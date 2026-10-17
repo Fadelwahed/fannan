@@ -1,5 +1,11 @@
 # R3 checks not established
 
+## R7 additions (Mi'mar, 17 October 2026, Codex round 3)
+
+- **CODEX-R3-02 spacing scale:** the approved scale now comes only from the handoff's `tokens.json` (bytes checked against the handoff SHA-256 and the build evidence input hash, then validated); page `--spacing-*` declarations no longer count. Checked in real Chrome 155 (test-only). Spacing written as `calc()` or between token steps is still reported off-scale; a page whose CSS sets a different value under a token name is caught as off-scale, not as a token mismatch. Manual rhythm review stays required.
+- **CODEX-R3-01/04 tokens:** numeric negatives, references resolving to negative values, and component typography rules are checked in the validator, the converter and real Style Dictionary 5.6.1 (test-only deps). A negative value reached through a CSS `calc()` or a page stylesheet is outside token validation.
+- **CODEX-R3-03 fixture:** see the corrected local-fixture entry below. The real Impeccable binary and a full gate PASS remain UNTESTED.
+
 ## R6 additions (Mi'mar, 17 October 2026, Argon round 2)
 
 - **ARGON-R2-01 protected browser tree:** checked with a real root-owned 0755 tree under `/root` on Mi'mar's box (`test-results/r6/ARGON-01-root-probe.log`, run with sudo, test-only): the old code accepted an internal symlink and a symlinked root; the new code refuses both and still hashes a clean tree. A provisioned `/opt/fannan/bin` browser remains UNTESTED.

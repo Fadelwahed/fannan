@@ -1,5 +1,25 @@
 # R3 executed verification — 17 October 2026
 
+## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:55 PM Gaza)
+
+Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 42 PASS, 0 FAIL, 0 SKIP | `test-results/r7/node.log` |
+| same, without deps (committed tree exported with `git archive`, no `runtime-deps`) | 0 | 33 PASS, 0 FAIL, 9 SKIP (need deps or Chrome) | `test-results/r7/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 36 PASS, 6 FAIL: every failure is the intended `Node 22.12+ required` refusal by `sd-build.mjs` | `test-results/r7/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r7/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r7/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r7/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r7/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract, spacing (approved scale from the hash-checked tokens.json) and state checks PASS; every run stops at launcher exit 3 `pinned binary missing; no download fallback`, asserted (CODEX-R3-03) | `test-results/r7/local-fixture.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r7/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`/`sh -n`, `ast.parse`) | 0 | mjs=24 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r7/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+Per-finding before/after logs are in `test-results/r7/`. Package build and the anchored verify (trust files at 0444) are in the latest `reviews/MIMAR-R7-changes-*.md`.
+
 ## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM Gaza)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`), copied in after the box restore; no install, no network.
