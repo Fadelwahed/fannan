@@ -1,6 +1,6 @@
 # Mi'mar R9 changes: Codex round 4 (CODEX-R4-01..05)
 
-Branch `mimar-r4-fixes`, from 44daaea (draft PR #1). Last code/package commit: e88cf69. Written Oct 18 2026, about 12:45 AM Gaza (UTC+3). This record is the latest round record: the only file besides the registry left unhashed (OPUS-R2-03 rule, `release/PACKAGING.md`). `reviews/MIMAR-R8-changes-c7df69a.md` is now hashed in the registry and left unchanged. No `GROK-*` or `CODEX-*` file was added or changed. `main`, `grok-review`, `codex-r3-fixes` and `codex/fannan-r3-review` were not touched. No force push.
+Branch `mimar-r4-fixes`, from 44daaea (draft PR #1). Last code/package commit: e88cf69. Written Oct 18 2026, about 12:30 AM Gaza (UTC+3). This record is the latest round record: the only file besides the registry left unhashed (OPUS-R2-03 rule, `release/PACKAGING.md`). `reviews/MIMAR-R8-changes-c7df69a.md` is now hashed in the registry and left unchanged. No `GROK-*` or `CODEX-*` file was added or changed. `main`, `grok-review`, `codex-r3-fixes` and `codex/fannan-r3-review` were not touched. No force push.
 
 ## Decisions recorded
 
