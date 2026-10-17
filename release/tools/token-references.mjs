@@ -2,7 +2,8 @@ const reference = value => typeof value === 'string' && /^\{[^{}]+\}$/.test(valu
 // R4-2: a unitless zero is a valid CSS length; every other dimension needs px, rem or em.
 // ARGON-R2-07: the string "0" is the same bare zero; numeric strings, exponents and other units stay refused.
 const dimension = value => value === 0 || value === '0' || typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
-const negative = value => typeof value === 'string' && /^-\d*\.?\d+/.test(value) && parseFloat(value) !== 0;
+// CODEX-R3-01: numbers count too (lineHeight: -1), not only strings.
+export const negative = value => typeof value === 'number' ? value < 0 : typeof value === 'string' && /^-\d*\.?\d+/.test(value) && parseFloat(value) !== 0;
 // ARGON-R2-07: lengths CSS forbids from being negative (radii, breakpoints, font sizes, padding, gaps, sizes and the
 // spacing scale, which feeds padding and gaps). Margins, insets, scroll margins and letter spacing may be negative.
 const nonNegativeKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|scrollPadding)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
@@ -74,8 +75,10 @@ export function validateTokens(tokens) {
     const allowed = expected(path);
     if (allowed && !allowed.includes(type)) throw Error(`incompatible token type at ${path}: ${type}`);
     if (token.$type && token.$type !== target.$type) throw Error(`incompatible token reference at ${path}: ${token.$type} vs ${target.$type}`);
-    if (!reference(value) && negative(value) && forbidsNegative(path)) throw Error(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07
     if (!reference(value) && !valid[type](value) && !(type === 'dimension' && lineHeightPercent(path, value))) throw Error(`invalid ${type} value at ${path}`);
+    if (!reference(value) && negative(value) && forbidsNegative(path)) throw Error(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07
+    // CODEX-R3-01: a reference is checked against the consuming path's rule, using the resolved literal value.
+    if (reference(value) && negative(target.$value) && forbidsNegative(path)) throw Error(`negative length at ${path}: ${value} resolves to ${target.$value}; CSS forbids it here`);
     return target;
   }
   for (const path of leaves.keys()) resolve(path);

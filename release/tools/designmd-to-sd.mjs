@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, resolve, dirname } from 'node:path';
 import { verifiedDeps } from './verify-deps.mjs';
-import { fontWeightAliases, inferTokenType, expectsDimension, validateTokens, forbidsNegative } from './token-references.mjs';
+import { fontWeightAliases, inferTokenType, expectsDimension, validateTokens, forbidsNegative, negative } from './token-references.mjs';
 let depsRoot;
 try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, dirname(dirname(fileURLToPath(import.meta.url)))); }
 catch (e) { console.error('designmd-to-sd: dependencies untrusted: ' + e.message); process.exit(2); }
@@ -35,8 +35,8 @@ function token(group, key, v, path) {
   const ty = ref ? undefined : inferTokenType(path, v);
   if (ty) t.$type = ty;
   else if (!ref) {
-    if (typeof v === 'string' && /^-\d*\.?\d+(px|rem|em)$/.test(v) && forbidsNegative(path)) errors.push(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07
-    else if (typeof v === 'number' && Number.isFinite(v) && expectsDimension(path)) errors.push(`units required at ${path}: use px, rem or em`); // R4-6 spacing; CODEX-R2-02/OPUS-R2-01: rounded, breakpoints, font sizes and every component dimension
+    if (typeof v === 'number' && Number.isFinite(v) && expectsDimension(path)) errors.push(`units required at ${path}: use px, rem or em`); // R4-6 spacing; CODEX-R2-02/OPUS-R2-01: rounded, breakpoints, font sizes and every component dimension
+    else if ((typeof v === 'number' && Number.isFinite(v) || typeof v === 'string' && /^-\d*\.?\d+(px|rem|em)$/.test(v)) && negative(v) && forbidsNegative(path)) errors.push(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07; CODEX-R3-01: numbers too
     else errors.push(`unknown token type at ${path}`);
   }
   return t;

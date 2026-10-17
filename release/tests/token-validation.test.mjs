@@ -241,3 +241,66 @@ test('OPUS-R2-08: stitch-design-md skill states the units rule the converter enf
   assert.match(skill, /only `0` may be bare/);
   assert.match(skill, /\{typography\.<name>\}/, 'composite component typography reference documented (OPUS-R2-04)');
 });
+
+// R7 helper: the same isolated converter/builder fixture as above (test-only shims; production tools unchanged).
+function tokenFixture() {
+  const root = mkdtempSync(join(tmpdir(), 'fannan-tokens-r7-'));
+  const tools = join(root, 'tools'), output = join(root, 'design-output/test');
+  cpSync(join(release, 'tools'), tools, { recursive: true });
+  writeFileSync(join(tools, 'verify-deps.mjs'), "export const verifiedDeps = prefix => prefix;\n"); // Isolated fixture only.
+  mkdirSync(join(root, 'runtime'), { recursive: true });
+  for (const name of ['dependency-trust.json', 'package-lock.json', 'sd.config.mjs']) cpSync(join(release, 'runtime', name), join(root, 'runtime', name));
+  mkdirSync(output, { recursive: true });
+  writeFileSync(join(tools, 'safe-write.sh'), `#!${process.execPath}\nconst fs=require('fs'),path=require('path');const root=${JSON.stringify(output)};const [project,file]=process.argv.slice(2);if(project!=='test'||!path.resolve(file).startsWith(root+path.sep))process.exit(10);fs.writeFileSync(file,fs.readFileSync(0),{flag:'wx'});\n`, { mode: 0o755 });
+  const env = { ...process.env, FANNAN_DEPS: deps };
+  const design = join(output, 'DESIGN.md'), json = join(output, 'tokens.json'), css = join(output, 'variables.css');
+  const convert = yaml => { rmSync(json, { force: true }); writeFileSync(design, `---\n${yaml}\n---\n`); return spawnSync(process.execPath, [join(tools, 'designmd-to-sd.mjs'), design, json, 'test'], { env, encoding: 'utf8' }); };
+  const build = () => { rmSync(css, { force: true }); rmSync(css + '.build.json', { force: true }); return spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, css, 'test'], { env, encoding: 'utf8' }); };
+  return { root, json, css, convert, build, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+}
+const buildRejects = (tokens, message) => {
+  const root = mkdtempSync(join(tmpdir(), 'fannan-build-r7-'));
+  try {
+    const input = join(root, 'tokens.json'), output = join(root, 'variables.css');
+    writeFileSync(input, JSON.stringify(tokens));
+    const result = spawnSync(process.execPath, [join(release, 'tools/sd-build.mjs'), input, output, 'test'], { env: { FANNAN_DEPS: '/opt/fannan/deps' }, encoding: 'utf8' });
+    assert.notEqual(result.status, 0, JSON.stringify(tokens));
+    assert.match(result.stderr, message, JSON.stringify(tokens));
+    assert.equal(existsSync(output), false);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+};
+
+test('CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)', () => {
+  const leaf = ($type, $value) => ({ $type, $value });
+  assert.equal(inferTokenType('typography.body.lineHeight', -1), undefined);
+  assert.equal(inferTokenType('typography.body.lineHeight', 1.5), 'number');
+  assert.throws(() => validateTokens({ typography: { body: { lineHeight: leaf('number', -1) } } }), /negative length at typography\.body\.lineHeight/);
+  assert.throws(() => validateTokens({ typography: { body: { lineHeight: leaf('number', -0.5) } } }), /negative length/);
+  const tracking = { typography: { body: { letterSpacing: leaf('dimension', '-1px') } } };
+  assert.doesNotThrow(() => validateTokens(tracking), 'letter spacing may be negative');
+  assert.throws(() => validateTokens({ ...tracking, components: { card: { padding: { $value: '{typography.body.letterSpacing}' } } } }), /negative length at components\.card\.padding/);
+  assert.throws(() => validateTokens({ ...tracking, components: { card: { gap: { $value: '{typography.body.letterSpacing}' } } } }), /negative length at components\.card\.gap/);
+  assert.throws(() => validateTokens({ ...tracking, spacing: { tight: { $value: '{typography.body.letterSpacing}' } } }), /negative length at spacing\.tight/);
+  assert.throws(() => validateTokens({ ...tracking, components: { card: { marginTop: { $value: '{typography.body.letterSpacing}' } } }, spacing: { chained: { $value: '{components.card.marginTop}' } } }), /negative length at spacing\.chained/, 'chained reference');
+  assert.throws(() => validateTokens({ scale: { neg: leaf('number', -1) }, typography: { body: { lineHeight: { $value: '{scale.neg}' } } } }), /negative length at typography\.body\.lineHeight/);
+  assert.doesNotThrow(() => validateTokens({ ...tracking, components: { card: { marginTop: { $value: '{typography.body.letterSpacing}' }, padding: { $value: '{spacing.sm}' } } }, spacing: { sm: leaf('dimension', '4px'), none: leaf('dimension', 0) } }));
+  assert.doesNotThrow(() => validateTokens({ typography: { body: { lineHeight: leaf('number', 0) } } }));
+  buildRejects({ typography: { body: { lineHeight: leaf('number', -1) } } }, /negative length at typography\.body\.lineHeight/);
+  buildRejects({ ...tracking, components: { card: { padding: { $value: '{typography.body.letterSpacing}' } } } }, /negative length at components\.card\.padding/);
+});
+
+test('CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps)', { skip: !existsSync(join(deps, 'node_modules')) && 'existing runtime dependencies absent' }, () => {
+  const f = tokenFixture();
+  try {
+    for (const [yaml, expected] of [
+      ['typography:\n  body:\n    lineHeight: -1', /negative length.*typography\.body\.lineHeight/],
+      ['typography:\n  body:\n    letterSpacing: -1px\ncomponents:\n  card:\n    padding: "{typography.body.letterSpacing}"', /negative length at components\.card\.padding/],
+      ['typography:\n  body:\n    letterSpacing: -1px\nspacing:\n  tight: "{typography.body.letterSpacing}"', /negative length at spacing\.tight/]
+    ]) {
+      const result = f.convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml); assert.equal(existsSync(f.json), false, yaml);
+    }
+    assert.equal(f.convert('typography:\n  body:\n    letterSpacing: -1px\n    lineHeight: 1.5\ncomponents:\n  card:\n    marginTop: "{typography.body.letterSpacing}"').status, 0);
+    const built = f.build(); assert.equal(built.status, 0, built.stderr);
+    assert.match(readFileSync(f.css, 'utf8'), /--components-card-margin-top:\s*(-1px|var\(--typography-body-letter-spacing\));/);
+  } finally { f.cleanup(); }
+});
