@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, resolve, dirname } from 'node:path';
 import { verifiedDeps } from './verify-deps.mjs';
-import { fontWeightAliases, inferTokenType, expectsDimension, validateTokens, forbidsNegative, negative } from './token-references.mjs';
+import { fontWeightAliases, inferTokenType, expectsDimension, validateTokens, forbidsNegative, negative, isTypographyPath } from './token-references.mjs';
 let depsRoot;
 try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, dirname(dirname(fileURLToPath(import.meta.url)))); }
 catch (e) { console.error('designmd-to-sd: dependencies untrusted: ' + e.message); process.exit(2); }
@@ -29,7 +29,7 @@ const warnings = [];
 const errors = [];
 const color = v => typeof v === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(v));
 function token(group, key, v, path) {
-  if (group === 'typography' && key === 'fontWeight' && typeof v === 'string' && Object.hasOwn(fontWeightAliases, v)) v = fontWeightAliases[v]; // R4-1: CSS-valid number
+  if (isTypographyPath(path) && key === 'fontWeight' && typeof v === 'string' && Object.hasOwn(fontWeightAliases, v)) v = fontWeightAliases[v]; // R4-1: CSS-valid number; CODEX-R3-04: component typography too
   const t = { $value: v };
   const ref = typeof v === 'string' && /^\{[^{}]+\}$/.test(v);
   const ty = ref ? undefined : inferTokenType(path, v);

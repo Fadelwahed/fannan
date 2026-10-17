@@ -7,9 +7,13 @@ export const negative = value => typeof value === 'number' ? value < 0 : typeof 
 // ARGON-R2-07: lengths CSS forbids from being negative (radii, breakpoints, font sizes, padding, gaps, sizes and the
 // spacing scale, which feeds padding and gaps). Margins, insets, scroll margins and letter spacing may be negative.
 const nonNegativeKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|scrollPadding)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
+// CODEX-R3-04: components.<name>.typography.<property> follows the same rules as typography.<style>.<property>.
+export const isTypographyPath = path => { const parts = path.split('.'); return parts[0] === 'typography' || parts[0] === 'components' && parts.length >= 4 && parts.at(-2) === 'typography'; };
 export const forbidsNegative = path => {
   const parts = path.split('.'), group = parts[0], key = parts.at(-1);
-  return ['spacing', 'rounded', 'breakpoints'].includes(group) || group === 'typography' && ['fontSize', 'lineHeight'].includes(key) || group === 'components' && nonNegativeKey.test(key);
+  if (isTypographyPath(path) && ['fontSize', 'lineHeight'].includes(key)) return true;
+  if (group === 'typography') return false;
+  return ['spacing', 'rounded', 'breakpoints'].includes(group) || group === 'components' && nonNegativeKey.test(key);
 };
 const lineHeightPercent = (path, value) => path.endsWith('.lineHeight') && typeof value === 'string' && /^\d*\.?\d+%$/.test(value);
 const color = value => typeof value === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(value));
@@ -31,12 +35,14 @@ const valid = {
 const componentDimensionKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|margin|inset|scrollPadding|scrollMargin)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
 export const isComponentDimensionKey = key => componentDimensionKey.test(key);
 
+const typographyTypes = Object.freeze({ fontFamily: ['fontFamily'], fontSize: ['dimension'], fontWeight: ['fontWeight'], letterSpacing: ['dimension'], lineHeight: ['number', 'dimension'] });
 function expected(path) {
   const parts = path.split('.'), group = parts[0], key = parts.at(-1);
   if (group === 'colors') return ['color'];
   if (['rounded', 'breakpoints'].includes(group)) return ['dimension'];
   if (group === 'spacing') return ['dimension']; // R4-6: spacing requires px, rem or em (a bare 0 is a valid dimension)
-  if (group === 'typography') return ({ fontFamily: ['fontFamily'], fontSize: ['dimension'], fontWeight: ['fontWeight'], letterSpacing: ['dimension'], lineHeight: ['number', 'dimension'] })[key];
+  const typographyRule = isTypographyPath(path) ? typographyTypes[key] : undefined;
+  if (typographyRule || group === 'typography') return typographyRule; // CODEX-R3-04: also components.<name>.typography.<property>
   if (group === 'components') {
     if (/color$/i.test(key)) return ['color'];
     if (componentDimensionKey.test(key)) return ['dimension'];

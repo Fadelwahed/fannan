@@ -304,3 +304,57 @@ test('CODEX-R3-01: the converter refuses numeric negatives and references to neg
     assert.match(readFileSync(f.css, 'utf8'), /--components-card-margin-top:\s*(-1px|var\(--typography-body-letter-spacing\));/);
   } finally { f.cleanup(); }
 });
+
+test('CODEX-R3-04: component typography follows the typography type rules (validator and builder)', () => {
+  const leaf = ($type, $value) => ({ $type, $value });
+  const button = typography => ({ components: { button: { typography } } });
+  assert.equal(inferTokenType('components.button.typography.fontSize', 16), undefined);
+  assert.equal(inferTokenType('components.button.typography.fontSize', '14px'), 'dimension');
+  assert.equal(inferTokenType('components.button.typography.fontSize', '-14px'), undefined);
+  assert.equal(inferTokenType('components.button.typography.lineHeight', 1.4), 'number');
+  assert.equal(inferTokenType('components.button.typography.lineHeight', '140%'), 'dimension');
+  assert.equal(inferTokenType('components.button.typography.fontWeight', 500), 'fontWeight');
+  assert.equal(inferTokenType('components.button.typography.fontWeight', 'semi-bold'), undefined);
+  assert.equal(inferTokenType('components.button.typography.fontFamily', ['Inter', 'sans-serif']), 'fontFamily');
+  for (const [typography, message] of [
+    [{ fontSize: leaf('number', 16) }, /incompatible token type at components\.button\.typography\.fontSize/],
+    [{ fontSize: leaf('dimension', 16) }, /invalid dimension value/],
+    [{ fontSize: leaf('dimension', '-14px') }, /negative length at components\.button\.typography\.fontSize/],
+    [{ lineHeight: leaf('number', -1) }, /negative length at components\.button\.typography\.lineHeight/],
+    [{ lineHeight: leaf('color', '#123456') }, /incompatible token type/],
+    [{ fontWeight: leaf('fontWeight', 1001) }, /invalid fontWeight value/],
+    [{ fontWeight: leaf('fontWeight', 'semi-bold') }, /invalid fontWeight value/],
+    [{ fontWeight: leaf('number', 500) }, /incompatible token type/],
+    [{ fontFamily: leaf('fontFamily', []) }, /invalid fontFamily value/],
+    [{ letterSpacing: leaf('number', 1) }, /incompatible token type/]
+  ]) {
+    assert.throws(() => validateTokens(button(typography)), message, JSON.stringify(typography));
+    buildRejects(button(typography), message);
+  }
+  assert.doesNotThrow(() => validateTokens(button({ fontSize: leaf('dimension', '14px'), lineHeight: leaf('number', 1.4), fontWeight: leaf('fontWeight', 500), fontFamily: leaf('fontFamily', ['Inter', 'sans-serif']), letterSpacing: leaf('dimension', '-0.01em') })));
+  assert.doesNotThrow(() => validateTokens({ typography: { label: { fontSize: leaf('dimension', '14px') } }, components: { button: { typography: { fontSize: { $value: '{typography.label.fontSize}' } } } } }));
+});
+
+test('CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps)', { skip: !existsSync(join(deps, 'node_modules')) && 'existing runtime dependencies absent' }, () => {
+  const f = tokenFixture();
+  try {
+    for (const [yaml, expected] of [
+      ['components:\n  button:\n    typography:\n      fontSize: 16', /units required.*components\.button\.typography\.fontSize/],
+      ['components:\n  button:\n    typography:\n      fontSize: -14px', /negative length.*components\.button\.typography\.fontSize/],
+      ['components:\n  button:\n    typography:\n      lineHeight: -1', /negative length.*components\.button\.typography\.lineHeight/],
+      ['components:\n  button:\n    typography:\n      fontWeight: heavy-ish', /unknown token type.*components\.button\.typography\.fontWeight/],
+      ['components:\n  button:\n    typography:\n      fontWeight: 1001', /unknown token type.*components\.button\.typography\.fontWeight/],
+      ['components:\n  button:\n    typography:\n      letterSpacing: 1', /units required.*components\.button\.typography\.letterSpacing/]
+    ]) {
+      const result = f.convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml); assert.equal(existsSync(f.json), false, yaml);
+    }
+    assert.equal(f.convert('components:\n  button:\n    typography:\n      fontSize: 14px\n      lineHeight: 1.4\n      fontWeight: semi-bold\n      fontFamily: [Inter, sans-serif]\n      letterSpacing: -0.01em').status, 0);
+    const t = JSON.parse(readFileSync(f.json, 'utf8')).components.button.typography;
+    assert.deepEqual([t.fontSize.$type, t.lineHeight.$type, t.fontWeight.$type, t.fontFamily.$type, t.letterSpacing.$type], ['dimension', 'number', 'fontWeight', 'fontFamily', 'dimension']);
+    assert.equal(t.fontWeight.$value, 600, 'DTCG alias mapped to a CSS-valid number, as for top-level typography');
+    const built = f.build(); assert.equal(built.status, 0, built.stderr);
+    const css = readFileSync(f.css, 'utf8');
+    assert.match(css, /--components-button-typography-font-size:\s*14px;/);
+    assert.match(css, /--components-button-typography-font-weight:\s*600;/);
+  } finally { f.cleanup(); }
+});
