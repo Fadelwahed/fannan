@@ -4,11 +4,17 @@ export function focusStyleProbe({ capture = false } = {}) {
     'borderTopStyle', 'borderTopWidth', 'borderTopColor', 'borderRightStyle', 'borderRightWidth', 'borderRightColor',
     'borderBottomStyle', 'borderBottomWidth', 'borderBottomColor', 'borderLeftStyle', 'borderLeftWidth', 'borderLeftColor',
     'backgroundColor', 'color', 'textDecorationLine', 'textDecorationColor', 'textDecorationStyle', 'textDecorationThickness'];
-  const read = el => { const style = getComputedStyle(el); return properties.map(key => style[key]); };
+  const read = el => ['', '::before', '::after'].flatMap(pseudo => {
+    const style = getComputedStyle(el, pseudo || null);
+    return properties.map(key => style[key]);
+  });
   if (capture) {
     window.__focusBefore = new WeakMap([...document.querySelectorAll('*')].map(el => [el, read(el)]));
     return;
   }
-  const el = document.activeElement, before = window.__focusBefore?.get(el);
-  return !!before && read(el).some((value, i) => value !== before[i]);
+  for (let el = document.activeElement; el; el = el.parentElement) {
+    const before = window.__focusBefore?.get(el);
+    if (before && read(el).some((value, i) => value !== before[i])) return true;
+  }
+  return false;
 }
