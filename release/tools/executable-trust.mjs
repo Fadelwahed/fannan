@@ -36,10 +36,19 @@ export function verifyExecutable(pin, protectedStorage = false) {
 }
 
 // R4-4: hash the whole browser directory (libraries, .pak, ICU data, helpers), not only the executable.
-// Same entry format as verify-deps inventoryDigest; symlinks must stay inside the tree.
+// Same entry format as verify-deps inventoryDigest; unprotected (test) trees may hold symlinks that stay inside.
+// ARGON-R2-01: in protected mode the root is checked as given (absolute, normalised, not a symlink, not
+// /opt/fannan/bin itself, root-owned all the way up) BEFORE it is resolved, and no symlink is allowed in the tree.
 export function supportTreeDigest(root, protectedStorage = false) {
+  if (protectedStorage) {
+    if (typeof root !== 'string' || !isAbsolute(root)) throw Error('browser support tree must be absolute');
+    if (posix.normalize(root) !== root || root.endsWith('/')) throw Error('browser support tree must be normalised');
+    if (root === '/opt/fannan/bin' || root === '/opt/fannan' || root === '/') throw Error('browser support tree must be the browser\'s own directory under /opt/fannan/bin/');
+    if (lstatSync(root).isSymbolicLink()) throw Error('browser support root is a symlink');
+    assertProtectedPath(root);
+    if (realpathSync(root) !== root) throw Error('browser support tree must be canonical');
+  }
   root = realpathSync(root);
-  if (protectedStorage) assertProtectedPath(root);
   const entries = [];
   (function walk(dir, prefix = '') {
     for (const name of readdirSync(dir).sort()) {
@@ -47,6 +56,7 @@ export function supportTreeDigest(root, protectedStorage = false) {
       if (st.isDirectory()) { if (protectedStorage) assertProtectedPath(path); entries.push(`d ${rel}`); walk(path, rel); }
       else if (st.isFile()) { if (protectedStorage) assertProtectedPath(path, true); entries.push(`f ${rel} ${sha(readFileSync(path))}`); }
       else if (st.isSymbolicLink()) {
+        if (protectedStorage) throw Error(`browser support symlink forbidden: ${rel}`);
         const target = readlinkSync(path), resolved = realpathSync(path);
         if (resolved !== root && !resolved.startsWith(root + sep)) throw Error(`browser support symlink escapes tree: ${rel}`);
         entries.push(`l ${rel} ${target}`);

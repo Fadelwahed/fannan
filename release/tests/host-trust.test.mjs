@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, symlinkSync, realpathSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, symlinkSync, realpathSync, mkdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -69,4 +69,21 @@ test('OPUS-R2-06: browser pin location must be its own directory under /opt/fann
   assert.doesNotThrow(() => assertBrowserPinLocation('/opt/fannan/bin/chrome-154/chrome'));
   for (const path of ['/opt/fannan/bin/chrome', '/opt/fannan/binx/chrome-154/chrome', '/opt/fannan/bin/../evil/chrome', '/opt/fannan/bin/chrome-154/../chrome', 'opt/fannan/bin/chrome-154/chrome', '/usr/bin/chrome', undefined, ''])
     assert.throws(() => assertBrowserPinLocation(path), /browser/, String(path));
+});
+
+test('ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'fannan-browser-')));
+  try {
+    const tree = join(dir, 'chrome-154'); mkdirSync(tree); writeFileSync(join(tree, 'chrome'), 'x');
+    symlinkSync(tree, join(dir, 'link'));
+    assert.throws(() => supportTreeDigest(join(dir, 'link'), true), /symlink/, 'a symlinked root is refused before realpath, not after');
+    assert.throws(() => supportTreeDigest('/opt/fannan/bin', true), /own directory/, 'the shared bin directory is never a support tree');
+    assert.throws(() => supportTreeDigest('/opt/fannan/bin/', true), /own directory|normalised/);
+    assert.throws(() => supportTreeDigest('relative/tree', true), /absolute/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)', () => {
+  const source = readFileSync(new URL('../tools/executable-trust.mjs', import.meta.url), 'utf8');
+  assert.match(source, /if \(protectedStorage\) throw Error\(`browser support symlink forbidden/);
 });
