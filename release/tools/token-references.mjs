@@ -16,8 +16,9 @@ const valid = {
 };
 
 // CODEX-R2-02: component spacing keys that must be CSS lengths (physical and logical sides, row/column gap,
-// inset and scroll padding/margin). A bare 0 is allowed; other numbers need px, rem or em.
-const componentDimensionKey = /^(rounded|gap|rowGap|columnGap)$|^(padding|margin|inset|scrollPadding|scrollMargin)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
+// inset and scroll padding/margin). OPUS-R2-01: plus the design.md spec's size/width/height sub-tokens and
+// min/max width/height. A bare 0 is allowed; other numbers need px, rem or em.
+const componentDimensionKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|margin|inset|scrollPadding|scrollMargin)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
 export const isComponentDimensionKey = key => componentDimensionKey.test(key);
 
 function expected(path) {
@@ -31,6 +32,9 @@ function expected(path) {
     if (componentDimensionKey.test(key)) return ['dimension'];
   }
 }
+
+// OPUS-R2-01: true when the path accepts only CSS lengths, so a bare nonzero number means "units required".
+export const expectsDimension = path => (expected(path) ?? []).length === 1 && expected(path)[0] === 'dimension';
 
 export function inferTokenType(path, value) {
   const allowed = expected(path);

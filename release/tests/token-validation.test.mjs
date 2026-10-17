@@ -113,6 +113,13 @@ test('token conversion validates types, dimensions and references before writing
       ['components:\n  card:\n    paddingTop: 8', /units required.*components\.card\.paddingTop/],
       ['components:\n  card:\n    marginBlock: 8', /units required.*components\.card\.marginBlock/],
       ['components:\n  card:\n    rowGap: 8', /units required.*components\.card\.rowGap/],
+      ['components:\n  button:\n    size: 40', /units required.*components\.button\.size/], // OPUS-R2-01
+      ['components:\n  button:\n    width: 40', /units required.*components\.button\.width/], // OPUS-R2-01
+      ['components:\n  button:\n    height: 40', /units required.*components\.button\.height/], // OPUS-R2-01
+      ['components:\n  button:\n    minWidth: 40', /units required.*components\.button\.minWidth/], // OPUS-R2-01
+      ['components:\n  button:\n    maxWidth: 40', /units required.*components\.button\.maxWidth/], // OPUS-R2-01
+      ['components:\n  button:\n    minHeight: 40', /units required.*components\.button\.minHeight/], // OPUS-R2-01
+      ['components:\n  button:\n    maxHeight: 40', /units required.*components\.button\.maxHeight/], // OPUS-R2-01
       ['typography:\n  body:\n    fontWeight: heavy-ish', /unknown token type/]
     ]) {
       const result = convert(yaml);
@@ -145,7 +152,7 @@ test('token conversion validates types, dimensions and references before writing
     assert.equal(zeroBuild.status, 0, zeroBuild.stderr);
     assert.match(readFileSync(zeroCss, 'utf8'), /--rounded-none:\s*0(rem|px)?;/);
     assert.match(readFileSync(zeroCss, 'utf8'), /--components-button-padding:\s*0(rem|px)?;/);
-    for (const [yaml, expected] of [['rounded:\n  sm: 4', /unknown token type.*rounded\.sm/], ['typography:\n  body:\n    fontSize: 16', /units required/], ['breakpoints:\n  desktop: 1440', /units required/]]) {
+    for (const [yaml, expected] of [['rounded:\n  sm: 4', /units required.*rounded\.sm/], ['components:\n  button:\n    height: 40', /units required.*components\.button\.height/], ['components:\n  button:\n    rounded: 4', /units required.*components\.button\.rounded/], ['typography:\n  body:\n    fontSize: 16', /units required/], ['breakpoints:\n  desktop: 1440', /units required/]]) {
       const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml);
     }
     // CODEX-R2-02: converter + real build accept 0 and 8px for logical/physical spacing keys.
@@ -157,6 +164,15 @@ test('token conversion validates types, dimensions and references before writing
     assert.equal(cardBuild.status, 0, cardBuild.stderr);
     assert.match(readFileSync(cardCss, 'utf8'), /--components-card-padding-inline:\s*8px;/);
     assert.match(readFileSync(cardCss, 'utf8'), /--components-card-padding-top:\s*0;/);
+    // OPUS-R2-01: size/width/height/min/max are dimensions; 0 and units accepted, typed and built.
+    assert.equal(convert('components:\n  button:\n    size: 40px\n    width: 0\n    height: 2.5rem\n    minWidth: 44px\n    maxWidth: 20em\n    minHeight: 44px\n    maxHeight: 0').status, 0);
+    const sizeTokens = JSON.parse(readFileSync(json, 'utf8')).components.button;
+    for (const key of ['size', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight']) assert.equal(sizeTokens[key].$type, 'dimension', key);
+    const sizeCss = join(output, 'size.css');
+    const sizeBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, sizeCss, 'test'], { env, encoding: 'utf8' });
+    assert.equal(sizeBuild.status, 0, sizeBuild.stderr);
+    assert.match(readFileSync(sizeCss, 'utf8'), /--components-button-min-height:\s*44px;/);
+    for (const key of ['size', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight']) assert.throws(() => validateTokens({ components: { button: { [key]: { $value: 40, $type: 'number' } } } }), /incompatible token type/, key);
     for (const [alias, number] of [['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
       assert.equal(convert(`typography:\n  body:\n    fontWeight: ${alias}`).status, 0, alias);
       assert.equal(JSON.parse(readFileSync(json, 'utf8')).typography.body.fontWeight.$value, number, alias);
