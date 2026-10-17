@@ -749,18 +749,24 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R7 additions (Mi'mar, 17 October 2026, Codex round 3)
+
+- **CODEX-R3-02 spacing scale:** the approved scale now comes only from the handoff's `tokens.json` (bytes checked against the handoff SHA-256 and the build evidence input hash, then validated); page `--spacing-*` declarations no longer count. Checked in real Chrome 155 (test-only). Spacing written as `calc()` or between token steps is still reported off-scale; a page whose CSS sets a different value under a token name is caught as off-scale, not as a token mismatch. Manual rhythm review stays required.
+- **CODEX-R3-01/04 tokens:** numeric negatives, references resolving to negative values, and component typography rules are checked in the validator, the converter and real Style Dictionary 5.6.1 (test-only deps). A negative value reached through a CSS `calc()` or a page stylesheet is outside token validation.
+- **CODEX-R3-03 fixture:** see the corrected local-fixture entry below. The real Impeccable binary and a full gate PASS remain UNTESTED.
+
 ## R6 additions (Mi'mar, 17 October 2026, Argon round 2)
 
 - **ARGON-R2-01 protected browser tree:** checked with a real root-owned 0755 tree under `/root` on Mi'mar's box (`test-results/r6/ARGON-01-root-probe.log`, run with sudo, test-only): the old code accepted an internal symlink and a symlinked root; the new code refuses both and still hashes a clean tree. A provisioned `/opt/fannan/bin` browser remains UNTESTED.
 - **ARGON-R2-06 browser environment:** checked on Linux with real Chrome 155 via `/proc/<pid>/environ` (test-only): a sentinel variable no longer reaches the browser process. macOS has no `/proc`, so that test skips there.
 - **ARGON-R2-09 design probe:** accent fallback, stock-glass gate and centred icon trios in any wrapper are checked in real Chrome 155 headless (test-only, unpinned). The trio rule is a screen: three icon-led items centred on the row or on every item. Reviewers still judge layouts it cannot see (CSS background icons, canvas, images without icon markup).
 - **R6-A focus backdrop:** outlines with offset >= 0 and outer rings are measured against the backdrop; inset rings and negative-offset outlines against the element. Borders stay measured against the element. All R5 real-Chrome focus cases give the same result (`test-results/r6/R6-A-chrome-regression.log`).
-- **Local fixture:** `release/tests/local-fixture.mjs` now runs end to end on Mi'mar's box (exit 0, `test-results/r6/local-fixture.log`): browser, contract, spacing and state checks pass; the full gate is still blocked by the absent pinned Impeccable binary. It uses the box's unpinned Chrome through a test-only shim, never the production pin.
+- **Local fixture:** `release/tests/local-fixture.mjs` runs end to end on Mi'mar's box (exit 0): browser, contract, spacing and state checks pass, and the full gate is blocked by the absent pinned Impeccable binary. R7 correction (CODEX-R3-03): in R6 (`test-results/r6/local-fixture.log`) the launcher actually stopped earlier, with exit 4 `detect path outside project output`, because the fixture relocated the checker's root but not the launcher's. Since R7 the temporary launcher copy is relocated too and the fixture asserts launcher exit 3 with `pinned binary missing; no download fallback` on every run (`test-results/r7/local-fixture.log`). It uses the box's unpinned Chrome through a test-only shim, never the production pin; the production launcher boundary is unchanged.
 
 ## R4 additions (Mi'mar, 17 October 2026)
 
 - **R4-3 focus screen:** checked in real Chrome 154 headless on Mi'mar's box (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). R4 composited colours over white, which could pass an invisible dark indicator on a dark page (a false pass) and fail a light one (a false fail). OPUS-R2-02 (R5) composites over the nearest opaque ancestor background captured unfocused, with a white fallback; checked in real Chrome (`test-results/r5/OPUS-02-chrome-*.log`). Background images, gradients, `opacity`, filters, blend modes and content painted behind via positioning are not modelled; pseudo-elements are measured against the element's backdrop, not its own background. Manual focus review stays required. The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
-- **OPUS-R2-10 spacing off-scale (R5):** `spacing-scale.mjs` was checked in real Chrome 155 headless on Mi'mar's box (test-only, unpinned). It reads `--spacing-*` from same-origin stylesheets and root computed style, compares computed padding, vertical margins and row/column gaps, and skips horizontal margins (auto resolves to pixels), 0, auto and normal. Cross-origin stylesheets, `calc()` steps between tokens, and auto vertical margins in flex/grid (which resolve to pixels) are not handled. Pages that keep browser default margins or button padding, including the bundled fixture page, now fail at handoff. The end-to-end checker run on the local fixture is blocked before the probes by the fixture's browser-version pin (pre-existing).
+- **OPUS-R2-10 spacing off-scale (R5):** `spacing-scale.mjs` was checked in real Chrome 155 headless on Mi'mar's box (test-only, unpinned). It reads `--spacing-*` from same-origin stylesheets and root computed style, compares computed padding, vertical margins and row/column gaps, and skips horizontal margins (auto resolves to pixels), 0, auto and normal. Cross-origin stylesheets, `calc()` steps between tokens, and auto vertical margins in flex/grid (which resolve to pixels) are not handled. Pages that keep browser default margins or button padding, including the bundled fixture page, now fail at handoff. (Superseded: the R5 fixture was blocked before the probes by its browser-version pin; R6 fixed that, and since R7 the fixture reaches the probes and stops only at the missing Impeccable binary, see the R6 additions.)
 - **R4-4 browser support tree:** `supportTreeDigest` was checked on unit fixtures and as a stability probe on the box's stock `/opt/google/chrome` (non-protected mode). Protected mode correctly refuses that stock install (owner-writable files). A provisioned root-owned read-only browser directory under `/opt/fannan/bin/` is UNTESTED (none exists); a setuid `chrome-sandbox` would need mode 4555, not 4755.
 - **Positive path of the launcher's protected-storage check:** still UNTESTED (needs a root-owned `/opt/fannan/bin`).
 - **R4-6 spacing units:** implemented per Fadel's decision. Existing project DESIGN.md files that used bare spacing numbers will now fail conversion with `units required` and must add px/rem/em; the bundled example and fixture already use units and still convert.
@@ -787,6 +793,26 @@ Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
 
+## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM Gaza)
+
+Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 42 PASS, 0 FAIL, 0 SKIP | `test-results/r7/node.log` |
+| same, without deps (committed tree exported with `git archive`, no `runtime-deps`) | 0 | 33 PASS, 0 FAIL, 9 SKIP (need deps or Chrome) | `test-results/r7/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 36 PASS, 6 FAIL: every failure is the intended `Node 22.12+ required` refusal by `sd-build.mjs` | `test-results/r7/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r7/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r7/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r7/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r7/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract, spacing (approved scale from the hash-checked tokens.json) and state checks PASS; every run stops at launcher exit 3 `pinned binary missing; no download fallback`, asserted (CODEX-R3-03) | `test-results/r7/local-fixture.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r7/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`/`sh -n`, `ast.parse`) | 0 | mjs=24 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r7/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+Per-finding before/after logs are in `test-results/r7/`. Package build and the anchored verify (trust files at 0444) are in the latest `reviews/MIMAR-R7-changes-*.md`.
+
 ## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM Gaza)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`), copied in after the box restore; no install, no network.
@@ -800,7 +826,7 @@ Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-onl
 | R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r6/r2-node.log`, `r2-python.log` |
 | `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r6/package-tests-git.log`, `package-tests.log` |
 | `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r6/package-self-test.log` |
-| `node release/tests/local-fixture.mjs` | 0 | browser, contract and state checks PASS; full gate blocked by the absent Impeccable binary | `test-results/r6/local-fixture.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract and state checks PASS; full gate blocked, but **R7 correction (CODEX-R3-03):** the log shows the launcher stopping with exit 4 `detect path outside project output` (the fixture had not relocated the launcher's root), not the missing-binary stop this row claimed. Corrected run: R7 below | `test-results/r6/local-fixture.log` |
 | design.md lint 0.4.0 offline, convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r6/designmd-lint-offline.log` |
 | Syntax | 0 | mjs=25 sh=4 py=4, 0 failures | `test-results/r6/syntax.log` |
 
