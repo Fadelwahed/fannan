@@ -68,3 +68,9 @@ Check all16skills, nine steps, stale active callers, generic memory, no spend ca
 ## Cloud starting prompt
 
 Read CLOUD-HANDOFF.md, AGENTS.md and ORIGINAL-ASSIGNMENT.md. Continue the unfinished Fannan R3 plan/package revision. Review partial changes first, fix and test all authorized local defects, preserve security and approval rules, reconcile the r7 findings, rebuild the seven-deliverable Markdown and final ZIP with fresh manifest/hash verification. Treat historical and reported host evidence separately from current executed tests. Work autonomously; no live bot installation, paid calls, external messages or invented approval.
+
+## Transfer verification
+
+The private GitHub repository is `Fadelwahed/fannan`; initial transfer commit `9b1500f6d7445e276ba9f570c28c2e59fa6651c2` was pushed and its remote main SHA matched locally. All232initial files were committed after a targeted credential-pattern scan found no hits; this is not a comprehensive secrets audit. No node_modules or unrelated workspace folders were uploaded. Cloud environment/task creation is pending browser sign-in and repository selection.
+
+Git stores the executable bit, not all filesystem permission bits. Before running the manifest verifier on a fresh clone, set the external manifest to mode0444 as specified; that local setup does not change its bytes or approve a release. Source fixture evidence contains historical Mac paths and synthetic approval records; never use them as current cloud paths or real approvals.
