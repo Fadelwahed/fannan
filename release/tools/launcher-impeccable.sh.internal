@@ -1,10 +1,26 @@
-#!/bin/sh
+#!/bin/bash
 # Read-only detector launcher. Executed only by launcher-impeccable.sh in a clean env.
 set -eu
 PATH=/usr/bin:/bin; export PATH
 PINNED_SHA256=3d31ec1a664ac35c815ea1d7c10abad1155ce364d0f461157eb837a34368efb6
-PINNED_BIN=/home/box/agent-data/fannan-bin/impeccable-linux-x64
+PINNED_BIN=/opt/fannan/bin/impeccable-linux-x64
 die() { echo "impeccable (Fannan launcher): $1" >&2; exit "$2"; }
+protected_path() {
+  local path=$1 owner mode
+  while :; do
+    [ ! -L "$path" ] || die 'pinned binary path contains a symlink' 3
+    owner=$(stat -c %u -- "$path") || die 'pinned binary path missing' 3
+    mode=$(stat -c %a -- "$path") || die 'pinned binary path missing' 3
+    [ "$owner" -eq 0 ] && [ $((8#$mode & 8#22)) -eq 0 ] || die 'pinned binary path is not protected' 3
+    if [ "$path" = "$PINNED_BIN" ]; then
+      [ -f "$path" ] && [ $((8#$mode & 8#222)) -eq 0 ] && [ $((8#$mode & 8#111)) -ne 0 ] || die 'pinned binary must be a read-only executable file' 3
+    else
+      [ -d "$path" ] || die 'pinned binary ancestor is not a directory' 3
+    fi
+    [ "$path" = / ] && break
+    path=$(dirname -- "$path")
+  done
+}
 [ -z "$IMPECCABLE_BIN" ] || [ "$IMPECCABLE_BIN" = "$PINNED_BIN" ] || die 'IMPECCABLE_BIN must be the pinned production path' 3
 IMPECCABLE_BIN=$PINNED_BIN
 [ $# -ge 1 ] || die 'allowed: --version | detect <project paths>' 4
@@ -14,32 +30,30 @@ case "$1" in
     case "$FANNAN_PROJECT" in ''|*[!a-z0-9-]*|-*|*-) die 'FANNAN_PROJECT must be a project slug' 4 ;; esac
     [ "${#FANNAN_PROJECT}" -le 64 ] || die 'project slug too long' 4
     shift; [ $# -ge 1 ] || die 'detect needs a path' 4
+    args=(detect)
     expect_scope=0; paths=0
     for a in "$@"; do
       if [ "$expect_scope" -eq 1 ]; then
-        case "$a" in type|layout|type,layout|layout,type) expect_scope=0; continue ;; *) die 'bad --scope value' 4 ;; esac
+        case "$a" in type|layout|type,layout|layout,type) args+=("$a"); expect_scope=0; continue ;; *) die 'bad --scope value' 4 ;; esac
       fi
       case "$a" in
-        --json|--quiet|--no-advisory|--no-config|--no-inline-ignores|--no-design-system) ;;
-        --scope) expect_scope=1 ;;
+        --json|--quiet|--no-advisory|--no-config|--no-inline-ignores|--no-design-system) args+=("$a") ;;
+        --scope) args+=("$a"); expect_scope=1 ;;
         -*) die "flag '$a' is not allowed" 4 ;;
         *)
           case "$a" in /*) : ;; *) die 'absolute local paths only' 4 ;; esac
           canonical=$(realpath -e -- "$a") || die "path not found: $a" 4
           case "$canonical" in "/workspace/design-output/$FANNAN_PROJECT"/*) : ;; *) die 'detect path outside project output' 4 ;; esac
+          args+=("$canonical")
           paths=$((paths + 1)) ;;
       esac
     done
     [ "$expect_scope" -eq 0 ] && [ "$paths" -gt 0 ] || die 'detect needs a path and complete flags' 4
-    set -- detect "$@" ;;
+    set -- "${args[@]}" ;;
   *) die "'$1' is not allowed" 4 ;;
 esac
-d=$IMPECCABLE_BIN
-while [ "$d" != / ]; do
-  [ ! -L "$d" ] || die 'pinned binary path contains a symlink' 3
-  d=$(dirname -- "$d")
-done
 [ -f "$IMPECCABLE_BIN" ] || die 'pinned binary missing; no download fallback' 3
+protected_path "$IMPECCABLE_BIN"
 umask 077
 tmp=$(mktemp -d /tmp/fannan-imp.XXXXXX) || die 'cannot create private temp dir' 6
 trap 'rm -rf "$tmp"' EXIT
