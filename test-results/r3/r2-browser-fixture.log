@@ -1,0 +1,25 @@
+$ node /private/tmp/fannan-r2-suites-fof65rhb/release/tests/local-fixture.mjs
+exit=1
+designmd-to-sd: dependencies untrusted: ENOENT: no such file or directory, lstat '/private/tmp/fannan-r2-suites-fof65rhb/runtime-deps'
+node:internal/errors:983
+  const err = new Error(message);
+              ^
+
+Error: Command failed: /Users/fadelwaheed/.hermes/node/bin/node /private/tmp/fannan-r2-suites-fof65rhb/test-results/local-fixture/tools/designmd-to-sd.mjs /private/tmp/fannan-r2-suites-fof65rhb/test-results/local-fixture/design-output/test/fixture-DESIGN.md /private/tmp/fannan-r2-suites-fof65rhb/test-results/local-fixture/design-output/test/tokens.json test
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execFileSync (node:child_process:952:15)
+    at file:///private/tmp/fannan-r2-suites-fof65rhb/release/tests/local-fixture.mjs:34:1
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  status: 2,
+  signal: null,
+  output: [ null, null, null ],
+  pid: 41700,
+  stdout: null,
+  stderr: null
+}
+
+Node.js v22.22.3

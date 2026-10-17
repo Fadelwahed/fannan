@@ -1,0 +1,32 @@
+# R3 reproducible packaging and verification
+
+The standard-library-only `scripts/package-r3.py` generates hashes from bytes; never hand-edit digest rows. It preserves source/input and R2. From the repository root:
+
+```sh
+python3 -B scripts/package-r3.py self-test
+python3 -B scripts/package-r3.py build --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3
+python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3
+```
+
+Build combines all seven original deliverables with all 16 skill files, enumerates the exact `release/` inventory, generates `trust/MANIFEST.sha256` and its external `PINNED.sha256`, writes deterministic `artifacts/FANNAN-R3.zip`, and checks every ZIP member byte plus CRC. It then records `test-results/r3/package-verification.json` and hashes every changed repository path in `trust/R3-CHANGES.sha256`. That registry includes the release manifest/pin, combined document, ZIP, test logs, package report, script, docs and checkpoint. The report is external to the ZIP to avoid a report/archive self-hash cycle; its bytes are covered by the changes registry. Other evidence and the immutable input/review are inside the archive.
+
+The release manifest covers **all release files with no exclusions**. Its pin must ultimately come from Amin's reviewed approval record/trusted runtime configuration, not a nearby editable file. Candidate hashes are reproducible review evidence, not approval.
+
+For the repository changes registry there are exactly two deliberate categories of exclusions: the registry itself (no file can contain its own SHA-256), and the single required final `reviews/CODEX-R3-response-<last-code-SHA>.md` added after code/package freeze. Git records that response commit; it quotes the registry digest. Multiple final response files are rejected. No implementation, test, evidence, generated document or ZIP is excluded from repository coverage. The final response is external to the ZIP for the same required-last-commit ordering.
+
+After final commit, compare the actual committed paths (the verifier uses the same diff plus any untracked paths, making it stricter while editing):
+
+```sh
+git diff --name-only 9ee1ca6aaa4a257cb84fb7381056005f48554bf3..HEAD
+python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3
+```
+
+`coveredChangedFiles`, `uncoveredChangedFiles: []` and `deliberateExclusions` are the comparison result. `changesManifestSha256` is quoted in the final response. The self-test proves rejection of tampering, unexpected files, symlinks and a writable manifest. The portable verifier checks read-only mode bits, external pin, exact inventory, bytes and archive contents; it does not replace target-host GNU/Linux execution.
+
+Also run the production verifier on a supported GNU/Linux host with the pin from the review record:
+
+```sh
+release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$FANNAN_MANIFEST_SHA256"
+```
+
+It requires GNU `realpath -e`, `stat -c` and `sha256sum` on its fixed PATH. This R3 Mac attempt fails before verification because `realpath -e` is unsupported. Do not mark that command PASS, relax its root/write-mode rule or replace production tools to hide the platform boundary. A clone preserves executable bits, not 0444; apply the documented local 0444 manifest mode before verification without changing bytes. No protected host installation is performed by this packaging script.

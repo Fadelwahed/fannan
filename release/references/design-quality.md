@@ -68,7 +68,7 @@ Set the page language, mark language changes and specify base direction separate
 ## Command and release decision
 
 ```sh
-FANNAN_DEPS=/home/box/agent-data/fannan-deps \
+FANNAN_DEPS=/opt/fannan/deps \
 node "$FANNAN_RELEASE/tools/pre-handoff-check.mjs" \
   /workspace/design-output/PROJECT/DESIGN.md \
   /workspace/design-output/PROJECT/reference.html \

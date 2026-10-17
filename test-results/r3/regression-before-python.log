@@ -1,0 +1,26 @@
+test_launcher_preserves_exact_argv_into_helper (guards.GuardTests.test_launcher_preserves_exact_argv_into_helper) ... FAIL
+test_detector_receives_canonical_paths_and_flags (guards.GuardTests.test_detector_receives_canonical_paths_and_flags) ... FAIL
+
+======================================================================
+FAIL: test_launcher_preserves_exact_argv_into_helper (guards.GuardTests.test_launcher_preserves_exact_argv_into_helper)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/fadelwaheed/fannan-loop/fannan/release/tests/test_guard_tools.py", line 82, in test_launcher_preserves_exact_argv_into_helper
+    self.assertEqual(p.stdout, ''.join(f'<{arg}>\n' for arg in args).encode())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'<>\n' != b'<--version>\n'
+
+======================================================================
+FAIL: test_detector_receives_canonical_paths_and_flags (guards.GuardTests.test_detector_receives_canonical_paths_and_flags)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/fadelwaheed/fannan-loop/fannan/release/tests/test_guard_tools.py", line 103, in test_detector_receives_canonical_paths_and_flags
+    self.assertEqual(p.stdout, f'<detect>\n<--json>\n<--scope>\n<type>\n<{page}>\n'.encode())
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'<de[86 chars]000gn/T/tmpm6fh5907/design-output/a-1/alias>\n' != b'<de[86 chars]000gn/T/tmpm6fh5907/design-output/a-1/page with spaces.html>\n'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.129s
+
+FAILED (failures=2)
+EXPECTED FAIL: both new regressions fail against starting bytes; current bytes pass.

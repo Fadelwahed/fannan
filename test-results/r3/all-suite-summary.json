@@ -1,0 +1,77 @@
+{
+  "platform": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "node": "v22.22.3",
+  "python": "3.15.0",
+  "results": [
+    {
+      "name": "node",
+      "command": "node --test release/tests/checker-boundaries.test.mjs release/tests/copy-signals.test.mjs release/tests/dependency-trust.test.mjs release/tests/focus-screen.test.mjs release/tests/handoff-contract.test.mjs release/tests/host-trust.test.mjs release/tests/local-file-boundary.test.mjs release/tests/token-validation.test.mjs",
+      "exit": 0,
+      "log": "node.log",
+      "tests": 14,
+      "pass": 13,
+      "fail": 0,
+      "skipped": 1
+    },
+    {
+      "name": "python",
+      "command": "python3 -B release/tests/test_guard_tools.py -v",
+      "exit": 0,
+      "log": "python.log",
+      "tests": 10,
+      "skipped": 4,
+      "pass": 6,
+      "fail": 0
+    },
+    {
+      "name": "r2-node",
+      "command": "node --test revisions/r2/release/tests/copy-signals.test.mjs revisions/r2/release/tests/dependency-trust.test.mjs revisions/r2/release/tests/handoff-contract.test.mjs revisions/r2/release/tests/local-file-boundary.test.mjs",
+      "exit": 0,
+      "log": "r2-node.log",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "r2-python",
+      "command": "python3 -B revisions/r2/release/tests/test_guard_tools.py -v",
+      "exit": 0,
+      "log": "r2-python.log",
+      "tests": 4,
+      "skipped": 1,
+      "pass": 3,
+      "fail": 0
+    },
+    {
+      "name": "browser-fixture",
+      "command": "node release/tests/local-fixture.mjs",
+      "exit": 2,
+      "log": "browser-fixture.log"
+    },
+    {
+      "name": "r2-browser-fixture",
+      "command": "node /private/tmp/fannan-r2-suites-fof65rhb/release/tests/local-fixture.mjs",
+      "exit": 1,
+      "log": "r2-browser-fixture.log"
+    },
+    {
+      "name": "package-self-test",
+      "command": "python3 -B scripts/package-r3.py self-test",
+      "exit": 0,
+      "log": "package-self-test.log"
+    },
+    {
+      "name": "diff-check",
+      "command": "git diff --check",
+      "exit": 0,
+      "log": "diff-check.log"
+    }
+  ],
+  "syntax": {
+    "javascript": 45,
+    "shell": 17,
+    "python": 6,
+    "failures": []
+  }
+}

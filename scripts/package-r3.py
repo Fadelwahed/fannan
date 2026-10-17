@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+"""Local R3 packaging only: never installs, fetches, repins dependencies or grants approval."""
+import argparse
+import hashlib
+import json
+import stat
+import subprocess
+import tempfile
+import zipfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+REGISTRY = 'trust/R3-CHANGES.sha256'
+REPORT = 'test-results/r3/package-verification.json'
+ARCHIVE = 'artifacts/FANNAN-R3.zip'
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def files(root):
+    paths = sorted(root.rglob('*'))
+    if any(p.is_symlink() for p in paths):
+        raise ValueError('symlinks are forbidden in package input')
+    return [p for p in paths if p.is_file()]
+
+
+def write(path, text, readonly=False):
+    if path.exists():
+        path.chmod(0o644)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding='utf-8')
+    if readonly:
+        path.chmod(0o444)
+
+
+def manifest(paths, root, covers):
+    return '# covers: ' + covers + '\n' + ''.join(f'{sha(p)}  {p.relative_to(root).as_posix()}\n' for p in sorted(paths))
+
+
+def verify_hashes(path, root, digest, exact=None):
+    if path.is_symlink() or path.stat().st_mode & 0o222:
+        raise ValueError('manifest must be a real read-only file')
+    if sha(path) != digest:
+        raise ValueError('manifest pin mismatch')
+    entries = {}
+    for line in path.read_text().splitlines():
+        if line.startswith('#'):
+            continue
+        value, name = line.split('  ', 1)
+        if name in entries or Path(name).is_absolute() or '..' in Path(name).parts:
+            raise ValueError('invalid or duplicate manifest path')
+        item = root / name
+        if item.is_symlink() or not item.is_file() or sha(item) != value:
+            raise ValueError('manifest bytes mismatch: ' + name)
+        entries[name] = value
+    if exact is not None and set(entries) != set(exact):
+        raise ValueError('manifest inventory mismatch')
+    return entries
+
+
+def combined():
+    release = ROOT / 'release'
+    parts = ['# Fannan — complete rewrite and review package, revision 3\n\n'
+             '17 October 2026. Local review candidate only. Live installation remains BLOCKED; '
+             'no approval or host evidence is invented. Seven original deliverables follow in order.\n']
+    groups = [
+        ('1. Full rewritten plan', [release / 'FANNAN-PLAN.md']),
+        ('2. Rewritten skill files in full', sorted((release / 'skills').glob('*/SKILL.md'))),
+        ('3. Integrated anti-AI design and copy checklist', [release / 'references/design-quality.md']),
+        ('4. Critic rubric', [release / 'references/critic-rubric.md']),
+        ('5. Changelog and review disposition', [release / 'CHANGELOG.md', release / 'REVIEW-RESPONSE.md']),
+        ('6. Open questions', [release / 'OPEN-QUESTIONS.md']),
+        ('7. Untested items and verification evidence', [release / 'UNTESTED.md', release / 'VERIFICATION.md'])]
+    assert len(groups[1][1]) == 16, 'all 16 skill files required'
+    for title, paths in groups:
+        parts.append('\n## ' + title + '\n')
+        for path in paths:
+            parts.append('\nSource: `' + path.relative_to(ROOT).as_posix() + '`\n\n' + path.read_text().rstrip() + '\n')
+    parts.append('\nChanged: R3 local code, plan/package and complete review ledger.\n'
+                 'Checked: fresh commands, negative regressions and generated package inventory/hashes/ZIP CRC.\n'
+                 'Needs attention: real host tools/isolation, B3/Jabr proof, Amin review and Fadel final-digest yes.\n')
+    return ''.join(parts)
+
+
+def changed(start):
+    def git(*args):
+        return subprocess.check_output(['git', *args], cwd=ROOT).decode().splitlines()
+    return sorted(set(git('diff', '--name-only', start, '--') + git('ls-files', '--others', '--exclude-standard')))
+
+
+def coverage(start):
+    names = changed(start)
+    responses = [name for name in names if name.startswith('reviews/CODEX-R3-response-') and name.endswith('.md')]
+    if len(responses) > 1:
+        raise ValueError('expected only one final response')
+    excluded = {REGISTRY: 'self hash cannot be embedded in its own manifest'}
+    excluded.update({name: 'required last response commit follows code/package freeze; Git commit records its bytes' for name in responses})
+    return [name for name in names if name not in excluded], {name: reason for name, reason in excluded.items() if name in names}
+
+
+def archive_paths():
+    paths = files(ROOT / 'release') + files(ROOT / 'input')
+    paths += [ROOT / name for name in ['trust/MANIFEST.sha256', 'trust/PINNED.sha256', 'FANNAN-REWRITE.md', 'ORIGINAL-ASSIGNMENT.md', 'GROK-HANDOFF.md', 'CLOUD-HANDOFF.md', 'reviews/GROK-R3-d2c36c1.md']]
+    paths += [p for p in files(ROOT / 'test-results/r3') if p.relative_to(ROOT).as_posix() != REPORT]
+    return sorted(paths)
+
+
+def build(start):
+    write(ROOT / 'FANNAN-REWRITE.md', combined())
+    release = ROOT / 'release'
+    covers = ' '.join(sorted(p.name for p in release.iterdir()))
+    write(ROOT / 'trust/MANIFEST.sha256', manifest(files(release), release, covers), True)
+    write(ROOT / 'trust/PINNED.sha256', sha(ROOT / 'trust/MANIFEST.sha256') + '  MANIFEST.sha256\n', True)
+    with zipfile.ZipFile(ROOT / ARCHIVE, 'w', zipfile.ZIP_DEFLATED) as archive:
+        for path in archive_paths():
+            entry = zipfile.ZipInfo(path.relative_to(ROOT).as_posix(), date_time=(2026, 10, 17, 0, 0, 0))
+            entry.compress_type = zipfile.ZIP_DEFLATED
+            entry.external_attr = (stat.S_IFREG | stat.S_IMODE(path.stat().st_mode)) << 16
+            archive.writestr(entry, path.read_bytes())
+    report = verify_release_archive()
+    write(ROOT / REPORT, json.dumps(report, indent=2) + '\n')
+    names, _ = coverage(start)
+    write(ROOT / REGISTRY, manifest([ROOT / name for name in names], ROOT, 'changed paths since ' + start), True)
+    return verify(start)
+
+
+def verify_release_archive():
+    release = ROOT / 'release'
+    pin = (ROOT / 'trust/PINNED.sha256').read_text().split()[0]
+    entries = verify_hashes(ROOT / 'trust/MANIFEST.sha256', release, pin, [p.relative_to(release).as_posix() for p in files(release)])
+    if (ROOT / 'FANNAN-REWRITE.md').read_text() != combined():
+        raise ValueError('combined seven-deliverable document is stale')
+    paths = {p.relative_to(ROOT).as_posix(): p for p in archive_paths()}
+    with zipfile.ZipFile(ROOT / ARCHIVE) as archive:
+        if archive.testzip() is not None or len(archive.namelist()) != len(set(archive.namelist())) or set(archive.namelist()) != set(paths):
+            raise ValueError('ZIP inventory or CRC mismatch')
+        if any(archive.read(name) != path.read_bytes() for name, path in paths.items()):
+            raise ValueError('ZIP bytes mismatch')
+    return dict(releaseManifestSha256=pin, releaseFiles=len(entries), archiveFiles=len(paths), archiveSha256=sha(ROOT / ARCHIVE), zipCRC='PASS', exactInventoryAndBytes='PASS', sevenDeliverables='PASS', skills=16)
+
+
+def verify(start):
+    report = verify_release_archive()
+    names, excluded = coverage(start)
+    entries = verify_hashes(ROOT / REGISTRY, ROOT, sha(ROOT / REGISTRY), names)
+    report.update(changedFiles=len(names) + len(excluded), coveredChangedFiles=len(entries), uncoveredChangedFiles=[], deliberateExclusions=excluded,
+                  changesManifestSha256=sha(ROOT / REGISTRY))
+    return report
+
+
+def self_test():
+    with tempfile.TemporaryDirectory() as temp:
+        base = Path(temp)
+        tree = base / 'release'; tree.mkdir()
+        item = tree / 'item'; item.write_text('reviewed')
+        ledger = base / 'manifest'
+        write(ledger, manifest([item], tree, 'item'), True)
+        pin = sha(ledger)
+        verify_hashes(ledger, tree, pin, ['item'])
+        for mutate in ['tamper', 'extra', 'link', 'mode']:
+            item.write_text('reviewed')
+            if mutate == 'tamper': item.write_text('modified')
+            if mutate == 'extra': (tree / 'extra').write_text('unexpected')
+            if mutate == 'link':
+                item.unlink(); item.symlink_to(ledger)
+            if mutate == 'mode': ledger.chmod(0o644)
+            try:
+                verify_hashes(ledger, tree, pin, [p.relative_to(tree).as_posix() for p in files(tree)])
+            except ValueError:
+                pass
+            else:
+                raise AssertionError('must reject ' + mutate)
+            if item.is_symlink(): item.unlink(); item.write_text('reviewed')
+            (tree / 'extra').unlink(missing_ok=True)
+            ledger.chmod(0o444)
+    return {'selfTest': 'PASS', 'negativeCases': ['tamper', 'extra file', 'symlink', 'writable manifest']}
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', choices=['build', 'verify', 'self-test'])
+    parser.add_argument('--start')
+    args = parser.parse_args()
+    if args.action != 'self-test' and not args.start:
+        parser.error('--start is required')
+    print(json.dumps(self_test() if args.action == 'self-test' else build(args.start) if args.action == 'build' else verify(args.start), indent=2))
