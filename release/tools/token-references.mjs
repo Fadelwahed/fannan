@@ -15,6 +15,11 @@ const valid = {
   fontWeight: value => typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 1000 || typeof value === 'string' && cssWeightKeywords.has(value)
 };
 
+// CODEX-R2-02: component spacing keys that must be CSS lengths (physical and logical sides, row/column gap,
+// inset and scroll padding/margin). A bare 0 is allowed; other numbers need px, rem or em.
+const componentDimensionKey = /^(rounded|gap|rowGap|columnGap)$|^(padding|margin|inset|scrollPadding|scrollMargin)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
+export const isComponentDimensionKey = key => componentDimensionKey.test(key);
+
 function expected(path) {
   const parts = path.split('.'), group = parts[0], key = parts.at(-1);
   if (group === 'colors') return ['color'];
@@ -23,7 +28,7 @@ function expected(path) {
   if (group === 'typography') return ({ fontFamily: ['fontFamily'], fontSize: ['dimension'], fontWeight: ['fontWeight'], letterSpacing: ['dimension'], lineHeight: ['number', 'dimension'] })[key];
   if (group === 'components') {
     if (/color$/i.test(key)) return ['color'];
-    if (/^(rounded|padding|margin|gap)$/.test(key)) return ['dimension'];
+    if (componentDimensionKey.test(key)) return ['dimension'];
   }
 }
 

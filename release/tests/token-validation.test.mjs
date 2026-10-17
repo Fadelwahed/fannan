@@ -45,6 +45,16 @@ test('shared token validation rejects malformed values and incompatible referenc
   assert.equal(inferTokenType('spacing.sm', '8px'), 'dimension');
   assert.equal(inferTokenType('spacing.none', 0), 'dimension');
   assert.doesNotThrow(() => validateTokens({ spacing: { none: leaf('dimension', 0), sm: leaf('dimension', '8px') } }));
+  // CODEX-R2-02: every physical/logical padding*/margin*/inset*/scroll-padding*/scroll-margin* and row/column gap key is a dimension.
+  const spacingKeys = ['paddingTop', 'paddingInline', 'paddingInlineStart', 'paddingBlockEnd', 'marginBlock', 'marginLeft', 'marginInlineEnd', 'rowGap', 'columnGap', 'inset', 'insetInline', 'scrollPadding', 'scrollPaddingBlockStart', 'scrollMargin', 'scrollMarginTop'];
+  for (const key of spacingKeys) {
+    assert.equal(inferTokenType(`components.card.${key}`, 8), undefined, key);
+    assert.equal(inferTokenType(`components.card.${key}`, 0), 'dimension', key);
+    assert.equal(inferTokenType(`components.card.${key}`, '8px'), 'dimension', key);
+    assert.throws(() => validateTokens({ components: { card: { [key]: leaf('number', 8) } } }), /incompatible token type/, key);
+    assert.throws(() => validateTokens({ components: { card: { [key]: leaf('dimension', 8) } } }), /invalid dimension value/, key);
+    assert.doesNotThrow(() => validateTokens({ components: { card: { [key]: leaf('dimension', '8px') } } }), key);
+  }
   for (const keyword of ['normal', 'bold']) assert.doesNotThrow(() => validateTokens({ typography: { body: { fontWeight: leaf('fontWeight', keyword) } } }));
 });
 
@@ -57,6 +67,8 @@ test('CSS build rejects hand-edited malformed token JSON before dependencies or 
       [{ a: { $type: 'bogus', $value: 'x' } }, /unknown token type/],
       [{ typography: { body: { fontWeight: { $type: 'fontWeight', $value: 'semi-bold' } } } }, /invalid fontWeight value/],
       [{ spacing: { sm: { $type: 'number', $value: 8 } } }, /incompatible token type/], // R4-6
+      [{ components: { card: { paddingInline: { $type: 'number', $value: 8 } } } }, /incompatible token type/], // CODEX-R2-02
+      [{ components: { card: { marginBlock: { $type: 'number', $value: 8 } } } }, /incompatible token type/], // CODEX-R2-02
       [{ colors: { primary: { $type: 'color', $value: '#123456' } }, spacing: { sm: { $value: '{colors.primary}' } } }, /incompatible token type/]
     ]) {
       writeFileSync(input, JSON.stringify(tokens));
@@ -97,6 +109,10 @@ test('token conversion validates types, dimensions and references before writing
       ['colors:\n  primary: "#123456"\nspacing:\n  sm: "{colors.primary}"', /incompatible token type/],
       ['spacing:\n  sm: .Inf', /unknown token type/],
       ['spacing:\n  sm: 8', /units required.*spacing\.sm/], // R4-6
+      ['components:\n  card:\n    paddingInline: 8', /units required.*components\.card\.paddingInline/], // CODEX-R2-02
+      ['components:\n  card:\n    paddingTop: 8', /units required.*components\.card\.paddingTop/],
+      ['components:\n  card:\n    marginBlock: 8', /units required.*components\.card\.marginBlock/],
+      ['components:\n  card:\n    rowGap: 8', /units required.*components\.card\.rowGap/],
       ['typography:\n  body:\n    fontWeight: heavy-ish', /unknown token type/]
     ]) {
       const result = convert(yaml);
@@ -132,6 +148,15 @@ test('token conversion validates types, dimensions and references before writing
     for (const [yaml, expected] of [['rounded:\n  sm: 4', /unknown token type.*rounded\.sm/], ['typography:\n  body:\n    fontSize: 16', /units required/], ['breakpoints:\n  desktop: 1440', /units required/]]) {
       const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml);
     }
+    // CODEX-R2-02: converter + real build accept 0 and 8px for logical/physical spacing keys.
+    assert.equal(convert('components:\n  card:\n    paddingInline: 8px\n    paddingTop: 0\n    marginBlock: 1rem\n    rowGap: 0\n    columnGap: 4px').status, 0);
+    const cardTokens = JSON.parse(readFileSync(json, 'utf8')).components.card;
+    for (const key of ['paddingInline', 'paddingTop', 'marginBlock', 'rowGap', 'columnGap']) assert.equal(cardTokens[key].$type, 'dimension', key);
+    const cardCss = join(output, 'card.css');
+    const cardBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, cardCss, 'test'], { env, encoding: 'utf8' });
+    assert.equal(cardBuild.status, 0, cardBuild.stderr);
+    assert.match(readFileSync(cardCss, 'utf8'), /--components-card-padding-inline:\s*8px;/);
+    assert.match(readFileSync(cardCss, 'utf8'), /--components-card-padding-top:\s*0;/);
     for (const [alias, number] of [['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
       assert.equal(convert(`typography:\n  body:\n    fontWeight: ${alias}`).status, 0, alias);
       assert.equal(JSON.parse(readFileSync(json, 'utf8')).typography.body.fontWeight.$value, number, alias);

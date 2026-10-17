@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, resolve, dirname } from 'node:path';
 import { verifiedDeps } from './verify-deps.mjs';
-import { fontWeightAliases, inferTokenType, validateTokens } from './token-references.mjs';
+import { fontWeightAliases, inferTokenType, isComponentDimensionKey, validateTokens } from './token-references.mjs';
 let depsRoot;
 try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, dirname(dirname(fileURLToPath(import.meta.url)))); }
 catch (e) { console.error('designmd-to-sd: dependencies untrusted: ' + e.message); process.exit(2); }
@@ -35,7 +35,7 @@ function token(group, key, v, path) {
   const ty = ref ? undefined : inferTokenType(path, v);
   if (ty) t.$type = ty;
   else if (!ref) {
-    if (typeof v === 'number' && Number.isFinite(v) && (group === 'spacing' || group === 'breakpoints' || group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) errors.push(`units required at ${path}: use px, rem or em`); // R4-6: spacing added
+    if (typeof v === 'number' && Number.isFinite(v) && (group === 'spacing' || group === 'breakpoints' || group === 'components' && isComponentDimensionKey(key) || group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) errors.push(`units required at ${path}: use px, rem or em`); // R4-6: spacing; CODEX-R2-02: component spacing keys
     else errors.push(`unknown token type at ${path}`);
   }
   return t;
