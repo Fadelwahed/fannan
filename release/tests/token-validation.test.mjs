@@ -15,6 +15,8 @@ test('shared token validation rejects malformed values and incompatible referenc
   for (const [tokens, message] of [
     [{ spacing: { sm: leaf('dimension', 16) } }, /invalid dimension value/],
     [{ colors: { primary: leaf('bogus', 'x') } }, /unknown token type/],
+    [{ a: leaf('toString', 'x') }, /unknown token type/],
+    [{ a: { 'bad.key': leaf('bogus', 'x') }, 'a.bad': { key: leaf('number', 1) } }, /ambiguous token name/],
     [{ spacing: { sm: leaf('number', Infinity) } }, /invalid number value/],
     [{ typography: { body: { fontFamily: leaf('fontFamily', []) } } }, /invalid fontFamily value/],
     [{ typography: { body: { fontWeight: leaf('fontWeight', 1001) } } }, /invalid fontWeight value/],

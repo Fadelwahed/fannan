@@ -34,7 +34,10 @@ export function validateTokens(tokens) {
   function scan(value, path = '') {
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error(`invalid token group: ${path}`);
     if ('$value' in value) { leaves.set(path, value); return; }
-    for (const [key, child] of Object.entries(value)) scan(child, path ? `${path}.${key}` : key);
+    for (const [key, child] of Object.entries(value)) {
+      if (key.includes('.')) throw Error(`ambiguous token name: ${key}`);
+      scan(child, path ? `${path}.${key}` : key);
+    }
   }
   scan(tokens);
   function resolve(path, seen = new Set()) {
@@ -44,7 +47,7 @@ export function validateTokens(tokens) {
     seen.add(path);
     const value = token.$value, target = reference(value) ? resolve(value.slice(1, -1), seen) : token;
     const type = token.$type ?? target.$type;
-    if (!valid[type]) throw Error(`unknown token type at ${path}: ${type}`);
+    if (!Object.hasOwn(valid, type)) throw Error(`unknown token type at ${path}: ${type}`);
     const allowed = expected(path);
     if (allowed && !allowed.includes(type)) throw Error(`incompatible token type at ${path}: ${type}`);
     if (token.$type && token.$type !== target.$type) throw Error(`incompatible token reference at ${path}: ${token.$type} vs ${target.$type}`);
