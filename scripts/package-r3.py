@@ -20,10 +20,16 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+NON_PACKAGE = {'__pycache__', 'node_modules', '.git'}  # R8 PORT-04, ported from codex/fannan-r3-review 2733317
+
+
 def files(root):
     paths = sorted(root.rglob('*'))
     if any(p.is_symlink() for p in paths):
         raise ValueError('symlinks are forbidden in package input')
+    bad = [p for p in paths if NON_PACKAGE & set(p.relative_to(root).parts) or p.suffix == '.pyc']
+    if bad:
+        raise ValueError('cache, dependency or git entry in package input: ' + bad[0].relative_to(root).as_posix())
     return [p for p in paths if p.is_file()]
 
 
@@ -129,6 +135,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r6')  # R6 before/after evidence (Argon round 2)
     if (ROOT / 'test-results/r7').is_dir():
         paths += files(ROOT / 'test-results/r7')  # R7 before/after evidence (Codex round 3)
+    if (ROOT / 'test-results/r8').is_dir():
+        paths += files(ROOT / 'test-results/r8')  # R8 before/after evidence (Codex cloud port)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 

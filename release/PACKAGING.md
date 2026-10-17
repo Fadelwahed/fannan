@@ -10,7 +10,7 @@ python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f
 
 Build combines all seven original deliverables with all 16 skill files, enumerates the exact `release/` inventory, generates `trust/MANIFEST.sha256` and its external `PINNED.sha256`, writes deterministic `artifacts/FANNAN-R3.zip`, and checks every ZIP member byte plus CRC. It then records `test-results/r3/package-verification.json` and hashes every changed repository path in `trust/R3-CHANGES.sha256`. That registry includes the release manifest/pin, combined document, ZIP, test logs, package report, script, docs and checkpoint. The report is external to the ZIP to avoid a report/archive self-hash cycle; its bytes are covered by the changes registry. Other evidence and the immutable input/review are inside the archive.
 
-The release manifest covers **all release files with no exclusions**. Its pin must ultimately come from Amin's reviewed approval record/trusted runtime configuration, not a nearby editable file. Candidate hashes are reproducible review evidence, not approval.
+Package input is refused (no manifest, no ZIP) if it holds a symlink or a cache, dependency or Git entry (`__pycache__`, `*.pyc`, `node_modules`, `.git`; R8, ported from the Codex cloud packager), so a stray Python cache can never be hashed into the release. The release manifest covers **all release files with no exclusions**. Its pin must ultimately come from Amin's reviewed approval record/trusted runtime configuration, not a nearby editable file. Candidate hashes are reproducible review evidence, not approval.
 
 For the repository changes registry (CODEX-R2-04, OPUS-R2-03), `scripts/package-r3.py` leaves at most two changed files unhashed:
 

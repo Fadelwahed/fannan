@@ -119,6 +119,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r6/') for n in names), 'R6 evidence is archived like R4/R5')
         if (ROOT / 'test-results/r7').is_dir():
             self.assertTrue(any(n.startswith('test-results/r7/') for n in names), 'R7 evidence is archived like R4-R6')
+        if (ROOT / 'test-results/r8').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r8/') for n in names), 'R8 evidence is archived like R4-R7')
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
     def test_doc_lists_the_exclusions(self):
@@ -127,6 +129,25 @@ class FinalRecordTests(unittest.TestCase):
             self.assertIn(needle, text)
         self.assertNotIn('exactly two', text)
 
+
+
+class PackageInputTests(unittest.TestCase):
+    # R8 PORT-04, ported from codex/fannan-r3-review 2733317 (scripts/build-package.py files_under): caches, dependency
+    # trees and Git metadata inside a packaged tree are refused instead of being hashed into the manifest and the ZIP.
+    def test_files_refuses_cache_dependency_and_git_entries(self):
+        for bad in ['tests/__pycache__/x.cpython-313.pyc', 'tools/stray.pyc', 'node_modules/pkg/index.js', '.git/HEAD']:
+            with tempfile.TemporaryDirectory() as temp:
+                tree = Path(temp) / 'release'
+                (tree / 'tools').mkdir(parents=True)
+                (tree / 'tools/ok.mjs').write_text('ok')
+                self.assertEqual([p.name for p in package.files(tree)], ['ok.mjs'])
+                (tree / bad).parent.mkdir(parents=True, exist_ok=True)
+                (tree / bad).write_bytes(b'x')
+                with self.assertRaisesRegex(ValueError, 'cache, dependency or git entry'):
+                    package.files(tree)
+
+    def test_release_tree_is_clean_now(self):
+        package.files(ROOT / 'release')
 
 if __name__ == '__main__':
     unittest.main()
