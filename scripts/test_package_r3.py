@@ -110,6 +110,15 @@ class FinalRecordTests(unittest.TestCase):
     def test_records_are_not_in_the_zip(self):
         self.assertFalse(any(p.relative_to(ROOT).as_posix().startswith(('reviews/CODEX-', 'reviews/MIMAR-')) for p in package.archive_paths()))
 
+    def test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records(self):
+        # ARGON-R2-08: recipients of the ZIP can rerun the self-test and the non-git package tests; review records stay out.
+        names = {p.relative_to(ROOT).as_posix() for p in package.archive_paths()}
+        self.assertTrue({'scripts/package-r3.py', 'scripts/test_package_r3.py'} <= names)
+        self.assertNotIn('reviews/CODEX-R3-response-f42bc27.md', names)
+        if (ROOT / 'test-results/r6').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r6/') for n in names), 'R6 evidence is archived like R4/R5')
+        self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
+
     def test_doc_lists_the_exclusions(self):
         text = (ROOT / 'release/PACKAGING.md').read_text()
         for needle in ['trust/R3-CHANGES.sha256', 'reviews/MIMAR-R<n>-changes-<sha>.md', 'at most one', 'not in the ZIP', '`reviews/CODEX-R3-response-<sha>.md` is hashed']:
