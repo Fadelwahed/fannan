@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { config } from '../runtime/sd.config.mjs';
 import { verifiedDeps } from './verify-deps.mjs';
-import { validateReferences } from './token-references.mjs';
+import { validateTokens } from './token-references.mjs';
 
 const [, , input, output, project] = process.argv;
 if (!input || !output || !project || !process.env.FANNAN_DEPS) {
@@ -18,7 +18,7 @@ if (major < 22 || (major === 22 && minor < 12)) { console.error('Node 22.12+ req
 const here = dirname(fileURLToPath(import.meta.url));
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const tokens = JSON.parse(readFileSync(input, 'utf8'));
-validateReferences(tokens);
+validateTokens(tokens);
 const depsRoot = verifiedDeps(process.env.FANNAN_DEPS, join(here, '..'));
 const modulePath = join(depsRoot, 'node_modules/style-dictionary/lib/StyleDictionary.js');
 const { default: StyleDictionary } = await import(pathToFileURL(modulePath).href);

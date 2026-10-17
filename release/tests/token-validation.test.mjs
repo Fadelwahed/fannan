@@ -5,15 +5,56 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { inferTokenType, validateTokens } from '../tools/token-references.mjs';
 
 const release = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const deps = resolve(release, '../runtime-deps');
 
-test('token conversion validates types, dimensions and references before writing', () => {
+test('shared token validation rejects malformed values and incompatible references', () => {
+  const leaf = ($type, $value) => ({ $type, $value });
+  for (const [tokens, message] of [
+    [{ spacing: { sm: leaf('dimension', 16) } }, /invalid dimension value/],
+    [{ colors: { primary: leaf('bogus', 'x') } }, /unknown token type/],
+    [{ spacing: { sm: leaf('number', Infinity) } }, /invalid number value/],
+    [{ typography: { body: { fontFamily: leaf('fontFamily', []) } } }, /invalid fontFamily value/],
+    [{ typography: { body: { fontWeight: leaf('fontWeight', 1001) } } }, /invalid fontWeight value/],
+    [{ typography: { body: { fontWeight: leaf('fontWeight', 'heavy-ish') } } }, /invalid fontWeight value/],
+    [{ colors: { primary: leaf('color', '#123456') }, spacing: { sm: { $value: '{colors.primary}' } } }, /incompatible token type/],
+    [{ colors: { primary: { $value: '{colors.missing}' } } }, /missing token reference/],
+    [{ colors: { primary: { $value: '{colors.primary}' } } }, /cyclic token reference/],
+    [{ colors: { primary: { $value: '{colors.secondary}' }, secondary: { $value: '{colors.primary}' } } }, /cyclic token reference/]
+  ]) assert.throws(() => validateTokens(tokens), message);
+  assert.equal(inferTokenType('typography.body.fontFamily', ['Inter', 'sans-serif']), 'fontFamily');
+  assert.equal(inferTokenType('typography.body.lineHeight', '150%'), 'dimension');
+  assert.equal(inferTokenType('typography.body.fontWeight', 'heavy-ish'), undefined);
+  assert.equal(inferTokenType('components.button.label', 'mysterious'), undefined);
+  assert.doesNotThrow(() => validateTokens({ typography: { body: { fontFamily: leaf('fontFamily', ['Inter', 'sans-serif']), lineHeight: leaf('dimension', '150%'), fontWeight: leaf('fontWeight', 700) } } }));
+});
+
+test('CSS build rejects hand-edited malformed token JSON before dependencies or writes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'fannan-build-boundary-'));
+  try {
+    const input = join(root, 'tokens.json'), output = join(root, 'variables.css');
+    for (const [tokens, message] of [
+      [{ a: { $type: 'dimension', $value: 16 } }, /invalid dimension value/],
+      [{ a: { $type: 'bogus', $value: 'x' } }, /unknown token type/],
+      [{ colors: { primary: { $type: 'color', $value: '#123456' } }, spacing: { sm: { $value: '{colors.primary}' } } }, /incompatible token type/]
+    ]) {
+      writeFileSync(input, JSON.stringify(tokens));
+      const result = spawnSync(process.execPath, [join(release, 'tools/sd-build.mjs'), input, output, 'test'], { env: { FANNAN_DEPS: '/opt/fannan/deps' }, encoding: 'utf8' });
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, message);
+      assert.equal(existsSync(output), false);
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('token conversion validates types, dimensions and references before writing', { skip: !existsSync(join(deps, 'node_modules')) && 'existing runtime dependencies absent' }, () => {
   const root = mkdtempSync(join(tmpdir(), 'fannan-tokens-'));
   try {
     const tools = join(root, 'tools'), output = join(root, 'design-output/test');
     cpSync(join(release, 'tools'), tools, { recursive: true });
+    writeFileSync(join(tools, 'verify-deps.mjs'), "export const verifiedDeps = prefix => prefix;\n"); // Isolated fixture only; production verifier remains intact.
     mkdirSync(join(root, 'runtime'), { recursive: true });
     cpSync(join(release, 'runtime/dependency-trust.json'), join(root, 'runtime/dependency-trust.json'));
     cpSync(join(release, 'runtime/package-lock.json'), join(root, 'runtime/package-lock.json'));
@@ -33,7 +74,10 @@ test('token conversion validates types, dimensions and references before writing
       ['breakpoints:\n  desktop: 1440', /units required.*breakpoints\.desktop/],
       ['colors:\n  primary: "{colors.missing}"', /missing token reference/],
       ['colors:\n  primary: "{colors.primary}"', /cyclic token reference/],
-      ['colors:\n  primary: "{colors.secondary}"\n  secondary: "{colors.primary}"', /cyclic token reference/]
+      ['colors:\n  primary: "{colors.secondary}"\n  secondary: "{colors.primary}"', /cyclic token reference/],
+      ['colors:\n  primary: "#123456"\nspacing:\n  sm: "{colors.primary}"', /incompatible token type/],
+      ['spacing:\n  sm: .Inf', /unknown token type/],
+      ['typography:\n  body:\n    fontWeight: heavy-ish', /unknown token type/]
     ]) {
       const result = convert(yaml);
       assert.notEqual(result.status, 0, yaml);
@@ -46,9 +90,26 @@ test('token conversion validates types, dimensions and references before writing
     assert.equal(tokens.typography.body.fontSize.$type, 'dimension');
     assert.equal(tokens.typography.body.lineHeight.$type, 'number');
     assert.equal(tokens.colors.link.$type, undefined);
+    assert.equal(convert('typography:\n  body:\n    fontFamily: [Inter, sans-serif]\n    fontWeight: semi-bold\n    lineHeight: "150%"').status, 0);
+    const familyTokens = JSON.parse(readFileSync(json, 'utf8'));
+    assert.deepEqual(familyTokens.typography.body.fontFamily.$value, ['Inter', 'sans-serif']);
+    assert.equal(familyTokens.typography.body.fontWeight.$type, 'fontWeight');
+    assert.equal(familyTokens.typography.body.lineHeight.$value, '150%');
+    assert.equal(convert('colors:\n  primary: "#123456"\ntypography:\n  body:\n    fontSize: 16px').status, 0);
     const css = join(output, 'variables.css');
     const built = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, css, 'test'], { env, encoding: 'utf8' });
     assert.equal(built.status, 0, built.stderr);
     assert.match(readFileSync(css, 'utf8'), /--typography-body-font-size:\s*16px/);
+    for (const [tokens, message] of [
+      [{ spacing: { sm: { $value: 16, $type: 'dimension' } } }, /invalid dimension value/],
+      [{ colors: { primary: { $value: 'x', $type: 'bogus' } } }, /unknown token type/]
+    ]) {
+      rmSync(css, { force: true });
+      writeFileSync(json, JSON.stringify(tokens));
+      const result = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, css, 'test'], { env, encoding: 'utf8' });
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, message);
+      assert.equal(existsSync(css), false);
+    }
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

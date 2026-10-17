@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, resolve, dirname } from 'node:path';
 import { verifiedDeps } from './verify-deps.mjs';
-import { validateReferences } from './token-references.mjs';
+import { inferTokenType, validateTokens } from './token-references.mjs';
 let depsRoot;
 try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, dirname(dirname(fileURLToPath(import.meta.url)))); }
 catch (e) { console.error('designmd-to-sd: dependencies untrusted: ' + e.message); process.exit(2); }
@@ -27,31 +27,16 @@ if (!fm || typeof fm !== 'object' || Array.isArray(fm)) die('frontmatter must be
 
 const warnings = [];
 const errors = [];
-const TYPO_TYPE = { fontFamily: 'fontFamily', fontSize: 'dimension', lineHeight: 'number', letterSpacing: 'dimension', fontWeight: 'fontWeight' };
-const dimension = v => typeof v === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(v);
 const color = v => typeof v === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(v));
-
-function typeFor(group, key, v, path) {
-  if (typeof v === 'string' && /^\{[^{}]+\}$/.test(v)) return undefined; // reference: type comes from target
-  if (group === 'colors') return color(v) ? 'color' : undefined;
-  if (group === 'breakpoints' || (group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) {
-    if (typeof v === 'number') errors.push(`units required at ${path}: use px, rem or em`);
-    return dimension(v) ? 'dimension' : undefined;
-  }
-  if (group === 'typography' && TYPO_TYPE[key]) {
-    if (key === 'lineHeight') return dimension(v) ? 'dimension' : typeof v === 'number' ? 'number' : undefined;
-    return (key === 'fontFamily' ? typeof v === 'string' : typeof v === 'string' || typeof v === 'number') ? TYPO_TYPE[key] : undefined;
-  }
-  if (dimension(v)) return 'dimension';
-  if (color(v)) return 'color';
-  if (typeof v === 'number') return 'number';
-  return undefined;
-}
 function token(group, key, v, path) {
   const t = { $value: v };
-  const ty = typeFor(group, key, v, path);
+  const ref = typeof v === 'string' && /^\{[^{}]+\}$/.test(v);
+  const ty = ref ? undefined : inferTokenType(path, v);
   if (ty) t.$type = ty;
-  else if (!(typeof v === 'string' && /^\{[^{}]+\}$/.test(v))) errors.push(`unknown token type at ${path}`);
+  else if (!ref) {
+    if (typeof v === 'number' && (group === 'breakpoints' || group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) errors.push(`units required at ${path}: use px, rem or em`);
+    else errors.push(`unknown token type at ${path}`);
+  }
   return t;
 }
 function wrap(group, obj, path) {
@@ -78,7 +63,7 @@ for (const g of ['colors', 'rounded', 'spacing', 'breakpoints', 'typography', 'c
 }
 if (errors.length) { for (const e of errors) console.error(`designmd-to-sd: error: ${e}`); process.exit(3); }
 if (!Object.keys(tok).length) die('no token groups found (colors, rounded, spacing, breakpoints, typography, components)');
-try { validateReferences(tok); } catch (e) { die(e.message, 3); }
+try { validateTokens(tok); } catch (e) { die(e.message, 3); }
 execFileSync(join(dirname(fileURLToPath(import.meta.url)), 'safe-write.sh'), [project, resolve(out)], { input: JSON.stringify(tok, null, 1) + '\n', encoding: 'utf8' });
 for (const w of warnings) console.error(`designmd-to-sd: warning: ${w}`);
 console.log(`designmd-to-sd: wrote ${out} (${Object.keys(tok).join(', ')})`);
