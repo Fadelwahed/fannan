@@ -1,5 +1,20 @@
 # Changelog and round-5 P1 disposition
 
+## R4 fixes (Mi'mar, branch `mimar-r4-fixes`, 17 October 2026)
+
+Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `grok-review`). Local review candidate only; live installation remains BLOCKED.
+
+| ID | Change | Test (fails before, passes after) |
+|---|---|---|
+| R4-1 | DTCG font-weight aliases (thin … ultra-black) are converted to numbers in `tools/designmd-to-sd.mjs`; shared validation in `tools/token-references.mjs` now accepts only 1–1000, `normal` and `bold`, so no raw alias reaches CSS (hand-edited JSON is rejected by `sd-build.mjs`). | `tests/token-validation.test.mjs` |
+| R4-2 | A unitless `0` is accepted as a dimension (emitted as `0`); every other unitless dimension still fails ("units required" / "unknown token type"). Restores d2c36c1 caller compatibility for `rounded`/`padding`/`margin`/`gap: 0`. | `tests/token-validation.test.mjs` |
+| R4-3 | New `focusSettle` waits (capped 1 s) for finite transitions on the focused element and ancestors before reading; `focusStyleProbe` ignores colour-only changes below 3:1 between states and changes to unrendered outline/border/decoration/pseudo-elements. Both checker tab loops call it. Manual focus evidence stays mandatory. | `tests/focus-screen.test.mjs`; real-Chrome probe in `test-results/r4/` |
+| R4-4 | The checker refuses a browser whose `Browser.version()` differs from the reviewed pin; `runtime/browser-trust.json` now requires `supportTreeSha256`, verified over the executable's own directory by `tools/executable-trust.mjs`. The pin stays BLOCKED. | `tests/host-trust.test.mjs`, `tests/checker-boundaries.test.mjs` |
+| R4-5 | `scripts/package-r3.py verify --registry-sha256 <digest>` anchors the changed-file registry externally (checked first); `PACKAGING.md` documents `chmod 0444` for both trust files. | `scripts/test_package_r3.py` |
+
+R4-6 (unitless spacing numbers) is deliberately unchanged, pending Fadel's decision.
+
+
 The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.
 
 | Round-5 P1 | Candidate change | Evidence / closure test | Honest disposition |

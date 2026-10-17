@@ -561,6 +561,21 @@ Source: `release/CHANGELOG.md`
 
 # Changelog and round-5 P1 disposition
 
+## R4 fixes (Mi'mar, branch `mimar-r4-fixes`, 17 October 2026)
+
+Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `grok-review`). Local review candidate only; live installation remains BLOCKED.
+
+| ID | Change | Test (fails before, passes after) |
+|---|---|---|
+| R4-1 | DTCG font-weight aliases (thin … ultra-black) are converted to numbers in `tools/designmd-to-sd.mjs`; shared validation in `tools/token-references.mjs` now accepts only 1–1000, `normal` and `bold`, so no raw alias reaches CSS (hand-edited JSON is rejected by `sd-build.mjs`). | `tests/token-validation.test.mjs` |
+| R4-2 | A unitless `0` is accepted as a dimension (emitted as `0`); every other unitless dimension still fails ("units required" / "unknown token type"). Restores d2c36c1 caller compatibility for `rounded`/`padding`/`margin`/`gap: 0`. | `tests/token-validation.test.mjs` |
+| R4-3 | New `focusSettle` waits (capped 1 s) for finite transitions on the focused element and ancestors before reading; `focusStyleProbe` ignores colour-only changes below 3:1 between states and changes to unrendered outline/border/decoration/pseudo-elements. Both checker tab loops call it. Manual focus evidence stays mandatory. | `tests/focus-screen.test.mjs`; real-Chrome probe in `test-results/r4/` |
+| R4-4 | The checker refuses a browser whose `Browser.version()` differs from the reviewed pin; `runtime/browser-trust.json` now requires `supportTreeSha256`, verified over the executable's own directory by `tools/executable-trust.mjs`. The pin stays BLOCKED. | `tests/host-trust.test.mjs`, `tests/checker-boundaries.test.mjs` |
+| R4-5 | `scripts/package-r3.py verify --registry-sha256 <digest>` anchors the changed-file registry externally (checked first); `PACKAGING.md` documents `chmod 0444` for both trust files. | `scripts/test_package_r3.py` |
+
+R4-6 (unitless spacing numbers) is deliberately unchanged, pending Fadel's decision.
+
+
 The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.
 
 | Round-5 P1 | Candidate change | Evidence / closure test | Honest disposition |
@@ -733,6 +748,14 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R4 additions (Mi'mar, 17 October 2026)
+
+- **R4-3 focus screen:** checked in real Chrome 154 headless on Mi'mar's box (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). Colours are composited over white, so a translucent focus background on a dark page can be under-measured (false fail, never a false pass relative to R3). The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
+- **R4-4 browser support tree:** `supportTreeDigest` was checked on unit fixtures and as a stability probe on the box's stock `/opt/google/chrome` (non-protected mode). Protected mode correctly refuses that stock install (owner-writable files). A provisioned root-owned read-only browser directory under `/opt/fannan/bin/` is UNTESTED (none exists); a setuid `chrome-sandbox` would need mode 4555, not 4755.
+- **Positive path of the launcher's protected-storage check:** still UNTESTED (needs a root-owned `/opt/fannan/bin`).
+- **R4-6 unitless spacing:** unchanged; awaiting Fadel's decision.
+
+
 Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs are historical, not R3 PASS. The final branch response quotes every command/count and each failure. Expected rejection, SKIP, blocked prerequisite and actual PASS are distinct.
 
 - **Dependency-backed converter/build success and browser fixture: BLOCKED.** No complete existing runtime-deps tree is available. Offline-only locked restore failed ENOTCACHED for zwitch-2.0.4; no network install ran. Pure validator and malformed-token build subprocess regressions run. Family-array/percentage line-height success through real Style Dictionary remains untested.
@@ -754,6 +777,26 @@ Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
 
+## R4 executed verification (Mi'mar's box, 17 October 2026)
+
+Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. Not the target bot host. Node runs used an existing locked dependency tree (lock sha256 `55a645b1…8710`, matches the pin) copied in as **test evidence only**; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP | `test-results/r4/node.log` |
+| same, without deps | 0 | 18 PASS, 0 FAIL, 1 SKIP (dependency-backed conversion) | `test-results/r4/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS, 0 SKIP (Linux runs the GNU/openat2 cases) | `test-results/r4/python.log` |
+| `node --test revisions/r2/release/tests/*.test.mjs` | 0 | 4 PASS | `test-results/r4/r2-node.log` |
+| `python3 -B revisions/r2/release/tests/test_guard_tools.py -v` | 0 | 4 PASS | `test-results/r4/r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 3 PASS | `test-results/r4/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS (tamper, extra, symlink, writable) | `test-results/r4/package-self-test.log` |
+| Node 20.19.2 `node --test release/tests/*.test.mjs` | 1 | 17 PASS, 2 FAIL: sd-build refuses Node < 22.12 by design (Node 22 is a hard prerequisite) | `test-results/r4/node20.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | 0 failures | `test-results/r4/syntax.log` |
+| Before/after per finding | — | each R4 test fails on the pre-fix code and passes after | `test-results/r4/R4-*-before*.log`, `R4-*-after.log` |
+
+The package build/verify, GNU `verify-manifest.sh` and coverage results are recorded in `reviews/MIMAR-R4-changes-*.md` (written after the package freeze).
+
+
 **Overall: local unit/syntax/content/package checks pass with explicit skips; dependency-backed fixtures and live readiness remain BLOCKED.** This is Darwin/macOS with Node v22.22.3 and Python 3.15.0, not the independent review's Linux box or a proven live bot host. Exact commands and complete stdout/stderr are committed in `test-results/r3/` and repeated in the final `reviews/CODEX-R3-response-*.md`. R2 evidence elsewhere is historical.
 
 | Exact command (globs expanded) | Exit | Observed result | Full output |
@@ -765,7 +808,7 @@ Source: `release/VERIFICATION.md`
 | `node release/tests/local-fixture.mjs` | 2 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/browser-fixture.log` |
 | `node /private/tmp/fannan-r2-suites-fof65rhb/release/tests/local-fixture.mjs` | 1 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/r2-browser-fixture.log` |
 | `python3 -B scripts/package-r3.py self-test` | 0 | PASS; four negative tamper/inventory/link/mode cases rejected | `test-results/r3/package-self-test.log` |
-| `git diff --check` | 0 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/diff-check.log` |
+| `git diff --check` | 0 | PASS: no whitespace errors (R4 correction: this row previously repeated the fixture BLOCKED text by mistake) | `test-results/r3/diff-check.log` |
 
 Current R3 totals: **Node 13 PASS / 0 FAIL / 1 SKIP; Python 6 PASS / 0 FAIL / 4 SKIP**. Historical R2 rerun: Node 4 PASS; Python 3 PASS / 1 SKIP. Combined unit suites: **26 PASS / 0 FAIL / 6 SKIP**. The package self-check is separate, with four meaningful negative cases. Two browser-fixture commands are blocked, not counted as unit passes. The archived fixture is copied unchanged into an isolated temporary tree before running because its historical runner removes its own evidence folder; no archived/source bytes were changed.
 

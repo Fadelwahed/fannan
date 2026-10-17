@@ -95,6 +95,11 @@ def coverage(start):
     responses = [name for name in names if name.startswith('reviews/CODEX-R3-response-') and name.endswith('.md')]
     if len(responses) > 1:
         raise ValueError('expected only one final response')
+    # R4: Mi'mar's round record is likewise the required last commit after the package freeze.
+    changes = [name for name in names if name.startswith('reviews/MIMAR-R4-changes-') and name.endswith('.md')]
+    if len(changes) > 1:
+        raise ValueError('expected only one final R4 changes record')
+    responses += changes
     excluded = {REGISTRY: 'self hash cannot be embedded in its own manifest'}
     excluded.update({name: 'required last response commit follows code/package freeze; Git commit records its bytes' for name in responses})
     return [name for name in names if name not in excluded], {name: reason for name, reason in excluded.items() if name in names}
@@ -104,6 +109,8 @@ def archive_paths():
     paths = files(ROOT / 'release') + files(ROOT / 'input')
     paths += [ROOT / name for name in ['trust/MANIFEST.sha256', 'trust/PINNED.sha256', 'FANNAN-REWRITE.md', 'ORIGINAL-ASSIGNMENT.md', 'GROK-HANDOFF.md', 'CLOUD-HANDOFF.md', 'reviews/GROK-R3-d2c36c1.md']]
     paths += [p for p in files(ROOT / 'test-results/r3') if p.relative_to(ROOT).as_posix() != REPORT]
+    if (ROOT / 'test-results/r4').is_dir():
+        paths += files(ROOT / 'test-results/r4')  # R4 before/after evidence
     return sorted(paths)
 
 

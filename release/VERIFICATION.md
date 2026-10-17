@@ -1,5 +1,25 @@
 # R3 executed verification — 17 October 2026
 
+## R4 executed verification (Mi'mar's box, 17 October 2026)
+
+Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. Not the target bot host. Node runs used an existing locked dependency tree (lock sha256 `55a645b1…8710`, matches the pin) copied in as **test evidence only**; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP | `test-results/r4/node.log` |
+| same, without deps | 0 | 18 PASS, 0 FAIL, 1 SKIP (dependency-backed conversion) | `test-results/r4/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS, 0 SKIP (Linux runs the GNU/openat2 cases) | `test-results/r4/python.log` |
+| `node --test revisions/r2/release/tests/*.test.mjs` | 0 | 4 PASS | `test-results/r4/r2-node.log` |
+| `python3 -B revisions/r2/release/tests/test_guard_tools.py -v` | 0 | 4 PASS | `test-results/r4/r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 3 PASS | `test-results/r4/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS (tamper, extra, symlink, writable) | `test-results/r4/package-self-test.log` |
+| Node 20.19.2 `node --test release/tests/*.test.mjs` | 1 | 17 PASS, 2 FAIL: sd-build refuses Node < 22.12 by design (Node 22 is a hard prerequisite) | `test-results/r4/node20.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | 0 failures | `test-results/r4/syntax.log` |
+| Before/after per finding | — | each R4 test fails on the pre-fix code and passes after | `test-results/r4/R4-*-before*.log`, `R4-*-after.log` |
+
+The package build/verify, GNU `verify-manifest.sh` and coverage results are recorded in `reviews/MIMAR-R4-changes-*.md` (written after the package freeze).
+
+
 **Overall: local unit/syntax/content/package checks pass with explicit skips; dependency-backed fixtures and live readiness remain BLOCKED.** This is Darwin/macOS with Node v22.22.3 and Python 3.15.0, not the independent review's Linux box or a proven live bot host. Exact commands and complete stdout/stderr are committed in `test-results/r3/` and repeated in the final `reviews/CODEX-R3-response-*.md`. R2 evidence elsewhere is historical.
 
 | Exact command (globs expanded) | Exit | Observed result | Full output |
@@ -11,7 +31,7 @@
 | `node release/tests/local-fixture.mjs` | 2 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/browser-fixture.log` |
 | `node /private/tmp/fannan-r2-suites-fof65rhb/release/tests/local-fixture.mjs` | 1 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/r2-browser-fixture.log` |
 | `python3 -B scripts/package-r3.py self-test` | 0 | PASS; four negative tamper/inventory/link/mode cases rejected | `test-results/r3/package-self-test.log` |
-| `git diff --check` | 0 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/diff-check.log` |
+| `git diff --check` | 0 | PASS: no whitespace errors (R4 correction: this row previously repeated the fixture BLOCKED text by mistake) | `test-results/r3/diff-check.log` |
 
 Current R3 totals: **Node 13 PASS / 0 FAIL / 1 SKIP; Python 6 PASS / 0 FAIL / 4 SKIP**. Historical R2 rerun: Node 4 PASS; Python 3 PASS / 1 SKIP. Combined unit suites: **26 PASS / 0 FAIL / 6 SKIP**. The package self-check is separate, with four meaningful negative cases. Two browser-fixture commands are blocked, not counted as unit passes. The archived fixture is copied unchanged into an isolated temporary tree before running because its historical runner removes its own evidence folder; no archived/source bytes were changed.
 
