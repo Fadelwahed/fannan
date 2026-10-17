@@ -15,7 +15,7 @@ import { localAsset } from './local-file-boundary.mjs';
 import { copySignals } from './copy-signals.mjs';
 import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
-import { spacingProbe } from './spacing-scale.mjs';
+import { spacingProbe, approvedSpacing } from './spacing-scale.mjs';
 import { designProbe } from './design-probe.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
@@ -45,6 +45,10 @@ try { handoff = JSON.parse(readFileSync(handoffPath, 'utf8')); ev.checks.contrac
 catch (e) { ev.checks.contract = { errors: [`handoff JSON cannot be read: ${e.message}`] }; }
 ev.checks.contract.pass = ev.checks.contract.errors.length === 0;
 if (!ev.checks.contract.pass) fail = true;
+// CODEX-R3-02: the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.
+const approvedScale = approvedSpacing(handoff);
+ev.checks.spacingTokens = { source: approvedScale.source ?? null, values: approvedScale.values, error: approvedScale.error, pass: !approvedScale.error };
+if (phase === 'handoff' && !ev.checks.spacingTokens.pass) fail = true;
 // 1 lint
 try {
   const r = execFileSync(process.execPath, [join(depsRoot, 'node_modules/@google/design.md/dist/index.js'), 'lint', designMd], { encoding: 'utf8' });
@@ -97,7 +101,7 @@ const copyProbe = (page, st) => page.evaluate(({ slots, lang, dir }) => {
   }
   return { errors, pass: errors.length === 0 };
 }, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });
-const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe) }; // OPUS-R2-10
+const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
 Object.assign(design, copySignals(design.visibleText, design.headlines));
 delete design.visibleText; delete design.headlines;
 ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design.typeSizes.length <= q.typeSizes && design.accentRatio !== null && design.accentRatio <= q.accentAreaRatioFullPage && design.accentViewportRatio !== null && design.accentViewportRatio <= q.accentAreaRatioViewport)) && !design.heroGradient && design.glass <= q.stockGlass && design.iconRows <= q.centeredThreeIconRows && !design.purpleBlue && !design.filler && !design.ruleOfThree && (phase === 'wireframe' || !design.placeholders) && (phase === 'wireframe' || design.spacingOffScale.length <= q.spacingOffScale) && design.h1 === 1 };
@@ -147,7 +151,7 @@ if (phase === 'handoff' && handoff?.screens) {
       const renderedSha256 = digest(frameBytes);
       await p.addScriptTag({ content: axeSrc });
       const a = await p.evaluate(async () => axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] }, rules: { 'target-size': { enabled: true } } }));
-      const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe) }; // OPUS-R2-10
+      const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
       Object.assign(d, copySignals(d.visibleText, d.headlines));
       delete d.visibleText; delete d.headlines;
       const doc = await p.evaluate(() => ({ lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction, height: document.documentElement.scrollHeight }));
