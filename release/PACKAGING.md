@@ -12,7 +12,15 @@ Build combines all seven original deliverables with all 16 skill files, enumerat
 
 The release manifest covers **all release files with no exclusions**. Its pin must ultimately come from Amin's reviewed approval record/trusted runtime configuration, not a nearby editable file. Candidate hashes are reproducible review evidence, not approval.
 
-For the repository changes registry there are exactly two deliberate categories of exclusions: the registry itself (no file can contain its own SHA-256), and the single required final `reviews/CODEX-R3-response-<last-code-SHA>.md` added after code/package freeze. Git records that response commit; it quotes the registry digest. Multiple final response files are rejected. No implementation, test, evidence, generated document or ZIP is excluded from repository coverage. The final response is external to the ZIP for the same required-last-commit ordering.
+For the repository changes registry, exactly these files are deliberately excluded (CODEX-R2-04), and each limit is enforced by `scripts/package-r3.py`:
+
+| Excluded file | Limit | Why |
+|---|---|---|
+| `trust/R3-CHANGES.sha256` | the registry itself | no file can contain its own SHA-256; anchor it with `--registry-sha256` |
+| `reviews/CODEX-R3-response-<sha>.md` | one file; a second one fails | Codex's required final response, committed after the R3 freeze |
+| `reviews/MIMAR-R<n>-changes-<sha>.md` | one file per round `<n>`; a second file for the same round fails; only this exact name pattern | Mi'mar's required final record for round `<n>`, committed after that round's freeze |
+
+Git records those commits, and each record quotes the registry digest. No implementation, test, evidence, generated document or ZIP is excluded from repository coverage. These records are not in the ZIP (they are written after the freeze, so the archive cannot contain them).
 
 After final commit, compare the actual committed paths (the verifier uses the same diff plus any untracked paths, making it stricter while editing). A clone does not keep the 0444 modes, and the verifier requires **both** generated trust files to be read-only, so set them first (no bytes change):
 
@@ -43,4 +51,3 @@ git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'
 ```
 
 It must exit 0. The full-range result, including the raw logs, is recorded separately in the round's evidence and is not claimed as clean.
-

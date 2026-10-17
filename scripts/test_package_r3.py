@@ -64,5 +64,35 @@ class WhitespacePolicyTests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
 
 
+class FinalRecordTests(unittest.TestCase):
+    """CODEX-R2-04: allowed final records, one-file limits and ZIP exclusion are implemented and documented."""
+    def coverage_for(self, names):
+        saved = package.changed
+        package.changed = lambda start: sorted(names)
+        try:
+            return package.coverage('start')
+        finally:
+            package.changed = saved
+
+    def test_one_record_per_round_is_excluded_and_duplicates_fail(self):
+        covered, excluded = self.coverage_for(['release/x', 'trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-aaa.md', 'reviews/MIMAR-R4-changes-bbb.md', 'reviews/MIMAR-R5-changes-ccc.md'])
+        self.assertEqual(covered, ['release/x'])
+        self.assertEqual(set(excluded), {'trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-aaa.md', 'reviews/MIMAR-R4-changes-bbb.md', 'reviews/MIMAR-R5-changes-ccc.md'})
+        with self.assertRaisesRegex(ValueError, 'one final record per round'):
+            self.coverage_for(['reviews/MIMAR-R5-changes-ccc.md', 'reviews/MIMAR-R5-changes-ddd.md'])
+        with self.assertRaisesRegex(ValueError, 'only one final response'):
+            self.coverage_for(['reviews/CODEX-R3-response-a.md', 'reviews/CODEX-R3-response-b.md'])
+        covered, _ = self.coverage_for(['reviews/MIMAR-notes.md', 'reviews/MIMAR-R5-changes.md'])
+        self.assertEqual(sorted(covered), sorted(['reviews/MIMAR-notes.md', 'reviews/MIMAR-R5-changes.md']), 'only exact record names are excluded')
+
+    def test_records_are_not_in_the_zip(self):
+        self.assertFalse(any(p.relative_to(ROOT).as_posix().startswith(('reviews/CODEX-', 'reviews/MIMAR-')) for p in package.archive_paths()))
+
+    def test_doc_lists_every_allowed_final_record(self):
+        text = (ROOT / 'release/PACKAGING.md').read_text()
+        for needle in ['trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-<sha>.md', 'reviews/MIMAR-R<n>-changes-<sha>.md', 'one file per round', 'not in the ZIP']:
+            self.assertIn(needle, text)
+
+
 if __name__ == '__main__':
     unittest.main()

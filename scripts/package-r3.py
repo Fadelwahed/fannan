@@ -95,11 +95,17 @@ def coverage(start):
     responses = [name for name in names if name.startswith('reviews/CODEX-R3-response-') and name.endswith('.md')]
     if len(responses) > 1:
         raise ValueError('expected only one final response')
-    # R4: Mi'mar's round record is likewise the required last commit after the package freeze.
-    changes = [name for name in names if name.startswith('reviews/MIMAR-R4-changes-') and name.endswith('.md')]
-    if len(changes) > 1:
-        raise ValueError('expected only one final R4 changes record')
-    responses += changes
+    # Mi'mar's per-round records (reviews/MIMAR-R<n>-changes-<sha>.md) are each the required last commit of their
+    # round, after that round's package freeze; at most one file per round (CODEX-R2-04).
+    import re
+    rounds = {}
+    for name in names:
+        match = re.fullmatch(r'reviews/MIMAR-R(\d+)-changes-[0-9a-f]+\.md', name)
+        if match:
+            rounds.setdefault(match.group(1), []).append(name)
+    if any(len(records) > 1 for records in rounds.values()):
+        raise ValueError('expected one final record per round')
+    responses += [records[0] for records in rounds.values()]
     excluded = {REGISTRY: 'self hash cannot be embedded in its own manifest'}
     excluded.update({name: 'required last response commit follows code/package freeze; Git commit records its bytes' for name in responses})
     return [name for name in names if name not in excluded], {name: reason for name, reason in excluded.items() if name in names}
