@@ -214,3 +214,10 @@ test('token conversion validates types, dimensions and references before writing
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces', () => {
+  const skill = readFileSync(join(release, 'skills/stitch-design-md/SKILL.md'), 'utf8');
+  assert.match(skill, /every spacing, rounded, breakpoint and component size token carries `px`, `rem` or `em`/);
+  assert.match(skill, /only `0` may be bare/);
+  assert.match(skill, /\{typography\.<name>\}/, 'composite component typography reference documented (OPUS-R2-04)');
+});
