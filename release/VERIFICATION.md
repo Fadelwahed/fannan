@@ -1,5 +1,31 @@
 # R3 executed verification — 17 October 2026
 
+## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM Gaza)
+
+Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accent colour measured through a page element). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 54 PASS, 0 FAIL | `test-results/r9/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 41 PASS, 0 FAIL | `test-results/r9/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 48 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7/R8) | `test-results/r9/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r9/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r9/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 18 PASS | `test-results/r9/package-tests-git.log` |
+| same, no-git copy | 0 | 15 PASS | `test-results/r9/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r9/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r9/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r9/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 13 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs` exit 0. Browser, contract, spacing, desktop widths (1440 + 320 reflow, page and state) and state checks run and pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r9/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r9/CODEX-R4-0{1,2,3,4}-before.log` / `-after.log` and `R9-accent-sibling-before.log` / `-after.log`.
+
 ## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM Gaza)
 
 Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network.

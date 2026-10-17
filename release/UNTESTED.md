@@ -1,8 +1,15 @@
 # R3 checks not established
 
+## R9 additions (Mi'mar, 18 October 2026, Codex round 4)
+
+- **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.
+- **Accent colour (R9 sibling):** normalised by a detached canvas. Chrome 155 only; colour spaces beyond sRGB (oklch outside sRGB) may round differently from computed backgrounds. UNTESTED.
+- **Package build (CODEX-R4-01):** atomic replace was tested on the box's local filesystem only; a crash between the four output renames can still leave a mix of old and new outputs (each file is whole). `verify` detects that mix.
+- **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM Gaza).
+
 ## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
 
-- **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
+- **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, text that actually overflows a hidden or clipped box (ellipsis styling on text that fits is not a failure, CODEX-R4-04), and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
 - **Install wording (PORT-03):** documentation only. Token scope proof, the daily-check freshness/escalation, the dedicated runtime identity and the detector at `/opt/fannan/bin` are still UNTESTED on any host; nothing was provisioned.
 - **Package input (PORT-04):** caches, dependency trees and Git metadata inside packaged trees are refused (unit-tested with temporary trees); the live build ran on a clean tree.
 

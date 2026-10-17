@@ -121,6 +121,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r7/') for n in names), 'R7 evidence is archived like R4-R6')
         if (ROOT / 'test-results/r8').is_dir():
             self.assertTrue(any(n.startswith('test-results/r8/') for n in names), 'R8 evidence is archived like R4-R7')
+        if (ROOT / 'test-results/r9').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r9/') for n in names), 'R9 evidence is archived like R4-R8')
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
     def test_doc_lists_the_exclusions(self):
