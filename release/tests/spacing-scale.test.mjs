@@ -118,3 +118,28 @@ test('CODEX-R3-02: the approved spacing scale is read from the hash-checked hand
     assert.match(approvedSpacing(handoff).error, /build evidence/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('CODEX-R4-02: page CSS cannot change the approved scale, and em is converted at each element\'s own font size (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { spacingProbe } = await import('../tools/spacing-scale.mjs');
+  const source = readFileSync(join(release, 'tools/spacing-scale.mjs'), 'utf8');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage();
+    // a hostile !important rule on every div would have turned each approved value into 13px through a measuring div
+    await page.setContent('<style>*{margin:0;padding:0} div{padding-top:13px!important} p{padding:8px}</style><p>a</p><div>b</div>');
+    const hijack = await page.evaluate(spacingProbe, ['8px', '1rem']);
+    assert.deepEqual(hijack.spacingScale, ['16px', '8px'], 'the scale is computed numerically');
+    assert.deepEqual(hijack.spacingOffScale.map(v => v.value), ['13px'], 'the override is still reported off-scale');
+    // 1em must be accepted on text of any size: 16px body, 24px heading, 12px small
+    await page.setContent('<style>*{margin:0;padding:0} body{font-size:16px} h2{font-size:24px;padding:1em} small{display:block;font-size:12px;padding:1em} p{padding:1em}</style><h2>H</h2><p>p</p><small>s</small>');
+    const em = await page.evaluate(spacingProbe, ['1em']);
+    assert.deepEqual(em.spacingOffScale, [], '24px on 24px text, 16px on 16px text and 12px on 12px text are all 1em');
+    await page.setContent('<style>*{margin:0;padding:0} body{font-size:16px} h2{font-size:24px;padding:16px}</style><h2>H</h2>');
+    assert.deepEqual((await page.evaluate(spacingProbe, ['1em'])).spacingOffScale.map(v => v.value), ['16px'], '16px on 24px text is not 1em');
+    await page.setContent('<style>html{font-size:20px} *{margin:0;padding:0} p{padding:1rem}</style><p>p</p>');
+    const rem = await page.evaluate(spacingProbe, ['1rem']);
+    assert.deepEqual(rem.spacingScale, ['20px']); assert.deepEqual(rem.spacingOffScale, [], 'rem follows the root computed font size');
+    assert.doesNotMatch(source.slice(source.indexOf('export function spacingProbe'), source.indexOf('export function approvedSpacing')), /createElement/, 'no measuring element');
+  } finally { await browser.close(); }
+});

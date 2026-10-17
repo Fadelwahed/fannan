@@ -8,28 +8,34 @@ import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { validateTokens } from './token-references.mjs';
 
+// CODEX-R4-02: no measuring element. Page CSS (including !important rules) cannot reach the scale: approved values are
+// converted numerically. px is used directly, rem via the root element's computed font size, and em via each inspected
+// element's own computed font size (CSS resolves padding, margin and gap em against the element itself).
 export function spacingProbe(approved = []) {
-  const probe = document.createElement('div'); document.body.append(probe);
-  const scale = new Set();
+  const units = { px: [], rem: [], em: [] };
   for (const value of Array.isArray(approved) ? approved : []) {
-    if (typeof value !== 'string' || !/^\d*\.?\d+(px|rem|em)$/.test(value)) continue; // plain lengths only
-    probe.style.paddingTop = ''; probe.style.paddingTop = value;
-    const px = getComputedStyle(probe).paddingTop;
-    if (/^\d*\.?\d+px$/.test(px) && px !== '0px') scale.add(px);
+    const m = typeof value === 'string' && /^(\d*\.?\d+)(px|rem|em)$/.exec(value); // plain lengths only
+    if (m && Number(m[1]) > 0) units[m[2]].push(Number(m[1]));
   }
-  probe.remove();
+  const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const near = (a, b) => Math.abs(a - b) < 0.05;
+  const scale = new Set([...units.px.map(n => n + 'px'), ...units.rem.map(n => n * rootPx + 'px')]);
   const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginBottom', 'rowGap', 'columnGap'];
   const off = new Map();
   for (const el of document.querySelectorAll('body *')) {
     const r = el.getBoundingClientRect(), c = getComputedStyle(el);
     if (!(r.width > 0 && r.height > 0) || c.visibility === 'hidden' || c.display === 'none') continue;
+    const elPx = parseFloat(c.fontSize);
+    const allowed = [...units.px, ...units.rem.map(n => n * rootPx), ...units.em.map(n => n * elPx)];
     for (const key of keys) {
       const value = c[key];
-      if (!value || ['0px', 'auto', 'normal'].includes(value) || scale.has(value)) continue;
+      if (!value || ['0px', 'auto', 'normal'].includes(value)) continue;
+      const px = /^-?\d*\.?\d+px$/.test(value) ? parseFloat(value) : NaN;
+      if (Number.isFinite(px) && allowed.some(a => near(a, px))) continue;
       if (!off.has(value)) off.set(value, { value, property: key, example: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') });
     }
   }
-  return { spacingScale: [...scale].sort(), spacingOffScale: [...off.values()] };
+  return { spacingScale: [...scale].sort(), spacingScaleEm: units.em.map(n => n + 'em'), rootFontSize: rootPx + 'px', spacingOffScale: [...off.values()] };
 }
 
 // CODEX-R3-02: node side. Reads the handoff's token JSON once, checks those exact bytes against the handoff SHA-256
