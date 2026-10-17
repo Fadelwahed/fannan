@@ -442,7 +442,7 @@ Load at section planning, the Step 4/5 grayscale review and the Step 8 pre-hando
 
 ## Measurement contract
 
-The reference viewport is 1440 × 900 CSS pixels at device scale one, with a full-page screenshot as well. Visit every declared screen and applicable state. Wait for local fonts and assets; log failed or blocked loads. Keep external requests, service workers and WebSockets blocked during the local check. Capture file hashes and the version under test. A reference PNG is 1440 pixels wide and named `screen--state--locale--vNN.png`; its hash identifies the version. A screenshot from another revision cannot support a PASS.
+The reference viewport is 1440 × 900 CSS pixels at device scale one, with a full-page screenshot as well. Visit every declared screen and applicable state. Wait for local fonts and assets; log failed or blocked loads. Keep external requests, service workers and WebSockets blocked during the local check. Capture file hashes and the version under test. A reference PNG is 1440 pixels wide and named `screen--state--locale--vNN.png`; its hash identifies the version. A screenshot from another revision cannot support a PASS. The checker also renders every declared `settings.desktopWidths` width and 320 CSS px (the 400% reflow equivalent of a 1280 px desktop) and fails horizontal overflow, clipped or ellipsised text and a language/direction mismatch; this is a screen, not mobile approval, and manual zoom and text-spacing evidence stays required.
 
 Mark visible text wrappers with `data-copy-slot="ID"` and match every displayed string to the approved locale variant in the copy deck, including interface and error labels. Unlisted or mismatched text blocks final handoff. Declare semantic section, component, copy-slot and media IDs in the reference DOM and match them to the handoff inventory. The critic inspects the full screenshot and semantic outline so unmarked containers cannot evade a count. CSS/computed-style counts are recorded as measurements. Layout intent, claims, tasteful restraint and the purpose of an image remain reviewed judgments with an artifact, reviewer, explanation and brief line references. A guessed PASS flag is not evidence.
 
@@ -676,7 +676,7 @@ Findings: **12 agreed, 3 rejected, 4 open**. An agreed local fix is not an asser
 | P2-C | G-16 checks protected tree/ancestors before load; no hostile same-identity process is still a required deployment condition. Chmod under shared owner is insufficient. |
 | P2-D | OPEN runtime integration. Every paid call needs fresh Fadel approval; text policy is not a proven API interlock. Runtime/tool hooks absent. |
 | P2-E | OPEN missing sources. Repository filename search found no original retired-routines file, helper code/13 tests, external register or Amin r7 record. No external store/Drive/credential search authorized. Recover originals or Fadel decides disposition; do not reconstruct verbatim records. |
-| P2-F | OPEN project evidence. Check declared desktop widths and 320 CSS px / 400% desktop reflow with manual evidence. Canonical frames remain 1440; no universal 1280/1920 requirement and no mobile authorization. Automated checker remains 1440-only. |
+| P2-F | OPEN project evidence. Check declared desktop widths and 320 CSS px / 400% desktop reflow with manual evidence. Canonical frames remain 1440; no universal 1280/1920 requirement and no mobile authorization. R8: the automated checker also screens every `settings.desktopWidths` entry plus 320 CSS px for overflow, clipped text and language/direction (screen only; manual zoom/reflow evidence still required). |
 | P2-G | Converter's prior safeguards preserved; G-5–G-9 extend validation to build/types/values/compatibility. |
 | P2-H | OPEN real pilot. Taste, real copy/RTL, assistive technology, provider/skill behavior and engineer/QA acknowledgement require actual approved project artifacts. |
 | P3-A | Fixed production dependency prefix `/opt/fannan/deps`; provisioning OPEN. |
@@ -749,6 +749,12 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
+
+- **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
+- **Install wording (PORT-03):** documentation only. Token scope proof, the daily-check freshness/escalation, the dedicated runtime identity and the detector at `/opt/fannan/bin` are still UNTESTED on any host; nothing was provisioned.
+- **Package input (PORT-04):** caches, dependency trees and Git metadata inside packaged trees are refused (unit-tested with temporary trees); the live build ran on a clean tree.
+
 ## R7 additions (Mi'mar, 17 October 2026, Codex round 3)
 
 - **CODEX-R3-02 spacing scale:** the approved scale now comes only from the handoff's `tokens.json` (bytes checked against the handoff SHA-256 and the build evidence input hash, then validated); page `--spacing-*` declarations no longer count. Checked in real Chrome 155 (test-only). Spacing written as `calc()` or between token steps is still reported off-scale; a page whose CSS sets a different value under a token name is caught as off-scale, not as a token mismatch. Manual rhythm review stays required.
@@ -792,6 +798,27 @@ Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs 
 Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
+
+## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM Gaza)
+
+Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 50 PASS, 0 FAIL, 0 SKIP | `test-results/r8/node.log` |
+| same, without deps (worktree copy, no `runtime-deps`) | 0 | 40 PASS, 0 FAIL, 10 SKIP (need deps or Chrome) | `test-results/r8/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 44 PASS, 6 FAIL: the same intended `Node 22.12+ required` refusals as R7 | `test-results/r8/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r8/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r8/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 13 PASS in the git checkout; 10 PASS, 3 SKIP in a no-git copy | `test-results/r8/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r8/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract, spacing, desktop-width (1440 + 320 reflow, page and state) and state checks PASS; every run stops at launcher exit 3 `pinned binary missing; no download fallback`, asserted | `test-results/r8/local-fixture.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample (convert + build run inside the local fixture) | `test-results/r8/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=27 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r8/syntax.log` |
+| Cloud `scripts/verify-static.mjs`, ad hoc on this tree (not a shipped tool) | 0 | PASS (16 skills, 51 source hashes, ledger, frontmatter and links); two local adjustments noted in the log | `test-results/r8/cloud-verify-static-adhoc.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+Per-port before/after logs are `test-results/r8/PORT-0*-before.log` / `-after.log`. Package build and the anchored verify are in the latest `reviews/MIMAR-R8-changes-*.md`.
 
 ## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM Gaza)
 
