@@ -6,7 +6,7 @@ Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. Not the target bo
 
 | Command | Exit | Result | Log |
 |---|---|---|---|
-| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP | `test-results/r4/node.log` |
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP (re-run after R4-6) | `test-results/r4/node.log` |
 | same, without deps | 0 | 18 PASS, 0 FAIL, 1 SKIP (dependency-backed conversion) | `test-results/r4/node-without-deps.log` |
 | `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS, 0 SKIP (Linux runs the GNU/openat2 cases) | `test-results/r4/python.log` |
 | `node --test revisions/r2/release/tests/*.test.mjs` | 0 | 4 PASS | `test-results/r4/r2-node.log` |

@@ -2,25 +2,25 @@ TAP version 13
 # Subtest: flags English and Arabic clichés and three-part headlines, not body lists
 ok 1 - flags English and Arabic clichés and three-part headlines, not body lists
   ---
-  duration_ms: 3.936882
+  duration_ms: 5.049256
   type: 'test'
   ...
 # Subtest: dependency inventory rejects a changed package and wrong ledger
 ok 2 - dependency inventory rejects a changed package and wrong ledger
   ---
-  duration_ms: 4.248199
+  duration_ms: 3.980118
   type: 'test'
   ...
 # Subtest: complete handoff passes; missing provenance, state or approval fails
 ok 3 - complete handoff passes; missing provenance, state or approval fails
   ---
-  duration_ms: 22.376309
+  duration_ms: 19.051767
   type: 'test'
   ...
 # Subtest: browser only serves bytes from selected project
 ok 4 - browser only serves bytes from selected project
   ---
-  duration_ms: 3.808308
+  duration_ms: 3.221487
   type: 'test'
   ...
 1..4
@@ -31,5 +31,5 @@ ok 4 - browser only serves bytes from selected project
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 82.289767
+# duration_ms 71.684258
 exit=0

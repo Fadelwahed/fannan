@@ -11,8 +11,7 @@ Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `gr
 | R4-3 | New `focusSettle` waits (capped 1 s) for finite transitions on the focused element and ancestors before reading; `focusStyleProbe` ignores colour-only changes below 3:1 between states and changes to unrendered outline/border/decoration/pseudo-elements. Both checker tab loops call it. Manual focus evidence stays mandatory. | `tests/focus-screen.test.mjs`; real-Chrome probe in `test-results/r4/` |
 | R4-4 | The checker refuses a browser whose `Browser.version()` differs from the reviewed pin; `runtime/browser-trust.json` now requires `supportTreeSha256`, verified over the executable's own directory by `tools/executable-trust.mjs`. The pin stays BLOCKED. | `tests/host-trust.test.mjs`, `tests/checker-boundaries.test.mjs` |
 | R4-5 | `scripts/package-r3.py verify --registry-sha256 <digest>` anchors the changed-file registry externally (checked first); `PACKAGING.md` documents `chmod 0444` for both trust files. | `scripts/test_package_r3.py` |
-
-R4-6 (unitless spacing numbers) is deliberately unchanged, pending Fadel's decision.
+| R4-6 | Fadel's decision (17 Oct 2026, 6:18 AM Gaza): spacing requires units. The converter's units-required check now covers `spacing` (`spacing: 8` fails; `8px` and a bare `0` pass), and shared validation types spacing as dimension only, so hand-edited `number` spacing is rejected by `sd-build.mjs` too. | `tests/token-validation.test.mjs` |
 
 
 The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.

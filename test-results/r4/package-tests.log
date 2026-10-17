@@ -3,7 +3,7 @@ test_packaging_doc_names_both_read_only_files_and_the_pin_option (__main__.Regis
 test_registry_pin_must_match_an_external_value (__main__.RegistryPinTests.test_registry_pin_must_match_an_external_value) ... ok
 
 ----------------------------------------------------------------------
-Ran 3 tests in 0.117s
+Ran 3 tests in 0.116s
 
 OK
 exit=0

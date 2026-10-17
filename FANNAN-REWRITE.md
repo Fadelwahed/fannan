@@ -572,8 +572,7 @@ Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `gr
 | R4-3 | New `focusSettle` waits (capped 1 s) for finite transitions on the focused element and ancestors before reading; `focusStyleProbe` ignores colour-only changes below 3:1 between states and changes to unrendered outline/border/decoration/pseudo-elements. Both checker tab loops call it. Manual focus evidence stays mandatory. | `tests/focus-screen.test.mjs`; real-Chrome probe in `test-results/r4/` |
 | R4-4 | The checker refuses a browser whose `Browser.version()` differs from the reviewed pin; `runtime/browser-trust.json` now requires `supportTreeSha256`, verified over the executable's own directory by `tools/executable-trust.mjs`. The pin stays BLOCKED. | `tests/host-trust.test.mjs`, `tests/checker-boundaries.test.mjs` |
 | R4-5 | `scripts/package-r3.py verify --registry-sha256 <digest>` anchors the changed-file registry externally (checked first); `PACKAGING.md` documents `chmod 0444` for both trust files. | `scripts/test_package_r3.py` |
-
-R4-6 (unitless spacing numbers) is deliberately unchanged, pending Fadel's decision.
+| R4-6 | Fadel's decision (17 Oct 2026, 6:18 AM Gaza): spacing requires units. The converter's units-required check now covers `spacing` (`spacing: 8` fails; `8px` and a bare `0` pass), and shared validation types spacing as dimension only, so hand-edited `number` spacing is rejected by `sd-build.mjs` too. | `tests/token-validation.test.mjs` |
 
 
 The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.
@@ -753,7 +752,7 @@ Source: `release/UNTESTED.md`
 - **R4-3 focus screen:** checked in real Chrome 154 headless on Mi'mar's box (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). Colours are composited over white, so a translucent focus background on a dark page can be under-measured (false fail, never a false pass relative to R3). The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
 - **R4-4 browser support tree:** `supportTreeDigest` was checked on unit fixtures and as a stability probe on the box's stock `/opt/google/chrome` (non-protected mode). Protected mode correctly refuses that stock install (owner-writable files). A provisioned root-owned read-only browser directory under `/opt/fannan/bin/` is UNTESTED (none exists); a setuid `chrome-sandbox` would need mode 4555, not 4755.
 - **Positive path of the launcher's protected-storage check:** still UNTESTED (needs a root-owned `/opt/fannan/bin`).
-- **R4-6 unitless spacing:** unchanged; awaiting Fadel's decision.
+- **R4-6 spacing units:** implemented per Fadel's decision. Existing project DESIGN.md files that used bare spacing numbers will now fail conversion with `units required` and must add px/rem/em; the bundled example and fixture already use units and still convert.
 
 
 Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs are historical, not R3 PASS. The final branch response quotes every command/count and each failure. Expected rejection, SKIP, blocked prerequisite and actual PASS are distinct.
@@ -783,7 +782,7 @@ Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. Not the target bo
 
 | Command | Exit | Result | Log |
 |---|---|---|---|
-| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP | `test-results/r4/node.log` |
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP (re-run after R4-6) | `test-results/r4/node.log` |
 | same, without deps | 0 | 18 PASS, 0 FAIL, 1 SKIP (dependency-backed conversion) | `test-results/r4/node-without-deps.log` |
 | `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS, 0 SKIP (Linux runs the GNU/openat2 cases) | `test-results/r4/python.log` |
 | `node --test revisions/r2/release/tests/*.test.mjs` | 0 | 4 PASS | `test-results/r4/r2-node.log` |

@@ -11,7 +11,7 @@ test_project_and_traversal_validation (__main__.GuardTests.test_project_and_trav
 test_writer_keeps_root_owned_ancestor_and_dedicated_identity_requirements (__main__.GuardTests.test_writer_keeps_root_owned_ancestor_and_dedicated_identity_requirements) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 0.060s
+Ran 10 tests in 0.058s
 
 OK
 exit=0

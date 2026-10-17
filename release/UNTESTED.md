@@ -5,7 +5,7 @@
 - **R4-3 focus screen:** checked in real Chrome 154 headless on Mi'mar's box (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). Colours are composited over white, so a translucent focus background on a dark page can be under-measured (false fail, never a false pass relative to R3). The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
 - **R4-4 browser support tree:** `supportTreeDigest` was checked on unit fixtures and as a stability probe on the box's stock `/opt/google/chrome` (non-protected mode). Protected mode correctly refuses that stock install (owner-writable files). A provisioned root-owned read-only browser directory under `/opt/fannan/bin/` is UNTESTED (none exists); a setuid `chrome-sandbox` would need mode 4555, not 4755.
 - **Positive path of the launcher's protected-storage check:** still UNTESTED (needs a root-owned `/opt/fannan/bin`).
-- **R4-6 unitless spacing:** unchanged; awaiting Fadel's decision.
+- **R4-6 spacing units:** implemented per Fadel's decision. Existing project DESIGN.md files that used bare spacing numbers will now fail conversion with `units required` and must add px/rem/em; the bundled example and fixture already use units and still convert.
 
 
 Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs are historical, not R3 PASS. The final branch response quotes every command/count and each failure. Expected rejection, SKIP, blocked prerequisite and actual PASS are distinct.
