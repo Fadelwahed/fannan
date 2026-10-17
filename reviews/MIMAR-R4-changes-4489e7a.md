@@ -8,8 +8,8 @@
 |---|---|
 | Base | `eb2d540a2a70045d41321a642e4bc2992f420bcb` (`origin/codex-r3-fixes`). |
 | Source of findings | `reviews/GROK-R4-eb2d540.md` on `grok-review` (commit `07d9c889`). |
-| Last commit before this file | `5c874e9` (package freeze). This file is the required last commit. |
-| Implemented | R4-1, R4-2, R4-3, R4-4, R4-5. **Skipped:** R4-6 (unitless spacing), waiting on Fadel's decision between requiring units and treating values as scale steps. |
+| Last commit before this file | `4489e7a` (package freeze after R4-6). This file is the required last commit. An earlier version of this record (`MIMAR-R4-changes-5c874e9.md`, pushed in `86b0218`) was renamed and updated here once Fadel decided R4-6. |
+| Implemented | R4-1, R4-2, R4-3, R4-4, R4-5, and R4-6 (spacing requires units, per Fadel's decision at 6:18 AM Gaza time). |
 | Process change | The GROK-HANDOFF.md update for Fadel's new split (6:00 AM Gaza time) is in its own commit. |
 | Runtime | Mi'mar's box: Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. **Not the target bot host.** |
 | Dependencies | An existing locked tree (lock sha256 `55a645b1…8710`, which matches the pin) was linked into scratch copies as test evidence only. No install, no network, no new dependency. |
@@ -26,6 +26,9 @@
 | `d73e404` | R4-5: add --registry-sha256 anchor and document read-only mode for both trust files |
 | `59a1862` | Update GROK-HANDOFF.md: reviewers list findings, Mi'mar implements on mimar-* branches, Fadel merges to main |
 | `5c874e9` | R4 package: regenerate manifest, pin, ZIP and registry; record R4 evidence and doc corrections |
+| `86b0218` | R4: record Mi'mar R4 changes, evidence and open items (first version of this record; pushed) |
+| `94b00d8` | R4-6: require units for spacing |
+| `4489e7a` | R4 package: regenerate manifest, pin, ZIP and registry after R4-6; refresh R4 evidence |
 
 ## 2. Changes per finding
 
@@ -115,7 +118,24 @@
 - **Before** (`R4-5-before.log`): 2 failures, 1 error.
 - **After** (`R4-5-after.log`): 3 / 3 OK.
 
-### Packaging support and doc corrections (commit 5c874e9)
+### R4-6 (P3): unitless spacing (Fadel's decision, 6:18 AM Gaza time: require units; bare 0 allowed)
+
+**Changes:**
+- `release/tools/designmd-to-sd.mjs:38`: the units-required check now covers `spacing` and applies only to finite numbers. `.Inf` still reports `unknown token type` (G-7).
+- `release/tools/token-references.mjs:22`: `expected('spacing')` is `['dimension']`, so hand-edited `{"$type":"number","$value":8}` spacing is rejected by `sd-build.mjs` too. This is tighter, not looser.
+
+**Before → after:** `spacing: {sm: 8}` used to build `--spacing-sm: 8;`. It now fails with `units required at spacing.sm: use px, rem or em`. `8px` and a bare `0` still convert as dimension.
+
+**Tests:** `release/tests/token-validation.test.mjs`:
+- The success fixture changed from `sm: 8` with `$type number` to `sm: 8px` plus `none: 0`, both `$type dimension`.
+- New negatives: converter `spacing: 8`, shared `number` spacing, and sd-build hand JSON.
+- The G-7 Infinity unit case moved to an untyped group, because spacing no longer accepts numbers.
+- **Before** (`test-results/r4/R4-6-before.log`): 3 tests, 0 pass, 3 fail.
+- **After** (`R4-6-after.log`): 3 / 3 pass.
+
+**Impact:** existing project DESIGN.md files that use bare spacing numbers must add px, rem or em. The bundled `example-DESIGN.md` and `fixture-DESIGN.md` already use px and still convert and build (rc 0, re-checked).
+
+### Packaging support and doc corrections (commits 5c874e9, 4489e7a)
 
 - `scripts/package-r3.py:96-101`: `reviews/MIMAR-R4-changes-*.md` (exactly one) is treated like the Codex response, as the required last commit after the freeze.
 - `scripts/package-r3.py:112-113`: `test-results/r4/` evidence is included in the ZIP.
@@ -131,25 +151,25 @@ The "Division of work" section now reads:
 - `reviews/GROK-*` and `reviews/CODEX-*` stay unedited.
 - The approval and installation gates are unchanged.
 
-## 4. Manifest, coverage and verification (after commit 5c874e9, isolated clone `/tmp/r4v`)
+## 4. Manifest, coverage and verification (after commit 4489e7a, isolated clone `/tmp/r4v`)
 
 **Build:** `python3 -B scripts/package-r3.py build --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3`. Hashes were generated, not hand-edited.
 
 | Item | Value |
 |---|---|
-| Release manifest | `trust/MANIFEST.sha256` sha256 `6e930cf2fe35c34058449ec87cb25a47b395d28018f3eb4911d92f1f8eda6f82` (66 files) |
-| ZIP | `artifacts/FANNAN-R3.zip` sha256 `6eae3aa760913cb2186bc37fce9d4bb0318cf82ae5db0679420faa8cd1f41dba` (174 members, CRC PASS) |
-| Registry | `trust/R3-CHANGES.sha256` sha256 **`b98b69a485331b0ff5201646429d68fba9bd8d87f9eceecef7183b23581d65d5`**. Use this value for `--registry-sha256`. |
+| Release manifest | `trust/MANIFEST.sha256` sha256 `45d6e989d80d9736d7a3cbdca134d0e99784bdbf178b27ecd8af2fd9393c8b9f` (66 files) |
+| ZIP | `artifacts/FANNAN-R3.zip` sha256 `52d8c8b2dd797f153999541186b8b89f17a711fac51c64274ec2dd09c3aee1ef` (176 members, CRC PASS) |
+| Registry | `trust/R3-CHANGES.sha256` sha256 **`20e91359bdc05b6c8021e17d44c6bfa5c442d1b2376834b6fd324c2645209226`**. Use this value for `--registry-sha256`. |
 
 **Commands run:**
 - `chmod 0444 trust/MANIFEST.sha256 trust/R3-CHANGES.sha256`
-- `python3 -B scripts/package-r3.py verify --start 9ee1ca6… --registry-sha256 b98b69a4…65d5`
-  - Result: exit 0, `registryPin: external`, 89 changed, 87 covered, `uncoveredChangedFiles: []`.
-  - Exclusions: the registry itself and `reviews/CODEX-R3-response-f42bc27.md`. This file becomes the third exclusion once committed.
+- `python3 -B scripts/package-r3.py verify --start 9ee1ca6… --registry-sha256 20e91359…9226`
+  - Result: exit 0, `registryPin: external`, 92 changed, 89 covered, `uncoveredChangedFiles: []`.
+  - Exclusions: the registry itself, `reviews/CODEX-R3-response-f42bc27.md`, and this R4 record (one allowed).
 - The same command with `--registry-sha256 000…0` fails with `ValueError: registry pin mismatch`.
 - `release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$(cut -d' ' -f1 trust/PINNED.sha256)"` gives `MANIFEST OK (66 files)`, exit 0.
 
-**Coverage:** `git diff --name-only eb2d540..HEAD` lists 49 paths. The only one not in the registry is `trust/R3-CHANGES.sha256` (it can't contain its own hash). Every changed `release/` file is in the 66-file release manifest.
+**Coverage:** `git diff --name-only eb2d540..HEAD` lists 52 paths at the freeze. The only ones not in the registry are `trust/R3-CHANGES.sha256` (it can't contain its own hash) and this R4 record (the required last commit). Every changed `release/` file is in the 66-file release manifest.
 
 **Other checks:**
 - `git diff --stat eb2d540..HEAD -- reviews/` is empty before this file, so no `reviews/GROK-*` or `reviews/CODEX-*` file changed.
@@ -159,7 +179,7 @@ The "Division of work" section now reads:
 
 | Command | Exit | Result |
 |---|---|---|
-| `node --test release/tests/*.test.mjs` (Node 22.23.3, test-only deps) | 0 | **19 pass / 0 fail / 0 skip** |
+| `node --test release/tests/*.test.mjs` (Node 22.23.3, test-only deps; re-run after R4-6) | 0 | **19 pass / 0 fail / 0 skip** |
 | same, without deps | 0 | 18 pass / 0 fail / 1 skip (dependency-backed conversion) |
 | `python3 -B release/tests/test_guard_tools.py -v` | 0 | **10 / 10 OK, 0 skipped** |
 | `node --test revisions/r2/release/tests/*.test.mjs` | 0 | 4 / 4 |
@@ -180,7 +200,6 @@ The "Division of work" section now reads:
 
 ## 7. Remaining open items and blockers
 
-- **R4-6 (P3):** unitless spacing numbers emit `--spacing-sm: 8;`. **Fadel's decision is needed:** require units, or treat the values as scale steps.
 - **Protected storage and identity** (G-4, G-11, G-16, B1): Fadel chooses a dedicated non-root user or a reviewed sandbox, and the system owner provisions root-owned `/opt/fannan/{bin,deps}`, `/workspace` and `/workspace/design-output`.
 - **Detector (B2):** the binary at `/opt/fannan/bin/impeccable-linux-x64`, sha256 `3d31ec1a664ac35c815ea1d7c10abad1155ce364d0f461157eb837a34368efb6`.
 - **Deps (B5):** `npm ci --ignore-scripts` into `/opt/fannan/deps`, inventory `0f7891db…a031`.
