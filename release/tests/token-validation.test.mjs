@@ -173,6 +173,24 @@ test('token conversion validates types, dimensions and references before writing
     assert.equal(sizeBuild.status, 0, sizeBuild.stderr);
     assert.match(readFileSync(sizeCss, 'utf8'), /--components-button-min-height:\s*44px;/);
     for (const key of ['size', 'width', 'height', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight']) assert.throws(() => validateTokens({ components: { button: { [key]: { $value: 40, $type: 'number' } } } }), /incompatible token type/, key);
+    // OPUS-R2-04: the design.md spec permits composite {typography.<name>} references inside components.
+    // The converter expands them to per-property references, so the token JSON and CSS stay primitive.
+    assert.equal(convert('colors:\n  primary: "#123456"\ntypography:\n  label:\n    fontSize: 14px\n    fontWeight: 500\n    lineHeight: 1.4\ncomponents:\n  button:\n    backgroundColor: "{colors.primary}"\n    typography: "{typography.label}"').status, 0);
+    const composite = JSON.parse(readFileSync(json, 'utf8')).components.button.typography;
+    assert.deepEqual(composite, { fontSize: { $value: '{typography.label.fontSize}' }, fontWeight: { $value: '{typography.label.fontWeight}' }, lineHeight: { $value: '{typography.label.lineHeight}' } });
+    const compositeCss = join(output, 'composite.css');
+    const compositeBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, compositeCss, 'test'], { env, encoding: 'utf8' });
+    assert.equal(compositeBuild.status, 0, compositeBuild.stderr);
+    assert.match(readFileSync(compositeCss, 'utf8'), /--components-button-typography-font-size:\s*(14px|var\(--typography-label-font-size\));/);
+    for (const [yaml, expected] of [
+      ['typography:\n  label:\n    fontSize: 14px\ncolors:\n  primary: "{typography.label}"', /composite reference not allowed at colors\.primary/],
+      ['typography:\n  label:\n    fontSize: 14px\ncomponents:\n  button:\n    backgroundColor: "{typography.label}"', /composite reference not allowed at components\.button\.backgroundColor/],
+      ['typography:\n  label:\n    fontSize: 14px\nspacing:\n  sm: "{typography.label}"', /composite reference not allowed at spacing\.sm/],
+      ['colors:\n  primary: "#123456"\ncomponents:\n  button:\n    typography: "{colors.primary}"', /components\.button\.typography must reference a typography group/],
+      ['typography:\n  label:\n    fontSize: 14px\ncomponents:\n  button:\n    typography: "{typography.missing}"', /components\.button\.typography must reference a typography group/]
+    ]) {
+      const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml); assert.equal(existsSync(json), false, yaml);
+    }
     for (const [alias, number] of [['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
       assert.equal(convert(`typography:\n  body:\n    fontWeight: ${alias}`).status, 0, alias);
       assert.equal(JSON.parse(readFileSync(json, 'utf8')).typography.body.fontWeight.$value, number, alias);

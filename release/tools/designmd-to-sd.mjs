@@ -50,6 +50,17 @@ function wrap(group, obj, path) {
       continue;
     }
     if (group === 'colors' && typeof v === 'string' && !/^\{[^{}]+\}$/.test(v) && !color(v)) errors.push(`not a colour at ${p}: ${v}`);
+    const target = typeof v === 'string' && /^\{[^{}]+\}$/.test(v) ? v.slice(1, -1) : null;
+    const node = target && target.split('.').reduce((at, part) => at && typeof at === 'object' && !Array.isArray(at) ? at[part] : undefined, fm);
+    const groupTarget = !!node && typeof node === 'object' && !Array.isArray(node);
+    // OPUS-R2-04: the design.md spec permits composite references only inside components; Fannan accepts them for
+    // the typography sub-token, pointing at a typography group, and expands them to per-property references.
+    if (group === 'components' && k === 'typography' && target) {
+      if (!groupTarget || !target.startsWith('typography.') || !Object.values(node).length || Object.values(node).some(x => x !== null && typeof x === 'object')) { errors.push(`${p} must reference a typography group, e.g. "{typography.label}"`); continue; }
+      outObj[k] = Object.fromEntries(Object.keys(node).map(prop => [prop, token(group, prop, `{${target}.${prop}}`, `${p}.${prop}`)]));
+      continue;
+    }
+    if (groupTarget) { errors.push(`composite reference not allowed at ${p}: only components.<name>.typography may reference a typography group`); continue; }
     if (typeof v === 'object' && !Array.isArray(v)) outObj[k] = wrap(group, v, p);
     else outObj[k] = token(group, k, v, p);
   }
