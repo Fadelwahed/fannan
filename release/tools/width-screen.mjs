@@ -11,7 +11,8 @@ export function inspectLayout() {
     if (!r.width || !r.height || c.visibility === 'hidden' || c.display === 'none' || !e.textContent.trim()) continue;
     const x = e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX);
     const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);
-    if (x || y || c.textOverflow === 'ellipsis') clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: c.textOverflow === 'ellipsis' });
+    // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.
+    if (x || y) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });
   }
   const root = document.documentElement;
   return { width: innerWidth, documentWidth: root.scrollWidth, horizontalOverflow: root.scrollWidth > root.clientWidth + 1, clipped, lang: root.lang, dir: getComputedStyle(root).direction };
