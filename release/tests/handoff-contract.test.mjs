@@ -31,7 +31,7 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     const h = {
       version: 1, phase: 'handoff', brief: { path: brief }, rules: { path: rules },
       designLink: { url: 'https://example.invalid/private', private: true, evidence: brief }, tokens: tokenArtifacts, toolEvidence: [{ tool: 'fixture', version: '1', artifact: brief }],
-      settings: { path: settings, repository: 'repo-x', stack: 'stack-x', roles: { engineer: 'engineer-x', qaGate: 'qa-x', writer: 'writer-x', approver: 'approver-x' } },
+      settings: { desktopWidths: [1440, 1280], path: settings, repository: 'repo-x', stack: 'stack-x', roles: { engineer: 'engineer-x', qaGate: 'qa-x', writer: 'writer-x', approver: 'approver-x' } },
       pointOfView: { idea: 'Residents first', briefRefs: ['brief.md:1'] },
       screens: [{ id: 'home', page: frame, headingOutline: [{ level: 1, text: 'Specific headline.' }], seoIntent: 'service page', schemaIntent: 'none', images: [], actions: [], states: [{ state: 'default', lang: 'en', dir: 'ltr', page: frame, frame: { path: frame, width: 1440, version: 'v1', sha256: hash } }, ...states.slice(1).map(na)], components: [{ id: 'heading', states: [{ state: 'default', lang: 'en', dir: 'ltr', applicable: true, evidence: frame }, ...states.slice(1).map(na)] }], acceptance: [{ id: 'title', severity: 'BLOCK', decision: 'PASS', check: 'title visible', evidence: frame }], wcag: { standard: '2.2 AA', contrastEvidence: frame, focusOrderEvidence: frame, targetSizeEvidence: frame } }],
       copySlots: [{ id: 'hero', screen: 'home', kind: 'interface', purpose: 'state service', text: 'Specific headline.', minChars: 5, maxChars: 30, tone: 'direct', placementScreenshot: frame, placements: [{ lang: 'en', state: 'default', screenshot: frame }], source: { kind: 'brief', path: brief, ref: 'brief.md:2' }, lang: 'en', dir: 'ltr', variants: [{ lang: 'en', dir: 'ltr', text: 'Specific headline.', source: { path: brief, ref: 'brief.md:2' } }] }],
@@ -41,6 +41,14 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
       approval: { decision: 'approved', approver: 'approver-x', record: approved, frameIds: [frameId] }
     };
     assert.deepEqual(checkHandoff(h), []);
+    // R8, ported from codex/fannan-r3-review 2733317: declared desktop widths are unique positive integers and include the canonical 1440.
+    for (const bad of [undefined, [], [1280], [1440, 1440], [1440, 0], [1440, -1280], [1440, 1280.5], ['1440'], '1440']) {
+      h.settings.desktopWidths = bad;
+      assert.match(checkHandoff(h).join('\n'), /settings\.desktopWidths/, `desktopWidths ${JSON.stringify(bad)} must fail`);
+    }
+    h.settings.desktopWidths = [1440];
+    assert.deepEqual(checkHandoff(h), [], '1440 alone is enough');
+    h.settings.desktopWidths = [1440, 1280];
     h.manualChecks.push({ ...h.manualChecks[0], decision: 'FAIL' });
     assert.match(checkHandoff(h).join('\n'), /manual check IDs must be unique|manual FAIL/);
     h.manualChecks.pop();

@@ -57,6 +57,8 @@ export function checkHandoff(h, phase = 'handoff') {
   }
   need(nonempty(h?.pointOfView?.idea) && h.pointOfView?.briefRefs?.length > 0 && h.pointOfView.briefRefs.every(ref), 'point of view needs an idea and brief line refs');
   need(Array.isArray(h?.screens) && h.screens.length > 0, 'screens required');
+  const widths = h?.settings?.desktopWidths; // R8, ported from codex/fannan-r3-review 2733317
+  need(Array.isArray(widths) && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length, 'settings.desktopWidths must declare unique positive integer CSS widths including the canonical 1440');
   need(Array.isArray(h?.copySlots) && h.copySlots.length > 0, 'copy slots required before layout');
   need(new Set((h?.copySlots || []).map(c => c.id)).size === (h?.copySlots || []).length, 'copy slot IDs must be unique');
   need(new Set((h?.facts || []).map(f => f.id)).size === (h?.facts || []).length, 'fact IDs must be unique');
