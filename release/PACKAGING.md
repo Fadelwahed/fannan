@@ -33,3 +33,14 @@ release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$F
 ```
 
 It requires GNU `realpath -e`, `stat -c` and `sha256sum` on its fixed PATH. This R3 Mac attempt fails before verification because `realpath -e` is unsupported. Do not mark that command PASS, relax its root/write-mode rule or replace production tools to hide the platform boundary. A clone preserves executable bits, not 0444; apply the documented local 0444 mode (`chmod 0444 trust/MANIFEST.sha256 trust/R3-CHANGES.sha256`) before verification without changing bytes. No protected host installation is performed by this packaging script.
+
+## Whitespace check (CODEX-R2-03)
+
+Committed test logs under `test-results/` are raw tool output, and raw logs are kept byte-for-byte: Node's TAP output contains trailing spaces, and stripping them would change recorded evidence. So a plain `git diff --check <base>..HEAD` reports whitespace errors in those logs only. The whitespace gate is range-qualified and source-only:
+
+```sh
+git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'
+```
+
+It must exit 0. The full-range result, including the raw logs, is recorded separately in the round's evidence and is not claimed as clean.
+

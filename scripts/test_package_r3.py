@@ -51,5 +51,18 @@ class RegistryPinTests(unittest.TestCase):
         self.assertIn('--registry-sha256', text)
 
 
+class WhitespacePolicyTests(unittest.TestCase):
+    """CODEX-R2-03: raw test logs keep their bytes; the whitespace check is range-qualified and source-only."""
+    def test_policy_is_documented(self):
+        text = (ROOT / 'release/PACKAGING.md').read_text()
+        self.assertIn("git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'", text)
+        self.assertIn('raw logs are kept byte-for-byte', text)
+
+    @unittest.skipUnless((ROOT / '.git').exists(), 'needs a git checkout of the repository')
+    def test_source_only_range_check_passes(self):
+        p = subprocess.run(['git', 'diff', '--check', 'eb2d540..HEAD', '--', '.', ':(exclude)test-results/**/*.log'], capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()
