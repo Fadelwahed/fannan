@@ -11,9 +11,12 @@ export function designProbe() {
   const accent = accentVar ? getComputedStyle(document.documentElement).getPropertyValue(accentVar).trim() : '';
   const pageArea = Math.max(document.documentElement.scrollHeight, innerHeight) * document.documentElement.clientWidth;
   const rects = [...document.querySelectorAll('body *')].filter(visible).map(e => ({e,r:e.getBoundingClientRect(),c:getComputedStyle(e)}));
-  const swatch = document.createElement('span'); swatch.style.color = accent; document.body.append(swatch);
-  const accentComputed = accent ? getComputedStyle(swatch).color : ''; swatch.remove();
-  const painted = rects.filter(({c}) => c.backgroundColor === accentComputed);
+  // R9 sibling of CODEX-R4-02: colours are normalised by a detached canvas, never by an element in the page, so page CSS
+  // (span{color:...!important}) cannot change what "the accent" is.
+  const ctx = document.createElement('canvas').getContext('2d');
+  const norm = value => { ctx.fillStyle = '#010203'; ctx.fillStyle = value; const out = ctx.fillStyle; ctx.fillStyle = '#030201'; ctx.fillStyle = value; return out === ctx.fillStyle ? out : null; };
+  const accentComputed = accent ? norm(accent) : null;
+  const painted = accentComputed ? rects.filter(({c}) => norm(c.backgroundColor) === accentComputed) : [];
   const accentArea = accent ? painted.reduce((sum,{r}) => sum + Math.max(0, Math.min(r.width, innerWidth)) * r.height, 0) : null;
   const accentViewportArea = accent ? painted.reduce((sum,{r}) => sum + Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0)), 0) : null;
   const gradients = rects.filter(({c}) => c.backgroundImage.includes('gradient(')).length;

@@ -46,3 +46,20 @@ test('ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon
     assert.equal(four.iconRows, 0);
   } finally { await browser.close(); }
 });
+
+test('R9 (sibling of CODEX-R4-02): page CSS cannot change the accent colour the probe measures (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const body = '<main><h1>x</h1><b style="display:block;width:400px;height:400px;background:var(--colors-accent)"></b></main>';
+    await page.setContent(`<style>:root{--colors-accent:rgb(11,61,145)}</style>${body}`);
+    const clean = await page.evaluate(designProbe);
+    await page.setContent(`<style>:root{--colors-accent:rgb(11,61,145)} span{color:rgb(1,2,3)!important}</style>${body}`);
+    const hostile = await page.evaluate(designProbe);
+    assert.ok(clean.accentRatio > 0);
+    assert.equal(hostile.accentRatio, clean.accentRatio, 'a span override does not hide the accent area');
+    await page.setContent(`<style>:root{--colors-accent:not-a-colour}</style>${body}`);
+    assert.equal((await page.evaluate(designProbe)).accentRatio, 0, 'an invalid accent matches nothing');
+  } finally { await browser.close(); }
+});
