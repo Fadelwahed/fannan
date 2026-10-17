@@ -1,0 +1,63 @@
+TAP version 13
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 1 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 3.25211
+  type: 'test'
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 2 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 3.527663
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+not ok 3 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 1.128733
+  type: 'test'
+  location: '<scratch>/release/tests/focus-screen.test.mjs:91:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a black outline on a #111 page is not visible
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    file://<scratch>/release/tests/focus-screen.test.mjs:98:58
+    withDom (file://<scratch>/release/tests/focus-screen.test.mjs:50:12)
+    check (file://<scratch>/release/tests/focus-screen.test.mjs:96:84)
+    TestContext.<anonymous> (file://<scratch>/release/tests/focus-screen.test.mjs:102:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 4 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 71.38866
+  type: 'test'
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 5 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 0.791433
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 4
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5071.035929

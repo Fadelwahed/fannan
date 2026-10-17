@@ -88,6 +88,25 @@ test('R4-3: weak colour-only and unrendered changes do not count as a visible fo
   check(() => { styles.backgroundColor = 'color(display-p3 0 0 0)'; }, true, 'unparseable colours fall back to counting the change (no weaker than R3)');
 });
 
+test('OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white', () => {
+  const page = {}, button = { parentElement: page };
+  const base = () => ({ outlineStyle: 'none', outlineWidth: '0px', outlineColor: 'rgb(0, 0, 0)', boxShadow: 'none', backgroundColor: 'rgba(0, 0, 0, 0)', color: 'rgb(230, 230, 230)', textDecorationLine: 'none' });
+  let styles, pageStyle;
+  const styleFor = (el, which) => which ? { content: 'none' } : el === page ? pageStyle : styles;
+  const check = (mutate, expected, message, pageBackground = 'rgb(17, 17, 17)') => withDom([button, page], styleFor, () => {
+    styles = base(); pageStyle = { ...base(), backgroundColor: pageBackground };
+    focusStyleProbe({ capture: true }); mutate(); assert.equal(focusStyleProbe(), expected, message);
+  });
+  const outline = colour => () => { styles.outlineStyle = 'solid'; styles.outlineWidth = '2px'; styles.outlineColor = colour; };
+  check(outline('rgba(255, 255, 255, 0.03)'), false, 'a 3% white outline on a #111 page is not visible');
+  check(outline('rgb(0, 0, 0)'), false, 'a black outline on a #111 page is not visible');
+  check(() => { styles.boxShadow = 'rgb(0, 0, 0) 0px 0px 0px 3px'; }, false, 'a black ring on a #111 page is not visible');
+  check(() => { styles.backgroundColor = 'rgba(255, 255, 255, 0.03)'; }, false, 'a 3% white background on a #111 page is not visible');
+  check(outline('rgb(255, 255, 255)'), true, 'a white outline on a #111 page is visible');
+  check(outline('rgb(0, 0, 0)'), true, 'the same black outline on a white page is visible', 'rgb(255, 255, 255)');
+  check(outline('rgb(0, 0, 0)'), true, 'no opaque ancestor: white fallback', 'rgba(0, 0, 0, 0)');
+});
+
 test('R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped', async () => {
   const saved = Object.getOwnPropertyDescriptor(globalThis, 'document');
   try {

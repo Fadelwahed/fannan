@@ -27,8 +27,9 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     window.__focusBefore = new WeakMap([...document.querySelectorAll('*')].map(el => [el, read(el)]));
     return;
   }
-  // R4-3: colours are compared by contrast between the unfocused and focused state (composited over white).
-  // A colour-only change below minContrast (3:1) is not counted. Unparseable colours count as changed,
+  // R4-3: colours are compared by contrast between the unfocused and focused state. OPUS-R2-02: translucent
+  // colours are composited over the backdrop (the nearest opaque ancestor background, captured unfocused, with
+  // translucent layers in between), falling back to white. A colour-only change below minContrast is not counted. Unparseable colours count as changed,
   // so this is never weaker than the R3 "any change" rule.
   const rgba = value => {
     if (String(value ?? '').trim() === 'transparent') return { c: [0, 0, 0], a: 0 };
@@ -40,17 +41,28 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     return { c: n.slice(0, 3), a: n.length > 3 ? n[3] : 1 };
   };
   const over = (colour, ground) => colour.c.map((channel, i) => channel * colour.a + ground[i] * (1 - colour.a));
-  const rgb = value => { const colour = rgba(value); return colour && over(colour, [255, 255, 255]); };
+  const white = [255, 255, 255];
+  const backdrop = el => {
+    const layers = [];
+    for (let node = el.parentElement; node; node = node.parentElement) {
+      const colour = rgba((window.__focusBefore?.get(node)?.[0] ?? getComputedStyle(node)).backgroundColor);
+      if (!colour) return white; // unparseable ancestor background: white fallback
+      layers.push(colour);
+      if (colour.a >= 1) break;
+    }
+    return layers.reverse().reduce((ground, colour) => over(colour, ground), white);
+  };
+  const rgb = (value, ground = white) => { const colour = rgba(value); return colour && over(colour, ground); };
   const contrast = (x, y) => { const [hi, lo] = [luminance(x), luminance(y)].sort((p, q) => q - p); return (hi + 0.05) / (lo + 0.05); };
   const luminance = c => c.map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
-  const strongColour = (a, b) => {
+  const strongColour = (a, b, ground = white) => {
     if (a === b) return false;
-    const x = rgb(a), y = rgb(b);
+    const x = rgb(a, ground), y = rgb(b, ground);
     if (!x || !y) return true;
     return contrast(x, y) >= minContrast;
   };
   // CODEX-R2-01: an outline/border/decoration/shadow only counts when it is painted: alpha > 0 and at least
-  // minContrast against the element's unfocused background (composited over white). Unparseable colours count.
+  // minContrast against the element's unfocused background composited over its backdrop. Unparseable colours count.
   const painted = (value, ground) => {
     const colour = rgba(value);
     if (!colour) return true;
@@ -67,7 +79,7 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     if (was !== is) return is ? painted(a[colour], ground) : painted(b[colour], ground);
     if (!is) return false;
     if (geometry.some(key => a[key] !== b[key])) return painted(a[colour], ground) || painted(b[colour], ground);
-    return strongColour(b[colour], a[colour]);
+    return strongColour(b[colour], a[colour], ground);
   };
   const colours = value => String(value ?? '').match(/rgba?\([^)]*\)/g) || [];
   const shadow = (b, a, ground) => {
@@ -78,18 +90,18 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
       if (a.boxShadow && a.boxShadow !== 'none' && !after.length) return true; // unparseable paint counts
       return after.some(colour => painted(colour, ground)) || before.some(colour => painted(colour, ground));
     }
-    return after.some((colour, i) => strongColour(before[i], colour));
+    return after.some((colour, i) => strongColour(before[i], colour, ground));
   };
-  const visibleChange = (b, a, ground = rgb(b.backgroundColor) || [255, 255, 255]) => feature(b, a, 'outline', '', ['outlineStyle', 'outlineWidth', 'outlineOffset'], 'outlineColor', ground)
+  const visibleChange = (b, a, back, ground = rgb(b.backgroundColor, back) || back) => feature(b, a, 'outline', '', ['outlineStyle', 'outlineWidth', 'outlineOffset'], 'outlineColor', ground)
     || ['Top', 'Right', 'Bottom', 'Left'].some(side => feature(b, a, 'border', side, [`border${side}Style`, `border${side}Width`], `border${side}Color`, ground))
     || feature(b, a, 'decoration', '', ['textDecorationLine', 'textDecorationStyle', 'textDecorationThickness'], 'textDecorationColor', ground)
-    || shadow(b, a, ground) || strongColour(b.backgroundColor, a.backgroundColor) || strongColour(b.color, a.color);
+    || shadow(b, a, ground) || strongColour(b.backgroundColor, a.backgroundColor, back) || strongColour(b.color, a.color, ground);
   const rendered = (style, index) => index === 0 || (!!style.content && !['none', 'normal'].includes(style.content));
   for (let el = document.activeElement; el; el = el.parentElement) {
     const before = window.__focusBefore?.get(el);
     if (!before) continue;
-    const after = read(el);
-    if (after.some((style, i) => (rendered(style, i) || rendered(before[i], i)) && visibleChange(before[i], style))) return true;
+    const after = read(el), back = backdrop(el);
+    if (after.some((style, i) => (rendered(style, i) || rendered(before[i], i)) && visibleChange(before[i], style, back))) return true;
   }
   return false;
 }
