@@ -213,3 +213,19 @@ test('ARGON-R2-05: a :focus-within container indicator counts for every child, n
     assert.deepEqual(baseline, [true, true]);
   } finally { await browser.close(); }
 });
+
+test('R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element', () => {
+  const base = () => ({ outlineStyle: 'none', outlineWidth: '0px', outlineColor: 'rgb(0, 0, 0)', outlineOffset: '0px', boxShadow: 'none', backgroundColor: 'rgb(11, 61, 145)', color: 'rgb(255, 255, 255)', textDecorationLine: 'none' });
+  const button = {}, wrapper = {}; button.parentElement = wrapper;
+  let styles = base();
+  withDom([button, wrapper], el => el === wrapper ? { backgroundColor: 'rgb(255, 255, 255)' } : styles, () => {
+    focusStyleProbe({ capture: true });
+    const check = (change, expected, label) => { styles = { ...base(), ...change }; assert.equal(focusStyleProbe(), expected, label); };
+    check({ outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(0, 0, 0)', outlineOffset: '2px' }, true, 'black outline on a white page around a dark button is visible');
+    check({ outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(255, 255, 255)', outlineOffset: '2px' }, false, 'white outline on a white page is invisible, even around a dark button');
+    check({ outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(255, 255, 255)', outlineOffset: '-4px' }, true, 'inset outline (negative offset) is drawn on the dark button');
+    check({ boxShadow: 'rgb(0, 0, 0) 0px 0px 0px 3px' }, true, 'black outer ring on white');
+    check({ boxShadow: 'rgb(255, 255, 255) 0px 0px 0px 3px' }, false, 'white outer ring on white');
+    check({ boxShadow: 'rgb(255, 255, 255) 0px 0px 0px 3px inset' }, true, 'white inset ring on the dark button');
+  });
+});

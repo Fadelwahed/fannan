@@ -87,21 +87,26 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     if (geometry.some(key => a[key] !== b[key])) return painted(a[colour], ground) || painted(b[colour], ground);
     return strongColour(b[colour], a[colour], ground);
   };
-  const colours = value => String(value ?? '').match(/rgba?\([^)]*\)/g) || [];
-  const shadow = (b, a, ground) => {
+  // R6: an outline (offset >= 0) and an outer box-shadow ring are drawn outside the element, so they are measured
+  // against the backdrop; an inset ring or a negative-offset outline against the element's own background.
+  const shadowItems = value => String(value ?? '').split(/,(?![^(]*\))/).map(item => item.trim()).filter(item => item && item !== 'none');
+  const shadowColour = item => (item.match(/rgba?\([^)]*\)/) || [])[0];
+  const shadow = (b, a, ground, back) => {
     if (a.boxShadow === b.boxShadow) return false;
     const shape = value => String(value ?? '').replace(/rgba?\([^)]*\)/g, 'C');
-    const before = colours(b.boxShadow), after = colours(a.boxShadow);
+    const under = item => /\binset\b/.test(item) ? ground : back;
+    const before = shadowItems(b.boxShadow), after = shadowItems(a.boxShadow);
     if (shape(a.boxShadow) !== shape(b.boxShadow)) {
-      if (a.boxShadow && a.boxShadow !== 'none' && !after.length) return true; // unparseable paint counts
-      return after.some(colour => painted(colour, ground)) || before.some(colour => painted(colour, ground));
+      if (after.some(item => !shadowColour(item))) return true; // unparseable paint counts
+      return after.some(item => painted(shadowColour(item), under(item))) || before.some(item => shadowColour(item) && painted(shadowColour(item), under(item)));
     }
-    return after.some((colour, i) => strongColour(before[i], colour, ground));
+    return after.some((item, i) => strongColour(shadowColour(before[i]), shadowColour(item), under(item)));
   };
-  const visibleChange = (b, a, back, ground = rgb(b.backgroundColor, back) || back) => feature(b, a, 'outline', '', ['outlineStyle', 'outlineWidth', 'outlineOffset'], 'outlineColor', ground)
+  const outlineGround = (b, a, ground, back) => parseFloat((on(a, 'outline') ? a : b).outlineOffset) < 0 ? ground : back;
+  const visibleChange = (b, a, back, ground = rgb(b.backgroundColor, back) || back) => feature(b, a, 'outline', '', ['outlineStyle', 'outlineWidth', 'outlineOffset'], 'outlineColor', outlineGround(b, a, ground, back))
     || ['Top', 'Right', 'Bottom', 'Left'].some(side => feature(b, a, 'border', side, [`border${side}Style`, `border${side}Width`], `border${side}Color`, ground))
     || feature(b, a, 'decoration', '', ['textDecorationLine', 'textDecorationStyle', 'textDecorationThickness'], 'textDecorationColor', ground)
-    || shadow(b, a, ground) || strongColour(b.backgroundColor, a.backgroundColor, back) || strongColour(b.color, a.color, ground);
+    || shadow(b, a, ground, back) || strongColour(b.backgroundColor, a.backgroundColor, back) || strongColour(b.color, a.color, ground);
   const rendered = (style, index) => index === 0 || (!!style.content && !['none', 'normal'].includes(style.content));
   for (let el = document.activeElement; el; el = el.parentElement) {
     const before = window.__focusBefore?.get(el);
