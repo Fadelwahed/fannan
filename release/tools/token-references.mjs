@@ -2,13 +2,16 @@ const reference = value => typeof value === 'string' && /^\{[^{}]+\}$/.test(valu
 const dimension = value => typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
 const lineHeightPercent = (path, value) => path.endsWith('.lineHeight') && typeof value === 'string' && /^\d*\.?\d+%$/.test(value);
 const color = value => typeof value === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(value));
-const weights = new Set(['thin', 'hairline', 'extra-light', 'ultra-light', 'light', 'normal', 'regular', 'book', 'medium', 'semi-bold', 'demi-bold', 'bold', 'extra-bold', 'ultra-bold', 'black', 'heavy', 'extra-black', 'ultra-black']);
+// DTCG font-weight aliases. CSS accepts only 1-1000, normal and bold here, so aliases are converted to numbers
+// before writing token JSON; raw aliases are never emitted into CSS.
+export const fontWeightAliases = Object.freeze({ thin: 100, hairline: 100, 'extra-light': 200, 'ultra-light': 200, light: 300, normal: 400, regular: 400, book: 400, medium: 500, 'semi-bold': 600, 'demi-bold': 600, bold: 700, 'extra-bold': 800, 'ultra-bold': 800, black: 900, heavy: 900, 'extra-black': 950, 'ultra-black': 950 });
+const cssWeightKeywords = new Set(['normal', 'bold']);
 const valid = {
   color,
   dimension,
   number: value => typeof value === 'number' && Number.isFinite(value),
   fontFamily: value => typeof value === 'string' && !!value.trim() || Array.isArray(value) && value.length > 0 && value.every(name => typeof name === 'string' && !!name.trim()),
-  fontWeight: value => typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 1000 || typeof value === 'string' && weights.has(value)
+  fontWeight: value => typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 1000 || typeof value === 'string' && cssWeightKeywords.has(value)
 };
 
 function expected(path) {

@@ -21,6 +21,7 @@ test('shared token validation rejects malformed values and incompatible referenc
     [{ typography: { body: { fontFamily: leaf('fontFamily', []) } } }, /invalid fontFamily value/],
     [{ typography: { body: { fontWeight: leaf('fontWeight', 1001) } } }, /invalid fontWeight value/],
     [{ typography: { body: { fontWeight: leaf('fontWeight', 'heavy-ish') } } }, /invalid fontWeight value/],
+    [{ typography: { body: { fontWeight: leaf('fontWeight', 'semi-bold') } } }, /invalid fontWeight value/], // R4-1: DTCG alias is not valid CSS
     [{ colors: { primary: leaf('color', '#123456') }, spacing: { sm: { $value: '{colors.primary}' } } }, /incompatible token type/],
     [{ colors: { primary: { $value: '{colors.missing}' } } }, /missing token reference/],
     [{ colors: { primary: { $value: '{colors.primary}' } } }, /cyclic token reference/],
@@ -31,6 +32,7 @@ test('shared token validation rejects malformed values and incompatible referenc
   assert.equal(inferTokenType('typography.body.fontWeight', 'heavy-ish'), undefined);
   assert.equal(inferTokenType('components.button.label', 'mysterious'), undefined);
   assert.doesNotThrow(() => validateTokens({ typography: { body: { fontFamily: leaf('fontFamily', ['Inter', 'sans-serif']), lineHeight: leaf('dimension', '150%'), fontWeight: leaf('fontWeight', 700) } } }));
+  for (const keyword of ['normal', 'bold']) assert.doesNotThrow(() => validateTokens({ typography: { body: { fontWeight: leaf('fontWeight', keyword) } } }));
 });
 
 test('CSS build rejects hand-edited malformed token JSON before dependencies or writes', () => {
@@ -40,6 +42,7 @@ test('CSS build rejects hand-edited malformed token JSON before dependencies or 
     for (const [tokens, message] of [
       [{ a: { $type: 'dimension', $value: 16 } }, /invalid dimension value/],
       [{ a: { $type: 'bogus', $value: 'x' } }, /unknown token type/],
+      [{ typography: { body: { fontWeight: { $type: 'fontWeight', $value: 'semi-bold' } } } }, /invalid fontWeight value/],
       [{ colors: { primary: { $type: 'color', $value: '#123456' } }, spacing: { sm: { $value: '{colors.primary}' } } }, /incompatible token type/]
     ]) {
       writeFileSync(input, JSON.stringify(tokens));
@@ -96,6 +99,15 @@ test('token conversion validates types, dimensions and references before writing
     const familyTokens = JSON.parse(readFileSync(json, 'utf8'));
     assert.deepEqual(familyTokens.typography.body.fontFamily.$value, ['Inter', 'sans-serif']);
     assert.equal(familyTokens.typography.body.fontWeight.$type, 'fontWeight');
+    assert.equal(familyTokens.typography.body.fontWeight.$value, 600); // R4-1: DTCG alias mapped to a CSS-valid number
+    const weightCss = join(output, 'weights.css');
+    const weightBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, weightCss, 'test'], { env, encoding: 'utf8' });
+    assert.equal(weightBuild.status, 0, weightBuild.stderr);
+    assert.match(readFileSync(weightCss, 'utf8'), /--typography-body-font-weight:\s*600;/);
+    for (const [alias, number] of [['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
+      assert.equal(convert(`typography:\n  body:\n    fontWeight: ${alias}`).status, 0, alias);
+      assert.equal(JSON.parse(readFileSync(json, 'utf8')).typography.body.fontWeight.$value, number, alias);
+    }
     assert.equal(familyTokens.typography.body.lineHeight.$value, '150%');
     assert.equal(convert('colors:\n  primary: "#123456"\ntypography:\n  body:\n    fontSize: 16px').status, 0);
     const css = join(output, 'variables.css');
