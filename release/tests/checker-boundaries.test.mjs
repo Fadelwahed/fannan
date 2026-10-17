@@ -35,9 +35,23 @@ test('checker verifies browser before launch and records checked identity and ru
   assert.equal(launched, false);
   const ev = {};
   await vm.runInNewContext(`(async () => { ${block} })()`, {
-    verifiedBrowser: () => ({ path: '/opt/reviewed/browser', sha256: 'checked-digest' }), ev,
+    verifiedBrowser: () => ({ path: '/opt/reviewed/browser', sha256: 'checked-digest', version: 'tested-version' }), ev, // R4-4: pin carries the reviewed version
     chromium: { async launch(options) { assert.equal(options.executablePath, '/opt/reviewed/browser'); assert.equal(options.chromiumSandbox, true); return { version: () => 'tested-version' }; } }
   });
   assert.equal(ev.browser.sha256, 'checked-digest');
   assert.equal(ev.browser.version, 'tested-version');
+});
+test('R4-4: checker refuses a browser whose runtime version differs from the reviewed pin', async () => {
+  const start = source.indexOf('let browserIdentity;');
+  const block = source.slice(start, source.indexOf('\nconst ctx =', start));
+  let closed = false, exitCode = null;
+  const ev = {};
+  await assert.rejects(vm.runInNewContext(`(async () => { ${block} })()`, {
+    verifiedBrowser: () => ({ path: '/opt/fannan/bin/browser/chrome', sha256: 'checked-digest', version: '154.0.8037.97' }), ev,
+    console: { error() {} }, process: { exit(code) { exitCode = code; throw Error('blocked exit'); } },
+    chromium: { async launch() { return { version: () => '155.0.0.1', async close() { closed = true; } }; } }
+  }), /blocked exit/);
+  assert.equal(exitCode, 2);
+  assert.equal(closed, true, 'mismatched browser is closed before any page work');
+  assert.equal(ev.browser, undefined, 'no evidence is recorded for an unverified version');
 });

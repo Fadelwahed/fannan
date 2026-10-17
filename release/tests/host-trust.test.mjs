@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, rmSync, symlinkSync, realpathSync, mkdirSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { assertProtectedMetadata, verifyExecutable, verifiedBrowser } from '../tools/executable-trust.mjs';
+import { assertProtectedMetadata, verifyExecutable, verifiedBrowser, supportTreeDigest, verifyBrowserPin } from '../tools/executable-trust.mjs';
 
 test('protected storage rejects shared ownership, writable modes and links', () => {
   const meta = (uid, mode, link = false, type = 'directory') => ({ uid, mode, isSymbolicLink: () => link, isDirectory: () => type === 'directory', isFile: () => type === 'file' });
@@ -42,4 +42,24 @@ test('production browser refuses an environment override before execution', () =
 });
 test('production browser remains blocked without a reviewed target-host pin', () => {
   assert.throws(verifiedBrowser, /pin blocked/);
+});
+
+test('R4-4: browser support tree is hashed and any changed, added or escaping entry is refused', () => {
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'fannan-browser-')));
+  try {
+    const tree = join(dir, 'chrome-154'); mkdirSync(join(tree, 'locales'), { recursive: true });
+    writeFileSync(join(tree, 'chrome'), 'reviewed-exe'); writeFileSync(join(tree, 'resources.pak'), 'pak'); writeFileSync(join(tree, 'locales', 'en-US.pak'), 'en');
+    const pin = { path: join(tree, 'chrome'), sha256: createHash('sha256').update('reviewed-exe').digest('hex'), version: '154.0.8037.97', supportTreeSha256: supportTreeDigest(tree) };
+    assert.equal(supportTreeDigest(tree), pin.supportTreeSha256, 'digest is deterministic');
+    assert.equal(verifyBrowserPin(pin, false).supportTreeSha256, pin.supportTreeSha256);
+    assert.throws(() => verifyBrowserPin({ ...pin, supportTreeSha256: undefined }, false), /support tree pin missing/);
+    writeFileSync(join(tree, 'resources.pak'), 'tampered');
+    assert.throws(() => verifyBrowserPin(pin, false), /support tree mismatch/);
+    writeFileSync(join(tree, 'resources.pak'), 'pak'); writeFileSync(join(tree, 'injected.so'), 'x');
+    assert.throws(() => verifyBrowserPin(pin, false), /support tree mismatch/);
+    rmSync(join(tree, 'injected.so')); symlinkSync('/etc/hosts', join(tree, 'escape'));
+    assert.throws(() => supportTreeDigest(tree), /escapes/);
+    rmSync(join(tree, 'escape'));
+    assert.equal(verifyBrowserPin(pin, false).version, '154.0.8037.97');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

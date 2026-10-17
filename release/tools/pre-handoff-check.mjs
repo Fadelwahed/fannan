@@ -56,7 +56,9 @@ let browserIdentity;
 try { browserIdentity = verifiedBrowser(); }
 catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }
 const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true });
-ev.browser = { ...browserIdentity, version: b.version() };
+const runtimeVersion = b.version();
+if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4
+ev.browser = { ...browserIdentity, version: runtimeVersion };
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
 await ctx.routeWebSocket(/.*/, ws => ws.close());
 const blocked = [];

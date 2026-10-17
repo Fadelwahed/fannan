@@ -1,0 +1,2 @@
+Real tree sanity probe (Mi'mar box, Oct 17 2026 6:14 AM Gaza (UTC+3)): supportTreeDigest(/opt/google/chrome) stable across two runs = true (~1.5 s).
+Protected mode on the stock box install refuses: "protected file must be read-only: /opt/google/chrome/CHROME_VERSION_EXTRA" (stock files are 0644/0755; a reviewed copy must be root-owned read-only, e.g. chrome-sandbox 4555 not 4755). UNTESTED on a provisioned /opt/fannan/bin/<browser-dir>.
