@@ -4,7 +4,13 @@ import { createHash } from 'node:crypto';
 import { inflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
-export const qualityChecks = JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8'));
+// OPUS-R2-09: the focus-state contrast is configurable upward only; 3:1 (WCAG 1.4.11 AA) is the floor.
+export function validateQualityChecks(config) {
+  const value = config?.thresholds?.focusStateContrast;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 3) throw Error('quality-checks focusStateContrast must be a number >= 3 (WCAG 1.4.11 floor)');
+  return config;
+}
+export const qualityChecks = validateQualityChecks(JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8')));
 export const manualIds = qualityChecks.manualIds;
 export const states = ['default', 'hover', 'focus', 'disabled', 'empty', 'loading', 'error'];
 const filler = /\b(unlock|seamless|empower|cutting[ -]edge|revolutionary|game[ -]changing)\b/i;

@@ -135,8 +135,21 @@ test('R4-3: both checker tab loops settle animations after Tab and before readin
   const loops = source.split("await p.keyboard.press('Tab');").slice(1);
   assert.equal(loops.length, 2);
   for (const after of loops) {
-    const settle = after.indexOf('await p.evaluate(focusSettle)'), probe = after.indexOf('await p.evaluate(focusStyleProbe)');
+    const settle = after.indexOf('await p.evaluate(focusSettle)'), probe = after.indexOf('await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast })'); // OPUS-R2-09 call form
     assert.ok(settle !== -1 && probe !== -1 && settle < probe, 'focusSettle must run between Tab and the probe');
   }
   assert.match(source, /import \{ focusSettle, focusStyleProbe \} from '\.\/focus-screen\.mjs';/);
+});
+
+test('OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls', async () => {
+  const config = JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8'));
+  assert.equal(config.thresholds.focusStateContrast, 3);
+  assert.match(config.focusStateContrastReason, /2\.4\.13/);
+  assert.match(config.focusStateContrastReason, /1\.4\.11/);
+  const { validateQualityChecks } = await import('../tools/handoff-contract.mjs');
+  for (const bad of [undefined, 2.9, 0, '3', NaN]) assert.throws(() => validateQualityChecks({ ...config, thresholds: { ...config.thresholds, focusStateContrast: bad } }), /focusStateContrast/, String(bad));
+  for (const good of [3, 4.5]) assert.doesNotThrow(() => validateQualityChecks({ ...config, thresholds: { ...config.thresholds, focusStateContrast: good } }));
+  const source = readFileSync(new URL('../tools/pre-handoff-check.mjs', import.meta.url), 'utf8');
+  assert.equal(source.split('await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast })').length - 1, 2, 'both tab loops pass the configured contrast');
+  assert.doesNotMatch(source, /await p\.evaluate\(focusStyleProbe\);/);
 });

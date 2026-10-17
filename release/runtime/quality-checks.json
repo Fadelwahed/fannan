@@ -1,6 +1,9 @@
 {
   "version": 1,
-  "phase": ["wireframe", "handoff"],
+  "phase": [
+    "wireframe",
+    "handoff"
+  ],
   "thresholds": {
     "centeredSectionsPerPage": 1,
     "accentAreaRatioFullPage": 0.1,
@@ -9,8 +12,25 @@
     "centeredThreeIconRows": 0,
     "genericHeroGradients": 0,
     "fillerMatches": 0,
-    "placeholdersAtHandoff": 0
+    "placeholdersAtHandoff": 0,
+    "focusStateContrast": 3
   },
   "reason": "Six font sizes cover display, title, section, body, secondary and label roles without ad hoc steps. DOM area estimates are proxies and require state-bound screenshot review. Non-hero gradients and backdrop filters are signals for the critic, not automatic fails.",
-  "manualIds": ["point-of-view", "brief-trace", "generic-hero", "decoration-job", "card-grid", "dashboard-tropes", "rule-of-three", "reference-work", "craft", "wcag-review", "accent-area", "palette", "rules-copy", "language-overflow"]
+  "focusStateContrastReason": "Screening threshold for the focus heuristic: a focus indicator (outline, border, underline, ring, or background/text change) counts only when it reaches this contrast against the unfocused state or its backdrop. 3:1 is derived from WCAG 2.2 SC 2.4.13 Focus Appearance (AAA) and matches the SC 1.4.11 Non-text Contrast (AA) minimum, which is the floor: the checker refuses a value below 3. It is a screen, not proof of 2.4.7/2.4.13; manual focus review stays mandatory.",
+  "manualIds": [
+    "point-of-view",
+    "brief-trace",
+    "generic-hero",
+    "decoration-job",
+    "card-grid",
+    "dashboard-tropes",
+    "rule-of-three",
+    "reference-work",
+    "craft",
+    "wcag-review",
+    "accent-area",
+    "palette",
+    "rules-copy",
+    "language-overflow"
+  ]
 }

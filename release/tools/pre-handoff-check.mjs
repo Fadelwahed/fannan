@@ -128,7 +128,7 @@ for (let i = 0; i < 200; i++) {
   await p.evaluate(focusStyleProbe, { capture: true });
   await p.keyboard.press('Tab');
   await p.evaluate(focusSettle);
-  const focusVisible = await p.evaluate(focusStyleProbe);
+  const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
   const info = await p.evaluate(() => {
     const el = document.activeElement; if (!el || el === document.body) return null;
     if (!window.__fid.has(el)) window.__fid.set(el, ++window.__fnext);
@@ -146,7 +146,7 @@ for (let i = 0; i < 200; i++) {
 }
 const keyboardTrapSuspect = stops.length >= 200;
 const small = stops.filter(s => (s.w < 24 || s.h < 24) && !s.inlineLink), noFocus = stops.filter(s => !s.focusVisible), obsc = stops.filter(s => s.obscured);
-ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic (settled after transitions; colour-only changes under 3:1 between states and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
+ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic (settled after transitions; colour-only changes under the configured focusStateContrast (3:1 floor) between states, indicators below it against their backdrop and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
 if (!ev.checks.custom22.pass) fail = true;
 evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
 ev.checks.states = [];
@@ -176,7 +176,7 @@ if (phase === 'handoff' && handoff?.screens) {
         await p.evaluate(focusStyleProbe, { capture: true });
         await p.keyboard.press('Tab');
         await p.evaluate(focusSettle);
-        const focusVisible = await p.evaluate(focusStyleProbe);
+        const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
         const f = await p.evaluate(() => { const el = document.activeElement; if (!el || el === document.body || window.__stateFocus.has(el)) return null; window.__stateFocus.add(el); const r = el.getBoundingClientRect(), x = r.left+r.width/2, y = r.top+r.height/2, top = document.elementFromPoint(Math.max(0,Math.min(innerWidth-1,x)),Math.max(0,Math.min(innerHeight-1,y))); const inlineLink = el.tagName === 'A' && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement?.tagName || '') && el.parentElement.textContent.trim().length > el.textContent.trim().length; return { small: (r.width < 24 || r.height < 24) && !inlineLink, obscured: !!top && top !== el && !el.contains(top) && !top.contains(el) }; });
         if (!f) break;
         f.invisible = !focusVisible;
