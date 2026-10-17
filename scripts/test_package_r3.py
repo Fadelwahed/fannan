@@ -117,6 +117,8 @@ class FinalRecordTests(unittest.TestCase):
         self.assertNotIn('reviews/CODEX-R3-response-f42bc27.md', names)
         if (ROOT / 'test-results/r6').is_dir():
             self.assertTrue(any(n.startswith('test-results/r6/') for n in names), 'R6 evidence is archived like R4/R5')
+        if (ROOT / 'test-results/r7').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r7/') for n in names), 'R7 evidence is archived like R4-R6')
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
     def test_doc_lists_the_exclusions(self):
