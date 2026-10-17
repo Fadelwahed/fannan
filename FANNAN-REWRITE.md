@@ -442,7 +442,7 @@ Load at section planning, the Step 4/5 grayscale review and the Step 8 pre-hando
 
 ## Measurement contract
 
-The reference viewport is 1440 × 900 CSS pixels at device scale one, with a full-page screenshot as well. Visit every declared screen and applicable state. Wait for local fonts and assets; log failed or blocked loads. Keep external requests, service workers and WebSockets blocked during the local check. Capture file hashes and the version under test. A reference PNG is 1440 pixels wide and named `screen--state--locale--vNN.png`; its hash identifies the version. A screenshot from another revision cannot support a PASS. The checker also renders every declared `settings.desktopWidths` width and 320 CSS px (the 400% reflow equivalent of a 1280 px desktop) and fails horizontal overflow, clipped or ellipsised text and a language/direction mismatch; this is a screen, not mobile approval, and manual zoom and text-spacing evidence stays required.
+The reference viewport is 1440 × 900 CSS pixels at device scale one, with a full-page screenshot as well. Visit every declared screen and applicable state. Wait for local fonts and assets; log failed or blocked loads. Keep external requests, service workers and WebSockets blocked during the local check. Capture file hashes and the version under test. A reference PNG is 1440 pixels wide and named `screen--state--locale--vNN.png`; its hash identifies the version. A screenshot from another revision cannot support a PASS. The checker also renders every declared `settings.desktopWidths` width and 320 CSS px (the 400% reflow equivalent of a 1280 px desktop) and fails horizontal overflow, text that actually overflows a hidden or clipped box (ellipsis styling alone is not a failure) and a language/direction mismatch; this is a screen, not mobile approval, and manual zoom and text-spacing evidence stays required.
 
 Mark visible text wrappers with `data-copy-slot="ID"` and match every displayed string to the approved locale variant in the copy deck, including interface and error labels. Unlisted or mismatched text blocks final handoff. Declare semantic section, component, copy-slot and media IDs in the reference DOM and match them to the handoff inventory. The critic inspects the full screenshot and semantic outline so unmarked containers cannot evade a count. CSS/computed-style counts are recorded as measurements. Layout intent, claims, tasteful restraint and the purpose of an image remain reviewed judgments with an artifact, reviewer, explanation and brief line references. A guessed PASS flag is not evidence.
 
@@ -749,9 +749,16 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R9 additions (Mi'mar, 18 October 2026, Codex round 4)
+
+- **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.
+- **Accent colour (R9 sibling):** normalised by a detached canvas. Chrome 155 only; colour spaces beyond sRGB (oklch outside sRGB) may round differently from computed backgrounds. UNTESTED.
+- **Package build (CODEX-R4-01):** atomic replace was tested on the box's local filesystem only; a crash between the four output renames can still leave a mix of old and new outputs (each file is whole). `verify` detects that mix.
+- **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM Gaza).
+
 ## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
 
-- **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
+- **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, text that actually overflows a hidden or clipped box (ellipsis styling on text that fits is not a failure, CODEX-R4-04), and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
 - **Install wording (PORT-03):** documentation only. Token scope proof, the daily-check freshness/escalation, the dedicated runtime identity and the detector at `/opt/fannan/bin` are still UNTESTED on any host; nothing was provisioned.
 - **Package input (PORT-04):** caches, dependency trees and Git metadata inside packaged trees are refused (unit-tested with temporary trees); the live build ran on a clean tree.
 
@@ -798,6 +805,32 @@ Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs 
 Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
+
+## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM Gaza)
+
+Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accent colour measured through a page element). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 54 PASS, 0 FAIL | `test-results/r9/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 41 PASS, 0 FAIL | `test-results/r9/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 48 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7/R8) | `test-results/r9/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r9/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r9/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 18 PASS | `test-results/r9/package-tests-git.log` |
+| same, no-git copy | 0 | 15 PASS | `test-results/r9/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r9/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r9/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r9/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 13 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs` exit 0. Browser, contract, spacing, desktop widths (1440 + 320 reflow, page and state) and state checks run and pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r9/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r9/CODEX-R4-0{1,2,3,4}-before.log` / `-after.log` and `R9-accent-sibling-before.log` / `-after.log`.
 
 ## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM Gaza)
 
