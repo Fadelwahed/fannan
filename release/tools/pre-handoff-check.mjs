@@ -3,7 +3,8 @@
 // Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.2 AA tags with target-size ENABLED, 0 violations,
 // (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,
 // focus visible on every tab stop, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
-import { readFileSync, existsSync, realpathSync } from 'node:fs';
+import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -12,7 +13,7 @@ import { checkHandoff, qualityChecks } from './handoff-contract.mjs';
 import { verifiedDeps } from './verify-deps.mjs';
 import { localAsset } from './local-file-boundary.mjs';
 import { copySignals } from './copy-signals.mjs';
-import { verifiedBrowser } from './executable-trust.mjs';
+import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe } from './spacing-scale.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
@@ -53,10 +54,12 @@ try {
 let axeSrc;
 try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }
 catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
+const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // ARGON-R2-06: private HOME, removed on exit
+process.on('exit', () => rmSync(browserHome, { recursive: true, force: true }));
 let browserIdentity;
 try { browserIdentity = verifiedBrowser(); }
 catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }
-const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true });
+const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true, env: browserLaunchEnv(browserHome) });
 const runtimeVersion = b.version();
 if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4
 ev.browser = { ...browserIdentity, version: runtimeVersion };

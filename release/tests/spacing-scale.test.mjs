@@ -37,3 +37,22 @@ test('OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are n
     assert.deepEqual(none.spacingOffScale.map(v => v.value), ['8px'], 'no scale: every nonzero spacing is off-scale');
   } finally { await browser.close(); }
 });
+
+test('ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only)', { skip: !(process.platform === 'linux' && existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'Linux, test-only deps or local Chrome absent' }, async () => {
+  const { browserLaunchEnv } = await import('../tools/executable-trust.mjs');
+  const { readdirSync, mkdtempSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const home = mkdtempSync(join(tmpdir(), 'fannan-browser-home-'));
+  process.env.FANNAN_R6_SENTINEL = 'must-not-leak';
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'], env: browserLaunchEnv(home) });
+  try {
+    const children = readdirSync('/proc').filter(pid => /^\d+$/.test(pid)).filter(pid => { try { return /^PPid:\s*(\d+)$/m.exec(readFileSync(`/proc/${pid}/status`, 'utf8'))[1] === String(process.pid); } catch { return false; } });
+    const envs = children.map(pid => { try { return readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0'); } catch { return null; } }).filter(Boolean);
+    assert.ok(envs.length >= 1, 'browser child found');
+    for (const env of envs) {
+      assert.ok(!env.some(v => v.startsWith('FANNAN_R6_SENTINEL=')), 'sentinel absent');
+      assert.ok(env.includes(`HOME=${home}`) && env.includes('PATH=/usr/bin:/bin'));
+    }
+  } finally { await browser.close(); delete process.env.FANNAN_R6_SENTINEL; rmSync(home, { recursive: true, force: true }); }
+});

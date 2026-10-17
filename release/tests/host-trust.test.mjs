@@ -87,3 +87,17 @@ test('ARGON-R2-01: protected mode refuses any symlink inside the support tree (b
   const source = readFileSync(new URL('../tools/executable-trust.mjs', import.meta.url), 'utf8');
   assert.match(source, /if \(protectedStorage\) throw Error\(`browser support symlink forbidden/);
 });
+
+test('ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env', async () => {
+  const mod = await import('../tools/executable-trust.mjs');
+  assert.equal(typeof mod.browserLaunchEnv, 'function', 'browserLaunchEnv exported');
+  process.env.FANNAN_R6_SENTINEL = 'leak';
+  try {
+    const env = mod.browserLaunchEnv('/tmp/fannan-home-x');
+    assert.deepEqual(Object.keys(env).sort(), ['HOME', 'LANG', 'PATH']);
+    assert.deepEqual(env, { PATH: '/usr/bin:/bin', LANG: 'C.UTF-8', HOME: '/tmp/fannan-home-x' });
+    assert.throws(() => mod.browserLaunchEnv('relative'), /absolute/);
+  } finally { delete process.env.FANNAN_R6_SENTINEL; }
+  const source = readFileSync(new URL('../tools/pre-handoff-check.mjs', import.meta.url), 'utf8');
+  assert.match(source, /chromium\.launch\(\{ executablePath: browserIdentity\.path, chromiumSandbox: true, env: browserLaunchEnv\(browserHome\) \}\)/);
+});

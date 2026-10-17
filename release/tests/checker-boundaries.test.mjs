@@ -30,13 +30,14 @@ test('checker verifies browser before launch and records checked identity and ru
   assert.notEqual(start, -1);
   const block = source.slice(start, source.indexOf('\nconst ctx =', start));
   let launched = false;
-  const denied = { verifiedBrowser() { throw Error('pin blocked'); }, console: { error() {} }, process: { exit() { throw Error('blocked exit'); } }, chromium: { launch() { launched = true; } }, ev: {} };
+  const denied = { browserHome: '/tmp/h', browserLaunchEnv: home => ({ PATH: '/usr/bin:/bin', LANG: 'C.UTF-8', HOME: home }), verifiedBrowser() { throw Error('pin blocked'); }, console: { error() {} }, process: { exit() { throw Error('blocked exit'); } }, chromium: { launch() { launched = true; } }, ev: {} };
   await assert.rejects(vm.runInNewContext(`(async () => { ${block} })()`, denied), /blocked exit/);
   assert.equal(launched, false);
   const ev = {};
   await vm.runInNewContext(`(async () => { ${block} })()`, {
     verifiedBrowser: () => ({ path: '/opt/reviewed/browser', sha256: 'checked-digest', version: 'tested-version' }), ev, // R4-4: pin carries the reviewed version
-    chromium: { async launch(options) { assert.equal(options.executablePath, '/opt/reviewed/browser'); assert.equal(options.chromiumSandbox, true); return { version: () => 'tested-version' }; } }
+    browserHome: '/tmp/h', browserLaunchEnv: home => ({ PATH: '/usr/bin:/bin', LANG: 'C.UTF-8', HOME: home }),
+    chromium: { async launch(options) { assert.equal(options.executablePath, '/opt/reviewed/browser'); assert.equal(options.chromiumSandbox, true); assert.deepEqual(options.env, { PATH: '/usr/bin:/bin', LANG: 'C.UTF-8', HOME: '/tmp/h' }); /* ARGON-R2-06 */ return { version: () => 'tested-version' }; } }
   });
   assert.equal(ev.browser.sha256, 'checked-digest');
   assert.equal(ev.browser.version, 'tested-version');
@@ -48,6 +49,7 @@ test('R4-4: checker refuses a browser whose runtime version differs from the rev
   const ev = {};
   await assert.rejects(vm.runInNewContext(`(async () => { ${block} })()`, {
     verifiedBrowser: () => ({ path: '/opt/fannan/bin/browser/chrome', sha256: 'checked-digest', version: '154.0.8037.97' }), ev,
+    browserHome: '/tmp/h', browserLaunchEnv: home => ({ PATH: '/usr/bin:/bin', LANG: 'C.UTF-8', HOME: home }),
     console: { error() {} }, process: { exit(code) { exitCode = code; throw Error('blocked exit'); } },
     chromium: { async launch() { return { version: () => '155.0.0.1', async close() { closed = true; } }; } }
   }), /blocked exit/);

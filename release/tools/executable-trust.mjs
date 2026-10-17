@@ -91,3 +91,11 @@ export function verifiedBrowser() {
   assertBrowserPinLocation(pin.path);
   return verifyBrowserPin(pin, true);
 }
+
+// ARGON-R2-06: the browser child gets only these variables (like the Impeccable launcher), never the checker's
+// process.env, so tokens or keys in the caller's environment cannot reach page or browser code. HOME is a fresh
+// private directory made by the caller.
+export function browserLaunchEnv(home) {
+  if (typeof home !== 'string' || !isAbsolute(home)) throw Error('browser HOME must be an absolute private directory');
+  return { PATH: '/usr/bin:/bin', LANG: 'C.UTF-8', HOME: home };
+}
