@@ -1,5 +1,24 @@
 # R3 executed verification — 17 October 2026
 
+## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM Gaza)
+
+Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`), copied in after the box restore; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 36 PASS, 0 FAIL, 0 SKIP | `test-results/r6/node.log` |
+| same, without deps | 0 | 30 PASS, 0 FAIL, 6 SKIP (need deps or Chrome) | `test-results/r6/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 34 PASS, 2 FAIL: the intended `Node 22.12+ required` refusal | `test-results/r6/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r6/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r6/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r6/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r6/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract and state checks PASS; full gate blocked by the absent Impeccable binary | `test-results/r6/local-fixture.log` |
+| design.md lint 0.4.0 offline, convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r6/designmd-lint-offline.log` |
+| Syntax | 0 | mjs=25 sh=4 py=4, 0 failures | `test-results/r6/syntax.log` |
+
+Per-finding before/after logs are in `test-results/r6/`. Package build/verify results are in the latest `reviews/MIMAR-R6-changes-*.md`.
+
 ## R4 executed verification (Mi'mar's box, 17 October 2026)
 
 Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. Not the target bot host. Node runs used an existing locked dependency tree (lock sha256 `55a645b1…8710`, matches the pin) copied in as **test evidence only**; no install, no network.

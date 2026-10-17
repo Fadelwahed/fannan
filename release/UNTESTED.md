@@ -1,5 +1,13 @@
 # R3 checks not established
 
+## R6 additions (Mi'mar, 17 October 2026, Argon round 2)
+
+- **ARGON-R2-01 protected browser tree:** checked with a real root-owned 0755 tree under `/root` on Mi'mar's box (`test-results/r6/ARGON-01-root-probe.log`, run with sudo, test-only): the old code accepted an internal symlink and a symlinked root; the new code refuses both and still hashes a clean tree. A provisioned `/opt/fannan/bin` browser remains UNTESTED.
+- **ARGON-R2-06 browser environment:** checked on Linux with real Chrome 155 via `/proc/<pid>/environ` (test-only): a sentinel variable no longer reaches the browser process. macOS has no `/proc`, so that test skips there.
+- **ARGON-R2-09 design probe:** accent fallback, stock-glass gate and centred icon trios in any wrapper are checked in real Chrome 155 headless (test-only, unpinned). The trio rule is a screen: three icon-led items centred on the row or on every item. Reviewers still judge layouts it cannot see (CSS background icons, canvas, images without icon markup).
+- **R6-A focus backdrop:** outlines with offset >= 0 and outer rings are measured against the backdrop; inset rings and negative-offset outlines against the element. Borders stay measured against the element. All R5 real-Chrome focus cases give the same result (`test-results/r6/R6-A-chrome-regression.log`).
+- **Local fixture:** `release/tests/local-fixture.mjs` now runs end to end on Mi'mar's box (exit 0, `test-results/r6/local-fixture.log`): browser, contract, spacing and state checks pass; the full gate is still blocked by the absent pinned Impeccable binary. It uses the box's unpinned Chrome through a test-only shim, never the production pin.
+
 ## R4 additions (Mi'mar, 17 October 2026)
 
 - **R4-3 focus screen:** checked in real Chrome 154 headless on Mi'mar's box (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). R4 composited colours over white, which could pass an invisible dark indicator on a dark page (a false pass) and fail a light one (a false fail). OPUS-R2-02 (R5) composites over the nearest opaque ancestor background captured unfocused, with a white fallback; checked in real Chrome (`test-results/r5/OPUS-02-chrome-*.log`). Background images, gradients, `opacity`, filters, blend modes and content painted behind via positioning are not modelled; pseudo-elements are measured against the element's backdrop, not its own background. Manual focus review stays required. The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
