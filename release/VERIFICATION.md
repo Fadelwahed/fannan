@@ -1,6 +1,6 @@
 # R3 executed verification — 17 October 2026
 
-## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:55 PM Gaza)
+## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM Gaza)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
 
