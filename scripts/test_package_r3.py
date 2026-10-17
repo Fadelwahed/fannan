@@ -65,33 +65,44 @@ class WhitespacePolicyTests(unittest.TestCase):
 
 
 class FinalRecordTests(unittest.TestCase):
-    """CODEX-R2-04: allowed final records, one-file limits and ZIP exclusion are implemented and documented."""
-    def coverage_for(self, names):
+    """CODEX-R2-04 + OPUS-R2-03: only the registry and the one latest Mi'mar record written after the freeze stay
+    unhashed; the frozen CODEX response and earlier records are hashed; no record is in the ZIP."""
+    def coverage_for(self, names, listed=None):
         saved = package.changed
         package.changed = lambda start: sorted(names)
         try:
-            return package.coverage('start')
+            return package.coverage('start', listed)
         finally:
             package.changed = saved
 
-    def test_one_record_per_round_is_excluded_and_duplicates_fail(self):
-        covered, excluded = self.coverage_for(['release/x', 'trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-aaa.md', 'reviews/MIMAR-R4-changes-bbb.md', 'reviews/MIMAR-R5-changes-ccc.md'])
-        self.assertEqual(covered, ['release/x'])
-        self.assertEqual(set(excluded), {'trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-aaa.md', 'reviews/MIMAR-R4-changes-bbb.md', 'reviews/MIMAR-R5-changes-ccc.md'})
-        with self.assertRaisesRegex(ValueError, 'one final record per round'):
-            self.coverage_for(['reviews/MIMAR-R5-changes-ccc.md', 'reviews/MIMAR-R5-changes-ddd.md'])
-        with self.assertRaisesRegex(ValueError, 'only one final response'):
-            self.coverage_for(['reviews/CODEX-R3-response-a.md', 'reviews/CODEX-R3-response-b.md'])
-        covered, _ = self.coverage_for(['reviews/MIMAR-notes.md', 'reviews/MIMAR-R5-changes.md'])
-        self.assertEqual(sorted(covered), sorted(['reviews/MIMAR-notes.md', 'reviews/MIMAR-R5-changes.md']), 'only exact record names are excluded')
+    def test_build_hashes_everything_but_the_registry(self):
+        names = ['release/x', 'trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-aaa.md', 'reviews/MIMAR-R4-changes-bbb.md', 'reviews/MIMAR-R5-changes-ccc.md']
+        covered, excluded = self.coverage_for(names)
+        self.assertEqual(set(excluded), {'trust/R3-CHANGES.sha256'})
+        self.assertEqual(sorted(covered), sorted(n for n in names if n != 'trust/R3-CHANGES.sha256'))
+
+    def test_verify_excludes_only_one_latest_record_written_after_the_freeze(self):
+        listed = {'release/x', 'reviews/CODEX-R3-response-aaa.md', 'reviews/MIMAR-R4-changes-bbb.md', 'reviews/MIMAR-R5-changes-ccc.md'}
+        names = sorted(listed | {'trust/R3-CHANGES.sha256', 'reviews/MIMAR-R5-changes-ddd.md'})
+        covered, excluded = self.coverage_for(names, listed)
+        self.assertEqual(set(excluded), {'trust/R3-CHANGES.sha256', 'reviews/MIMAR-R5-changes-ddd.md'})
+        self.assertEqual(set(covered), listed)
+        with self.assertRaisesRegex(ValueError, 'at most one record after the freeze'):
+            self.coverage_for(names + ['reviews/MIMAR-R6-changes-eee.md'], listed)
+        with self.assertRaisesRegex(ValueError, 'older than'):
+            self.coverage_for(sorted(listed | {'reviews/MIMAR-R3-changes-fff.md'}), listed)
+        covered, _ = self.coverage_for(sorted(listed | {'reviews/CODEX-R3-response-zzz.md', 'reviews/MIMAR-R5-changes.md'}), listed)
+        self.assertIn('reviews/CODEX-R3-response-zzz.md', covered, 'an unhashed CODEX response is not excused')
+        self.assertIn('reviews/MIMAR-R5-changes.md', covered, 'only the exact record name pattern is excused')
 
     def test_records_are_not_in_the_zip(self):
         self.assertFalse(any(p.relative_to(ROOT).as_posix().startswith(('reviews/CODEX-', 'reviews/MIMAR-')) for p in package.archive_paths()))
 
-    def test_doc_lists_every_allowed_final_record(self):
+    def test_doc_lists_the_exclusions(self):
         text = (ROOT / 'release/PACKAGING.md').read_text()
-        for needle in ['trust/R3-CHANGES.sha256', 'reviews/CODEX-R3-response-<sha>.md', 'reviews/MIMAR-R<n>-changes-<sha>.md', 'one file per round', 'not in the ZIP']:
+        for needle in ['trust/R3-CHANGES.sha256', 'reviews/MIMAR-R<n>-changes-<sha>.md', 'at most one', 'not in the ZIP', '`reviews/CODEX-R3-response-<sha>.md` is hashed']:
             self.assertIn(needle, text)
+        self.assertNotIn('exactly two', text)
 
 
 if __name__ == '__main__':

@@ -12,15 +12,14 @@ Build combines all seven original deliverables with all 16 skill files, enumerat
 
 The release manifest covers **all release files with no exclusions**. Its pin must ultimately come from Amin's reviewed approval record/trusted runtime configuration, not a nearby editable file. Candidate hashes are reproducible review evidence, not approval.
 
-For the repository changes registry, exactly these files are deliberately excluded (CODEX-R2-04), and each limit is enforced by `scripts/package-r3.py`:
+For the repository changes registry (CODEX-R2-04, OPUS-R2-03), `scripts/package-r3.py` leaves at most two changed files unhashed:
 
-| Excluded file | Limit | Why |
+| Unhashed file | Limit | Why |
 |---|---|---|
 | `trust/R3-CHANGES.sha256` | the registry itself | no file can contain its own SHA-256; anchor it with `--registry-sha256` |
-| `reviews/CODEX-R3-response-<sha>.md` | one file; a second one fails | Codex's required final response, committed after the R3 freeze |
-| `reviews/MIMAR-R<n>-changes-<sha>.md` | one file per round `<n>`; a second file for the same round fails; only this exact name pattern | Mi'mar's required final record for round `<n>`, committed after that round's freeze |
+| `reviews/MIMAR-R<n>-changes-<sha>.md` | at most one, absent from the registry, for the latest round (not older than any record in the registry); only this exact name pattern | Mi'mar's record is the required last commit after the package freeze; Git records its bytes and it quotes the registry digest |
 
-Git records those commits, and each record quotes the registry digest. No implementation, test, evidence, generated document or ZIP is excluded from repository coverage. These records are not in the ZIP (they are written after the freeze, so the archive cannot contain them).
+Everything else that changed since the start commit is hashed: implementation, tests, evidence, generated documents, the ZIP, every earlier Mi'mar record, and `reviews/CODEX-R3-response-<sha>.md` is hashed too (it is frozen before this round). At build time only the registry is excluded; verify then allows the single late record. A second late record, an older-round late record, or any other unhashed file fails verify. Review records (`reviews/CODEX-*`, `reviews/MIMAR-*`) are not in the ZIP.
 
 After final commit, compare the actual committed paths (the verifier uses the same diff plus any untracked paths, making it stricter while editing). A clone does not keep the 0444 modes, and the verifier requires **both** generated trust files to be read-only, so set them first (no bytes change):
 
@@ -32,7 +31,7 @@ python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f
 
 `--registry-sha256` (R4-5) anchors `trust/R3-CHANGES.sha256` to an externally recorded digest and is checked before anything else; a mismatch fails. Without it the registry is only checked against its own hash (`registryPin` reports `self (unanchored …)`), which proves internal consistency, not authenticity. Regression tests: `python3 -B scripts/test_package_r3.py -v`.
 
-`coveredChangedFiles`, `uncoveredChangedFiles: []` and `deliberateExclusions` are the comparison result. `changesManifestSha256` is quoted in the final response. The self-test proves rejection of tampering, unexpected files, symlinks and a writable manifest. The portable verifier checks read-only mode bits, external pin, exact inventory, bytes and archive contents; it does not replace target-host GNU/Linux execution.
+`coveredChangedFiles`, `uncoveredChangedFiles: []` and `deliberateExclusions` are the comparison result. `changesManifestSha256` is quoted in the latest Mi'mar record (`reviews/MIMAR-R<n>-changes-<sha>.md`). The self-test proves rejection of tampering, unexpected files, symlinks and a writable manifest. The portable verifier checks read-only mode bits, external pin, exact inventory, bytes and archive contents; it does not replace target-host GNU/Linux execution.
 
 Also run the production verifier on a supported GNU/Linux host with the pin from the review record:
 

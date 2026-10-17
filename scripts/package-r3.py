@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local R3 packaging only: never installs, fetches, repins dependencies or grants approval."""
 import argparse
+import re
 import hashlib
 import json
 import stat
@@ -90,25 +91,30 @@ def changed(start):
     return sorted(set(git('diff', '--name-only', start, '--') + git('ls-files', '--others', '--exclude-standard')))
 
 
-def coverage(start):
+RECORD = re.compile(r'reviews/MIMAR-R(\d+)-changes-[0-9a-f]+\.md')
+
+
+def listed(registry):
+    """Paths named in a registry file (comment lines skipped)."""
+    return {line.split(None, 1)[1].lstrip('*') for line in registry.read_text().splitlines() if line.strip() and not line.startswith('#')}
+
+
+def coverage(start, registered=None):
+    """CODEX-R2-04 + OPUS-R2-03. At build (registered is None) every changed path except the registry is hashed,
+    including the frozen CODEX response and earlier Mi'mar records. At verify, the only other path allowed outside the
+    registry is at most one reviews/MIMAR-R<n>-changes-<sha>.md written after the freeze, for the latest round."""
     names = changed(start)
-    responses = [name for name in names if name.startswith('reviews/CODEX-R3-response-') and name.endswith('.md')]
-    if len(responses) > 1:
-        raise ValueError('expected only one final response')
-    # Mi'mar's per-round records (reviews/MIMAR-R<n>-changes-<sha>.md) are each the required last commit of their
-    # round, after that round's package freeze; at most one file per round (CODEX-R2-04).
-    import re
-    rounds = {}
-    for name in names:
-        match = re.fullmatch(r'reviews/MIMAR-R(\d+)-changes-[0-9a-f]+\.md', name)
-        if match:
-            rounds.setdefault(match.group(1), []).append(name)
-    if any(len(records) > 1 for records in rounds.values()):
-        raise ValueError('expected one final record per round')
-    responses += [records[0] for records in rounds.values()]
-    excluded = {REGISTRY: 'self hash cannot be embedded in its own manifest'}
-    excluded.update({name: 'required last response commit follows code/package freeze; Git commit records its bytes' for name in responses})
-    return [name for name in names if name not in excluded], {name: reason for name, reason in excluded.items() if name in names}
+    excluded = {REGISTRY: 'self hash cannot be embedded in its own manifest'} if REGISTRY in names else {}
+    if registered is not None:
+        late = [name for name in names if name != REGISTRY and name not in registered and RECORD.fullmatch(name)]
+        if len(late) > 1:
+            raise ValueError('expected at most one record after the freeze: ' + ', '.join(late))
+        if late:
+            frozen = [int(RECORD.fullmatch(name).group(1)) for name in registered if RECORD.fullmatch(name)]
+            if frozen and int(RECORD.fullmatch(late[0]).group(1)) < max(frozen):
+                raise ValueError(f'record {late[0]} is older than the latest frozen record')
+            excluded[late[0]] = 'latest round record, the required last commit after the package freeze; Git records its bytes'
+    return [name for name in names if name not in excluded], excluded
 
 
 def archive_paths():
@@ -174,7 +180,7 @@ def check_registry_pin(path, expected):
 def verify(start, registry_sha256=None):
     registry_pin = check_registry_pin(ROOT / REGISTRY, registry_sha256)  # checked first: an unanchored or wrong registry fails before anything else
     report = verify_release_archive()
-    names, excluded = coverage(start)
+    names, excluded = coverage(start, listed(ROOT / REGISTRY))
     entries = verify_hashes(ROOT / REGISTRY, ROOT, registry_sha256 or sha(ROOT / REGISTRY), names)
     report.update(changedFiles=len(names) + len(excluded), coveredChangedFiles=len(entries), uncoveredChangedFiles=[], deliberateExclusions=excluded,
                   changesManifestSha256=sha(ROOT / REGISTRY), registryPin=registry_pin)
