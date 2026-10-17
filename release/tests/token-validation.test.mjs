@@ -191,7 +191,7 @@ test('token conversion validates types, dimensions and references before writing
     ]) {
       const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml); assert.equal(existsSync(json), false, yaml);
     }
-    for (const [alias, number] of [['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
+    for (const [alias, number] of [['normal', 400], ['bold', 700], ['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
       assert.equal(convert(`typography:\n  body:\n    fontWeight: ${alias}`).status, 0, alias);
       assert.equal(JSON.parse(readFileSync(json, 'utf8')).typography.body.fontWeight.$value, number, alias);
     }
