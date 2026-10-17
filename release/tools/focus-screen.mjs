@@ -36,7 +36,7 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     const m = /^rgba?\(([^)]*)\)$/.exec(String(value ?? '').trim());
     if (!m) return null;
     const parts = m[1].split(/[\s,/]+/).filter(Boolean);
-    const n = parts.map(part => part.endsWith('%') ? parseFloat(part) / 100 : parseFloat(part));
+    const n = parts.map((part, i) => part.endsWith('%') ? parseFloat(part) * (i < 3 ? 2.55 : 0.01) : parseFloat(part)); // ARGON-R2-04: channel % -> 0..255, alpha % -> 0..1
     if (n.length < 3 || n.some(Number.isNaN)) return null;
     return { c: n.slice(0, 3), a: n.length > 3 ? n[3] : 1 };
   };

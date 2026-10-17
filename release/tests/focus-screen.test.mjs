@@ -153,3 +153,31 @@ test('OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored a
   assert.equal(source.split('await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast })').length - 1, 2, 'both tab loops pass the configured contrast');
   assert.doesNotMatch(source, /await p\.evaluate\(focusStyleProbe\);/);
 });
+
+test('ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count', () => {
+  const base = () => ({ outlineStyle: 'none', outlineWidth: '0px', outlineColor: 'rgb(0, 0, 0)', boxShadow: 'none', backgroundColor: 'rgb(255, 255, 255)', color: 'rgb(0, 0, 0)', textDecorationLine: 'none' });
+  const button = {}, wrapper = { }; button.parentElement = wrapper;
+  let styles = base();
+  const styleFor = el => el === wrapper ? { backgroundColor: 'rgb(255, 255, 255)' } : styles;
+  withDom([button, wrapper], styleFor, () => {
+    styles = { ...base(), backgroundColor: 'rgb(100%, 100%, 100%)', color: 'rgb(0%, 0%, 0%)' };
+    focusStyleProbe({ capture: true });
+    styles = { ...styles, backgroundColor: 'rgb(0%, 0%, 0%)', color: 'rgb(100%, 100%, 100%)' };
+    assert.equal(focusStyleProbe(), true, 'white -> black in percentages is a strong change');
+    styles = { ...base(), backgroundColor: 'rgb(100%, 100%, 100%)' };
+    focusStyleProbe({ capture: true });
+    styles = { ...styles, backgroundColor: 'rgb(255 255 255 / 100%)' };
+    assert.equal(focusStyleProbe(), false, 'same colour written two ways is no change');
+    styles = base(); focusStyleProbe({ capture: true });
+    styles = { ...base(), outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgba(0, 0, 0, 0)' };
+    assert.equal(focusStyleProbe(), false, 'transparent outline (CODEX-R2-01)');
+    styles = { ...base(), outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(0% 0% 0% / 0%)' };
+    assert.equal(focusStyleProbe(), false, 'transparent outline with alpha 0%');
+    styles = { ...base(), outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(0% 0% 0% / 100%)' };
+    assert.equal(focusStyleProbe(), true, 'opaque black outline with alpha 100%');
+    styles = { ...base(), boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 2px' };
+    assert.equal(focusStyleProbe(), false, 'transparent ring (CODEX-R2-01)');
+    styles = { ...base(), outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(250, 250, 250)' };
+    assert.equal(focusStyleProbe(), false, 'near-white outline on white (CODEX-R2-01)');
+  });
+});
