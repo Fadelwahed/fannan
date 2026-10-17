@@ -149,5 +149,60 @@ class PackageInputTests(unittest.TestCase):
     def test_release_tree_is_clean_now(self):
         package.files(ROOT / 'release')
 
+class BuildOrderTests(unittest.TestCase):
+    """CODEX-R4-01: a rejected input is found before any output is written, so the previous outputs keep their bytes."""
+    OUTPUTS = ['FANNAN-REWRITE.md', 'trust/MANIFEST.sha256', 'trust/PINNED.sha256', 'artifacts/FANNAN-R3.zip', 'test-results/r3/package-verification.json', 'trust/R3-CHANGES.sha256']
+
+    def run_build(self, damage):
+        saved = package.ROOT, package.combined, package.changed
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'release/tools').mkdir(parents=True)
+            (root / 'release/tools/ok.mjs').write_text('ok')
+            (root / 'input').mkdir()
+            (root / 'input/brief.md').write_text('brief')
+            before = {}
+            for name in self.OUTPUTS:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_bytes(b'previous ' + name.encode())
+                before[name] = (root / name).read_bytes()
+            package.ROOT = root
+            package.combined = lambda: 'regenerated'
+            package.changed = lambda start: ['release/tools/ok.mjs']
+            try:
+                damage(root)
+                with self.assertRaises((ValueError, subprocess.CalledProcessError)):
+                    package.build('9ee1ca6')
+            finally:
+                package.ROOT, package.combined, package.changed = saved
+            for name in self.OUTPUTS:
+                self.assertEqual((root / name).read_bytes(), before[name], name + ' was changed by a rejected build')
+            self.assertEqual([p.name for p in (root / 'artifacts').iterdir()], ['FANNAN-R3.zip'], 'no temp file left behind')
+
+    def test_symlink_in_release_preserves_outputs(self):
+        self.run_build(lambda root: (root / 'release/link').symlink_to(root / 'input/brief.md'))
+
+    def test_cache_in_input_preserves_outputs(self):
+        def damage(root):
+            (root / 'input/__pycache__').mkdir(); (root / 'input/__pycache__/x.pyc').write_bytes(b'x')
+        self.run_build(damage)
+
+    def test_missing_archive_input_preserves_outputs(self):
+        self.run_build(lambda root: None)  # ORIGINAL-ASSIGNMENT.md and the other named inputs are absent
+
+    def test_bad_start_preserves_outputs(self):
+        def damage(root):
+            def bad(start):
+                raise subprocess.CalledProcessError(128, ['git', 'diff', start])
+            package.changed = bad
+        self.run_build(damage)
+
+    def test_build_lists_archive_paths_once(self):
+        src = SCRIPT.read_text()
+        body = src[src.index('def build(start):'):src.index('def verify_release_archive')]
+        self.assertEqual(body.count('archive_paths()'), 1)
+        self.assertLess(body.index('archive_paths()'), body.index('write_bytes('))
+        self.assertLess(body.index('coverage(start)'), body.index('write_bytes('))
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Local R3 packaging only: never installs, fetches, repins dependencies or grants approval."""
 import argparse
+import os
 import re
 import hashlib
+import io
 import json
 import stat
 import subprocess
@@ -34,12 +36,21 @@ def files(root):
 
 
 def write(path, text, readonly=False):
-    if path.exists():
-        path.chmod(0o644)
+    write_bytes(path, text.encode('utf-8'), readonly)
+
+
+def write_bytes(path, data, readonly=False):
+    """CODEX-R4-01: write a sibling temp file, then os.replace it, so an interrupted write never truncates the old output."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding='utf-8')
-    if readonly:
-        path.chmod(0o444)
+    fd, temp = tempfile.mkstemp(prefix='.' + path.name + '.', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'wb') as handle:
+            handle.write(data)
+        os.chmod(temp, 0o444 if readonly else 0o644)
+        os.replace(temp, path)
+    except BaseException:
+        Path(temp).unlink(missing_ok=True)
+        raise
 
 
 def manifest(paths, root, covers):
@@ -141,32 +152,51 @@ def archive_paths():
     return sorted(paths)
 
 
+GENERATED = ('FANNAN-REWRITE.md', 'trust/MANIFEST.sha256', 'trust/PINNED.sha256')
+
+
 def build(start):
-    write(ROOT / 'FANNAN-REWRITE.md', combined())
+    """CODEX-R4-01: every input is listed and validated BEFORE any output is written. The archive path list is computed
+    once and reused; generated files are packaged from memory; each output replaces the old one atomically."""
     release = ROOT / 'release'
+    release_files = files(release)               # refuses symlinks, caches, dependency and git entries
+    paths = archive_paths()                      # same refusals for every packaged tree; computed once
+    coverage(start)                              # a bad --start fails here, before any write
+    missing = [p for p in paths if p.relative_to(ROOT).as_posix() not in GENERATED and (p.is_symlink() or not p.is_file())]
+    if missing:
+        raise ValueError('package input missing or not a regular file: ' + missing[0].relative_to(ROOT).as_posix())
+    generated = {'FANNAN-REWRITE.md': combined().encode('utf-8')}
     covers = ' '.join(sorted(p.name for p in release.iterdir()))
-    write(ROOT / 'trust/MANIFEST.sha256', manifest(files(release), release, covers), True)
-    write(ROOT / 'trust/PINNED.sha256', sha(ROOT / 'trust/MANIFEST.sha256') + '  MANIFEST.sha256\n', True)
-    with zipfile.ZipFile(ROOT / ARCHIVE, 'w', zipfile.ZIP_DEFLATED) as archive:
-        for path in archive_paths():
-            entry = zipfile.ZipInfo(path.relative_to(ROOT).as_posix(), date_time=(2026, 10, 17, 0, 0, 0))
+    generated['trust/MANIFEST.sha256'] = manifest(release_files, release, covers).encode('utf-8')
+    generated['trust/PINNED.sha256'] = (hashlib.sha256(generated['trust/MANIFEST.sha256']).hexdigest() + '  MANIFEST.sha256\n').encode('utf-8')
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+        for path in paths:
+            name = path.relative_to(ROOT).as_posix()
+            entry = zipfile.ZipInfo(name, date_time=(2026, 10, 17, 0, 0, 0))
             entry.compress_type = zipfile.ZIP_DEFLATED
-            entry.external_attr = (stat.S_IFREG | stat.S_IMODE(path.stat().st_mode)) << 16
-            archive.writestr(entry, path.read_bytes())
-    report = verify_release_archive()
+            mode = (0o444 if name.startswith('trust/') else 0o644) if name in GENERATED else stat.S_IMODE(path.stat().st_mode)
+            entry.external_attr = (stat.S_IFREG | mode) << 16
+            archive.writestr(entry, generated[name] if name in GENERATED else path.read_bytes())
+    # all inputs accepted; only now are outputs replaced
+    write_bytes(ROOT / 'FANNAN-REWRITE.md', generated['FANNAN-REWRITE.md'])
+    write_bytes(ROOT / 'trust/MANIFEST.sha256', generated['trust/MANIFEST.sha256'], True)
+    write_bytes(ROOT / 'trust/PINNED.sha256', generated['trust/PINNED.sha256'], True)
+    write_bytes(ROOT / ARCHIVE, buffer.getvalue())
+    report = verify_release_archive(paths)
     write(ROOT / REPORT, json.dumps(report, indent=2) + '\n')
     names, _ = coverage(start)
     write(ROOT / REGISTRY, manifest([ROOT / name for name in names], ROOT, 'changed paths since ' + start), True)
     return verify(start, allow_unanchored=True)  # build's own consistency check; the anchored verify follows from the record
 
 
-def verify_release_archive():
+def verify_release_archive(archive_list=None):
     release = ROOT / 'release'
     pin = (ROOT / 'trust/PINNED.sha256').read_text().split()[0]
     entries = verify_hashes(ROOT / 'trust/MANIFEST.sha256', release, pin, [p.relative_to(release).as_posix() for p in files(release)])
     if (ROOT / 'FANNAN-REWRITE.md').read_text() != combined():
         raise ValueError('combined seven-deliverable document is stale')
-    paths = {p.relative_to(ROOT).as_posix(): p for p in archive_paths()}
+    paths = {p.relative_to(ROOT).as_posix(): p for p in (archive_list if archive_list is not None else archive_paths())}
     with zipfile.ZipFile(ROOT / ARCHIVE) as archive:
         if archive.testzip() is not None or len(archive.namelist()) != len(set(archive.namelist())) or set(archive.namelist()) != set(paths):
             raise ValueError('ZIP inventory or CRC mismatch')
