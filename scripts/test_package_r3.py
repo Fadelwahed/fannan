@@ -28,7 +28,19 @@ class RegistryPinTests(unittest.TestCase):
                 package.check_registry_pin(registry, '0' * 64)
             with self.assertRaisesRegex(ValueError, '64 lowercase hex'):
                 package.check_registry_pin(registry, 'ABC')
-            self.assertIn('unanchored', package.check_registry_pin(registry, None))
+            with self.assertRaisesRegex(ValueError, 'unanchored registry'):
+                package.check_registry_pin(registry, None)  # ARGON-R2-02: verify refuses without an external pin
+            self.assertIn('unanchored', package.check_registry_pin(registry, None, allow_unanchored=True))
+
+    @unittest.skipUnless((ROOT / '.git').exists(), 'needs a git checkout of the repository')
+    def test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed(self):
+        p = subprocess.run([sys.executable, '-B', str(SCRIPT), 'verify', '--start', 'HEAD'], capture_output=True, text=True, cwd=ROOT)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('unanchored registry', p.stderr)
+        p = subprocess.run([sys.executable, '-B', str(SCRIPT), 'build', '--start', 'HEAD', '--allow-unanchored-registry'], capture_output=True, text=True, cwd=ROOT)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('verify only', p.stderr)
+        self.assertIn('--allow-unanchored-registry', (ROOT / 'release/PACKAGING.md').read_text())
 
     @unittest.skipUnless((ROOT / '.git').exists(), 'needs a git checkout of the repository')
     def test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first(self):

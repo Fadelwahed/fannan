@@ -144,7 +144,7 @@ def build(start):
     write(ROOT / REPORT, json.dumps(report, indent=2) + '\n')
     names, _ = coverage(start)
     write(ROOT / REGISTRY, manifest([ROOT / name for name in names], ROOT, 'changed paths since ' + start), True)
-    return verify(start)
+    return verify(start, allow_unanchored=True)  # build's own consistency check; the anchored verify follows from the record
 
 
 def verify_release_archive():
@@ -167,18 +167,21 @@ def require_hex_digest(expected):
         raise ValueError('--registry-sha256 must be 64 lowercase hex characters')
 
 
-def check_registry_pin(path, expected):
-    """R4-5: anchor the changed-file registry to an externally supplied digest (e.g. the one quoted in the review/response)."""
+def check_registry_pin(path, expected, allow_unanchored=False):
+    """R4-5: anchor the changed-file registry to an externally supplied digest (e.g. the one quoted in the review/response).
+    ARGON-R2-02: without a digest, verify refuses unless the caller explicitly allows an unanchored (self-consistency) check."""
     if expected is None:
-        return 'self (unanchored: pass --registry-sha256 with the reviewed digest to anchor it)'
+        if not allow_unanchored:
+            raise ValueError('unanchored registry: pass --registry-sha256 <digest quoted in the latest record> (or --allow-unanchored-registry for a self-consistency check only)')
+        return 'self (unanchored: internal consistency only, not authenticity)'
     require_hex_digest(expected)
     if sha(path) != expected:
         raise ValueError('registry pin mismatch: trust/R3-CHANGES.sha256 differs from --registry-sha256')
     return 'external'
 
 
-def verify(start, registry_sha256=None):
-    registry_pin = check_registry_pin(ROOT / REGISTRY, registry_sha256)  # checked first: an unanchored or wrong registry fails before anything else
+def verify(start, registry_sha256=None, allow_unanchored=False):
+    registry_pin = check_registry_pin(ROOT / REGISTRY, registry_sha256, allow_unanchored)  # checked first: an unanchored or wrong registry fails before anything else
     report = verify_release_archive()
     names, excluded = coverage(start, listed(ROOT / REGISTRY))
     entries = verify_hashes(ROOT / REGISTRY, ROOT, registry_sha256 or sha(ROOT / REGISTRY), names)
@@ -220,14 +223,17 @@ if __name__ == '__main__':
     parser.add_argument('action', choices=['build', 'verify', 'self-test'])
     parser.add_argument('--start')
     parser.add_argument('--registry-sha256', help='verify only: expected SHA-256 of trust/R3-CHANGES.sha256 from the review record')
+    parser.add_argument('--allow-unanchored-registry', action='store_true', help='verify only: accept a missing --registry-sha256 (self-consistency, not authenticity)')
     args = parser.parse_args()
     if args.action != 'self-test' and not args.start:
         parser.error('--start is required')
     if args.registry_sha256 is not None and args.action != 'verify':
         parser.error('--registry-sha256 applies to verify only')
+    if args.allow_unanchored_registry and args.action != 'verify':
+        parser.error('--allow-unanchored-registry applies to verify only')
     if args.registry_sha256 is not None:
         try:
             require_hex_digest(args.registry_sha256)
         except ValueError as error:
             parser.error(str(error))
-    print(json.dumps(self_test() if args.action == 'self-test' else build(args.start) if args.action == 'build' else verify(args.start, args.registry_sha256), indent=2))
+    print(json.dumps(self_test() if args.action == 'self-test' else build(args.start) if args.action == 'build' else verify(args.start, args.registry_sha256, args.allow_unanchored_registry), indent=2))

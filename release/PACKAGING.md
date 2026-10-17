@@ -5,7 +5,7 @@ The standard-library-only `scripts/package-r3.py` generates hashes from bytes; n
 ```sh
 python3 -B scripts/package-r3.py self-test
 python3 -B scripts/package-r3.py build --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3
-python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3
+python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3 --registry-sha256 <digest quoted in the latest record>
 ```
 
 Build combines all seven original deliverables with all 16 skill files, enumerates the exact `release/` inventory, generates `trust/MANIFEST.sha256` and its external `PINNED.sha256`, writes deterministic `artifacts/FANNAN-R3.zip`, and checks every ZIP member byte plus CRC. It then records `test-results/r3/package-verification.json` and hashes every changed repository path in `trust/R3-CHANGES.sha256`. That registry includes the release manifest/pin, combined document, ZIP, test logs, package report, script, docs and checkpoint. The report is external to the ZIP to avoid a report/archive self-hash cycle; its bytes are covered by the changes registry. Other evidence and the immutable input/review are inside the archive.
@@ -29,7 +29,7 @@ git diff --name-only 9ee1ca6aaa4a257cb84fb7381056005f48554bf3..HEAD
 python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3 --registry-sha256 <digest quoted in the review/response record>
 ```
 
-`--registry-sha256` (R4-5) anchors `trust/R3-CHANGES.sha256` to an externally recorded digest and is checked before anything else; a mismatch fails. Without it the registry is only checked against its own hash (`registryPin` reports `self (unanchored …)`), which proves internal consistency, not authenticity. Regression tests: `python3 -B scripts/test_package_r3.py -v`.
+`--registry-sha256` (R4-5) anchors `trust/R3-CHANGES.sha256` to an externally recorded digest and is checked before anything else; a mismatch fails. Verify refuses to run without it (ARGON-R2-02: `unanchored registry`). Only an explicit `--allow-unanchored-registry` (verify only) checks the registry against its own hash; `registryPin` then reports `self (unanchored …)`, which proves internal consistency, not authenticity, and is never a PASS for review. Build runs that self-consistency check internally. Regression tests: `python3 -B scripts/test_package_r3.py -v`.
 
 `coveredChangedFiles`, `uncoveredChangedFiles: []` and `deliberateExclusions` are the comparison result. `changesManifestSha256` is quoted in the latest Mi'mar record (`reviews/MIMAR-R<n>-changes-<sha>.md`). The self-test proves rejection of tampering, unexpected files, symlinks and a writable manifest. The portable verifier checks read-only mode bits, external pin, exact inventory, bytes and archive contents; it does not replace target-host GNU/Linux execution.
 
