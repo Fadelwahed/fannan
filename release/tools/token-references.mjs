@@ -1,6 +1,15 @@
 const reference = value => typeof value === 'string' && /^\{[^{}]+\}$/.test(value);
 // R4-2: a unitless zero is a valid CSS length; every other dimension needs px, rem or em.
-const dimension = value => value === 0 || typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
+// ARGON-R2-07: the string "0" is the same bare zero; numeric strings, exponents and other units stay refused.
+const dimension = value => value === 0 || value === '0' || typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
+const negative = value => typeof value === 'string' && /^-\d*\.?\d+/.test(value) && parseFloat(value) !== 0;
+// ARGON-R2-07: lengths CSS forbids from being negative (radii, breakpoints, font sizes, padding, gaps, sizes and the
+// spacing scale, which feeds padding and gaps). Margins, insets, scroll margins and letter spacing may be negative.
+const nonNegativeKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|scrollPadding)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
+export const forbidsNegative = path => {
+  const parts = path.split('.'), group = parts[0], key = parts.at(-1);
+  return ['spacing', 'rounded', 'breakpoints'].includes(group) || group === 'typography' && ['fontSize', 'lineHeight'].includes(key) || group === 'components' && nonNegativeKey.test(key);
+};
 const lineHeightPercent = (path, value) => path.endsWith('.lineHeight') && typeof value === 'string' && /^\d*\.?\d+%$/.test(value);
 const color = value => typeof value === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(value));
 // DTCG font-weight aliases. CSS accepts only 1-1000, normal and bold here, so aliases are converted to numbers
@@ -39,6 +48,7 @@ export const expectsDimension = path => (expected(path) ?? []).length === 1 && e
 export function inferTokenType(path, value) {
   const allowed = expected(path);
   const types = allowed ?? ['color', 'dimension', 'number'];
+  if (negative(value) && forbidsNegative(path)) return undefined; // ARGON-R2-07
   return types.find(type => valid[type](value) || type === 'dimension' && lineHeightPercent(path, value));
 }
 
@@ -64,6 +74,7 @@ export function validateTokens(tokens) {
     const allowed = expected(path);
     if (allowed && !allowed.includes(type)) throw Error(`incompatible token type at ${path}: ${type}`);
     if (token.$type && token.$type !== target.$type) throw Error(`incompatible token reference at ${path}: ${token.$type} vs ${target.$type}`);
+    if (!reference(value) && negative(value) && forbidsNegative(path)) throw Error(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07
     if (!reference(value) && !valid[type](value) && !(type === 'dimension' && lineHeightPercent(path, value))) throw Error(`invalid ${type} value at ${path}`);
     return target;
   }

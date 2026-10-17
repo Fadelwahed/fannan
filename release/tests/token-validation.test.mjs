@@ -55,6 +55,16 @@ test('shared token validation rejects malformed values and incompatible referenc
     assert.throws(() => validateTokens({ components: { card: { [key]: leaf('dimension', 8) } } }), /invalid dimension value/, key);
     assert.doesNotThrow(() => validateTokens({ components: { card: { [key]: leaf('dimension', '8px') } } }), key);
   }
+  // ARGON-R2-07: dimension edge cases. Only 0 may be bare (number 0, -0 or the string "0"); numeric strings, NaN,
+  // Infinity, exponents and other units are refused; negative lengths are refused where CSS forbids them.
+  for (const v of [0, -0, '0', '8px', '.5rem', '1.25em', '-0px']) assert.equal(inferTokenType('spacing.x', v), 'dimension', String(v));
+  for (const v of ['8', 8, '-8', NaN, Infinity, '1e2px', '8pt', '8%', '8 px', '5.px', 'px', '', null, '8PX']) assert.equal(inferTokenType('spacing.x', v), undefined, String(v));
+  for (const path of ['spacing.sm', 'rounded.sm', 'breakpoints.md', 'typography.body.fontSize', 'components.card.padding', 'components.card.paddingInline', 'components.card.gap', 'components.button.width', 'components.button.minHeight', 'components.button.rounded', 'components.card.scrollPaddingTop']) {
+    assert.equal(inferTokenType(path, '-4px'), undefined, path);
+    assert.throws(() => validateTokens(path.split('.').reduceRight((child, key) => ({ [key]: child }), leaf('dimension', '-4px'))), /negative length/, path);
+  }
+  for (const path of ['components.card.margin', 'components.card.marginTop', 'components.card.inset', 'components.card.scrollMarginTop', 'typography.body.letterSpacing'])
+    assert.equal(inferTokenType(path, '-4px'), 'dimension', path);
   for (const keyword of ['normal', 'bold']) assert.doesNotThrow(() => validateTokens({ typography: { body: { fontWeight: leaf('fontWeight', keyword) } } }));
 });
 
@@ -155,6 +165,16 @@ test('token conversion validates types, dimensions and references before writing
     for (const [yaml, expected] of [['rounded:\n  sm: 4', /units required.*rounded\.sm/], ['components:\n  button:\n    height: 40', /units required.*components\.button\.height/], ['components:\n  button:\n    rounded: 4', /units required.*components\.button\.rounded/], ['typography:\n  body:\n    fontSize: 16', /units required/], ['breakpoints:\n  desktop: 1440', /units required/]]) {
       const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml);
     }
+    // ARGON-R2-07: negative lengths refused where CSS forbids them; negative margins and a quoted "0" accepted and built.
+    for (const [yaml, expected] of [['spacing:\n  sm: -4px', /negative length.*spacing\.sm/], ['components:\n  card:\n    paddingTop: -4px', /negative length.*components\.card\.paddingTop/], ['rounded:\n  sm: -2px', /negative length.*rounded\.sm/], ['spacing:\n  sm: "8"', /unknown token type.*spacing\.sm/]]) {
+      const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml); assert.equal(existsSync(json), false, yaml);
+    }
+    assert.equal(convert('spacing:\n  none: "0"\n  sm: 8px\ncomponents:\n  card:\n    marginTop: -4px').status, 0);
+    const negCss = join(output, 'neg.css');
+    const negBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, negCss, 'test'], { env, encoding: 'utf8' });
+    assert.equal(negBuild.status, 0, negBuild.stderr);
+    assert.match(readFileSync(negCss, 'utf8'), /--components-card-margin-top:\s*-4px;/);
+    assert.match(readFileSync(negCss, 'utf8'), /--spacing-none:\s*0;/);
     // CODEX-R2-02: converter + real build accept 0 and 8px for logical/physical spacing keys.
     assert.equal(convert('components:\n  card:\n    paddingInline: 8px\n    paddingTop: 0\n    marginBlock: 1rem\n    rowGap: 0\n    columnGap: 4px').status, 0);
     const cardTokens = JSON.parse(readFileSync(json, 'utf8')).components.card;
