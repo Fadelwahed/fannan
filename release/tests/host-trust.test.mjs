@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, rmSync, symlinkSync, realpathSync, mkdirSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { assertProtectedMetadata, verifyExecutable, verifiedBrowser, supportTreeDigest, verifyBrowserPin } from '../tools/executable-trust.mjs';
+import { assertProtectedMetadata, verifyExecutable, verifiedBrowser, supportTreeDigest, verifyBrowserPin, assertBrowserPinLocation } from '../tools/executable-trust.mjs';
 
 test('protected storage rejects shared ownership, writable modes and links', () => {
   const meta = (uid, mode, link = false, type = 'directory') => ({ uid, mode, isSymbolicLink: () => link, isDirectory: () => type === 'directory', isFile: () => type === 'file' });
@@ -61,5 +61,12 @@ test('R4-4: browser support tree is hashed and any changed, added or escaping en
     assert.throws(() => supportTreeDigest(tree), /escapes/);
     rmSync(join(tree, 'escape'));
     assert.equal(verifyBrowserPin(pin, false).version, '154.0.8037.97');
+    assert.throws(() => supportTreeDigest(tree, true), /unprotected/, 'OPUS-R2-06: protected mode refuses a user-owned tree');
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin', () => {
+  assert.doesNotThrow(() => assertBrowserPinLocation('/opt/fannan/bin/chrome-154/chrome'));
+  for (const path of ['/opt/fannan/bin/chrome', '/opt/fannan/binx/chrome-154/chrome', '/opt/fannan/bin/../evil/chrome', '/opt/fannan/bin/chrome-154/../chrome', 'opt/fannan/bin/chrome-154/chrome', '/usr/bin/chrome', undefined, ''])
+    assert.throws(() => assertBrowserPinLocation(path), /browser/, String(path));
 });

@@ -1,6 +1,6 @@
 import { readFileSync, lstatSync, realpathSync, readdirSync, readlinkSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { isAbsolute, dirname, join, sep } from 'node:path';
+import { isAbsolute, dirname, join, sep, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -65,13 +65,19 @@ export function verifyBrowserPin(pin, protectedStorage = true) {
   return { ...identity, supportTreeSha256 };
 }
 
+// OPUS-R2-06: the support tree is the executable's own directory, so the browser must sit in its own directory
+// under /opt/fannan/bin, never directly in it, and the path must be absolute and normalised (no '..').
+export function assertBrowserPinLocation(path) {
+  if (typeof path !== 'string' || !path.startsWith('/opt/fannan/bin/') || posix.normalize(path) !== path) throw Error('browser pin missing protected path or version');
+  if (dirname(path) === '/opt/fannan/bin') throw Error('browser must live in its own directory under /opt/fannan/bin/');
+}
+
 export function verifiedBrowser() {
   for (const name of ['CHROME_PATH', 'PUPPETEER_EXECUTABLE_PATH'])
     if (process.env[name]) throw Error(`${name} browser override is forbidden`);
   const pin = JSON.parse(readFileSync(join(here, '../runtime/browser-trust.json'), 'utf8'));
   if (pin.status !== 'reviewed') throw Error('browser pin blocked: reviewed target-host executable identity missing');
-  if (!pin.path?.startsWith('/opt/fannan/bin/') || !pin.version) throw Error('browser pin missing protected path or version');
-  // The support tree is the executable's own directory, so the browser must not sit directly in /opt/fannan/bin.
-  if (dirname(pin.path) === '/opt/fannan/bin') throw Error('browser must live in its own directory under /opt/fannan/bin/');
+  if (!pin.version) throw Error('browser pin missing protected path or version');
+  assertBrowserPinLocation(pin.path);
   return verifyBrowserPin(pin, true);
 }
