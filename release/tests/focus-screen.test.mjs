@@ -71,7 +71,16 @@ test('R4-3: weak colour-only and unrendered changes do not count as a visible fo
   check(() => { styles.borderLeftColor = 'rgb(0, 0, 255)'; }, false, 'border colour without a rendered border is invisible');
   check(() => { styles.textDecorationColor = 'rgb(0, 0, 255)'; }, false, 'decoration colour without a decoration line is invisible');
   check(() => { pseudo.backgroundColor = 'rgb(0, 0, 0)'; }, false, 'unrendered pseudo-element change is invisible');
-  check(() => { styles.boxShadow = 'rgb(250, 250, 250) 0px 0px 0px 3px'; }, true, 'a new shadow ring changes geometry');
+  check(() => { styles.boxShadow = 'rgb(0, 0, 255) 0px 0px 0px 3px'; }, true, 'a new painted shadow ring is visible');
+  // CODEX-R2-01: geometry alone is not paint; transparent or near-background indicators must not count.
+  check(() => { styles.boxShadow = 'rgb(250, 250, 250) 0px 0px 0px 3px'; }, false, 'a near-white ring on white (about 1:1) is not visible');
+  check(() => { styles.boxShadow = 'rgba(0, 0, 0, 0) 0px 0px 0px 3px'; }, false, 'a transparent shadow ring is not visible');
+  check(() => { styles.outlineStyle = 'solid'; styles.outlineWidth = '2px'; styles.outlineColor = 'rgba(0, 0, 0, 0)'; }, false, 'a transparent 2px outline is not visible');
+  check(() => { styles.outlineStyle = 'solid'; styles.outlineWidth = '2px'; styles.outlineColor = 'transparent'; }, false, 'a transparent keyword outline is not visible');
+  check(() => { styles.borderLeftStyle = 'solid'; styles.borderLeftWidth = '2px'; styles.borderLeftColor = 'rgba(0, 0, 0, 0)'; }, false, 'a transparent new border is not visible');
+  check(() => { styles.textDecorationLine = 'underline'; styles.textDecorationColor = 'rgba(0, 0, 0, 0)'; }, false, 'a transparent new underline is not visible');
+  check(() => { styles.outlineStyle = 'solid'; styles.outlineWidth = '2px'; styles.outlineColor = 'rgb(250, 250, 250)'; }, false, 'a near-background outline is not visible');
+  check(() => { styles.outlineStyle = 'solid'; styles.outlineWidth = '2px'; styles.outlineColor = 'rgba(0, 0, 255, 0.9)'; }, true, 'a mostly opaque blue outline is visible');
   check(() => { styles.backgroundColor = 'rgb(0, 0, 0)'; styles.color = 'rgb(255, 255, 255)'; }, true, 'strong background/text change is visible');
   check(() => { styles.backgroundColor = 'rgba(0, 0, 0, 0)'; }, false, 'transparent over white is treated as white (no change)');
   check(() => { styles.outlineStyle = 'solid'; styles.outlineWidth = '2px'; }, true, 'rendered outline is visible');

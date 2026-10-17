@@ -30,46 +30,60 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
   // R4-3: colours are compared by contrast between the unfocused and focused state (composited over white).
   // A colour-only change below minContrast (3:1) is not counted. Unparseable colours count as changed,
   // so this is never weaker than the R3 "any change" rule.
-  const rgb = value => {
+  const rgba = value => {
+    if (String(value ?? '').trim() === 'transparent') return { c: [0, 0, 0], a: 0 };
     const m = /^rgba?\(([^)]*)\)$/.exec(String(value ?? '').trim());
     if (!m) return null;
     const parts = m[1].split(/[\s,/]+/).filter(Boolean);
     const n = parts.map(part => part.endsWith('%') ? parseFloat(part) / 100 : parseFloat(part));
     if (n.length < 3 || n.some(Number.isNaN)) return null;
-    const alpha = n.length > 3 ? n[3] : 1;
-    return n.slice(0, 3).map(channel => channel * alpha + 255 * (1 - alpha));
+    return { c: n.slice(0, 3), a: n.length > 3 ? n[3] : 1 };
   };
+  const over = (colour, ground) => colour.c.map((channel, i) => channel * colour.a + ground[i] * (1 - colour.a));
+  const rgb = value => { const colour = rgba(value); return colour && over(colour, [255, 255, 255]); };
+  const contrast = (x, y) => { const [hi, lo] = [luminance(x), luminance(y)].sort((p, q) => q - p); return (hi + 0.05) / (lo + 0.05); };
   const luminance = c => c.map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i], 0);
   const strongColour = (a, b) => {
     if (a === b) return false;
     const x = rgb(a), y = rgb(b);
     if (!x || !y) return true;
-    const [hi, lo] = [luminance(x), luminance(y)].sort((p, q) => q - p);
-    return (hi + 0.05) / (lo + 0.05) >= minContrast;
+    return contrast(x, y) >= minContrast;
+  };
+  // CODEX-R2-01: an outline/border/decoration/shadow only counts when it is painted: alpha > 0 and at least
+  // minContrast against the element's unfocused background (composited over white). Unparseable colours count.
+  const painted = (value, ground) => {
+    const colour = rgba(value);
+    if (!colour) return true;
+    if (!(colour.a > 0)) return false;
+    return contrast(over(colour, ground), ground) >= minContrast;
   };
   const on = (style, kind, side = '') => {
     if (kind === 'outline') return !!style.outlineStyle && style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0;
     if (kind === 'border') return !!style[`border${side}Style`] && !['none', 'hidden'].includes(style[`border${side}Style`]) && parseFloat(style[`border${side}Width`]) > 0;
     return !!style.textDecorationLine && style.textDecorationLine !== 'none';
   };
-  const feature = (b, a, kind, side, geometry, colour) => {
+  const feature = (b, a, kind, side, geometry, colour, ground) => {
     const was = on(b, kind, side), is = on(a, kind, side);
-    if (was !== is) return true;
+    if (was !== is) return is ? painted(a[colour], ground) : painted(b[colour], ground);
     if (!is) return false;
-    return geometry.some(key => a[key] !== b[key]) || strongColour(b[colour], a[colour]);
+    if (geometry.some(key => a[key] !== b[key])) return painted(a[colour], ground) || painted(b[colour], ground);
+    return strongColour(b[colour], a[colour]);
   };
   const colours = value => String(value ?? '').match(/rgba?\([^)]*\)/g) || [];
-  const shadow = (b, a) => {
+  const shadow = (b, a, ground) => {
     if (a.boxShadow === b.boxShadow) return false;
     const shape = value => String(value ?? '').replace(/rgba?\([^)]*\)/g, 'C');
-    if (shape(a.boxShadow) !== shape(b.boxShadow)) return true;
     const before = colours(b.boxShadow), after = colours(a.boxShadow);
+    if (shape(a.boxShadow) !== shape(b.boxShadow)) {
+      if (a.boxShadow && a.boxShadow !== 'none' && !after.length) return true; // unparseable paint counts
+      return after.some(colour => painted(colour, ground)) || before.some(colour => painted(colour, ground));
+    }
     return after.some((colour, i) => strongColour(before[i], colour));
   };
-  const visibleChange = (b, a) => feature(b, a, 'outline', '', ['outlineStyle', 'outlineWidth', 'outlineOffset'], 'outlineColor')
-    || ['Top', 'Right', 'Bottom', 'Left'].some(side => feature(b, a, 'border', side, [`border${side}Style`, `border${side}Width`], `border${side}Color`))
-    || feature(b, a, 'decoration', '', ['textDecorationLine', 'textDecorationStyle', 'textDecorationThickness'], 'textDecorationColor')
-    || shadow(b, a) || strongColour(b.backgroundColor, a.backgroundColor) || strongColour(b.color, a.color);
+  const visibleChange = (b, a, ground = rgb(b.backgroundColor) || [255, 255, 255]) => feature(b, a, 'outline', '', ['outlineStyle', 'outlineWidth', 'outlineOffset'], 'outlineColor', ground)
+    || ['Top', 'Right', 'Bottom', 'Left'].some(side => feature(b, a, 'border', side, [`border${side}Style`, `border${side}Width`], `border${side}Color`, ground))
+    || feature(b, a, 'decoration', '', ['textDecorationLine', 'textDecorationStyle', 'textDecorationThickness'], 'textDecorationColor', ground)
+    || shadow(b, a, ground) || strongColour(b.backgroundColor, a.backgroundColor) || strongColour(b.color, a.color);
   const rendered = (style, index) => index === 0 || (!!style.content && !['none', 'normal'].includes(style.content));
   for (let el = document.activeElement; el; el = el.parentElement) {
     const before = window.__focusBefore?.get(el);
