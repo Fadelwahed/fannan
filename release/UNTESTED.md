@@ -1,5 +1,11 @@
 # R3 checks not established
 
+## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
+
+- **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
+- **Install wording (PORT-03):** documentation only. Token scope proof, the daily-check freshness/escalation, the dedicated runtime identity and the detector at `/opt/fannan/bin` are still UNTESTED on any host; nothing was provisioned.
+- **Package input (PORT-04):** caches, dependency trees and Git metadata inside packaged trees are refused (unit-tested with temporary trees); the live build ran on a clean tree.
+
 ## R7 additions (Mi'mar, 17 October 2026, Codex round 3)
 
 - **CODEX-R3-02 spacing scale:** the approved scale now comes only from the handoff's `tokens.json` (bytes checked against the handoff SHA-256 and the build evidence input hash, then validated); page `--spacing-*` declarations no longer count. Checked in real Chrome 155 (test-only). Spacing written as `calc()` or between token steps is still reported off-scale; a page whose CSS sets a different value under a token name is caught as off-scale, not as a token mismatch. Manual rhythm review stays required.

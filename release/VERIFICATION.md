@@ -1,5 +1,26 @@
 # R3 executed verification — 17 October 2026
 
+## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM Gaza)
+
+Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 50 PASS, 0 FAIL, 0 SKIP | `test-results/r8/node.log` |
+| same, without deps (worktree copy, no `runtime-deps`) | 0 | 40 PASS, 0 FAIL, 10 SKIP (need deps or Chrome) | `test-results/r8/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 44 PASS, 6 FAIL: the same intended `Node 22.12+ required` refusals as R7 | `test-results/r8/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r8/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r8/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 13 PASS in the git checkout; 10 PASS, 3 SKIP in a no-git copy | `test-results/r8/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r8/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract, spacing, desktop-width (1440 + 320 reflow, page and state) and state checks PASS; every run stops at launcher exit 3 `pinned binary missing; no download fallback`, asserted | `test-results/r8/local-fixture.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample (convert + build run inside the local fixture) | `test-results/r8/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=27 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r8/syntax.log` |
+| Cloud `scripts/verify-static.mjs`, ad hoc on this tree (not a shipped tool) | 0 | PASS (16 skills, 51 source hashes, ledger, frontmatter and links); two local adjustments noted in the log | `test-results/r8/cloud-verify-static-adhoc.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+Per-port before/after logs are `test-results/r8/PORT-0*-before.log` / `-after.log`. Package build and the anchored verify are in the latest `reviews/MIMAR-R8-changes-*.md`.
+
 ## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM Gaza)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
