@@ -1,15 +1,22 @@
-// Mac-only fixture: copied tools get a TEST root shim because production write guards target /workspace on Linux.
+// Isolated browser fixture: copied tools get a TEST root shim because production write guards target /workspace on Linux.
 // This proves Node/Chrome/Style Dictionary execution, never production guard or a real project PASS.
-import { cpSync, mkdirSync, writeFileSync, readFileSync, rmSync, chmodSync } from 'node:fs';
+import { cpSync, mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, chmodSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { manualIds, states } from '../tools/handoff-contract.mjs';
+import { tmpdir } from 'node:os';
 
 const task = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const fixture = join(task, 'test-results/local-fixture');
-rmSync(fixture, { recursive: true, force: true });
+const deps = join(task, 'runtime-deps');
+if (!['yaml/dist/index.js', 'style-dictionary/lib/StyleDictionary.js', 'playwright-core/index.mjs', 'axe-core/axe.min.js', '@google/design.md/dist/index.js'].every(name => existsSync(join(deps, 'node_modules', name)))) {
+  console.error('LOCAL FIXTURE BLOCKED: existing pinned runtime dependencies absent; no network install attempted'); process.exit(2);
+}
+const chrome = process.platform === 'darwin' ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : '/usr/bin/google-chrome';
+if (!existsSync(chrome)) { console.error('LOCAL FIXTURE BLOCKED: local test browser absent'); process.exit(2); }
+const fixture = mkdtempSync(join(tmpdir(), 'fannan-browser-fixture-'));
+console.log('TEST-ONLY fixture evidence: ' + fixture);
 const tools = join(fixture, 'tools');
 const output = join(fixture, 'design-output/test');
 mkdirSync(output, { recursive: true });
@@ -26,7 +33,12 @@ writeFileSync(join(tools, 'readonly-precheck.sh'), guard, { mode: 0o755 });
 writeFileSync(join(tools, 'safe-write.sh'), guard, { mode: 0o755 });
 chmodSync(join(tools, 'readonly-precheck.sh'), 0o755);
 chmodSync(join(tools, 'safe-write.sh'), 0o755);
-const env = { ...process.env, FANNAN_DEPS: join(task, 'runtime-deps'), CHROME_PATH: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' };
+// These adapters exist only in the temporary copied tools; they cannot approve production storage.
+const verifier = join(tools, 'verify-deps.mjs');
+writeFileSync(verifier, readFileSync(verifier, 'utf8').replace('return verifyDeps(prefix, pin, releaseRoot);', 'return verifyDependencyTree(prefix, pin, releaseRoot);'));
+writeFileSync(join(tools, 'executable-trust.mjs'), readFileSync(join(tools, 'executable-trust.mjs'), 'utf8').replace('export function verifiedBrowser() {', 'function productionBrowser() {') + `\nexport function verifiedBrowser() { return verifyExecutable(${JSON.stringify({path:realpathSync(chrome),sha256:createHash('sha256').update(readFileSync(chrome)).digest('hex')})}); }\n`);
+const env = { ...process.env, FANNAN_DEPS: deps };
+delete env.CHROME_PATH; delete env.PUPPETEER_EXECUTABLE_PATH;
 const sourceDesign = readFileSync(resolve(task, 'input/fannan-review-pack/example-DESIGN.md'), 'utf8');
 const design = join(output, 'fixture-DESIGN.md');
 writeFileSync(design, sourceDesign.replace('---\n\n## Overview', 'breakpoints:\n  desktop: 1440px\n---\n\n## Overview'));
@@ -35,7 +47,7 @@ execFileSync(process.execPath, [join(tools, 'designmd-to-sd.mjs'), design, json,
 execFileSync(process.execPath, [join(tools, 'sd-build.mjs'), json, css, 'test'], { env, stdio: 'inherit' });
 if (!readFileSync(css, 'utf8').includes('--colors-primary') || !readFileSync(css, 'utf8').includes('--breakpoints-desktop')) throw Error('CSS token or breakpoint absent');
 const html = join(output, 'home.html');
-writeFileSync(html, '<!doctype html><html lang="en" dir="ltr"><head><title>Fixture</title><style>:root{--accent:rgb(11,61,145)}body{font:16px Arial;color:#111;background:white}main{padding:2rem}button{outline:2px solid black;min-width:48px;min-height:48px;background:rgb(11,61,145);color:white}</style></head><body><main><h1 data-copy-slot="headline">Specific service</h1><p data-copy-slot="description">A service for residents.</p><button data-copy-slot="button">Start</button></main></body></html>');
+writeFileSync(html, '<!doctype html><html lang="en" dir="ltr"><head><title>Fixture</title><style>:root{--accent:rgb(11,61,145)}body{font:16px Arial;color:#111;background:white}main{padding:2rem}button{outline:none;min-width:48px;min-height:48px;background:rgb(11,61,145);color:white}button:focus{outline:2px solid black}</style></head><body><main><h1 data-copy-slot="headline">Specific service</h1><p data-copy-slot="description">A service for residents.</p><button data-copy-slot="button">Start</button></main></body></html>');
 const handoff = join(output, 'handoff.json');
 writeFileSync(handoff, '{}'); // Deliberately fails contract: this fixture only tests browser execution.
 const evidence = join(output, 'evidence');

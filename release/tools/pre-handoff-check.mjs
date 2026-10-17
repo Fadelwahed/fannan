@@ -1,9 +1,8 @@
-// pre-handoff-check.mjs: Fannan's Harden gate (round 5: project arg, deps outside the checked tree, IMPECCABLE_BIN set). Local files only; all network requests blocked.
+// pre-handoff-check.mjs: Fannan's Harden gate (project arg, protected external dependencies and executables). Local files only; all network requests blocked.
 // Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>
 // Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.2 AA tags with target-size ENABLED, 0 violations,
 // (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,
 // focus visible on every tab stop, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
-const CHROME = process.env.CHROME_PATH || '/usr/bin/google-chrome';
 import { readFileSync, existsSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -13,6 +12,8 @@ import { checkHandoff, qualityChecks } from './handoff-contract.mjs';
 import { verifiedDeps } from './verify-deps.mjs';
 import { localAsset } from './local-file-boundary.mjs';
 import { copySignals } from './copy-signals.mjs';
+import { verifiedBrowser } from './executable-trust.mjs';
+import { focusStyleProbe } from './focus-screen.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
 if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }
@@ -20,7 +21,7 @@ const phase = phaseArg?.split('=')[1] || 'handoff';
 const q = qualityChecks.thresholds;
 const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
 if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 12)) { console.error('pre-handoff-check: Node 22.12+ is required (package.json engines); found ' + process.versions.node); process.exit(2); }
-// npm deps live OUTSIDE the manifest-covered tree (N2): npm ci --prefix /home/box/agent-data/fannan-deps
+// npm deps live in protected storage OUTSIDE the manifest-covered tree (N2).
 const releaseRoot = realpathSync(join(here, '..'));
 let depsRoot;
 try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, releaseRoot); }
@@ -51,7 +52,11 @@ try {
 let axeSrc;
 try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }
 catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
-const b = await chromium.launch({ executablePath: CHROME, chromiumSandbox: true });
+let browserIdentity;
+try { browserIdentity = verifiedBrowser(); }
+catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }
+const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true });
+ev.browser = { ...browserIdentity, version: b.version() };
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
 await ctx.routeWebSocket(/.*/, ws => ws.close());
 const blocked = [];
@@ -118,25 +123,27 @@ if (!ev.checks.axe.pass) fail = true;
 await p.evaluate(() => { window.__fid = new WeakMap(); window.__fnext = 0; });
 const stops = []; const seen = new Set();
 for (let i = 0; i < 200; i++) {
+  await p.evaluate(focusStyleProbe, { capture: true });
   await p.keyboard.press('Tab');
+  const focusVisible = await p.evaluate(focusStyleProbe);
   const info = await p.evaluate(() => {
     const el = document.activeElement; if (!el || el === document.body) return null;
     if (!window.__fid.has(el)) window.__fid.set(el, ++window.__fnext);
-    const r = el.getBoundingClientRect(); const cs = getComputedStyle(el);
-    const visible = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) || cs.boxShadow !== 'none';
+    const r = el.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const top = document.elementFromPoint(Math.min(Math.max(cx, 0), innerWidth - 1), Math.min(Math.max(cy, 0), innerHeight - 1));
     const obscured = top && top !== el && !el.contains(top) && !top.contains(el);
     const inlineLink = el.tagName === 'A' && el.parentElement && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement.tagName) && (el.parentElement.textContent || '').trim().length > (el.textContent || '').trim().length;
-    return { id: window.__fid.get(el), tag: el.tagName, name: el.getAttribute('aria-label') || el.name || (el.textContent || '').trim().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height), focusVisible: visible, obscured: !!obscured, inlineLink };
+    return { id: window.__fid.get(el), tag: el.tagName, name: el.getAttribute('aria-label') || el.name || (el.textContent || '').trim().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height), obscured: !!obscured, inlineLink };
   });
+  if (info) info.focusVisible = focusVisible;
   if (!info) break;            // focus left the document (end of tab order)
   if (seen.has(info.id)) break; // same ELEMENT again = wrapped around (identity, not name)
   seen.add(info.id); stops.push(info);
 }
 const keyboardTrapSuspect = stops.length >= 200;
 const small = stops.filter(s => (s.w < 24 || s.h < 24) && !s.inlineLink), noFocus = stops.filter(s => !s.focusVisible), obsc = stops.filter(s => s.obscured);
-ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus-visible is heuristic (outline or box-shadow); inline text links are exempt from 2.5.8 per the WCAG exception' };
+ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic; manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
 if (!ev.checks.custom22.pass) fail = true;
 evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
 ev.checks.states = [];
@@ -163,9 +170,12 @@ if (phase === 'handoff' && handoff?.screens) {
       const focus = [];
       await p.evaluate(() => { window.__stateFocus = new WeakSet(); });
       for (let i = 0; i < 200; i++) {
+        await p.evaluate(focusStyleProbe, { capture: true });
         await p.keyboard.press('Tab');
-        const f = await p.evaluate(() => { const el = document.activeElement; if (!el || el === document.body || window.__stateFocus.has(el)) return null; window.__stateFocus.add(el); const r = el.getBoundingClientRect(), c = getComputedStyle(el), x = r.left+r.width/2, y = r.top+r.height/2, top = document.elementFromPoint(Math.max(0,Math.min(innerWidth-1,x)),Math.max(0,Math.min(innerHeight-1,y))); const inlineLink = el.tagName === 'A' && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement?.tagName || '') && el.parentElement.textContent.trim().length > el.textContent.trim().length; return { small: (r.width < 24 || r.height < 24) && !inlineLink, invisible: c.outlineStyle === 'none' && c.boxShadow === 'none', obscured: !!top && top !== el && !el.contains(top) && !top.contains(el) }; });
+        const focusVisible = await p.evaluate(focusStyleProbe);
+        const f = await p.evaluate(() => { const el = document.activeElement; if (!el || el === document.body || window.__stateFocus.has(el)) return null; window.__stateFocus.add(el); const r = el.getBoundingClientRect(), x = r.left+r.width/2, y = r.top+r.height/2, top = document.elementFromPoint(Math.max(0,Math.min(innerWidth-1,x)),Math.max(0,Math.min(innerHeight-1,y))); const inlineLink = el.tagName === 'A' && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement?.tagName || '') && el.parentElement.textContent.trim().length > el.textContent.trim().length; return { small: (r.width < 24 || r.height < 24) && !inlineLink, obscured: !!top && top !== el && !el.contains(top) && !top.contains(el) }; });
         if (!f) break;
+        f.invisible = !focusVisible;
         focus.push(f);
       }
       const rmState = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
@@ -212,7 +222,7 @@ if (blocked.length) fail = true;
 // 4 impeccable detect: findings are advisory, but it MUST run and return parseable output
 {
   let out = '', status = 0;
-  try { out = execFileSync(join(here, 'launcher-impeccable.sh'), ['detect', '--json', page], { encoding: 'utf8', env: { PATH: '/usr/bin:/bin', FANNAN_PROJECT: project, IMPECCABLE_BIN: process.env.IMPECCABLE_BIN || join(here, '../latest/impeccable/bin/impeccable-linux-x64') } }); }
+  try { out = execFileSync(join(here, 'launcher-impeccable.sh'), ['detect', '--json', page], { encoding: 'utf8', env: { PATH: '/usr/bin:/bin', FANNAN_PROJECT: project } }); }
   catch (e) { out = String(e.stdout || ''); status = e.status; }
   let findings = null; try { const j = JSON.parse(out); if (Array.isArray(j)) findings = j; } catch {}
   if (findings === null || (status !== 0 && status !== 2)) { ev.checks.impeccable = { ran: false, exit: status, pass: false, note: 'detect did not run or gave no parseable output' }; fail = true; }
