@@ -1,7 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { focusSettle, focusStyleProbe } from '../tools/focus-screen.mjs';
+import { readFileSync, existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as focusScreen from '../tools/focus-screen.mjs';
+const { focusSettle, focusStyleProbe } = focusScreen;
+const focusBaseline = focusScreen.focusBaseline ?? (() => { throw Error('focusBaseline missing'); });
+const deps = resolve(dirname(fileURLToPath(import.meta.url)), '../../runtime-deps');
+const chrome = process.platform === 'darwin' ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' : '/usr/bin/google-chrome';
 
 test('focus screen compares unfocused and focused appearance rather than decoration presence', () => {
   const saved = Object.fromEntries(['window', 'document', 'getComputedStyle'].map(k => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
@@ -138,7 +145,7 @@ test('R4-3: both checker tab loops settle animations after Tab and before readin
     const settle = after.indexOf('await p.evaluate(focusSettle)'), probe = after.indexOf('await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast })'); // OPUS-R2-09 call form
     assert.ok(settle !== -1 && probe !== -1 && settle < probe, 'focusSettle must run between Tab and the probe');
   }
-  assert.match(source, /import \{ focusSettle, focusStyleProbe \} from '\.\/focus-screen\.mjs';/);
+  assert.match(source, /import \{ focusSettle, focusStyleProbe(, focusBaseline)? \} from '\.\/focus-screen\.mjs';/); // ARGON-R2-05 adds focusBaseline
 });
 
 test('OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls', async () => {
@@ -180,4 +187,29 @@ test('ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); 
     styles = { ...base(), outlineStyle: 'solid', outlineWidth: '2px', outlineColor: 'rgb(250, 250, 250)' };
     assert.equal(focusStyleProbe(), false, 'near-white outline on white (CODEX-R2-01)');
   });
+});
+
+test('ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused', () => {
+  const source = readFileSync(new URL('../tools/pre-handoff-check.mjs', import.meta.url), 'utf8');
+  const loops = source.split('for (let i = 0; i < 200; i++) {');
+  assert.equal(loops.length, 3, 'page loop and per-state loop');
+  for (const body of loops.slice(1)) assert.doesNotMatch(body.slice(0, body.indexOf('focusVisible')), /capture: true/, 'no capture inside the loop before Tab');
+  assert.equal(source.split('await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true });').length - 1, 2);
+});
+
+test('ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<style>body{background:#fff}button{outline:none;border:0;background:#fff;color:#000}div{padding:8px;background:#fff}div:focus-within{background:#000}</style><div><button>a</button><button>b</button></div>');
+    const perStop = [];
+    for (let i = 0; i < 2; i++) { await page.evaluate(focusStyleProbe, { capture: true }); await page.keyboard.press('Tab'); perStop.push(await page.evaluate(focusStyleProbe, {})); }
+    assert.deepEqual(perStop, [true, false], 'old per-stop capture: the second child is a false "no visible focus"');
+    await page.setContent('<style>body{background:#fff}button{outline:none;border:0;background:#fff;color:#000}div{padding:8px;background:#fff}div:focus-within{background:#000}</style><div><button>a</button><button>b</button></div>'); // fresh load, as after goto in the checker
+    await page.evaluate(focusBaseline); await page.evaluate(focusStyleProbe, { capture: true });
+    const baseline = [];
+    for (let i = 0; i < 2; i++) { await page.keyboard.press('Tab'); baseline.push(await page.evaluate(focusStyleProbe, {})); }
+    assert.deepEqual(baseline, [true, true]);
+  } finally { await browser.close(); }
 });

@@ -14,6 +14,12 @@ export async function focusSettle({ maxMs = 1000 } = {}) {
   await Promise.race([Promise.allSettled(finite.map(animation => animation.finished)), new Promise(resolve => setTimeout(resolve, maxMs))]);
 }
 
+// ARGON-R2-05: the baseline for a tab loop is captured once, with nothing focused, so :focus-within styles on a
+// shared ancestor never leak into the "before" state of a later sibling. Call before focusStyleProbe({ capture: true }).
+export function focusBaseline() {
+  if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
+}
+
 export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
   const properties = ['content', 'outlineStyle', 'outlineWidth', 'outlineColor', 'outlineOffset', 'boxShadow',
     'borderTopStyle', 'borderTopWidth', 'borderTopColor', 'borderRightStyle', 'borderRightWidth', 'borderRightColor',

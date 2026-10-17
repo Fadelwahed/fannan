@@ -13,7 +13,7 @@ import { verifiedDeps } from './verify-deps.mjs';
 import { localAsset } from './local-file-boundary.mjs';
 import { copySignals } from './copy-signals.mjs';
 import { verifiedBrowser } from './executable-trust.mjs';
-import { focusSettle, focusStyleProbe } from './focus-screen.mjs';
+import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe } from './spacing-scale.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
@@ -125,8 +125,8 @@ if (!ev.checks.axe.pass) fail = true;
 // custom: tab through, check focus visible, not obscured by fixed/sticky elements, target size
 await p.evaluate(() => { window.__fid = new WeakMap(); window.__fnext = 0; });
 const stops = []; const seen = new Set();
+await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05: one unfocused baseline
 for (let i = 0; i < 200; i++) {
-  await p.evaluate(focusStyleProbe, { capture: true });
   await p.keyboard.press('Tab');
   await p.evaluate(focusSettle);
   const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
@@ -173,8 +173,8 @@ if (phase === 'handoff' && handoff?.screens) {
       await p.evaluate(() => scrollTo(0, 0));
       const focus = [];
       await p.evaluate(() => { window.__stateFocus = new WeakSet(); });
+      await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05
       for (let i = 0; i < 200; i++) {
-        await p.evaluate(focusStyleProbe, { capture: true });
         await p.keyboard.press('Tab');
         await p.evaluate(focusSettle);
         const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
