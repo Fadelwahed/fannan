@@ -1,0 +1,9 @@
+{
+  "selfTest": "PASS",
+  "negativeCases": [
+    "tamper",
+    "extra file",
+    "symlink",
+    "writable manifest"
+  ]
+}

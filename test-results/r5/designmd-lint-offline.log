@@ -1,0 +1,52 @@
+# design.md lint, offline (unshare -rn: no network namespace), pinned test-only deps (inventory 0f7891db…a031 verified)
+  "version": "0.4.0",
+$ design.md lint input/fannan-review-pack/example-DESIGN.md
+{
+  "findings": [
+    {
+      "severity": "warning",
+      "path": "colors.muted",
+      "message": "'muted' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "info",
+      "message": "Design system defines 5 colors, 2 typography scales, 2 rounding levels, 3 spacing tokens, 1 component.",
+      "rule": "token-summary"
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "infos": 1
+  }
+}
+exit=0
+$ design.md lint test-results/local-fixture/design-output/test/fixture-DESIGN.md
+{
+  "findings": [
+    {
+      "severity": "warning",
+      "path": "colors.muted",
+      "message": "'muted' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "info",
+      "message": "Design system defines 5 colors, 2 typography scales, 2 rounding levels, 3 spacing tokens, 1 component.",
+      "rule": "token-summary"
+    },
+    {
+      "severity": "warning",
+      "path": "breakpoints",
+      "message": "\"breakpoints\" looks like a design-token map but is not a recognized schema key (colors, typography, spacing, rounded, components). It will be silently ignored by export commands. Rename it to a supported key or move its values under a recognized section.",
+      "rule": "token-like-ignored"
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warnings": 2,
+    "infos": 1
+  }
+}
+exit=0

@@ -117,6 +117,8 @@ def archive_paths():
     paths += [p for p in files(ROOT / 'test-results/r3') if p.relative_to(ROOT).as_posix() != REPORT]
     if (ROOT / 'test-results/r4').is_dir():
         paths += files(ROOT / 'test-results/r4')  # R4 before/after evidence
+    if (ROOT / 'test-results/r5').is_dir():
+        paths += files(ROOT / 'test-results/r5')  # R5 before/after evidence (CODEX-R2-05)
     return sorted(paths)
 
 
