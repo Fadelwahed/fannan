@@ -358,3 +358,27 @@ test('CODEX-R3-04: the converter applies the typography rules to component typog
     assert.match(css, /--components-button-typography-font-weight:\s*600;/);
   } finally { f.cleanup(); }
 });
+
+test('CODEX-R4-03: one rule per consuming path applies to literals and resolved references alike (type, units, sign, percent only for lineHeight)', () => {
+  const leaf = (type, value) => ({ $type: type, $value: value });
+  const lh = { typography: { body: { lineHeight: leaf('dimension', '150%'), fontSize: leaf('dimension', '16px') } } };
+  assert.doesNotThrow(() => validateTokens(lh), 'percent is allowed on lineHeight itself');
+  for (const path of ['spacing.md', 'components.card.padding', 'components.card.gap', 'components.button.typography.fontSize', 'typography.body.letterSpacing', 'rounded.md', 'breakpoints.md', 'components.card.width']) {
+    const alias = path.split('.').reduceRight((child, key) => ({ [key]: child }), { $value: '{typography.body.lineHeight}' });
+    const tokens = structuredClone(lh);
+    for (const [k, v] of Object.entries(alias)) tokens[k] = { ...(tokens[k] ?? {}), ...v };
+    if (path === 'typography.body.letterSpacing') tokens.typography.body = { ...lh.typography.body, letterSpacing: { $value: '{typography.body.lineHeight}' } };
+    assert.throws(() => validateTokens(tokens), new RegExp(`invalid dimension value at ${path.replace(/\./g, '\\.')}.*resolves to "150%"`), path);
+    const literal = path.split('.').reduceRight((child, key) => ({ [key]: child }), leaf('dimension', '150%'));
+    assert.throws(() => validateTokens(literal), /invalid dimension value/, `${path} literal`);
+    assert.equal(inferTokenType(path, '150%'), undefined, `${path} infer`);
+  }
+  // a component lineHeight alias to a percent lineHeight is fine; a percent on a non-typography lineHeight key is not
+  assert.doesNotThrow(() => validateTokens({ ...lh, components: { button: { typography: { lineHeight: { $value: '{typography.body.lineHeight}' } } } } }));
+  assert.equal(inferTokenType('components.button.lineHeight', '150%'), undefined);
+  // units: a unitless number aliased into a length path is refused (via the type rule)
+  assert.throws(() => validateTokens({ scale: { n: leaf('number', 8) }, spacing: { md: { $value: '{scale.n}' } } }), /incompatible token type at spacing\.md/);
+  assert.throws(() => validateTokens({ scale: { n: leaf('dimension', '8pt') } }), /invalid dimension value at scale\.n/);
+  // valid aliases still pass
+  assert.doesNotThrow(() => validateTokens({ ...lh, spacing: { md: { $value: '{typography.body.fontSize}' } }, components: { card: { padding: { $value: '{spacing.md}' } }, button: { typography: { fontSize: { $value: '{typography.body.fontSize}' } } } } }));
+});

@@ -15,7 +15,7 @@ export const forbidsNegative = path => {
   if (group === 'typography') return false;
   return ['spacing', 'rounded', 'breakpoints'].includes(group) || group === 'components' && nonNegativeKey.test(key);
 };
-const lineHeightPercent = (path, value) => path.endsWith('.lineHeight') && typeof value === 'string' && /^\d*\.?\d+%$/.test(value);
+const lineHeightPercent = (path, value) => isTypographyPath(path) && path.endsWith('.lineHeight') && typeof value === 'string' && /^\d*\.?\d+%$/.test(value);
 const color = value => typeof value === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(value));
 // DTCG font-weight aliases. CSS accepts only 1-1000, normal and bold here, so aliases are converted to numbers
 // before writing token JSON; raw aliases are never emitted into CSS.
@@ -52,11 +52,20 @@ function expected(path) {
 // OPUS-R2-01: true when the path accepts only CSS lengths, so a bare nonzero number means "units required".
 export const expectsDimension = path => (expected(path) ?? []).length === 1 && expected(path)[0] === 'dimension';
 
-export function inferTokenType(path, value) {
+// CODEX-R4-03: ONE rule per consuming path (type + units + sign + percent only for lineHeight). Literals and resolved
+// references both go through checkValue, so an alias can never carry a value the consuming path would refuse literally.
+export function checkValue(path, type, value) {
+  if (!Object.hasOwn(valid, type)) return `unknown token type at ${path}: ${type}`;
   const allowed = expected(path);
-  const types = allowed ?? ['color', 'dimension', 'number'];
-  if (negative(value) && forbidsNegative(path)) return undefined; // ARGON-R2-07
-  return types.find(type => valid[type](value) || type === 'dimension' && lineHeightPercent(path, value));
+  if (allowed && !allowed.includes(type)) return `incompatible token type at ${path}: ${type}`;
+  if (!valid[type](value) && !(type === 'dimension' && lineHeightPercent(path, value))) return `invalid ${type} value at ${path}`;
+  if (negative(value) && forbidsNegative(path)) return `negative length at ${path}: CSS forbids it here`; // ARGON-R2-07
+  return null;
+}
+
+export function inferTokenType(path, value) {
+  const types = expected(path) ?? ['color', 'dimension', 'number'];
+  return types.find(type => checkValue(path, type, value) === null);
 }
 
 export function validateTokens(tokens) {
@@ -77,14 +86,10 @@ export function validateTokens(tokens) {
     seen.add(path);
     const value = token.$value, target = reference(value) ? resolve(value.slice(1, -1), seen) : token;
     const type = token.$type ?? target.$type;
-    if (!Object.hasOwn(valid, type)) throw Error(`unknown token type at ${path}: ${type}`);
-    const allowed = expected(path);
-    if (allowed && !allowed.includes(type)) throw Error(`incompatible token type at ${path}: ${type}`);
     if (token.$type && token.$type !== target.$type) throw Error(`incompatible token reference at ${path}: ${token.$type} vs ${target.$type}`);
-    if (!reference(value) && !valid[type](value) && !(type === 'dimension' && lineHeightPercent(path, value))) throw Error(`invalid ${type} value at ${path}`);
-    if (!reference(value) && negative(value) && forbidsNegative(path)) throw Error(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07
-    // CODEX-R3-01: a reference is checked against the consuming path's rule, using the resolved literal value.
-    if (reference(value) && negative(target.$value) && forbidsNegative(path)) throw Error(`negative length at ${path}: ${value} resolves to ${target.$value}; CSS forbids it here`);
+    // CODEX-R4-03: the consuming path's full rule applies to the resolved literal, exactly as to a literal.
+    const error = checkValue(path, type, target.$value);
+    if (error) throw Error(reference(value) ? `${error} (${value} resolves to ${JSON.stringify(target.$value)})` : error);
     return target;
   }
   for (const path of leaves.keys()) resolve(path);
