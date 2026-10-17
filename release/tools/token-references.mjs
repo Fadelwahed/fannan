@@ -1,5 +1,6 @@
 const reference = value => typeof value === 'string' && /^\{[^{}]+\}$/.test(value);
-const dimension = value => typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
+// R4-2: a unitless zero is a valid CSS length; every other dimension needs px, rem or em.
+const dimension = value => value === 0 || typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
 const lineHeightPercent = (path, value) => path.endsWith('.lineHeight') && typeof value === 'string' && /^\d*\.?\d+%$/.test(value);
 const color = value => typeof value === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(value));
 // DTCG font-weight aliases. CSS accepts only 1-1000, normal and bold here, so aliases are converted to numbers

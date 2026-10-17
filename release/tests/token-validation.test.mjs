@@ -32,6 +32,13 @@ test('shared token validation rejects malformed values and incompatible referenc
   assert.equal(inferTokenType('typography.body.fontWeight', 'heavy-ish'), undefined);
   assert.equal(inferTokenType('components.button.label', 'mysterious'), undefined);
   assert.doesNotThrow(() => validateTokens({ typography: { body: { fontFamily: leaf('fontFamily', ['Inter', 'sans-serif']), lineHeight: leaf('dimension', '150%'), fontWeight: leaf('fontWeight', 700) } } }));
+  // R4-2: CSS allows a unitless zero length; other unitless dimensions stay rejected.
+  assert.equal(inferTokenType('rounded.none', 0), 'dimension');
+  assert.equal(inferTokenType('components.button.padding', 0), 'dimension');
+  assert.equal(inferTokenType('rounded.sm', 4), undefined);
+  assert.doesNotThrow(() => validateTokens({ rounded: { none: leaf('dimension', 0) }, components: { button: { padding: leaf('dimension', 0), gap: leaf('dimension', 0), margin: leaf('dimension', 0) } }, breakpoints: { min: leaf('dimension', 0) } }));
+  assert.throws(() => validateTokens({ rounded: { sm: leaf('dimension', 4) } }), /invalid dimension value/);
+  assert.throws(() => validateTokens({ rounded: { sm: leaf('dimension', -0.5) } }), /invalid dimension value/);
   for (const keyword of ['normal', 'bold']) assert.doesNotThrow(() => validateTokens({ typography: { body: { fontWeight: leaf('fontWeight', keyword) } } }));
 });
 
@@ -104,6 +111,18 @@ test('token conversion validates types, dimensions and references before writing
     const weightBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, weightCss, 'test'], { env, encoding: 'utf8' });
     assert.equal(weightBuild.status, 0, weightBuild.stderr);
     assert.match(readFileSync(weightCss, 'utf8'), /--typography-body-font-weight:\s*600;/);
+    // R4-2: caller compatibility with d2c36c1 for zero radii/padding; non-zero unitless values still fail.
+    assert.equal(convert('rounded:\n  none: 0\n  sm: 4px\ncomponents:\n  button:\n    padding: 0\n    gap: 0\n    margin: 0').status, 0);
+    const zeroTokens = JSON.parse(readFileSync(json, 'utf8'));
+    assert.deepEqual([zeroTokens.rounded.none, zeroTokens.components.button.padding], [{ $value: 0, $type: 'dimension' }, { $value: 0, $type: 'dimension' }]);
+    const zeroCss = join(output, 'zero.css');
+    const zeroBuild = spawnSync(process.execPath, [join(tools, 'sd-build.mjs'), json, zeroCss, 'test'], { env, encoding: 'utf8' });
+    assert.equal(zeroBuild.status, 0, zeroBuild.stderr);
+    assert.match(readFileSync(zeroCss, 'utf8'), /--rounded-none:\s*0(rem|px)?;/);
+    assert.match(readFileSync(zeroCss, 'utf8'), /--components-button-padding:\s*0(rem|px)?;/);
+    for (const [yaml, expected] of [['rounded:\n  sm: 4', /unknown token type.*rounded\.sm/], ['typography:\n  body:\n    fontSize: 16', /units required/], ['breakpoints:\n  desktop: 1440', /units required/]]) {
+      const result = convert(yaml); assert.notEqual(result.status, 0, yaml); assert.match(result.stderr, expected, yaml);
+    }
     for (const [alias, number] of [['thin', 100], ['hairline', 100], ['extra-light', 200], ['ultra-light', 200], ['light', 300], ['regular', 400], ['book', 400], ['medium', 500], ['demi-bold', 600], ['extra-bold', 800], ['ultra-bold', 800], ['black', 900], ['heavy', 900], ['extra-black', 950], ['ultra-black', 950]]) {
       assert.equal(convert(`typography:\n  body:\n    fontWeight: ${alias}`).status, 0, alias);
       assert.equal(JSON.parse(readFileSync(json, 'utf8')).typography.body.fontWeight.$value, number, alias);
