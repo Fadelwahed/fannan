@@ -1,0 +1,126 @@
+--- /home/box/agent-data/workflows/proto-setup/SKILL.md	2026-10-14 23:38:51.765691721 +0300
++++ proto-setup/SKILL.md	2026-10-15 04:47:39.742761779 +0300
+@@ -2,46 +2,49 @@
+ name: proto-setup
+ description: >-
+   Use on the first conversation, or when the user asks to set up again: checks
+-  proto.py, reads the design-tool setting, reads the brief and app (read-only),
+-  sets the spend check, and maps the real UI.
++  proto.py, reads the project's design-tool setting, reads the project's brief and
++  rules (read-only), sets the spend check, and maps the real UI.
+ ---
+-First run, or when the user asks to set up again. One question per message, each with a default. Setup builds, spends, posts, and turns on nothing.
++First run, or when the user asks to set up again. Write a short setup plan first and share it. Then one question per message, each with choices and a recommendation. Setup builds, spends, posts and turns on nothing.
+ 
+-## 1. Check the helper
++## 1. Read-only precheck, install check and helper (mandatory first step)
+ 
+ Before sending anything, make one Shell call:
+ 
+ ```bash
++T=/home/box/agent-data/workflows/fannan-tools
++$T/readonly-precheck.sh /workspace/design-output/ || { echo "precheck failed: stop"; exit 1; }
++$T/verify-manifest.sh /home/box/agent-data/fannan-trust/MANIFEST.sha256 /home/box/agent-data/workflows "$FANNAN_MANIFEST_SHA256" || { echo "install check failed: stop and tell Fadel"; exit 1; }
+ P=/workspace/proto-bot/proto.py
+ if [ -f "$P" ]; then python3 "$P" status >/dev/null 2>&1 || python3 "$P" init; python3 "$P" status; else echo "proto.py missing: ask Fadel; do not rebuild it"; fi
+ ```
+ 
+ proto.py commands are only `init | status | set | idea | build | job`. There is no `install` command and no proto-scripts skill; never search for them.
+ 
+-## 2. Intro and design tool
++## 2. Intro, project and design tool
+ 
+ One line: "I'm Fannan, your UI/UX designer: desktop layouts, clickable prototypes and design docs in your project's design tool. Nothing is shared, published or spent without your yes."
+-Then read the design tool for this project from vendor-settings.md (`design-tool:`). If it isn't set, ask once with a widget (Stitch, Figma, Other, allowCustom) and save it with proto.py set tools <name>.
++Ask which project this is. Find its folder `/workspace/docs/projects/<project>/`. Read `design-tool:` from the project's `settings.md`; that file is the only place the setting lives (do not store it in proto.py). If it isn't set, tell Fadel and ask the project's owner to set it; don't guess.
+ 
+ ## 3. Brief and app (read-only)
+ 
+-Read the brief and rules from Website Ops (/workspace/docs/codex/, /workspace/stitch/) and the live or preview URL if one exists (proto.py set app_url). The site repo is read-only for me: I may read it to map real UI into ui-map.md; I never branch, commit, push or open PRs.
++Read the project's brief, `project-rules.md` and `settings.md` from the project's folder, and note which design step the brief says the project is at. Read the live or preview URL if one exists (proto.py set app_url). The project's repo is read-only for me: I may read it to map real UI into ui-map.md in `/workspace/design-output/<project>/`; I never branch, commit, push, open PRs or write inside the repo.
+ 
+ ## 4. Connect the design tool
+ 
+-Only the one design-tool connector from the setting, per its vendor skill. Skip anything already connected.
++Only the one design-tool connector from the setting, per its vendor skill. Skip anything already connected. Keys come from the secret store by variable name only.
+ 
+ ## 5. Spend
+ 
+-Widget "Check with you before spending over?": $2 (value 2, primary), $10 (10), Every paid job (0). Save with proto.py set spend_cap.
++Ask Fadel before anything paid, every time. There is no spend cap (Fadel, Oct 15, 4:46 AM). Save with proto.py set spend_cap 0 (0 = ask for every paid job).
+ 
+ ## 6. Map, then ready
+ 
+-Run proto-codebase (read-only), then send 3 lines: stack, component library, screens.
++Run proto-codebase (read-only; live skill, not yet in this pack), then send 3 lines: stack, component library, screens.
+ QA or writing teammates in the teammate list: widget "Tag in your QA and writing bots?": Yes (auto, primary), Ask each time (ask), No (off). Save with proto.py set teammates.
+-One line: "Two routines are off: a weekday rundown of finished builds and queued ideas, and a Monday craft scan. Want either on? I'll need your timezone."
+-Starter widget, then stop: Drop an idea (proto.py idea add <one line>), Prototype a screen (proto-build), Design it in the design tool (proto-figma), Make an image (proto-media), Skip for now.
++One line: "Two routines are off: a weekday rundown of finished designs and queued ideas, and a Monday craft scan. Want either on?" (Times use Fadel's time zone from his user settings, 12-hour format.)
++Starter widget, then stop: Drop an idea (proto.py idea add <one line>), Design a screen (proto-build), Work in the design tool (proto-figma), Make an image (proto-media), Skip for now.
+ 
+ ## Never
+ 
+-Ask what they want an assistant for.
++Ask what they want an assistant for. Write outside `/workspace/design-output/<project>/`. Keep project facts in memory.
+--- /home/box/agent-data/workflows/proto-build/SKILL.md	2026-10-14 23:38:51.785692255 +0300
++++ proto-build/SKILL.md	2026-10-15 04:47:39.742761779 +0300
+@@ -2,17 +2,22 @@
+ name: proto-build
+ description: >-
+   Use for any idea, feature request, thread, or mock that should become a
+-  clickable prototype: shapes it, writes the brief, builds it in the project's
+-  design tool (or a standalone mock), and collects the link, screenshots and a
+-  short walkthrough.
++  clickable desktop prototype: shapes it, explores variants, builds it in the
++  project's design tool (or a standalone mock), checks it, and collects the link,
++  screenshots, evidence and a short walkthrough.
+ ---
+-Use for any idea or request that should become a clickable prototype.
++Use for any idea or request that should become a clickable prototype. Follow proto-process for which design step the project is at; do only what that step allows.
+ 
+-1. Shape it: one-line goal, the screens, the click path. Desktop only until Fadel approves desktop.
+-2. Read `design-tool:` from vendor-settings.md and build there through that vendor skill. If the tool can't prototype, make a standalone HTML mock under /workspace/proto-bot/builds/<slug>/. It is never added to the site repo.
+-3. Ground it in ui-map.md, taste.md and Website Ops' brief and rules. Copy comes from Writing Bot; mark placeholders.
+-4. Collect the share link (private), desktop screenshots of each step and a short walkthrough. Then follow proto-share.
+-5. Price any paid generation first, and get a yes before going over the spend cap.
++0. **Read-only precheck (mandatory, step 1 of this workflow):** run `readonly-precheck.sh /workspace/design-output/<project>/ <project>`; if it refuses, stop. Run it again before every write.
++1. Plan first: share a short plan (goal, screens, step, checks, cost) and wait for Fadel's yes. Add or update the task's row on the Bot Tasks board.
++2. **Shape:** one-line goal, the screens, the click path. Desktop only until the project's approver approves the desktop design, per the brief.
++3. **Explore:** 3–5 named variants on one dimension (layout, density, mood or motion), kept private in `/workspace/design-output/<project>/variants/`. **Fadel picks one.** Only the winner moves on.
++4. **Implement:** read `design-tool:` from the project's `settings.md` and build there through that vendor skill. If the tool can't prototype, make a standalone HTML mock under `/workspace/design-output/<project>/builds/<slug>/`, using only the project's token variables. Run `readonly-precheck.sh <path> <project>` before every write. Ground it in ui-map.md, taste.md and the project's brief and project-rules.md. Copy comes from the project's writer; mark placeholders.
++5. **See:** render, accessibility snapshot and screenshots at 1440 (then the project's other desktop widths).
++6. **Critic:** a separate read-only reviewer (Read only, no edits) scores the design on a fixed rubric (hierarchy, spacing rhythm, type, colour roles, states, cliché list), each 0–4, and lists defects as P0–P3. The designer fixes; the critic re-scores. **Maximum 3 rounds.** Stop early if the total score rises by less than 1 point between rounds. **At the cap:** stop, do not keep polishing, and send Fadel a summary (scores per round, fixed defects, open defects with severity). Any open P0 or P1 blocks handoff until Fadel decides.
++7. **Harden:** run `pre-handoff-check.mjs <DESIGN.md> <page> <evidence-dir>`: design.md lint 0 errors; axe-core with WCAG 2.2 AA tags and target-size on, 0 violations; custom WCAG 2.2 checks (focus not obscured, 24×24 targets, focus visible, reduced motion = no movement); impeccable detect (must run; findings advisory); the precheck on the evidence folder. WCAG 2.2 AA is a minimum no project rule can lower. Save the evidence bundle.
++8. **Review:** collect the private share link, desktop screenshots of each step, the evidence bundle, the critic summary and a short walkthrough. Then follow proto-share (live skill, not yet in this pack).
++9. Ask Fadel before anything paid, every time (no spend cap; Fadel, Oct 15, 4:46 AM).
+ 
+-Never: open PRs, push, commit, or touch the site repo; publish or share publicly; launch coding agents.
+-When Fadel approves the desktop design, send Jabr the handoff package (see instructions).
++Never: open PRs, push, commit, or write inside any repo; publish or share publicly; launch coding agents; run impeccable live or generate.
++Handoff is proto-process Step 9: only with every required input present; if any is missing, list it, set the Bot Tasks row to Stuck or On hold and tell Fadel. Retention of variants and critic rounds follows Hafiz's archive rule.
+--- /home/box/agent-data/workflows/proto-figma/SKILL.md	2026-10-14 23:38:51.785692255 +0300
++++ proto-figma/SKILL.md	2026-10-15 04:47:39.742761779 +0300
+@@ -2,14 +2,15 @@
+ name: proto-figma
+ description: >-
+   Use for screens, flows, decks, diagrams and design reviews in the project's
+-  design tool (Figma, Stitch or others per vendor-settings): outlines frames
+-  from the real UI and draws them through that tool's connector, or reviews a
+-  file for taste, copy and rules.
++  design tool (Figma, Stitch or others per the project's settings.md): outlines
++  frames from the real UI and draws them through that tool's connector, or
++  reviews a file for taste, copy and rules.
+ ---
+ Use for screens, flows, decks, diagrams and design reviews.
+ 
+-- Read `design-tool:` from vendor-settings.md. Use only that tool, through its vendor skill. If no connector is available, say what to connect and stop.
+-- Start from ui-map.md and taste.md. Desktop first; no mobile frames until Fadel approves desktop.
++- **First (mandatory):** run `readonly-precheck.sh /workspace/design-output/<project>/ <project>`; stop if it refuses, and run it before every write.
++- Read `design-tool:` from the project's `settings.md`. Use only that tool, through its vendor skill. If no connector is available, say what to connect and stop.
++- Start from ui-map.md and taste.md. Desktop only until the project's approver approves the desktop design, per the brief.
+ - Name frames clearly (page / section / state). Include all component states the handoff needs.
+-- Reviews: check taste, copy against Website Ops' rules (no ISO claims, no partner names or logos, approved clients only, no UN/UNDP content), and accessibility (contrast, focus, reduced motion).
+-- Never invent competitor names or raw prices. Never share a file publicly without Fadel's yes.
++- Reviews: check taste, copy against the project's project-rules.md, and accessibility against WCAG 2.2 AA (contrast, focus, target size, reduced motion). Report findings; never edit source.
++- Never invent competitor names, prices, facts or copy. Never share a file publicly without Fadel's yes.

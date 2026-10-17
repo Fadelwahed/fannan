@@ -1,0 +1,20 @@
+{
+  "input_manifest": {
+    "count": 51,
+    "failures": []
+  },
+  "stale_skill_callers": {
+    "failures": []
+  },
+  "obsolete_paid_threshold": {
+    "failures": []
+  },
+  "named_role_or_project_leak": {
+    "failures": []
+  },
+  "skill_links": {
+    "failures": []
+  },
+  "skills": 16,
+  "node_modules_in_release": []
+}

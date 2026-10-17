@@ -1,0 +1,109 @@
+{
+ "when": "2026-10-16T04:04:29.601Z",
+ "designMd": "/Users/fadelwaheed/Desktop/Digital Cloud/Hermes project /fannan-rewrite-2026-10-16/test-results/local-fixture/design-output/test/fixture-DESIGN.md",
+ "page": "/Users/fadelwaheed/Desktop/Digital Cloud/Hermes project /fannan-rewrite-2026-10-16/test-results/local-fixture/design-output/test/home.html",
+ "checks": {
+  "contract": {
+   "errors": [
+    "version must be 1",
+    "phase must be handoff",
+    "brief.path must exist",
+    "rules.path must exist",
+    "settings path, repo, stack and four roles required",
+    "point of view needs an idea and brief line refs",
+    "screens required",
+    "copy slots required before layout",
+    "placeholders must be listed and cleared for handoff",
+    "languages/directions required",
+    "private design link with evidence required",
+    "tokens.json path and matching SHA-256 required",
+    "tokens.css path and matching SHA-256 required",
+    "tokens.buildScript path and matching SHA-256 required",
+    "tokens.buildScript must use reviewed release artifact",
+    "tokens.config path and matching SHA-256 required",
+    "tokens.config must use reviewed release artifact",
+    "tokens.lock path and matching SHA-256 required",
+    "tokens.lock must use reviewed release artifact",
+    "tokens need distinct JSON and CSS files",
+    "Style Dictionary build evidence must match reviewed artifacts and output hashes",
+    "tokens JSON/CSS cannot be parsed",
+    "tool evidence/artifacts required",
+    "assets need file, source, licence and consent record",
+    "motion needs duration/easing/trigger/reduced-motion",
+    "critic needs 1-3 evidenced rounds, all final copy/design checks PASS",
+    "dated approval record must name approver and every versioned frame hash",
+    "open questions block handoff"
+   ],
+   "pass": false
+  },
+  "lint": {
+   "errors": 0,
+   "pass": true
+  },
+  "assets": {
+   "brokenImages": [],
+   "failedFonts": [],
+   "pass": true
+  },
+  "design": {
+   "centered": 0,
+   "typeSizes": [
+    "16px",
+    "32px",
+    "13.3333px"
+   ],
+   "accent": "rgb(11,61,145)",
+   "accentArea": 2304,
+   "accentRatio": 0.0017777777777777779,
+   "accentViewportRatio": 0.0017777777777777779,
+   "gradients": 0,
+   "heroGradient": false,
+   "glass": 0,
+   "iconRows": 0,
+   "purpleBlue": false,
+   "placeholders": false,
+   "h1": 1,
+   "filler": false,
+   "ruleOfThree": false,
+   "basis": "DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required",
+   "pass": true
+  },
+  "axe": {
+   "version": "4.14.0",
+   "targetSizeEnabled": true,
+   "violations": [],
+   "incomplete": [],
+   "pass": true
+  },
+  "custom22": {
+   "tabStops": 1,
+   "targetUnder24": [],
+   "focusNotVisible": [],
+   "focusObscured": [],
+   "keyboardTrapSuspect": false,
+   "pass": true,
+   "note": "focus-visible is heuristic (outline or box-shadow); inline text links are exempt from 2.5.8 per the WCAG exception"
+  },
+  "states": [],
+  "reducedMotion": {
+   "runningWebAnimations": 0,
+   "elementsChangedOver700ms": 0,
+   "rafCallsOver700ms": 0,
+   "pass": true
+  },
+  "resourceBoundary": {
+   "pass": true,
+   "blockedRequests": 0
+  },
+  "impeccable": {
+   "ran": false,
+   "exit": 3,
+   "pass": false,
+   "note": "detect did not run or gave no parseable output"
+  }
+ },
+ "externalRequestsBlocked": [],
+ "phase": "handoff",
+ "pass": false,
+ "handoffReady": false
+}

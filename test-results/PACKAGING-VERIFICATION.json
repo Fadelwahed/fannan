@@ -1,0 +1,22 @@
+{
+  "revision": 2,
+  "release_manifest": "PASS",
+  "release_files": 57,
+  "exact_file_inventory": "PASS",
+  "unexpected_files": 0,
+  "symlinks": 0,
+  "manifest_sha256": "204f79e40aec2966cbb666c559758e8b8b20938c278d70d2515c6c778c2d2b06",
+  "combined_deliverables_in_order": 7,
+  "full_skill_files": 16,
+  "source_manifest_entries_verified": 51,
+  "full_production_gate": "BLOCKED: original pinned detector absent; original Linux host untested",
+  "live_installation": "NOT PERFORMED",
+  "zip_crc": "PASS",
+  "zip_bytes_match_files": "PASS",
+  "zip_entries": 163,
+  "excluded": [
+    "runtime-deps",
+    "revisions"
+  ],
+  "archive": "FANNAN-REVIEW-CANDIDATE-2026-10-16.zip"
+}

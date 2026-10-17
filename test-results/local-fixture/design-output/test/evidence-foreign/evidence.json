@@ -1,0 +1,189 @@
+{
+ "when": "2026-10-16T04:04:45.009Z",
+ "designMd": "/Users/fadelwaheed/Desktop/Digital Cloud/Hermes project /fannan-rewrite-2026-10-16/test-results/local-fixture/design-output/test/fixture-DESIGN.md",
+ "page": "/Users/fadelwaheed/Desktop/Digital Cloud/Hermes project /fannan-rewrite-2026-10-16/test-results/local-fixture/design-output/test/home.html",
+ "checks": {
+  "contract": {
+   "errors": [],
+   "pass": true
+  },
+  "lint": {
+   "errors": 0,
+   "pass": true
+  },
+  "assets": {
+   "brokenImages": [
+    "https://example.invalid/x.png"
+   ],
+   "failedFonts": [],
+   "pass": false
+  },
+  "design": {
+   "centered": 0,
+   "typeSizes": [
+    "16px",
+    "32px",
+    "13.3333px"
+   ],
+   "accent": "rgb(11,61,145)",
+   "accentArea": 2304,
+   "accentRatio": 0.0017777777777777779,
+   "accentViewportRatio": 0.0017777777777777779,
+   "gradients": 0,
+   "heroGradient": false,
+   "glass": 0,
+   "iconRows": 0,
+   "purpleBlue": false,
+   "placeholders": false,
+   "h1": 1,
+   "filler": false,
+   "ruleOfThree": false,
+   "basis": "DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required",
+   "pass": true
+  },
+  "axe": {
+   "version": "4.14.0",
+   "targetSizeEnabled": true,
+   "violations": [
+    {
+     "id": "frame-title",
+     "impact": "serious",
+     "nodes": 1
+    },
+    {
+     "id": "image-alt",
+     "impact": "critical",
+     "nodes": 1
+    }
+   ],
+   "incomplete": [],
+   "pass": false
+  },
+  "custom22": {
+   "tabStops": 2,
+   "targetUnder24": [],
+   "focusNotVisible": [
+    {
+     "id": 2,
+     "tag": "IFRAME",
+     "name": "",
+     "w": 304,
+     "h": 154,
+     "focusVisible": false,
+     "obscured": false,
+     "inlineLink": false
+    }
+   ],
+   "focusObscured": [],
+   "keyboardTrapSuspect": false,
+   "pass": false,
+   "note": "focus-visible is heuristic (outline or box-shadow); inline text links are exempt from 2.5.8 per the WCAG exception"
+  },
+  "states": [
+   {
+    "screen": "home",
+    "lang": "en",
+    "state": "default",
+    "renderedSha256": "727a51b2ec24a767842ac6db9cf3386bdee601e177b5384e980991b1fde1a436",
+    "approvedSha256": "8d66325bf2462eb2b75f51d9f71bd62eb99fd894ad3bc165f0c17afb628f0214",
+    "browserVersion": "155.0.8059.85",
+    "axeViolations": [
+     "frame-title",
+     "image-alt"
+    ],
+    "axeIncomplete": [],
+    "assets": {
+     "brokenImages": [
+      "https://example.invalid/x.png"
+     ],
+     "failedFonts": []
+    },
+    "copy": {
+     "errors": [
+      "copy slot description differs from deck"
+     ],
+     "pass": false
+    },
+    "centered": 0,
+    "typeSizes": 3,
+    "accentRatio": 0.0017777777777777779,
+    "maxViewportAccent": 0.0017777777777777779,
+    "gradients": 0,
+    "heroGradient": false,
+    "glass": 0,
+    "purpleBlue": false,
+    "iconRows": 0,
+    "filler": false,
+    "ruleOfThree": false,
+    "placeholders": false,
+    "focusFailures": [
+     {
+      "small": false,
+      "invisible": true,
+      "obscured": false
+     }
+    ],
+    "reducedMotion": {
+     "running": 0,
+     "changed": false
+    },
+    "language": "en",
+    "direction": "ltr",
+    "pass": false
+   }
+  ],
+  "reducedMotion": {
+   "runningWebAnimations": 0,
+   "elementsChangedOver700ms": 0,
+   "rafCallsOver700ms": 0,
+   "pass": true
+  },
+  "resourceBoundary": {
+   "pass": false,
+   "blockedRequests": 8
+  },
+  "impeccable": {
+   "ran": false,
+   "exit": 3,
+   "pass": false,
+   "note": "detect did not run or gave no parseable output"
+  }
+ },
+ "externalRequestsBlocked": [
+  {
+   "url": "https://example.invalid/x.png",
+   "reason": "only local project files are allowed"
+  },
+  {
+   "url": "file:///Users/fadelwaheed/Desktop/Digital%20Cloud/Hermes%20project%20/fannan-rewrite-2026-10-16/test-results/local-fixture/foreign.html",
+   "reason": "file request is outside the selected project"
+  },
+  {
+   "url": "https://example.invalid/x.png",
+   "reason": "only local project files are allowed"
+  },
+  {
+   "url": "file:///Users/fadelwaheed/Desktop/Digital%20Cloud/Hermes%20project%20/fannan-rewrite-2026-10-16/test-results/local-fixture/foreign.html",
+   "reason": "file request is outside the selected project"
+  },
+  {
+   "url": "https://example.invalid/x.png",
+   "reason": "only local project files are allowed"
+  },
+  {
+   "url": "file:///Users/fadelwaheed/Desktop/Digital%20Cloud/Hermes%20project%20/fannan-rewrite-2026-10-16/test-results/local-fixture/foreign.html",
+   "reason": "file request is outside the selected project"
+  },
+  {
+   "url": "https://example.invalid/x.png",
+   "reason": "only local project files are allowed"
+  },
+  {
+   "url": "file:///Users/fadelwaheed/Desktop/Digital%20Cloud/Hermes%20project%20/fannan-rewrite-2026-10-16/test-results/local-fixture/foreign.html",
+   "reason": "file request is outside the selected project"
+  }
+ ],
+ "phase": "handoff",
+ "pass": false,
+ "handoffReady": false
+}

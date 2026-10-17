@@ -1,0 +1,37 @@
+# Changelog and round-5 P1 disposition
+
+The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.
+
+| Round-5 P1 | Candidate change | Evidence / closure test | Honest disposition |
+|---|---|---|---|
+| N1 — setup prechecks the output root and stops | Project selection precedes the project-specific path; setup and all workflow callers supply both target and project | `skills/design-setup/SKILL.md`; explicit usage/precheck tests and full caller scan in verification record | Candidate caller defect fixed; live skill execution untested |
+| N2 — npm dependencies conflict with the hashed tree | Exact package and lock stay in `runtime/`; actual npm install is outside `release/`; all three dependency consumers verify lock and installed-tree hashes before loading through `FANNAN_DEPS`, and reject an in-tree prefix | Local `npm ci --ignore-scripts`, token/browser fixture execution, release inventory contains no node_modules; external manifest generated after edits | Candidate layout/runtime defect fixed; target-host install untested |
+| N5 — launcher has no explicit pinned-binary path | Checker invokes the protected launcher with explicit `IMPECCABLE_BIN` or the release's declared default; never invokes an arbitrary binary directly | Missing binary produces a failing evidence record; supplied launcher hash pin retained; negative path executed | Caller fixed; successful real binary execution remains BLOCKED because the binary is absent |
+| R3-2 — Amin's review is not recorded | Add `INSTALL-ACCEPTANCE.md` with per-file/digest review requirement and blocked status; do not reuse an old review for rewritten files | Candidate review by a native reviewer is documented separately and is **not Amin's review** | **OPEN** until Amin actually reviews and records the candidate hashes |
+| R3-3 — paid threshold remains in skills/memory | All candidate skills require approval for every paid job; proposed memory save 8 says exactly “Ask Fadel before anything that costs money” | Search active skills and proposed memory for old threshold wording; no threshold widget or unsupported paid command introduced | Candidate text fixed; live skill/memory activation remains pending approval |
+| R3-4 — read-only token and branch checks approved but not implemented | Preserve exact one-repository Contents:read control and branch/daily-check fallback; specify secret-safe proof and task ownership | `references/security-and-install.md`, `INSTALL-ACCEPTANCE.md`; no credential or branch mutation attempted | **OPEN** until real permissions, read access and branch/task evidence exist |
+| R3-5 — project omitted / unsafe writes | Keep exactly two arguments in guard; every caller supplies project; evidence output is fresh/versioned and uses guarded no-clobber writes | Guard/negative-path tests, contract checks and caller review; descriptor-relative exclusive writer and same-identity host boundary documented | Candidate caller/output defects fixed; descriptor regression tests required; actual Linux host enforcement remains untested |
+
+## Requested improvements
+
+- Rewrote the complete plan while retaining Scope and authority as rules and the exact eight steps plus Step 9. Step 5 now explicitly uses the structural/copy checks before color/type; this is the existing gate, not a new one.
+- Wrote all nine workflow and seven vendor skill files in full, with focused triggers, generic project lookup, security rules and Gotchas. Detailed criteria load from supporting references. The old routine text is not reconstructed from memory.
+- Added the brief/section/decision trace, copy-first source ledger, six-size type ceiling, ten-percent accent ceiling, purposeful spacing/grid/motion, translations/RTL and long-text acceptance.
+- Integrated the anti-pattern and copy checklist into the pre-handoff contract and browser check. Semantic judgments require explicit scoped reviewer evidence, not a detector's optimistic guess.
+- Added an independent copy-and-design rubric, real-reference comparisons, generic-headline failure and a hard three-round/stalled-score stop with no soft pass.
+- Defined the canonical handoff record and generated checklist, scoped to every screen/state/language, with real copy, source/rights records, artifact hashes, tokens/CSS/build inputs, audit intent and no open questions.
+- Supplied the token conversion/build path and config using the existing pinned dependency. Selected the permitted reviewed Node 22 installation route for the original Node20 host; this Mac's Node22 evidence is separately labelled.
+- Supplied the complete rename map and a single release manifest/pin. No active skill caller retains an obsolete skill name; migration/history/helper-path mentions are explicitly classified.
+- Removed unsupported media search/resume instructions. Matching avatars become a reference-backed acceptance process requiring real references and Fadel's approval before paid generation.
+
+## Closed historical findings preserved
+
+R3-1 stays rejected: the gate already used the launcher; N5 is the missing-binary-path issue. The launcher stays allowlisted and copy-hash-run, with no download fallback. shadcn stays guidance-only without CLI execution. Vendor output remains text/design reference, never repository writes. The AA floor, desktop approval, external manifest, required project argument, negative-path failures, fixed tool versions and explicit untested boundaries stay in place. This rewrite does not reclassify old closed findings as new defects.
+
+## Review fixes made in this candidate
+
+An independent read-only reviewer identified and the implementation addressed phase-inappropriate placeholder rejection, contradictory PASS/FAIL records, insufficient per-state checks, evidence overwrite risk, incomplete generated checklist, and weak token/frame fixture validation. See the verification record for the tests actually executed; source review is not a runtime PASS. Any limitation remaining there is still a limitation here.
+
+## Grok review revision — 16 October 2026
+
+The complete finding-by-finding disposition is in `REVIEW-RESPONSE.md`. This revision pins a proposed Node distribution/checksum, verifies dependency bytes before imports, narrows detector/browser access, replaces pathname writes with a descriptor-based writer, adds Arabic and tagline screening, and makes authority, key rotation, avatar uniqueness and engineer ownership explicit. It preserves the existing approval gates, tools and exact npm versions. No review finding is closed by inventing Amin's approval, a missing binary, a target-host run or a live atomic transaction.

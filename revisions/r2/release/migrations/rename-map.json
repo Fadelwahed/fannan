@@ -1,0 +1,23 @@
+{
+  "status": "proposal-only",
+  "migration": "atomic-after-Amin-review-and-Fadel-approval",
+  "workflowSkills": {
+    "design-process": null,
+    "design-setup": "proto-setup",
+    "design-prototype": "proto-build",
+    "design-canvas": "proto-figma",
+    "design-ui-map": "proto-codebase",
+    "design-connect": "proto-connect",
+    "design-media": "proto-media",
+    "design-research": "proto-research",
+    "design-share": "proto-share"
+  },
+  "callersToSwitchAtomically": [
+    "live skill cross-references and frontmatter names",
+    "vendor generate-design references at former lines 152, 207, 253, 315",
+    "Fannan memory save 7",
+    "trust manifest and pin"
+  ],
+  "excludedFromRename": ["/workspace/proto-bot/proto.py", "/workspace/proto-bot/", "immutable historical review files"],
+  "installGate": "Do not install any candidate alone. Back up and checksum live files, then install all nine new skills and retire the eight old skills together, update callers and trust manifest, verify, and roll back on failure. Live state remains unchanged until the separate review and approval gates."
+}

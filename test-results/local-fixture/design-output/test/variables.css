@@ -1,0 +1,29 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --colors-primary: #0b3d91;
+  --colors-on-primary: #ffffff;
+  --colors-surface: #ffffff;
+  --colors-on-surface: #1a1a1a;
+  --colors-muted: #5a5f66;
+  --rounded-sm: 4px;
+  --rounded-md: 8px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+  --breakpoints-desktop: 1440px;
+  --typography-headline-lg-font-family: Inter;
+  --typography-headline-lg-font-size: 48px;
+  --typography-headline-lg-font-weight: 700;
+  --typography-headline-lg-line-height: 1.1;
+  --typography-body-md-font-family: Inter;
+  --typography-body-md-font-size: 16px;
+  --typography-body-md-font-weight: 400;
+  --typography-body-md-line-height: 1.5;
+  --components-button-primary-background-color: #0b3d91;
+  --components-button-primary-text-color: #ffffff;
+  --components-button-primary-rounded: 8px;
+  --components-button-primary-padding: 12px;
+}
