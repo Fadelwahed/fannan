@@ -141,12 +141,28 @@ def verify_release_archive():
     return dict(releaseManifestSha256=pin, releaseFiles=len(entries), archiveFiles=len(paths), archiveSha256=sha(ROOT / ARCHIVE), zipCRC='PASS', exactInventoryAndBytes='PASS', sevenDeliverables='PASS', skills=16)
 
 
-def verify(start):
+def require_hex_digest(expected):
+    if not isinstance(expected, str) or len(expected) != 64 or any(c not in '0123456789abcdef' for c in expected):
+        raise ValueError('--registry-sha256 must be 64 lowercase hex characters')
+
+
+def check_registry_pin(path, expected):
+    """R4-5: anchor the changed-file registry to an externally supplied digest (e.g. the one quoted in the review/response)."""
+    if expected is None:
+        return 'self (unanchored: pass --registry-sha256 with the reviewed digest to anchor it)'
+    require_hex_digest(expected)
+    if sha(path) != expected:
+        raise ValueError('registry pin mismatch: trust/R3-CHANGES.sha256 differs from --registry-sha256')
+    return 'external'
+
+
+def verify(start, registry_sha256=None):
+    registry_pin = check_registry_pin(ROOT / REGISTRY, registry_sha256)  # checked first: an unanchored or wrong registry fails before anything else
     report = verify_release_archive()
     names, excluded = coverage(start)
-    entries = verify_hashes(ROOT / REGISTRY, ROOT, sha(ROOT / REGISTRY), names)
+    entries = verify_hashes(ROOT / REGISTRY, ROOT, registry_sha256 or sha(ROOT / REGISTRY), names)
     report.update(changedFiles=len(names) + len(excluded), coveredChangedFiles=len(entries), uncoveredChangedFiles=[], deliberateExclusions=excluded,
-                  changesManifestSha256=sha(ROOT / REGISTRY))
+                  changesManifestSha256=sha(ROOT / REGISTRY), registryPin=registry_pin)
     return report
 
 
@@ -182,7 +198,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['build', 'verify', 'self-test'])
     parser.add_argument('--start')
+    parser.add_argument('--registry-sha256', help='verify only: expected SHA-256 of trust/R3-CHANGES.sha256 from the review record')
     args = parser.parse_args()
     if args.action != 'self-test' and not args.start:
         parser.error('--start is required')
-    print(json.dumps(self_test() if args.action == 'self-test' else build(args.start) if args.action == 'build' else verify(args.start), indent=2))
+    if args.registry_sha256 is not None and args.action != 'verify':
+        parser.error('--registry-sha256 applies to verify only')
+    if args.registry_sha256 is not None:
+        try:
+            require_hex_digest(args.registry_sha256)
+        except ValueError as error:
+            parser.error(str(error))
+    print(json.dumps(self_test() if args.action == 'self-test' else build(args.start) if args.action == 'build' else verify(args.start, args.registry_sha256), indent=2))

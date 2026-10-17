@@ -14,12 +14,15 @@ The release manifest covers **all release files with no exclusions**. Its pin mu
 
 For the repository changes registry there are exactly two deliberate categories of exclusions: the registry itself (no file can contain its own SHA-256), and the single required final `reviews/CODEX-R3-response-<last-code-SHA>.md` added after code/package freeze. Git records that response commit; it quotes the registry digest. Multiple final response files are rejected. No implementation, test, evidence, generated document or ZIP is excluded from repository coverage. The final response is external to the ZIP for the same required-last-commit ordering.
 
-After final commit, compare the actual committed paths (the verifier uses the same diff plus any untracked paths, making it stricter while editing):
+After final commit, compare the actual committed paths (the verifier uses the same diff plus any untracked paths, making it stricter while editing). A clone does not keep the 0444 modes, and the verifier requires **both** generated trust files to be read-only, so set them first (no bytes change):
 
 ```sh
+chmod 0444 trust/MANIFEST.sha256 trust/R3-CHANGES.sha256
 git diff --name-only 9ee1ca6aaa4a257cb84fb7381056005f48554bf3..HEAD
-python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3
+python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3 --registry-sha256 <digest quoted in the review/response record>
 ```
+
+`--registry-sha256` (R4-5) anchors `trust/R3-CHANGES.sha256` to an externally recorded digest and is checked before anything else; a mismatch fails. Without it the registry is only checked against its own hash (`registryPin` reports `self (unanchored …)`), which proves internal consistency, not authenticity. Regression tests: `python3 -B scripts/test_package_r3.py -v`.
 
 `coveredChangedFiles`, `uncoveredChangedFiles: []` and `deliberateExclusions` are the comparison result. `changesManifestSha256` is quoted in the final response. The self-test proves rejection of tampering, unexpected files, symlinks and a writable manifest. The portable verifier checks read-only mode bits, external pin, exact inventory, bytes and archive contents; it does not replace target-host GNU/Linux execution.
 
@@ -29,4 +32,4 @@ Also run the production verifier on a supported GNU/Linux host with the pin from
 release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$FANNAN_MANIFEST_SHA256"
 ```
 
-It requires GNU `realpath -e`, `stat -c` and `sha256sum` on its fixed PATH. This R3 Mac attempt fails before verification because `realpath -e` is unsupported. Do not mark that command PASS, relax its root/write-mode rule or replace production tools to hide the platform boundary. A clone preserves executable bits, not 0444; apply the documented local 0444 manifest mode before verification without changing bytes. No protected host installation is performed by this packaging script.
+It requires GNU `realpath -e`, `stat -c` and `sha256sum` on its fixed PATH. This R3 Mac attempt fails before verification because `realpath -e` is unsupported. Do not mark that command PASS, relax its root/write-mode rule or replace production tools to hide the platform boundary. A clone preserves executable bits, not 0444; apply the documented local 0444 mode (`chmod 0444 trust/MANIFEST.sha256 trust/R3-CHANGES.sha256`) before verification without changing bytes. No protected host installation is performed by this packaging script.
