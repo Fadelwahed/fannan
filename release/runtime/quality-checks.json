@@ -14,9 +14,10 @@
     "fillerMatches": 0,
     "placeholdersAtHandoff": 0,
     "focusStateContrast": 3,
-    "spacingOffScale": 0
+    "spacingOffScale": 0,
+    "stockGlass": 0
   },
-  "reason": "Six font sizes cover display, title, section, body, secondary and label roles without ad hoc steps. DOM area estimates are proxies and require state-bound screenshot review. Non-hero gradients and backdrop filters are signals for the critic, not automatic fails.",
+  "reason": "Six font sizes cover display, title, section, body, secondary and label roles without ad hoc steps. DOM area estimates are proxies and require state-bound screenshot review. Non-hero gradients are signals for the critic, not automatic fails. Backdrop filters (stock glassmorphism) are gated at zero in both phases (design-quality.md, Default effects; ARGON-R2-09).",
   "focusStateContrastReason": "Screening threshold for the focus heuristic: a focus indicator (outline, border, underline, ring, or background/text change) counts only when it reaches this contrast against the unfocused state or its backdrop. 3:1 is derived from WCAG 2.2 SC 2.4.13 Focus Appearance (AAA) and matches the SC 1.4.11 Non-text Contrast (AA) minimum, which is the floor: the checker refuses a value below 3. It is a screen, not proof of 2.4.7/2.4.13; manual focus review stays mandatory.",
   "spacingOffScaleReason": "At handoff every visible padding, vertical margin and row/column gap must resolve to a value on the built --spacing-* scale (0 always allowed). Horizontal margins are not counted because auto margins resolve to pixels. Wireframes are not gated. A screen, not proof of good rhythm.",
   "manualIds": [
