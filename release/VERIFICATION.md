@@ -13,7 +13,7 @@ Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-onl
 | R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r6/r2-node.log`, `r2-python.log` |
 | `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r6/package-tests-git.log`, `package-tests.log` |
 | `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r6/package-self-test.log` |
-| `node release/tests/local-fixture.mjs` | 0 | browser, contract and state checks PASS; full gate blocked by the absent Impeccable binary | `test-results/r6/local-fixture.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract and state checks PASS; full gate blocked, but **R7 correction (CODEX-R3-03):** the log shows the launcher stopping with exit 4 `detect path outside project output` (the fixture had not relocated the launcher's root), not the missing-binary stop this row claimed. Corrected run: R7 below | `test-results/r6/local-fixture.log` |
 | design.md lint 0.4.0 offline, convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r6/designmd-lint-offline.log` |
 | Syntax | 0 | mjs=25 sh=4 py=4, 0 failures | `test-results/r6/syntax.log` |
 

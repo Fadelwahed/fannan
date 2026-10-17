@@ -3,7 +3,7 @@
 import { cpSync, mkdirSync, writeFileSync, readFileSync, existsSync, mkdtempSync, chmodSync, realpathSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { manualIds, states } from '../tools/handoff-contract.mjs';
 import { tmpdir } from 'node:os';
@@ -27,8 +27,24 @@ cpSync(join(task, 'release/runtime/package-lock.json'), join(fixture, 'runtime/p
 cpSync(join(task, 'release/runtime/quality-checks.json'), join(fixture, 'runtime/quality-checks.json'), { recursive: true, force: true });
 cpSync(join(task, 'release/runtime/dependency-trust.json'), join(fixture, 'runtime/dependency-trust.json'), { recursive: true, force: true });
 const root = join(fixture, 'design-output');
+// CODEX-R3-03: every relocation must apply, or the fixture stops (no silent no-op replacement).
+const patch = (file, from, to) => { const text = readFileSync(file, 'utf8'); if (!text.includes(from)) throw Error(`fixture patch target absent in ${file}`); writeFileSync(file, text.replace(from, to)); };
 const checker = join(tools, 'pre-handoff-check.mjs');
-writeFileSync(checker, readFileSync(checker, 'utf8').replace("const OUTPUT_BASE = '/workspace/design-output';", `const OUTPUT_BASE = ${JSON.stringify(root)};`));
+patch(checker, "const OUTPUT_BASE = '/workspace/design-output';", `const OUTPUT_BASE = ${JSON.stringify(root)};`);
+// CODEX-R3-03: the temporary launcher copy gets the same test root, so detect reaches the pinned-binary check.
+// The production launcher in release/tools keeps its /workspace/design-output boundary (checked below).
+const launcherBoundary = '"/workspace/design-output/$FANNAN_PROJECT"/*)';
+if (!readFileSync(join(task, 'release/tools/launcher-impeccable.sh.internal'), 'utf8').includes(launcherBoundary)) throw Error('production launcher boundary changed');
+patch(join(tools, 'launcher-impeccable.sh.internal'), launcherBoundary, `${JSON.stringify(realpathSync(root) + '/')}"$FANNAN_PROJECT"/*)`);
+const missingBinary = 'impeccable (Fannan launcher): pinned binary missing; no download fallback';
+const runChecker = (evidenceDir, quiet = false) => {
+  const r = spawnSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidenceDir, 'test', handoff], { env, encoding: 'utf8' });
+  if (!quiet) { process.stdout.write(r.stdout); process.stderr.write(r.stderr); }
+  const result = JSON.parse(readFileSync(join(evidenceDir, 'evidence.json'), 'utf8'));
+  // CODEX-R3-03: the full gate must stop at the missing pinned binary (launcher exit 3), not at any other detector error.
+  if (result.checks.impeccable?.exit !== 3 || result.checks.impeccable.ran !== false || !r.stderr.split('\n').includes(missingBinary)) throw Error(`expected launcher exit 3 "${missingBinary}"; got exit ${result.checks.impeccable?.exit}: ${r.stderr.trim().split('\n').filter(l => l.includes('impeccable')).join(' | ')}`);
+  return { status: r.status, result };
+};
 const guard = `#!${process.execPath}\nconst fs=require('fs'),path=require('path');const root=${JSON.stringify(root)};const [a,b]=process.argv.slice(2);const write=process.argv[1].endsWith('safe-write.sh');const project=write?a:b,target=path.resolve(write?b:a);if(project!=='test'||!target.startsWith(path.join(root,project)+path.sep)){console.error('TEST GUARD DENY');process.exit(10)}if(write){fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,fs.readFileSync(0),{flag:'wx'});}else console.log('TEST GUARD ALLOW');\n`;
 writeFileSync(join(tools, 'readonly-precheck.sh'), guard, { mode: 0o755 });
 writeFileSync(join(tools, 'safe-write.sh'), guard, { mode: 0o755 });
@@ -55,10 +71,7 @@ writeFileSync(html, fixturePage('variables.css')); // OPUS-R2-10 follow-up: buil
 const handoff = join(output, 'handoff.json');
 writeFileSync(handoff, '{}'); // Deliberately fails contract: this fixture only tests browser execution.
 const evidence = join(output, 'evidence');
-let status = 0;
-try { execFileSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidence, 'test', handoff], { env, stdio: 'inherit' }); }
-catch (e) { status = e.status; }
-const result = JSON.parse(readFileSync(join(evidence, 'evidence.json'), 'utf8'));
+let { status, result } = runChecker(evidence);
 if (status !== 1 || result.pass || !result.checks.axe || !result.checks.design || !result.checks.impeccable) throw Error('expected browser execution and fail-closed output');
 const shot = join(evidence, 'page-1440.png');
 const hash = createHash('sha256').update(readFileSync(shot)).digest('hex');
@@ -87,20 +100,17 @@ const authored = {
 };
 writeFileSync(handoff, JSON.stringify(authored));
 const evidence2 = join(output, 'evidence-valid');
-try { execFileSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidence2, 'test', handoff], { env, stdio: 'inherit' }); }
-catch (e) { status = e.status; }
-const second = JSON.parse(readFileSync(join(evidence2, 'evidence.json'), 'utf8'));
+const { status: status2, result: second } = runChecker(evidence2);
+status = status2;
 if (status !== 1 || !second.checks.contract.pass || second.checks.states.length !== 1 || !second.checks.states[0].pass || second.checks.impeccable.pass) throw Error('expected valid contract and all applicable state browser checks, with pinned binary blocking');
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
-try { execFileSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidence3, 'test', handoff], { env, stdio: 'ignore' }); } catch {}
-const mutated = JSON.parse(readFileSync(join(evidence3, 'evidence.json'), 'utf8'));
+const { result: mutated } = runChecker(evidence3, true);
 if (mutated.checks.states[0].copy.pass || mutated.checks.states[0].renderedSha256 === hash) throw Error('changed HTML must fail deck and approved-frame hash');
 const foreign = join(fixture, 'foreign.html');
 writeFileSync(foreign, '<p>outside project</p>');
 writeFileSync(html, readFileSync(html, 'utf8').replace('</main>', `<iframe src="${pathToFileURL(foreign).href}"></iframe><img src="https://example.invalid/x.png"></main>`));
 const evidence4 = join(output, 'evidence-foreign');
-try { execFileSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidence4, 'test', handoff], { env, stdio: 'ignore' }); } catch {}
-const foreignResult = JSON.parse(readFileSync(join(evidence4, 'evidence.json'), 'utf8'));
+const { result: foreignResult } = runChecker(evidence4, true);
 if (!foreignResult.externalRequestsBlocked?.some(v => v.url?.includes('foreign.html')) || !foreignResult.externalRequestsBlocked?.some(v => v.url?.includes('example.invalid')) || foreignResult.checks.resourceBoundary.pass) throw Error('foreign file and network loads must be blocked by browser route');
-console.log('LOCAL FIXTURE: browser, contract and applicable state checks passed; full gate correctly blocked by absent pinned Impeccable binary');
+console.log(`LOCAL FIXTURE: browser, contract and applicable state checks passed; full gate correctly blocked by absent pinned Impeccable binary (launcher exit 3: ${missingBinary})`);
