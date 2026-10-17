@@ -34,10 +34,13 @@ writeFileSync(join(tools, 'readonly-precheck.sh'), guard, { mode: 0o755 });
 writeFileSync(join(tools, 'safe-write.sh'), guard, { mode: 0o755 });
 chmodSync(join(tools, 'readonly-precheck.sh'), 0o755);
 chmodSync(join(tools, 'safe-write.sh'), 0o755);
+// R6: the test shim carries the local Chrome's own version, so the R4-4 runtime-version check can pass in this fixture.
+const chromeVersion = /(\d+\.\d+\.\d+\.\d+)/.exec(execFileSync(realpathSync(chrome), ['--version'], { encoding: 'utf8' }))?.[1];
+if (!chromeVersion) throw Error('local Chrome version unreadable');
 // These adapters exist only in the temporary copied tools; they cannot approve production storage.
 const verifier = join(tools, 'verify-deps.mjs');
 writeFileSync(verifier, readFileSync(verifier, 'utf8').replace('return verifyDeps(prefix, pin, releaseRoot);', 'return verifyDependencyTree(prefix, pin, releaseRoot);'));
-writeFileSync(join(tools, 'executable-trust.mjs'), readFileSync(join(tools, 'executable-trust.mjs'), 'utf8').replace('export function verifiedBrowser() {', 'function productionBrowser() {') + `\nexport function verifiedBrowser() { return verifyExecutable(${JSON.stringify({path:realpathSync(chrome),sha256:createHash('sha256').update(readFileSync(chrome)).digest('hex')})}); }\n`);
+writeFileSync(join(tools, 'executable-trust.mjs'), readFileSync(join(tools, 'executable-trust.mjs'), 'utf8').replace('export function verifiedBrowser() {', 'function productionBrowser() {') + `\nexport function verifiedBrowser() { return { ...verifyExecutable(${JSON.stringify({path:realpathSync(chrome),sha256:createHash('sha256').update(readFileSync(chrome)).digest('hex')})}), version: ${JSON.stringify(chromeVersion)} }; }\n`);
 const env = { ...process.env, FANNAN_DEPS: deps };
 delete env.CHROME_PATH; delete env.PUPPETEER_EXECUTABLE_PATH;
 const sourceDesign = readFileSync(resolve(task, 'input/fannan-review-pack/example-DESIGN.md'), 'utf8');
