@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { manualIds, states } from '../tools/handoff-contract.mjs';
 import { tmpdir } from 'node:os';
+import { fixturePage } from './fixture-page.mjs';
 
 const task = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const deps = join(task, 'runtime-deps');
@@ -47,7 +48,7 @@ execFileSync(process.execPath, [join(tools, 'designmd-to-sd.mjs'), design, json,
 execFileSync(process.execPath, [join(tools, 'sd-build.mjs'), json, css, 'test'], { env, stdio: 'inherit' });
 if (!readFileSync(css, 'utf8').includes('--colors-primary') || !readFileSync(css, 'utf8').includes('--breakpoints-desktop')) throw Error('CSS token or breakpoint absent');
 const html = join(output, 'home.html');
-writeFileSync(html, '<!doctype html><html lang="en" dir="ltr"><head><title>Fixture</title><style>:root{--accent:rgb(11,61,145)}body{font:16px Arial;color:#111;background:white}main{padding:2rem}button{outline:none;min-width:48px;min-height:48px;background:rgb(11,61,145);color:white}button:focus{outline:2px solid black}</style></head><body><main><h1 data-copy-slot="headline">Specific service</h1><p data-copy-slot="description">A service for residents.</p><button data-copy-slot="button">Start</button></main></body></html>');
+writeFileSync(html, fixturePage('variables.css')); // OPUS-R2-10 follow-up: built spacing scale, no browser defaults
 const handoff = join(output, 'handoff.json');
 writeFileSync(handoff, '{}'); // Deliberately fails contract: this fixture only tests browser execution.
 const evidence = join(output, 'evidence');

@@ -56,3 +56,21 @@ test('ARGON-R2-06: a secret-looking variable in the checker environment does not
     }
   } finally { await browser.close(); delete process.env.FANNAN_R6_SENTINEL; rmSync(home, { recursive: true, force: true }); }
 });
+
+test('OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { fixturePage } = await import('./fixture-page.mjs');
+  const { spacingProbe } = await import('../tools/spacing-scale.mjs');
+  const html = fixturePage('variables.css');
+  assert.match(html, /<link rel="stylesheet" href="variables\.css">/, 'loads the built token CSS');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.route('**/variables.css', route => route.fulfill({ contentType: 'text/css', body: ':root{--spacing-sm:8px;--spacing-md:16px;--spacing-lg:32px}' })); // the example DESIGN.md scale
+    await page.route('http://fixture.invalid/home.html', route => route.fulfill({ contentType: 'text/html', body: html }));
+    await page.goto('http://fixture.invalid/home.html');
+    const result = await page.evaluate(spacingProbe);
+    assert.deepEqual(result.spacingScale, ['16px', '32px', '8px']);
+    assert.deepEqual(result.spacingOffScale, []);
+  } finally { await browser.close(); }
+});
