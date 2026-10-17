@@ -35,7 +35,7 @@ function token(group, key, v, path) {
   const ty = ref ? undefined : inferTokenType(path, v);
   if (ty) t.$type = ty;
   else if (!ref) {
-    if (typeof v === 'number' && (group === 'breakpoints' || group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) errors.push(`units required at ${path}: use px, rem or em`);
+    if (typeof v === 'number' && Number.isFinite(v) && (group === 'spacing' || group === 'breakpoints' || group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) errors.push(`units required at ${path}: use px, rem or em`); // R4-6: spacing added
     else errors.push(`unknown token type at ${path}`);
   }
   return t;

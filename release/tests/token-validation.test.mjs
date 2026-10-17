@@ -17,7 +17,8 @@ test('shared token validation rejects malformed values and incompatible referenc
     [{ colors: { primary: leaf('bogus', 'x') } }, /unknown token type/],
     [{ a: leaf('toString', 'x') }, /unknown token type/],
     [{ a: { 'bad.key': leaf('bogus', 'x') }, 'a.bad': { key: leaf('number', 1) } }, /ambiguous token name/],
-    [{ spacing: { sm: leaf('number', Infinity) } }, /invalid number value/],
+    [{ scale: { sm: leaf('number', Infinity) } }, /invalid number value/], // R4-6: spacing no longer takes numbers, so the G-7 case uses an untyped group
+    [{ spacing: { sm: leaf('number', 8) } }, /incompatible token type/], // R4-6: unitless spacing rejected in hand-edited JSON too
     [{ typography: { body: { fontFamily: leaf('fontFamily', []) } } }, /invalid fontFamily value/],
     [{ typography: { body: { fontWeight: leaf('fontWeight', 1001) } } }, /invalid fontWeight value/],
     [{ typography: { body: { fontWeight: leaf('fontWeight', 'heavy-ish') } } }, /invalid fontWeight value/],
@@ -39,6 +40,11 @@ test('shared token validation rejects malformed values and incompatible referenc
   assert.doesNotThrow(() => validateTokens({ rounded: { none: leaf('dimension', 0) }, components: { button: { padding: leaf('dimension', 0), gap: leaf('dimension', 0), margin: leaf('dimension', 0) } }, breakpoints: { min: leaf('dimension', 0) } }));
   assert.throws(() => validateTokens({ rounded: { sm: leaf('dimension', 4) } }), /invalid dimension value/);
   assert.throws(() => validateTokens({ rounded: { sm: leaf('dimension', -0.5) } }), /invalid dimension value/);
+  // R4-6 (Fadel, 17 Oct 2026 6:18 AM): spacing requires units; a bare 0 stays allowed.
+  assert.equal(inferTokenType('spacing.sm', 8), undefined);
+  assert.equal(inferTokenType('spacing.sm', '8px'), 'dimension');
+  assert.equal(inferTokenType('spacing.none', 0), 'dimension');
+  assert.doesNotThrow(() => validateTokens({ spacing: { none: leaf('dimension', 0), sm: leaf('dimension', '8px') } }));
   for (const keyword of ['normal', 'bold']) assert.doesNotThrow(() => validateTokens({ typography: { body: { fontWeight: leaf('fontWeight', keyword) } } }));
 });
 
@@ -50,6 +56,7 @@ test('CSS build rejects hand-edited malformed token JSON before dependencies or 
       [{ a: { $type: 'dimension', $value: 16 } }, /invalid dimension value/],
       [{ a: { $type: 'bogus', $value: 'x' } }, /unknown token type/],
       [{ typography: { body: { fontWeight: { $type: 'fontWeight', $value: 'semi-bold' } } } }, /invalid fontWeight value/],
+      [{ spacing: { sm: { $type: 'number', $value: 8 } } }, /incompatible token type/], // R4-6
       [{ colors: { primary: { $type: 'color', $value: '#123456' } }, spacing: { sm: { $value: '{colors.primary}' } } }, /incompatible token type/]
     ]) {
       writeFileSync(input, JSON.stringify(tokens));
@@ -89,6 +96,7 @@ test('token conversion validates types, dimensions and references before writing
       ['colors:\n  primary: "{colors.secondary}"\n  secondary: "{colors.primary}"', /cyclic token reference/],
       ['colors:\n  primary: "#123456"\nspacing:\n  sm: "{colors.primary}"', /incompatible token type/],
       ['spacing:\n  sm: .Inf', /unknown token type/],
+      ['spacing:\n  sm: 8', /units required.*spacing\.sm/], // R4-6
       ['typography:\n  body:\n    fontWeight: heavy-ish', /unknown token type/]
     ]) {
       const result = convert(yaml);
@@ -96,9 +104,10 @@ test('token conversion validates types, dimensions and references before writing
       assert.match(result.stderr, expected, yaml);
       assert.equal(existsSync(json), false, yaml);
     }
-    assert.equal(convert('colors:\n  primary: "#123456"\n  link: "{colors.primary}"\ntypography:\n  body:\n    fontSize: 16px\n    lineHeight: 1.5\nspacing:\n  sm: 8').status, 0);
+    assert.equal(convert('colors:\n  primary: "#123456"\n  link: "{colors.primary}"\ntypography:\n  body:\n    fontSize: 16px\n    lineHeight: 1.5\nspacing:\n  sm: 8px\n  none: 0').status, 0);
     const tokens = JSON.parse(readFileSync(json, 'utf8'));
-    assert.equal(tokens.spacing.sm.$type, 'number');
+    assert.equal(tokens.spacing.sm.$type, 'dimension'); // R4-6: was 'number' for a bare 8
+    assert.deepEqual(tokens.spacing.none, { $value: 0, $type: 'dimension' });
     assert.equal(tokens.typography.body.fontSize.$type, 'dimension');
     assert.equal(tokens.typography.body.lineHeight.$type, 'number');
     assert.equal(tokens.colors.link.$type, undefined);

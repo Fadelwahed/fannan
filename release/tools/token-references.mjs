@@ -19,7 +19,7 @@ function expected(path) {
   const parts = path.split('.'), group = parts[0], key = parts.at(-1);
   if (group === 'colors') return ['color'];
   if (['rounded', 'breakpoints'].includes(group)) return ['dimension'];
-  if (group === 'spacing') return ['dimension', 'number'];
+  if (group === 'spacing') return ['dimension']; // R4-6: spacing requires px, rem or em (a bare 0 is a valid dimension)
   if (group === 'typography') return ({ fontFamily: ['fontFamily'], fontSize: ['dimension'], fontWeight: ['fontWeight'], letterSpacing: ['dimension'], lineHeight: ['number', 'dimension'] })[key];
   if (group === 'components') {
     if (/color$/i.test(key)) return ['color'];
