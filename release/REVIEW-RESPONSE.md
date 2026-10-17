@@ -46,7 +46,7 @@ Findings: **12 agreed, 3 rejected, 4 open**. An agreed local fix is not an asser
 | P2-C | G-16 checks protected tree/ancestors before load; no hostile same-identity process is still a required deployment condition. Chmod under shared owner is insufficient. |
 | P2-D | OPEN runtime integration. Every paid call needs fresh Fadel approval; text policy is not a proven API interlock. Runtime/tool hooks absent. |
 | P2-E | OPEN missing sources. Repository filename search found no original retired-routines file, helper code/13 tests, external register or Amin r7 record. No external store/Drive/credential search authorized. Recover originals or Fadel decides disposition; do not reconstruct verbatim records. |
-| P2-F | OPEN project evidence. Check declared desktop widths and 320 CSS px / 400% desktop reflow with manual evidence. Canonical frames remain 1440; no universal 1280/1920 requirement and no mobile authorization. Automated checker remains 1440-only. |
+| P2-F | OPEN project evidence. Check declared desktop widths and 320 CSS px / 400% desktop reflow with manual evidence. Canonical frames remain 1440; no universal 1280/1920 requirement and no mobile authorization. R8: the automated checker also screens every `settings.desktopWidths` entry plus 320 CSS px for overflow, clipped text and language/direction (screen only; manual zoom/reflow evidence still required). |
 | P2-G | Converter's prior safeguards preserved; G-5–G-9 extend validation to build/types/values/compatibility. |
 | P2-H | OPEN real pilot. Taste, real copy/RTL, assistive technology, provider/skill behavior and engineer/QA acknowledgement require actual approved project artifacts. |
 | P3-A | Fixed production dependency prefix `/opt/fannan/deps`; provisioning OPEN. |

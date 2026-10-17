@@ -2,7 +2,7 @@
 // Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>
 // Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.2 AA tags with target-size ENABLED, 0 violations,
 // (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,
-// focus visible on every tab stop, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
+// focus visible on every tab stop, every declared desktop width + 320 px reflow screened, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
 import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -17,6 +17,7 @@ import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe, approvedSpacing } from './spacing-scale.mjs';
 import { designProbe } from './design-probe.mjs';
+import { screenWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
 if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }
@@ -137,6 +138,9 @@ const small = stops.filter(s => (s.w < 24 || s.h < 24) && !s.inlineLink), noFocu
 ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic (settled after transitions; colour-only changes under the configured focusStateContrast (3:1 floor) between states, indicators below it against their backdrop and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
 if (!ev.checks.custom22.pass) fail = true;
 evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
+// R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
+ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null);
+if (!ev.checks.widths.pass) fail = true;
 ev.checks.states = [];
 if (phase === 'handoff' && handoff?.screens) {
   const declared = handoff.screens.flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
@@ -170,6 +174,7 @@ if (phase === 'handoff' && handoff?.screens) {
         f.invisible = !focusVisible;
         focus.push(f);
       }
+      const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
       const rmState = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
       await rmState.routeWebSocket(/.*/, ws => ws.close());
       await rmState.route('**/*', routeLocal);
@@ -182,8 +187,8 @@ if (phase === 'handoff' && handoff?.screens) {
       const running = await rp.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
       await rmState.close();
       const maxViewportAccent = Math.max(...viewportRatios);
-      const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), reducedMotion: { running, changed: motion1.some((x,i) => x !== motion2[i]) }, language: doc.lang, direction: doc.dir };
-      stateResult.pass = renderedSha256 === st.frame?.sha256 && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && a.incomplete.length === 0 && d.centered <= q.centeredSectionsPerPage && d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent <= q.accentAreaRatioViewport && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && !d.placeholders && d.spacingOffScale.length <= q.spacingOffScale && d.h1 === 1 && stateResult.focusFailures.length === 0 && running === 0 && !stateResult.reducedMotion.changed && doc.lang === st.lang && doc.dir === st.dir;
+      const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion: { running, changed: motion1.some((x,i) => x !== motion2[i]) }, language: doc.lang, direction: doc.dir };
+      stateResult.pass = renderedSha256 === st.frame?.sha256 && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && a.incomplete.length === 0 && d.centered <= q.centeredSectionsPerPage && d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent <= q.accentAreaRatioViewport && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && !d.placeholders && d.spacingOffScale.length <= q.spacingOffScale && d.h1 === 1 && stateResult.focusFailures.length === 0 && widths.pass && running === 0 && !stateResult.reducedMotion.changed && doc.lang === st.lang && doc.dir === st.dir;
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
       if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
       evidenceWrite(filename, frameBytes);

@@ -103,6 +103,7 @@ const evidence2 = join(output, 'evidence-valid');
 const { status: status2, result: second } = runChecker(evidence2);
 status = status2;
 if (status !== 1 || !second.checks.contract.pass || second.checks.states.length !== 1 || !second.checks.states[0].pass || second.checks.impeccable.pass) throw Error('expected valid contract and all applicable state browser checks, with pinned binary blocking');
+if (!second.checks.widths?.pass || second.checks.states[0].widths?.results.map(r => r.width).join() !== '1440,320' || !second.checks.states[0].widths.pass) throw Error('R8: declared desktop width 1440 and 320 px reflow must be screened on the page and the state');
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
 const { result: mutated } = runChecker(evidence3, true);
