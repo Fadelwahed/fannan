@@ -47,7 +47,12 @@ SECRET_ANY_SUFFIX = re.compile(r'(?:\.env[^/]*|\.#.*|(?:credentials?|secrets?|se
 # content: every leaf is a node with `$value`, and no credential keys (access_token, refresh_token, client_secret ...).
 CREDENTIAL_WORD = re.compile(r'credential|secret|service[-_.]?account|token|password|passwd|api[-_.]?key|private[-_.]?key|access[-_.]?key', re.I)
 CREDENTIAL_NAME_REVIEWED = {'token-references.mjs', 'token-validation.test.mjs', 'secret-scan.json'}
-CREDENTIAL_KEYS = {'access_token', 'refresh_token', 'client_secret', 'id_token', 'password', 'api_key', 'apikey', 'private_key', 'secret'}
+CREDENTIAL_KEYS = {'accesstoken', 'refreshtoken', 'clientsecret', 'idtoken', 'authtoken', 'password', 'passwd', 'apikey', 'privatekey', 'secret', 'secretkey', 'accesskey'}
+
+
+def credential_key(key):
+    """R14-GPT-06: a key is a credential key whatever its case and separators (client_secret, clientSecret, api-key)."""
+    return re.sub(r'[-_. ]', '', str(key).lower()) in CREDENTIAL_KEYS
 
 
 def design_tokens_ok(path, rel):
@@ -60,20 +65,25 @@ def design_tokens_ok(path, rel):
     where = str(declared.get('path', '')).replace('\\', '/')
     if not (where == rel or where.endswith('/' + rel)) or declared.get('sha256') != hashlib.sha256(path.read_bytes()).hexdigest():
         return False
+    # R14-GPT-06: credential keys are rejected anywhere first (every dict and list, `$extensions`, metadata siblings
+    # of `$value` and composite `$value` arrays), then the structure is validated.
+    def has_credential(node):
+        if isinstance(node, dict):
+            return any(credential_key(k) or has_credential(v) for k, v in node.items())
+        if isinstance(node, list):
+            return any(has_credential(v) for v in node)
+        return False
+    if has_credential(data):
+        return False
     values = []
 
     def walk(node):
         if not isinstance(node, dict):
             return False
-        if any(str(k).lower() in CREDENTIAL_KEYS for k in node):
-            return False
         if '$value' in node:
             values.append(1)
-            return not isinstance(node['$value'], dict) or walk_value(node['$value'])
+            return True
         return all(walk(v) for k, v in node.items() if not str(k).startswith('$'))
-
-    def walk_value(value):
-        return not any(str(k).lower() in CREDENTIAL_KEYS for k in value) and all(walk_value(v) for v in value.values() if isinstance(v, dict))
     return walk(data) and bool(values)
 
 
@@ -96,7 +106,9 @@ def credential_name(name, root):
 SECRET_CONTENT = re.compile('|'.join([
     '-----BEGIN [A-Z ]*' + 'PRIVATE KEY-----', 'AK' + 'IA[0-9A-Z]{16}', 'gh' + 'p_[A-Za-z0-9]{36}', 'github' + '_pat_[A-Za-z0-9_]{22,}',
     'xo' + 'x[baprs]-[A-Za-z0-9-]{10,}', 's' + 'k-[A-Za-z0-9_-]{32,}', 'AI' + 'za[0-9A-Za-z_-]{35}',
-    '"(?:refresh' + '_token|client' + '_secret|access' + '_token)"\\s*:\\s*"[^"]{8,}"']))
+    '"(?:refresh' + '_token|client' + '_secret|access' + '_token)"\\s*:\\s*"[^"]{8,}"',
+    # R14-GPT-06: a JSON credential key (any case or separator) holding a string value of 8+ characters
+    '"(?i:pass' + 'word|pass' + 'wd|secret|client[-_]?secret|api[-_]?key|private[-_]?key|auth[-_]?token|id[-_]?token)"\\s*:\\s*"[^"]{8,}"']))
 
 
 def secret_content(path):
@@ -176,6 +188,29 @@ def verify_hashes(path, root, digest, exact=None):
     if exact is not None and set(entries) != set(exact):
         raise ValueError('manifest inventory mismatch')
     return entries
+
+
+# R14 Part B: the designer-process sections the package must carry (R14-GPT-07 to 11, R14-MIMAR-01 to 05). A build
+# refuses a release tree that lacks any of them, before any output is written.
+REQUIRED_SECTIONS = {
+    'release/FANNAN-PLAN.md': ['Maintain a discovery ledger for audience needs', 'Navigation model and findability:', "neutral scenario, realistic starting point and observable completion criterion", "## Folding in the approver's feedback", 'intended emphasis order', 'named roles in the token JSON', 'For each width in `settings.desktopWidths`', '## Threat model for the pre-handoff gate', '## Review convergence rule'],
+    'release/references/handoff-contract.md': ['The seven baseline states are a minimum.', 'For every form, specify labels, required/optional indicators', 'feedback log with every item resolved or explicitly deferred'],
+    'release/skills/design-research/SKILL.md': ['Maintain a discovery ledger for audience needs'],
+    'release/skills/design-canvas/SKILL.md': ['The seven baseline states are a minimum.', 'For every form, specify labels'],
+}
+
+
+def missing_sections(root=None):
+    root = ROOT if root is None else root
+    out = []
+    for name, markers in REQUIRED_SECTIONS.items():
+        try:
+            text = ' '.join((root / name).read_text(encoding='utf-8').split())
+        except OSError:
+            out.append(name + ': missing file')
+            continue
+        out += [name + ': ' + m for m in markers if ' '.join(m.split()) not in text]
+    return out
 
 
 def combined():
@@ -258,6 +293,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r12')  # R12 before/after evidence (panel round 12)
     if (ROOT / 'test-results/r13').is_dir():
         paths += files(ROOT / 'test-results/r13')  # R13 before/after evidence (panel round 13)
+    if (ROOT / 'test-results/r14').is_dir():
+        paths += files(ROOT / 'test-results/r14')  # R14 before/after evidence and raw panel logs (panel round 14)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 
@@ -282,6 +319,9 @@ def build(start):
     release_files = files(release)               # refuses symlinks, caches, dependency and git entries
     paths = archive_paths()                      # same refusals for every packaged tree; computed once
     names, _ = coverage(start)                   # a bad --start fails here, before any write; computed once (ARGON-R5-04)
+    absent = missing_sections()
+    if absent:
+        raise ValueError('required designer-process section missing: ' + absent[0])  # R14 Part B
     missing = [p for p in paths if p.relative_to(ROOT).as_posix() not in GENERATED and (p.is_symlink() or not p.is_file())]
     if missing:
         raise ValueError('package input missing or not a regular file: ' + missing[0].relative_to(ROOT).as_posix())

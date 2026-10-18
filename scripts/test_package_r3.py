@@ -132,6 +132,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r12/') for n in names), 'R12 evidence is archived like R4-R11')
         if (ROOT / 'test-results/r13').is_dir():
             self.assertTrue(any(n.startswith('test-results/r13/') for n in names), 'R13 evidence is archived like R4-R12')
+        if (ROOT / 'test-results/r14').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r14/') for n in names), 'R14 evidence is archived like R4-R13')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -166,7 +168,7 @@ class BuildOrderTests(unittest.TestCase):
     OUTPUTS = ['FANNAN-REWRITE.md', 'trust/MANIFEST.sha256', 'trust/PINNED.sha256', 'artifacts/FANNAN-R3.zip', 'test-results/r3/package-verification.json', 'trust/R3-CHANGES.sha256']
 
     def run_build(self, damage):
-        saved = package.ROOT, package.combined, package.changed
+        saved = package.ROOT, package.combined, package.changed, getattr(package, 'missing_sections', None)
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / 'release/tools').mkdir(parents=True)
@@ -180,13 +182,16 @@ class BuildOrderTests(unittest.TestCase):
                 before[name] = (root / name).read_bytes()
             package.ROOT = root
             package.combined = lambda: 'regenerated'
+            package.missing_sections = lambda root=None: []  # synthetic tree; RequiredSectionTests covers the sections
             package.changed = lambda start: ['release/tools/ok.mjs']
             try:
                 damage(root)
                 with self.assertRaises((ValueError, subprocess.CalledProcessError)):
                     package.build('9ee1ca6')
             finally:
-                package.ROOT, package.combined, package.changed = saved
+                package.ROOT, package.combined, package.changed, package.missing_sections = saved
+                if package.missing_sections is None:
+                    del package.missing_sections
             for name in self.OUTPUTS:
                 self.assertEqual((root / name).read_bytes(), before[name], name + ' was changed by a rejected build')
             self.assertEqual([p.name for p in (root / 'artifacts').iterdir()], ['FANNAN-R3.zip'], 'no temp file left behind')
@@ -223,7 +228,7 @@ class RegistryInputTests(unittest.TestCase):
     NAMED = ['ORIGINAL-ASSIGNMENT.md', 'GROK-HANDOFF.md', 'CLOUD-HANDOFF.md', 'reviews/GROK-R3-d2c36c1.md', 'scripts/package-r3.py', 'scripts/test_package_r3.py']
 
     def run_build(self, extra, damage):
-        saved = package.ROOT, package.combined, package.changed
+        saved = package.ROOT, package.combined, package.changed, getattr(package, 'missing_sections', None)
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             (root / 'release/tools').mkdir(parents=True)
@@ -241,12 +246,15 @@ class RegistryInputTests(unittest.TestCase):
             damage(root)
             package.ROOT = root
             package.combined = lambda: 'regenerated'
+            package.missing_sections = lambda root=None: []  # synthetic tree; RequiredSectionTests covers the sections
             package.changed = lambda start: sorted(['release/tools/ok.mjs', package.REGISTRY, *extra])
             try:
                 with self.assertRaises(ValueError) as caught:
                     package.build('9ee1ca6')
             finally:
-                package.ROOT, package.combined, package.changed = saved
+                package.ROOT, package.combined, package.changed, package.missing_sections = saved
+                if package.missing_sections is None:
+                    del package.missing_sections
             for name in self.OUTPUTS:
                 self.assertEqual((root / name).read_bytes(), before[name], name + ' was changed by a rejected build')
             return str(caught.exception)
@@ -272,6 +280,30 @@ class RegistryInputTests(unittest.TestCase):
         body = src[src.index('def build(start):'):src.index('def verify_release_archive')]
         self.assertEqual(body.count('coverage(start)'), 1, 'one coverage list, reused for the registry')
         self.assertLess(body.index('coverage(start)'), body.index('write_bytes('))
+
+
+class RequiredSectionTests(unittest.TestCase):
+    def test_r14_release_carries_every_designer_process_section(self):
+        # R14 Part B: the plan, contract and skills carry the required sections; a tree without one is refused.
+        self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
+        self.assertEqual(package.missing_sections(), [])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for name in package.REQUIRED_SECTIONS:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(ROOT / name, root / name)
+            self.assertEqual(package.missing_sections(root), [])
+            plan = root / 'release/FANNAN-PLAN.md'
+            plan.write_text(plan.read_text().replace("## Folding in the approver's feedback", '## Feedback'))
+            self.assertEqual(package.missing_sections(root), ["release/FANNAN-PLAN.md: ## Folding in the approver's feedback"])
+            (root / 'release/skills/design-canvas/SKILL.md').unlink()
+            self.assertIn('release/skills/design-canvas/SKILL.md: missing file', package.missing_sections(root))
+
+    def test_r14_build_checks_sections_before_any_output(self):
+        import inspect
+        self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
+        source = inspect.getsource(package.build)
+        self.assertLess(source.index('absent = missing_sections()'), source.index('write_bytes('), 'refused before any output is replaced')
 
 
 class JunkAndSecretTests(unittest.TestCase):
@@ -355,6 +387,48 @@ class JunkAndSecretTests(unittest.TestCase):
             with temp, self.assertRaises(ValueError, msg=f'{tokens} {kwargs}'):
                 package.files(root)
         self.assertFalse(package.junk_or_secret('test-results/local-fixture/design-output/test/tokens.json'), 'the tracked fixture tokens are declared by their handoff and hash-matched')
+
+    def test_r14_credential_keys_anywhere_in_tokens_json_are_refused(self):
+        # R14-GPT-06: metadata siblings of $value, $extensions and composite $value arrays are searched too; valid
+        # credential-free extension metadata still passes. Package input and changed paths.
+        pw, cs = 'pass' + 'word', 'client' + 'Secret'
+        def tree(tokens):
+            temp = tempfile.TemporaryDirectory(); root = Path(temp.name)
+            (root / 'design').mkdir(); path = root / 'design/tokens.json'; path.write_text(json.dumps(tokens))
+            (root / 'design/handoff.json').write_text(json.dumps({'tokens': {'json': {'path': '/x/design/tokens.json', 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}}}))
+            return temp, root
+        good = {'colors': {'primary': {'$value': '#123456', '$type': 'color', '$extensions': {'org.example.tool': {'hidden': False, 'source': 'brand sheet'}}}}, 'shadow': {'card': {'$value': [{'color': '#000', 'offsetX': '0px'}], '$type': 'shadow'}}}
+        temp, root = tree(good)
+        with temp:
+            self.assertEqual(len(package.files(root)), 2, 'credential-free $extensions and composite values pass')
+        bad = [
+            {'colors': {'primary': {'$value': '#123456', '$extensions': {'auth': {pw: 'x'}}}}},
+            {'colors': {'primary': {'$value': '#123456', 'api-key': 'x'}}},
+            {'shadow': {'card': {'$value': [{'color': '#000', cs: 'x'}]}}},
+            {'list': [{'nested': [{'Access_Token': 'x'}]}], 'colors': {'p': {'$value': '#000'}}},
+        ]
+        for tokens in bad:
+            temp, root = tree(tokens)
+            with temp, self.assertRaises(ValueError, msg=json.dumps(tokens)):
+                package.files(root)
+        def damage(root):
+            (root / 'design').mkdir(exist_ok=True)
+            path = root / 'design/tokens.json'; path.write_text(json.dumps(bad[0]))
+            (root / 'design/handoff.json').write_text(json.dumps({'tokens': {'json': {'path': '/x/design/tokens.json', 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}}}))
+        self.assertIn('design/tokens.json', RegistryInputTests('run_build').run_build(['design/tokens.json'], damage))
+
+    def test_r14_json_credential_values_in_ordinary_files_are_refused(self):
+        # R14-GPT-06: the content screen also catches a JSON credential key with a real-looking value in any file.
+        for key in ['pass' + 'word', 'Pass' + 'word', 'api' + 'Key', 'api_' + 'key', 'private' + '-key', 'sec' + 'ret']:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'notes.json').write_text('{"auth": {"' + key + '": "' + 'v' * 12 + '"}}')
+                with self.assertRaises(ValueError, msg=key):
+                    package.files(root)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'notes.json').write_text('{"' + 'pass' + 'word": ""}')
+            self.assertEqual(len(package.files(root)), 1, 'an empty placeholder value passes')
 
     def test_r13_secret_content_in_ordinary_names_is_refused(self):
         # R13 panel q2: obvious secrets inside ordinarily named packaged files fail the package input and changed paths.
