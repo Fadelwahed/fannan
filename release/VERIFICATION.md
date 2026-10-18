@@ -1,5 +1,12 @@
 # R3 executed verification — 17 October 2026
 
+## R27 (panel round 27, 18 October 2026)
+
+- R27-GPT-01..04 fixed in `release/tools/width-screen.mjs` (stable identity key, not position; tab panels scope keys; action family keeps identity across role changes; source-state reservation before name matching; tabs to headed sections counts section-local actions, at least each panel's). R27-GPT-06: design-quality.md and handoff-contract.md.
+- Before (R27 tests against 99f4d97 sources): `test-results/r27/R27-chrome-before.log` 71/75 (all four R27 tests fail on their assertions), docs 20/21, package 2 failures. After: chrome 75/75, docs 21/21, package OK.
+- Real site (en/ar, JS on/off default-only, menu-open): `R27-real-site-old.log` and `R27-real-site-new.log` identical apart from timings. Honest sets R18-R26 (436 page renderings) match the panel's 99f4d97 log verdict for verdict; R27 pages27: one change, r1.html JS on now passes (toolbar to menu items).
+- Full Node suite: `test-results/r27/node.log` 184/185; the R18 inner-scroll test fails only under full-suite load and passes in isolation (`R18-isolated-rerun.log`).
+
 ## R26 executed verification (Mi'mar's box, 18 October 2026, about 9:45 PM UTC+3)
 
 Panel round 26 (4 P2: R26-GPT-01 to R26-GPT-04; P3 R26-MIMAR-01; `reviews/panel-r26/`). Fadel's root-cause instruction applied: loss accounting by element identity in `width-screen.mjs` (one ledger per screen; the closed swap list; one cover per element; collapsed boxes as display:none; carousel slides by element), plus settled motion. Serial runs; the shared box spiked to load 93 during the first suite run (other processes).
