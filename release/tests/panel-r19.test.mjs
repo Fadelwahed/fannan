@@ -166,10 +166,11 @@ test('R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result 
   };
   assert.deepEqual(out, {
     scrim: ok,
-    noReview: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: ['no PASS wcag-review record citing the screenshot'] },
-    otherArtifact: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: ['no PASS wcag-review record citing the screenshot'] },
+    // R22 (Fadel's three-zone tiebreak): the scrim hero measures clearly above AA, zone (a), so it passes without a review
+    noReview: { incomplete: ['color-contrast'], unresolved: [], reasons: [null] },
+    otherArtifact: { incomplete: ['color-contrast'], unresolved: [], reasons: [null] },
     noteCites: ok,
-    darkText: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: out.darkText.reasons?.length && out.darkText.reasons.every?.(x => /^faintest glyphs measured [\d.]+:1, below (4\.5|3):1$/.test(x)) ? out.darkText.reasons : ['below AA'] },
+    darkText: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: out.darkText.reasons?.length && out.darkText.reasons.every?.(x => /^faintest glyphs measured [\d.]+:1, below (4\.5|3):1( \(FAIL; no review can override\))?$/.test(x)) ? out.darkText.reasons : ['below AA'] },
     scrimByScriptOnly: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: out.scrimByScriptOnly.reasons?.some?.(x => /below/.test(x || '')) ? out.scrimByScriptOnly.reasons : ['below AA with JavaScript off'] },
     otherRule: { incomplete: ['color-contrast', 'aria-valid-attr-value'], unresolved: ['aria-valid-attr-value'], reasons: [null] },
   });
@@ -216,8 +217,10 @@ test('R19b: real Chrome: a declared non-default state reachable only by script (
     notDeclared: { valid: false, rendersWithoutScript: null, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
     noTrigger: { valid: false, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
     defaultState: { valid: false, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
-    belowAA: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'faintest glyphs measured 2.8:1, below 4.5:1' },
-    noReview: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'no PASS wcag-review record citing the screenshot' },
+    // R22 three zones: 2.8:1 is between 3:1 (less the margin) and AA, zone (c); the review lacks worstRegion. The
+    // honest dialog is clearly above AA, zone (a), so it passes without a review.
+    belowAA: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'faintest glyphs measured 2.8:1, between 3:1 and 4.5:1 (INCOMPLETE): the wcag-review does not name the worst region checked (worstRegion)' },
+    noReview: { valid: true, rendersWithoutScript: false, unresolved: [], reason: null },
     falseClaim: { valid: false, rendersWithoutScript: true, unresolved: [], reason: null },
   });
 }));
