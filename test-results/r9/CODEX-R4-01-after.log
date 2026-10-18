@@ -1,0 +1,11 @@
+test_bad_start_preserves_outputs (test_package_r3.BuildOrderTests.test_bad_start_preserves_outputs) ... ok
+test_build_lists_archive_paths_once (test_package_r3.BuildOrderTests.test_build_lists_archive_paths_once) ... ok
+test_cache_in_input_preserves_outputs (test_package_r3.BuildOrderTests.test_cache_in_input_preserves_outputs) ... ok
+test_missing_archive_input_preserves_outputs (test_package_r3.BuildOrderTests.test_missing_archive_input_preserves_outputs) ... ok
+test_symlink_in_release_preserves_outputs (test_package_r3.BuildOrderTests.test_symlink_in_release_preserves_outputs) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.006s
+
+OK
+exit 0

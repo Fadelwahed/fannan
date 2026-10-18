@@ -1,0 +1,88 @@
+TAP version 13
+# Subtest: checker detector call leaves executable selection to the pinned launcher
+ok 1 - checker detector call leaves executable selection to the pinned launcher
+  ---
+  duration_ms: 2.872208
+  type: 'test'
+  ...
+# Subtest: checker verifies browser before launch and records checked identity and runtime version
+ok 2 - checker verifies browser before launch and records checked identity and runtime version
+  ---
+  duration_ms: 3.303583
+  type: 'test'
+  ...
+# Subtest: flags English and Arabic clichés and three-part headlines, not body lists
+ok 3 - flags English and Arabic clichés and three-part headlines, not body lists
+  ---
+  duration_ms: 4.910125
+  type: 'test'
+  ...
+# Subtest: dependency inventory rejects a changed package and wrong ledger
+ok 4 - dependency inventory rejects a changed package and wrong ledger
+  ---
+  duration_ms: 12.129625
+  type: 'test'
+  ...
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 5 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 0.462792
+  type: 'test'
+  ...
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+ok 6 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 22.647917
+  type: 'test'
+  ...
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 7 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 0.649792
+  type: 'test'
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 8 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 1.445584
+  type: 'test'
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 9 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.148125
+  type: 'test'
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 10 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.249709
+  type: 'test'
+  ...
+# Subtest: browser only serves bytes from selected project
+ok 11 - browser only serves bytes from selected project
+  ---
+  duration_ms: 4.069042
+  type: 'test'
+  ...
+# Subtest: shared token validation rejects malformed values and incompatible references
+ok 12 - shared token validation rejects malformed values and incompatible references
+  ---
+  duration_ms: 1.470167
+  type: 'test'
+  ...
+# Subtest: token conversion validates types, dimensions and references before writing
+ok 13 - token conversion validates types, dimensions and references before writing # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.106583
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 1
+# todo 0
+# duration_ms 142.445834

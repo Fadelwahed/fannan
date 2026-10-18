@@ -1,0 +1,93 @@
+TAP version 13
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 1 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 2.007957
+  type: 'test'
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 2 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 2.604989
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+ok 3 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 0.610483
+  type: 'test'
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 4 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 71.255537
+  type: 'test'
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 5 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 0.59891
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+ok 6 - OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+  ---
+  duration_ms: 4.733455
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+ok 7 - ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+  ---
+  duration_ms: 0.542461
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+ok 8 - ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+  ---
+  duration_ms: 0.199863
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)
+ok 9 - ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)
+  ---
+  duration_ms: 615.261715
+  type: 'test'
+  ...
+# Subtest: R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+not ok 10 - R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+  ---
+  duration_ms: 1.259967
+  type: 'test'
+  location: '/workspace/fannan-mimar-wt/release/tests/focus-screen.test.mjs:217:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    black outline on a white page around a dark button is visible
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    check (file:///workspace/fannan-mimar-wt/release/tests/focus-screen.test.mjs:223:92)
+    file:///workspace/fannan-mimar-wt/release/tests/focus-screen.test.mjs:224:5
+    withDom (file:///workspace/fannan-mimar-wt/release/tests/focus-screen.test.mjs:57:12)
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/focus-screen.test.mjs:221:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 9
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5069.489578

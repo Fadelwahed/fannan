@@ -1,0 +1,344 @@
+v20.19.2
+TAP version 13
+# Subtest: checker detector call leaves executable selection to the pinned launcher
+ok 1 - checker detector call leaves executable selection to the pinned launcher
+  ---
+  duration_ms: 3.752783
+  ...
+# Subtest: checker verifies browser before launch and records checked identity and runtime version
+ok 2 - checker verifies browser before launch and records checked identity and runtime version
+  ---
+  duration_ms: 2.312885
+  ...
+# Subtest: R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+ok 3 - R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+  ---
+  duration_ms: 1.046799
+  ...
+# Subtest: flags English and Arabic clichés and three-part headlines, not body lists
+ok 4 - flags English and Arabic clichés and three-part headlines, not body lists
+  ---
+  duration_ms: 6.249165
+  ...
+# Subtest: dependency inventory rejects a changed package and wrong ledger
+ok 5 - dependency inventory rejects a changed package and wrong ledger
+  ---
+  duration_ms: 7.300694
+  ...
+# Subtest: ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-quality.md: zero stock glassmorphism, both)
+ok 6 - ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-quality.md: zero stock glassmorphism, both)
+  ---
+  duration_ms: 1.7134
+  ...
+# Subtest: ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only)
+ok 7 - ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only)
+  ---
+  duration_ms: 1858.713453
+  ...
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 8 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 3.391386
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 9 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 10.243563
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+ok 10 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 2.811665
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 11 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 71.454507
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 12 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 0.887553
+  ...
+# Subtest: OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+ok 13 - OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+  ---
+  duration_ms: 18.249346
+  ...
+# Subtest: ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+ok 14 - ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+  ---
+  duration_ms: 1.379258
+  ...
+# Subtest: ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+ok 15 - ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+  ---
+  duration_ms: 0.494552
+  ...
+# Subtest: ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)
+ok 16 - ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)
+  ---
+  duration_ms: 863.697215
+  ...
+# Subtest: R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+ok 17 - R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+  ---
+  duration_ms: 1.868025
+  ...
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+ok 18 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 33.659396
+  ...
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 19 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 2.573683
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 20 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 6.736574
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 21 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.48155
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 22 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.432473
+  ...
+# Subtest: R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+ok 23 - R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+  ---
+  duration_ms: 5.931248
+  ...
+# Subtest: OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+ok 24 - OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+  ---
+  duration_ms: 0.567109
+  ...
+# Subtest: ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+ok 25 - ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+  ---
+  duration_ms: 1.302894
+  ...
+# Subtest: ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+ok 26 - ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+  ---
+  duration_ms: 0.555287
+  ...
+# Subtest: ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env
+ok 27 - ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env
+  ---
+  duration_ms: 2.527531
+  ...
+# Subtest: browser only serves bytes from selected project
+ok 28 - browser only serves bytes from selected project
+  ---
+  duration_ms: 4.823712
+  ...
+# Subtest: OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+ok 29 - OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+  ---
+  duration_ms: 1.672311
+  ...
+# Subtest: OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only)
+ok 30 - OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only)
+  ---
+  duration_ms: 1237.698982
+  ...
+# Subtest: ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only)
+ok 31 - ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only)
+  ---
+  duration_ms: 1102.963433
+  ...
+# Subtest: OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only)
+ok 32 - OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only)
+  ---
+  duration_ms: 400.605964
+  ...
+# Subtest: CODEX-R3-02: a page-declared --spacing-* variable does not legitimise off-scale spacing; only the approved scale counts (real Chrome, test-only)
+ok 33 - CODEX-R3-02: a page-declared --spacing-* variable does not legitimise off-scale spacing; only the approved scale counts (real Chrome, test-only)
+  ---
+  duration_ms: 393.469388
+  ...
+# Subtest: CODEX-R3-02: the approved spacing scale is read from the hash-checked handoff token JSON and its build evidence
+ok 34 - CODEX-R3-02: the approved spacing scale is read from the hash-checked handoff token JSON and its build evidence
+  ---
+  duration_ms: 4.69385
+  ...
+# Subtest: shared token validation rejects malformed values and incompatible references
+ok 35 - shared token validation rejects malformed values and incompatible references
+  ---
+  duration_ms: 5.412173
+  ...
+# Subtest: CSS build rejects hand-edited malformed token JSON before dependencies or writes
+not ok 36 - CSS build rejects hand-edited malformed token JSON before dependencies or writes
+  ---
+  duration_ms: 121.345817
+  location: '/workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:71:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /invalid dimension value/. Input:
+    
+    'Node 22.12+ required\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    Node 22.12+ required
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:87:14)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: token conversion validates types, dimensions and references before writing
+not ok 37 - token conversion validates types, dimensions and references before writing
+  ---
+  duration_ms: 3968.240846
+  location: '/workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:93:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Node 22.12+ required
+    
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:154:12)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+ok 38 - OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+  ---
+  duration_ms: 0.281623
+  ...
+# Subtest: CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)
+not ok 39 - CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)
+  ---
+  duration_ms: 118.827798
+  location: '/workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:273:1'
+  failureType: 'testCodeFailure'
+  error: '{"typography":{"body":{"lineHeight":{"$type":"number","$value":-1}}}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    Node 22.12+ required
+    
+  operator: 'match'
+  stack: |-
+    buildRejects (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:268:12)
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:288:3)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps)
+not ok 40 - CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps)
+  ---
+  duration_ms: 768.903565
+  location: '/workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:292:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Node 22.12+ required
+    
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:303:37)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: CODEX-R3-04: component typography follows the typography type rules (validator and builder)
+not ok 41 - CODEX-R3-04: component typography follows the typography type rules (validator and builder)
+  ---
+  duration_ms: 113.508295
+  location: '/workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:308:1'
+  failureType: 'testCodeFailure'
+  error: '{"components":{"button":{"typography":{"fontSize":{"$type":"number","$value":16}}}}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    Node 22.12+ required
+    
+  operator: 'match'
+  stack: |-
+    buildRejects (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:268:12)
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:332:5)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps)
+not ok 42 - CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps)
+  ---
+  duration_ms: 1208.789273
+  location: '/workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:338:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Node 22.12+ required
+    
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/token-validation.test.mjs:355:37)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+1..42
+# tests 42
+# suites 0
+# pass 36
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6612.782578

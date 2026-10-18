@@ -1,0 +1,7 @@
+Command: Chrome --headless=new --disable-background-networking --disable-component-update --disable-sync --no-first-run --no-default-browser-check --user-data-dir=<private-temp>/profile --dump-dom file://<private-temp>/probe.html
+Exit: -6
+
+
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+AssertionError

@@ -1,0 +1,335 @@
+TAP version 13
+# Subtest: checker detector call leaves executable selection to the pinned launcher
+ok 1 - checker detector call leaves executable selection to the pinned launcher
+  ---
+  duration_ms: 2.068382
+  type: 'test'
+  ...
+# Subtest: checker verifies browser before launch and records checked identity and runtime version
+ok 2 - checker verifies browser before launch and records checked identity and runtime version
+  ---
+  duration_ms: 2.803004
+  type: 'test'
+  ...
+# Subtest: R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+ok 3 - R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+  ---
+  duration_ms: 0.759773
+  type: 'test'
+  ...
+# Subtest: flags English and Arabic clichés and three-part headlines, not body lists
+ok 4 - flags English and Arabic clichés and three-part headlines, not body lists
+  ---
+  duration_ms: 3.973945
+  type: 'test'
+  ...
+# Subtest: dependency inventory rejects a changed package and wrong ledger
+ok 5 - dependency inventory rejects a changed package and wrong ledger
+  ---
+  duration_ms: 5.352563
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-quality.md: zero stock glassmorphism, both)
+ok 6 - ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-quality.md: zero stock glassmorphism, both)
+  ---
+  duration_ms: 2.239588
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only)
+ok 7 - ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.149543
+  type: 'test'
+  ...
+# Subtest: R9 (sibling of CODEX-R4-02): page CSS cannot change the accent colour the probe measures (real Chrome, test-only)
+ok 8 - R9 (sibling of CODEX-R4-02): page CSS cannot change the accent colour the probe measures (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.066329
+  type: 'test'
+  ...
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 9 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 2.55701
+  type: 'test'
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 10 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 4.012554
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+ok 11 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 0.756635
+  type: 'test'
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 12 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 74.157552
+  type: 'test'
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 13 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 0.600225
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+ok 14 - OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+  ---
+  duration_ms: 5.035721
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+ok 15 - ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+  ---
+  duration_ms: 0.594175
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+ok 16 - ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+  ---
+  duration_ms: 0.215506
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)
+ok 17 - ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.278359
+  type: 'test'
+  ...
+# Subtest: R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+ok 18 - R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+  ---
+  duration_ms: 0.759395
+  type: 'test'
+  ...
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+ok 19 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 30.915294
+  type: 'test'
+  ...
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 20 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 1.566525
+  type: 'test'
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 21 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 3.435001
+  type: 'test'
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 22 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.304995
+  type: 'test'
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 23 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.365562
+  type: 'test'
+  ...
+# Subtest: R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+ok 24 - R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+  ---
+  duration_ms: 9.405479
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+ok 25 - OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+  ---
+  duration_ms: 0.318177
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+ok 26 - ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+  ---
+  duration_ms: 0.930125
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+ok 27 - ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+  ---
+  duration_ms: 0.310291
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env
+ok 28 - ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env
+  ---
+  duration_ms: 1.05234
+  type: 'test'
+  ...
+# Subtest: browser only serves bytes from selected project
+ok 29 - browser only serves bytes from selected project
+  ---
+  duration_ms: 2.105569
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: access proof forbids mutation probes and does not treat 403/422 as proof of read-only
+ok 30 - R8 PORT-03: access proof forbids mutation probes and does not treat 403/422 as proof of read-only
+  ---
+  duration_ms: 1.233536
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: the daily check must have run within its interval, otherwise it escalates
+ok 31 - R8 PORT-03: the daily check must have run within its interval, otherwise it escalates
+  ---
+  duration_ms: 0.213962
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: a separate runtime identity is mandatory and the shared uid 1000 folders do not qualify
+ok 32 - R8 PORT-03: a separate runtime identity is mandatory and the shared uid 1000 folders do not qualify
+  ---
+  duration_ms: 0.184448
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: the detector has one fixed path and one pinned source, matching the launcher pin
+ok 33 - R8 PORT-03: the detector has one fixed path and one pinned source, matching the launcher pin
+  ---
+  duration_ms: 0.347718
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: runtime stays a proposal; cloud "reported complete/installed" text is not taken
+ok 34 - R8 PORT-03: runtime stays a proposal; cloud "reported complete/installed" text is not taken
+  ---
+  duration_ms: 0.358763
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+ok 35 - OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+  ---
+  duration_ms: 2.078786
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only)
+ok 36 - OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.097106
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only)
+ok 37 - ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only) # SKIP Linux, test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.076815
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only)
+ok 38 - OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.067492
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-02: a page-declared --spacing-* variable does not legitimise off-scale spacing; only the approved scale counts (real Chrome, test-only)
+ok 39 - CODEX-R3-02: a page-declared --spacing-* variable does not legitimise off-scale spacing; only the approved scale counts (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.068408
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-02: the approved spacing scale is read from the hash-checked handoff token JSON and its build evidence
+ok 40 - CODEX-R3-02: the approved spacing scale is read from the hash-checked handoff token JSON and its build evidence
+  ---
+  duration_ms: 7.573056
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-02: page CSS cannot change the approved scale, and em is converted at each element's own font size (real Chrome, test-only)
+ok 41 - CODEX-R4-02: page CSS cannot change the approved scale, and em is converted at each element's own font size (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.091418
+  type: 'test'
+  ...
+# Subtest: shared token validation rejects malformed values and incompatible references
+ok 42 - shared token validation rejects malformed values and incompatible references
+  ---
+  duration_ms: 5.247005
+  type: 'test'
+  ...
+# Subtest: CSS build rejects hand-edited malformed token JSON before dependencies or writes
+ok 43 - CSS build rejects hand-edited malformed token JSON before dependencies or writes
+  ---
+  duration_ms: 274.68634
+  type: 'test'
+  ...
+# Subtest: token conversion validates types, dimensions and references before writing
+ok 44 - token conversion validates types, dimensions and references before writing # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.168207
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+ok 45 - OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+  ---
+  duration_ms: 0.252951
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)
+ok 46 - CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)
+  ---
+  duration_ms: 78.712798
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps)
+ok 47 - CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps) # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.104042
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-04: component typography follows the typography type rules (validator and builder)
+ok 48 - CODEX-R3-04: component typography follows the typography type rules (validator and builder)
+  ---
+  duration_ms: 335.697525
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps)
+ok 49 - CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps) # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.085773
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-03: one rule per consuming path applies to literals and resolved references alike (type, units, sign, percent only for lineHeight)
+ok 50 - CODEX-R4-03: one rule per consuming path applies to literals and resolved references alike (type, units, sign, percent only for lineHeight)
+  ---
+  duration_ms: 1.342147
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+ok 51 - R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+  ---
+  duration_ms: 1.797292
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+ok 52 - R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+  ---
+  duration_ms: 1.462416
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
+ok 53 - R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.160386
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
+ok 54 - CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.081584
+  type: 'test'
+  ...
+1..54
+# tests 54
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 13
+# todo 0
+# duration_ms 5090.778355
+exit 0

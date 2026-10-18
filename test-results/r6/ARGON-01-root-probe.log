@@ -1,0 +1,8 @@
+# before (efcb569)
+clean root-owned tree: ok 7b3e189f7f4a
+internal symlink: ok 2f69839b095d
+symlinked root: 7b3e189f7f4a (accepted)
+# after
+clean root-owned tree: ok 7b3e189f7f4a
+internal symlink: refused: browser support symlink forbidden: b.pak
+symlinked root refused: browser support root is a symlink

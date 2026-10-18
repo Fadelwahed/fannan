@@ -1,0 +1,33 @@
+test_build_hashes_everything_but_the_registry (__main__.FinalRecordTests.test_build_hashes_everything_but_the_registry) ... ok
+test_doc_lists_the_exclusions (__main__.FinalRecordTests.test_doc_lists_the_exclusions) ... ok
+test_records_are_not_in_the_zip (__main__.FinalRecordTests.test_records_are_not_in_the_zip) ... ok
+test_verify_excludes_only_one_latest_record_written_after_the_freeze (__main__.FinalRecordTests.test_verify_excludes_only_one_latest_record_written_after_the_freeze) ... ok
+test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first (__main__.RegistryPinTests.test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first) ... ok
+test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed (__main__.RegistryPinTests.test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed) ... FAIL
+test_packaging_doc_names_both_read_only_files_and_the_pin_option (__main__.RegistryPinTests.test_packaging_doc_names_both_read_only_files_and_the_pin_option) ... ok
+test_registry_pin_must_match_an_external_value (__main__.RegistryPinTests.test_registry_pin_must_match_an_external_value) ... FAIL
+test_policy_is_documented (__main__.WhitespacePolicyTests.test_policy_is_documented) ... ok
+test_source_only_range_check_passes (__main__.WhitespacePolicyTests.test_source_only_range_check_passes) ... ok
+
+======================================================================
+FAIL: test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed (__main__.RegistryPinTests.test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 39, in test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed
+    self.assertIn('unanchored registry', p.stderr)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'unanchored registry' not found in 'Traceback (most recent call last):\n  File "/workspace/fannan-mimar-wt/scripts/package-r3.py", line 233, in <module>\n    print(json.dumps(self_test() if args.action == \'self-test\' else build(args.start) if args.action == \'build\' else verify(args.start, args.registry_sha256), indent=2))\n                                                                                                                     ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/workspace/fannan-mimar-wt/scripts/package-r3.py", line 182, in verify\n    report = verify_release_archive()\n  File "/workspace/fannan-mimar-wt/scripts/package-r3.py", line 153, in verify_release_archive\n    entries = verify_hashes(ROOT / \'trust/MANIFEST.sha256\', release, pin, [p.relative_to(release).as_posix() for p in files(release)])\n  File "/workspace/fannan-mimar-wt/scripts/package-r3.py", line 57, in verify_hashes\n    raise ValueError(\'manifest bytes mismatch: \' + name)\nValueError: manifest bytes mismatch: tests/host-trust.test.mjs\n'
+
+======================================================================
+FAIL: test_registry_pin_must_match_an_external_value (__main__.RegistryPinTests.test_registry_pin_must_match_an_external_value)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 31, in test_registry_pin_must_match_an_external_value
+    with self.assertRaisesRegex(ValueError, 'unanchored registry'):
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.244s
+
+FAILED (failures=2)
