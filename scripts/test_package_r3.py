@@ -127,6 +127,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r10/') for n in names), 'R10 evidence is archived like R4-R9')
         if (ROOT / 'test-results/r11').is_dir():
             self.assertTrue(any(n.startswith('test-results/r11/') for n in names), 'R11 evidence is archived like R4-R10')
+        if (ROOT / 'test-results/r12').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r12/') for n in names), 'R12 evidence is archived like R4-R11')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -287,6 +289,27 @@ class JunkAndSecretTests(unittest.TestCase):
                 with self.assertRaises(ValueError, msg=name) as caught:
                     package.files(root)
                 self.assertIn(Path(name).name if '/' not in name else name.split('/')[0], str(caught.exception))
+
+    R12_BAD = ['release/.envrc.json', 'credentials.json', 'private.key.json', '.ssh/config.json', 'secrets.json', 'service-account.json', 'token.json', '.git-credentials.txt', '.npmrc.json', '.#notes.md', '.env-prod.md', '.gnupg/pubring.txt', '.aws/config.json', 'Secrets.yaml.md', 'cert.pem.txt']
+
+    def test_r12_secret_names_with_allowed_suffixes_are_refused_as_input_and_changed_paths(self):
+        # R12 M12: an allowlisted suffix never launders a credential name or folder.
+        for name in self.R12_BAD:
+            self.assertTrue(package.junk_or_secret(name), name)
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'ok.md').write_text('ok')
+                (root / 'sub' / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / 'sub' / name).write_text('x')
+                with self.assertRaises(ValueError, msg=name):
+                    package.files(root)
+        for name in ['release/.envrc.json', 'credentials.json', '.ssh/config.json', '.#notes.md']:
+            def damage(root, name=name):
+                (root / name).parent.mkdir(parents=True, exist_ok=True); (root / name).write_text('x')
+            message = RegistryInputTests('run_build').run_build([name], damage)
+            self.assertTrue(any(part in message for part in Path(name).parts), f'{name}: {message}')
+        for name in ['test-results/local-fixture/design-output/test/tokens.json', 'test-results/r3/secret-scan.json', 'release/tools/token-references.mjs', 'release/tests/token-validation.test.mjs', 'release/references/environment.md', 'keyboard.md']:
+            self.assertFalse(package.junk_or_secret(name), name)
 
     def test_ordinary_names_still_pass(self):
         with tempfile.TemporaryDirectory() as temp:

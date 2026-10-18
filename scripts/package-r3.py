@@ -32,8 +32,14 @@ JUNK_OR_SECRET = re.compile(r'(?:\.env(?:\..*)?|\.DS_Store|Thumbs\.db|desktop\.i
 # suffixes (the ZIP itself only at ARCHIVE) and no path part may be VCS or editor debris; JUNK_OR_SECRET is still
 # refused on top, so `.env.md` or `id_rsa.txt` fail too. Adding a new file type is a deliberate edit here.
 ALLOWED_SUFFIXES = {'.md', '.mjs', '.json', '.sh', '.sha256', '.txt', '.py', '.diff', '.internal', '.log'}
-DENIED_PARTS = {'.git', '.gitignore', '.gitattributes', '.gitmodules', '.hg', '.svn', '.idea', '.vscode', '.history'}
+DENIED_PARTS = {'.git', '.gitignore', '.gitattributes', '.gitmodules', '.hg', '.svn', '.idea', '.vscode', '.history', '.ssh', '.gnupg', '.aws'}  # R12 M12: credential folders
 JUNK_OR_SECRET_STEM = re.compile(r'(?:\.env(?:\..*)?|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.pub)?)\.[A-Za-z0-9]+')
+# R12 M12: allowlisted suffixes do not launder secret names. Any path part that is an environment file (.env, .envrc,
+# .env-prod ...), an editor lock (.#name), a credential file name with any suffixes (credentials.json, secrets.yaml.md,
+# service-account.json, token.json, .npmrc.json, .git-credentials.txt) or a key or certificate followed by more
+# suffixes (private.key.json) is refused. Design-token files (tokens.json) stay allowed: only the singular `token` is a
+# credential name.
+SECRET_ANY_SUFFIX = re.compile(r'(?:\.env[^/]*|\.#.*|(?:credentials?|secrets?|service[-_]account(?:[-_][^.]*)?|token|\.npmrc|\.netrc|\.pypirc|\.git-credentials)(?:\..*)?|.*\.(?:pem|key|p12|pfx)(?:\..*)?)', re.I)
 
 
 def junk_or_secret(name):
@@ -41,6 +47,8 @@ def junk_or_secret(name):
     if any(JUNK_OR_SECRET.fullmatch(part) or part in DENIED_PARTS for part in parts):
         return True
     if parts and JUNK_OR_SECRET_STEM.fullmatch(parts[-1]):
+        return True
+    if any(SECRET_ANY_SUFFIX.fullmatch(part) for part in parts):
         return True
     return Path(name).suffix not in ALLOWED_SUFFIXES and name != ARCHIVE
 
@@ -177,6 +185,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r10')  # R10 before/after evidence (Argon round 5)
     if (ROOT / 'test-results/r11').is_dir():
         paths += files(ROOT / 'test-results/r11')  # R11 before/after evidence (Asad panel round 5)
+    if (ROOT / 'test-results/r12').is_dir():
+        paths += files(ROOT / 'test-results/r12')  # R12 before/after evidence (panel round 12)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 
