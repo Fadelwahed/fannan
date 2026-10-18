@@ -442,11 +442,11 @@ Load at section planning, the Step 4/5 grayscale review and the Step 8 pre-hando
 
 ## Measurement contract
 
-The reference viewport is 1440 × 900 CSS pixels at device scale one, with a full-page screenshot as well. Visit every declared screen and applicable state. Wait for local fonts and assets; log failed or blocked loads. Keep external requests, service workers and WebSockets blocked during the local check. Capture file hashes and the version under test. A reference PNG is 1440 pixels wide and named `screen--state--locale--vNN.png`; its hash identifies the version. A screenshot from another revision cannot support a PASS. The checker also renders every declared `settings.desktopWidths` width and 320 CSS px (the 400% reflow equivalent of a 1280 px desktop) and fails horizontal overflow, text that actually overflows a hidden or clipped box (ellipsis styling alone is not a failure) and a language/direction mismatch; this is a screen, not mobile approval, and manual zoom and text-spacing evidence stays required.
+The reference viewport is 1440 × 900 CSS pixels at device scale one, with a full-page screenshot as well. Visit every declared screen and applicable state. Wait for local fonts and assets; log failed or blocked loads. Keep external requests, service workers and WebSockets blocked during the local check. Capture file hashes and the version under test. A reference PNG is 1440 pixels wide and named `screen--state--locale--vNN.png`; its hash identifies the version. A screenshot from another revision cannot support a PASS. The checker also renders every declared `settings.desktopWidths` width and 320 CSS px (the 400% reflow equivalent of a 1280 px desktop) and fails horizontal overflow, text that actually overflows a hidden or clipped box (ellipsis styling alone is not a failure; `body` is screened too, so `overflow-x: hidden` or `clip` on `html` and `body` cannot hide a wide layout), text or media pushed past the left edge (except inside a horizontal scroller, visually hidden sr-only content of at most 1×1 px or `clip: rect(0 0 0 0)` / `clip-path: inset(50%)`, and a focusable off-screen skip link that appears on focus) and a language/direction mismatch; this is a screen, not mobile approval, and manual zoom and text-spacing evidence stays required.
 
 Mark visible text wrappers with `data-copy-slot="ID"` and match every displayed string to the approved locale variant in the copy deck, including interface and error labels. Unlisted or mismatched text blocks final handoff. Declare semantic section, component, copy-slot and media IDs in the reference DOM and match them to the handoff inventory. The critic inspects the full screenshot and semantic outline so unmarked containers cannot evade a count. CSS/computed-style counts are recorded as measurements. Layout intent, claims, tasteful restraint and the purpose of an image remain reviewed judgments with an artifact, reviewer, explanation and brief line references. A guessed PASS flag is not evidence.
 
-Where the browser test uses a proxy, label it as a proxy in `evidence.json`. In particular, DOM element rectangles do not measure the actual colored pixels of text, images, gradients or overlapping regions. For accent coverage, the documented acceptance measure is visible accent area divided by total rendered area, separately for the full page and each reviewed viewport. The reviewer supplies an annotated color mask or measured screenshot regions for image/canvas/SVG content and any disputed DOM estimate. Use union area, not summed overlapping boxes. Borderline or unmeasurable coverage remains FAIL pending evidence; do not round 10.1% down to 10%.
+Where the browser test uses a proxy, label it as a proxy in `evidence.json`. In particular, DOM element rectangles do not measure the actual colored pixels of text, images, gradients or overlapping regions. For accent coverage, the documented acceptance measure is visible accent area divided by total rendered area, separately for the full page and each reviewed viewport. The reviewer supplies an annotated color mask or measured screenshot regions for image/canvas/SVG content and any disputed DOM estimate. Use union area, not summed overlapping boxes. Borderline or unmeasurable coverage remains FAIL pending evidence; do not round 10.1% down to 10%. The automated accent screen fails closed: if a declared accent token (`--accent`, `--colors-accent`, `--colors-primary`) is not a valid colour, or no accent token is declared, the ratios are null and the handoff check fails; it is never treated as zero accent.
 
 ## Pass/fail checklist
 
@@ -749,6 +749,12 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R10 additions (Mi'mar, 18 October 2026, Argon round 5)
+
+- **Accent fails closed (ARGON-R5-01):** an invalid declared accent, or none, gives null ratios and a handoff FAIL (also the scrolled viewport maximum). Checked in Chrome 155 headless only. In the wireframe phase the accent area stays deferred to Step 6 (unchanged), so an invalid accent is recorded in `accentInvalid` but does not fail a wireframe run.
+- **Width screen (ARGON-R5-02, -05):** `body` and `overflow: clip` boxes are screened; text or media past the left edge fails. Chrome 155 headless only. Not tested: content pushed off the right edge inside a clipping ancestor other than `body` (reported only if it carries text and that box overflows), `transform`-based off-screen content in other browsers, and sr-only variants other than the 1×1 px, `clip: rect(0 0 0 0)` and `clip-path: inset(50%)` patterns (other variants may be reported and need a manual decision). Skip links are exempt only when focusable, absolute or fixed, and wholly left of the viewport; whether they become visible on focus is left to the focus probe and manual review.
+- **Package registry inputs (ARGON-R5-04):** checked with temporary trees (missing path, symlinked file, symlinked folder). The live build ran on a clean tree.
+
 ## R9 additions (Mi'mar, 18 October 2026, Codex round 4)
 
 - **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.
@@ -805,6 +811,32 @@ Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs 
 Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
+
+## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM Gaza)
+
+Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 59 PASS, 0 FAIL | `test-results/r10/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 43 PASS, 0 FAIL | `test-results/r10/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 53 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7-R9) | `test-results/r10/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r10/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r10/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 22 PASS | `test-results/r10/package-tests-git.log` |
+| same, no-git copy | 0 | 19 PASS | `test-results/r10/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r10/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r10/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=27 sh=4 py=4 plus the launcher `.internal`, 0 failures (27 tracked `.mjs` files; no `.mjs` was added or removed in R10) | `test-results/r10/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean (after the R10 fix to `test-results/r9/versions.txt`; before it this gate failed on that file's trailing space) | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 16 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, run in the checkout (its dependency check refuses a symlinked deps folder, so the scratch copy is not used for it), exit 0. Browser, contract, spacing, desktop widths (1440 + 320 reflow, page and state, now including the body and left-edge screens) and state checks run and pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r10/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r10/ARGON-R5-0{1,2,3,4,5}-before.log` / `-after.log` (03 passes before and after: not reproduced) and `R10-zip-evidence-before.log` / `-after.log`.
 
 ## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM Gaza)
 
