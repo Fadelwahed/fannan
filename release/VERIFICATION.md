@@ -1,5 +1,21 @@
 # R3 executed verification — 17 October 2026
 
+## R25 executed verification (Mi'mar's box, 18 October 2026, about 8:50 PM UTC+3)
+
+Panel round 25 (4 P2: R25-GPT-01 to R25-GPT-04; P3 R25-GPT-05, R25-GPT-06; GPT, cross-checked by Mi'mar; `reviews/panel-r25/`), with Mi'mar's R25 tiebreaks confirmed by Fadel (tightening: only zero visible area is rescued). Linux x86_64, Node v22.23.3, Chrome 155 headless. All runs serial on a quiet box (load average 2-10).
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 174 PASS, 0 FAIL (R24's 169 + 4 in `tests/panel-r25.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r25/node.log` |
+| same, without deps; Python guard, `revisions/r2`; package tests (git / no-git); self-test; syntax; offline lint | 0 | pass | `test-results/r25/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 168 PASS, 6 FAIL: the same six Style Dictionary tests as before | `test-results/r25/node20.log` |
+| R25 Chrome before (R25 tests against dc1338f sources) / after | 1 / 0 | before: 62 PASS, 4 FAIL, the four R25 tests, each at its assertion (4 ERR_ASSERTION, 0 timeouts); after: 66 PASS, 0 FAIL | `test-results/r25/R25-chrome-before.log`, `R25-chrome-after.log` |
+| R24 Chrome before, rerun (R25-GPT-06) | 1 | the three R24 tests fail at their assertions against ec977f2 (3 ERR_ASSERTION, 0 timeouts) | `test-results/r25/R24-chrome-before-rerun-r25.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r25/local-fixture.log`): all earlier full-run expectations hold, including the R24-MIMAR-02 clamp reason, and the R25 full-gate nav cases: a max-height:0 nav fails alone, passes with menu-open, and a 1.2em partial cut fails with menu-open.
+
+**Honest patterns and the real site:** `test-results/r25/R25-real-site.log` is identical to R24 (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; with menu-open both languages PASS). `test-results/r25/R25-honest-patterns.log`: the R18-R24 sets match R24 except the R18 autoplay carousel's JavaScript-on rendering at 320, which recorded `partly clipped` instead of `reveal` (the slide was captured mid-transition, the known autoplay timing sensitivity; nothing in R25 changes partial-cut classification). The R25 repro pages with their states (p-mh-o, p-dn-o, p-n-e, p-p-e, p-s-e, p-ts, p-ta) pass; the default-only pages fail as expected without declared states.
+
 ## R24 executed verification (Mi'mar's box, 18 October 2026, about 7:45 PM UTC+3)
 
 Panel round 24 (3 P2: R24-GPT-01 to R24-GPT-03; P3 R24-MIMAR-01, R24-MIMAR-02; GPT, cross-checked by Mi'mar; `reviews/panel-r24/`), with Mi'mar's R24 tiebreaks. Linux x86_64, Node v22.23.3, Chrome 155 headless. The box was shared and heavily loaded during this round (load average up to 77, memory full from other processes), so some Chrome runs timed out on `page.goto`.
