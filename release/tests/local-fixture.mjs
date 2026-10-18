@@ -360,9 +360,10 @@ r21.hiddenCta = r19Run('hidden-cta', '<p class="r21cta">Terms apply to all plans
 const menu21 = isOpen => `<style>.r21d a{display:inline-block;padding:8px}.r21m{display:none;position:relative}.r21m .panel{position:absolute;top:40px;left:-134px;width:240px;background:#fff}.r21m[open] .panel{left:20px}@media (max-width:700px){.r21d{display:none}.r21m{display:block}}</style><nav class="r21d"><a href="#a">Products</a><a href="#b">Contact</a></nav><details class="r21m"${isOpen ? ' open' : ''}><summary>Menu</summary><div class="panel"><a href="#a" style="display:block">Products</a><a href="#b" style="display:block">Contact</a></div></details><div style="height:120px"></div>`;
 r21.menuDeclared = r19Run('menu-declared', menu21(false), '', '', authored, [['menu-open', at20(menu21(true))]]);
 r21.menuUndeclared = r19Run('menu-undeclared', menu21(false));
-const patch21 = fill => '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#222"/>' + (fill ? `<rect width="70" height="200" fill="${fill}"/>` : '') + '</svg>';
+const patch21 = fill => '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200"><rect width="1200" height="200" fill="#222"/>' + (fill ? `<rect width="70" height="200" fill="${fill}"/>` : '') + '</svg>';
 writeFileSync(join(output, 'r21-patch.svg'), patch21('#c8c8c8')); writeFileSync(join(output, 'r21-nopatch.svg'), patch21(null));
-const caption21 = bg => `<div style="position:relative;width:800px;max-width:100%;height:200px;background:url('${bg}')"><p style="position:absolute;top:70px;left:4px;margin:0;font-size:28px;color:#fff">Teams deliver support every day</p></div>`;
+// the panel's caption: one line of about 60 glyph clusters, of which only the first word (about 5) sits on the patch
+const caption21 = bg => `<div style="position:relative;width:1200px;height:200px;background:url('${bg}')"><p style="position:absolute;top:70px;left:4px;margin:0;font-size:28px;color:#fff;white-space:nowrap">Teams deliver support across forty countries every single day of the year</p></div>`;
 r21.patchWord = r19Run('patch-word', caption21('r21-patch.svg'));
 r21.noPatch = r19Run('no-patch', caption21('r21-nopatch.svg'));
 const results21 = original.replace('</main>', '</main><script>const d = document.querySelector("[data-copy-slot=description]"); const n = document.createElement("p"); n.setAttribute("data-copy-slot", "results-note"); n.textContent = "Start the service"; d.replaceWith(n);</script>');
