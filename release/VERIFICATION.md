@@ -1,5 +1,18 @@
 # R3 executed verification — 17 October 2026
 
+## R19b executed verification (Mi'mar's box, 18 October 2026, about 12:50 PM UTC+3)
+
+Mi'mar's tiebreak on script-only declared states (`requiresScript`). Same environment as R19.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 134 PASS, 0 FAIL (R19's 132 + 1 in `tests/panel-r19.test.mjs` + 1 in `tests/designer-process.test.mjs`; contract assertions added to `tests/handoff-contract.test.mjs`) | `test-results/r19/node.log` |
+| same, without deps | 0 | 76 PASS, 0 FAIL, 58 SKIPPED | `test-results/r19/node-without-deps.log` |
+| Python guard, `revisions/r2`, package tests (41 / 36 + 5 SKIPPED), self-test, syntax (mjs=45, 0 failures), offline lint | 0 | unchanged from R19 | `test-results/r19/` |
+| Node 20, informational | 1 | 128 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r19/node20.log` |
+
+**Fixture:** exit 0. Full pre-handoff runs: the scripted modal state declared `requiresScript: true` with its trigger is state PASS with axe's colour-contrast incomplete resolved on the scripted rendering alone (`requiresScript.valid` true); the same modal without the declaration stays blocking; the claim on a state that renders with JavaScript off is a `requiresScript/js-off` integrity mismatch. Before/after: `test-results/r19/R19b-*-{before,after}.log` (before = 3dabdf9 sources; assertion failures only).
+
 ## R19 executed verification (Mi'mar's box, 18 October 2026, about 12:05 PM UTC+3)
 
 Panel round 19 (5 P2: R19-GPT-01, 02, 04, R19-MIMAR-01/02; P3 R19-GPT-03, 05, 06; GPT only, cross-checked by Mi'mar; `reviews/panel-r19/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
