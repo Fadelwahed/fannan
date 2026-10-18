@@ -1,5 +1,15 @@
 # R3 checks not established
 
+## R28 additions (Mi'mar, 19 October 2026, panel round 28)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Mi'mar's decision (two-step loss accounting) applied, R26/R27 key code deleted.
+
+- **Same-state identity (A):** nodes are tagged at the first (1440) screen of a loaded page. Covered: resizing one page. UNTESTED: a page reloaded between widths (the tagged-index match is not implemented; a reload would make every node new and fail closed); a script that re-creates the same node at 320 with the same text (it is new; it may only cover through the swap list or the two extra rules).
+- **Openers (B):** summary, button or tab with aria-controls, an aria-expanded button (its parent when that holds no other aria-expanded control, else its next sibling). Opener signature = kind + role family + name, so a menu button renamed in the open state (Menu to Close) does not match and fails closed. UNTESTED: carousel controls without aria-controls (a reveal falls back to the clipping box signature: tag, role, aria-label, roledescription, copy slot; two boxes alike fail closed), menus opened by aria-haspopup without aria-expanded.
+- **Hidden copies:** a desktop nav link hidden at 320 is covered by a declared state only when exactly one opener region holds a hidden copy of it (a mobile menu repeating the links). Two such regions fail closed.
+- **Sections:** a heading's section ends at the next heading of the same or higher rank and inside the section or article it opens; the shown panel's items match only in the selected tab's section. UNTESTED: headings inside shadow roots of a different host than the section.
+- **Superseded doc assertions:** the R26 doc test no longer requires "Carousel slides are tracked by element", and the R27 doc test and `test_r27_sections` (stable key) were replaced by the R28 ones, because the R28 decision retires that wording.
+
 ## R27 additions (Mi'mar, 18 October 2026, panel round 27)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel confirmed the panel's tiebreaks.

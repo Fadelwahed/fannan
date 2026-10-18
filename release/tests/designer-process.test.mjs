@@ -260,13 +260,15 @@ test('R25: tabs to headed sections, one name per control, the shared count, zero
 // R26 (panel round 26, Fadel's root-cause fix): loss accounting by element identity, documented
 test('R26: element identity, the closed swap list with one cover per element, declared tab panels and settled motion are documented', () => {
   const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
-  for (const m of ['R26 replaces name counting with element identity', 'Each covering element covers one item only, so footer copies never stand in for nav links', 'need every tab panel declared as a state', "a panel's own heading is never subtracted", 'Carousel slides are tracked by element', 'recorded as motion at capture']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['R26 replaces name counting with element identity', 'Each covering element covers one item only, so footer copies never stand in for nav links', 'need every tab panel declared as a state', "a panel's own heading is never subtracted", 'recorded as motion at capture']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
   assert.ok(contract.includes('Losses are tracked by element, not by name'), 'handoff-contract.md: identity');
 });
 
-// R27 (panel round 27, R27-GPT-06): stable identity key and the two approved extra coverage rules, documented
-test('R27: identity is a stable key, not position, and the two extra coverage rules are documented', () => {
+// R27-GPT-06's stable-key wording was superseded by Mi'mar's R28 decision (keys retired); R28-GPT-06 checks the consolidated rule
+// R28 (panel round 28, R28-GPT-06): the two-step loss accounting, documented plainly, stale sentences gone
+test('R28: same-state node identity and cross-state cover only through a revealed region are documented; the stale sentences are gone', () => {
   const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
-  for (const m of ['R27 makes element identity a stable key, not position', 'Identity keeps across role changes within the action family', 'is set aside before name matching and never covers a hidden item', "need at least each panel's actions at the narrow width, counted only inside that tablist's sections", 'with the same role and accessible name, and a distinct element with the same text']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
-  for (const m of ['Element identity is a stable key, not position', 'a distinct non-ledger element with the same role and accessible name, and a distinct element with the same text']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+  for (const m of ['R28 loss accounting has two steps', 'Within one state, identity is the DOM node', 'never an author id', 'a reworded heading or a renamed control fails', 'a distinct element with the same role and accessible name; a distinct element with the same text', 'which ends at the next heading of the same or higher rank', 'Another declared state covers a lost item only through a reveal', 'An ambiguous opener-to-region link fails closed', 'No ids are compared across states', 'nothing outside the revealed region']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['within one state the element is the DOM node', 'covers a lost item only through the region a visible opener reveals']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+  for (const stale of ['in the same state (a footer link)', 'through the closed swap list alone', 'stable key, not position', 'Carousel slides are tracked by element']) { assert.ok(!quality.includes(stale), `design-quality.md still says: ${stale}`); assert.ok(!contract.includes(stale), `handoff-contract.md still says: ${stale}`); }
 });
