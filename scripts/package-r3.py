@@ -226,7 +226,9 @@ REQUIRED_SECTIONS = {
                                              # R17: fail-closed compositing, ENH backlog, rendered-visibility backstop
                                              'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:',
                                              # R18: the backstop's role (pixels decide visibility, AA stays with the CSS pass) and hidden text
-                                             'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)'],
+                                             'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)',
+                                             # R19: hidden layers, the top layer and the colour-contrast incomplete resolver
+                                             'Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:'],
     'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows', '## Cross-screen component comparison'],
 }
 # R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
@@ -345,6 +347,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r17')  # R17 before/after evidence and raw panel logs (panel round 17)
     if (ROOT / 'test-results/r18').is_dir():
         paths += files(ROOT / 'test-results/r18')  # R18 before/after evidence and raw panel logs (panel round 18)
+    if (ROOT / 'test-results/r19').is_dir():
+        paths += files(ROOT / 'test-results/r19')  # R19 before/after evidence and raw panel logs (panel round 19)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 

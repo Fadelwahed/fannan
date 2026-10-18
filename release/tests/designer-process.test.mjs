@@ -170,3 +170,14 @@ test('R18: the backstop role, its coverage, text that is not displayed and the a
   const para = quality.slice(quality.indexOf('Rendered-visibility backstop:'));
   assert.doesNotMatch(para.slice(0, 6000), vendors); assert.doesNotMatch(para.slice(0, 6000), /digital[\s_-]*cloud|\bgaza\b|palestin/i);
 });
+
+// R19 (panel round 19): covers the hit test cannot see, the top layer on declared states, inner scrollports, the width
+// screen's hidden content, the colour-contrast incomplete resolver (Fadel's tiebreak) and the cited accessible name.
+test('R19: hidden layers, the top layer, inner scrollports, hidden content in the width screen and the contrast incomplete resolver are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
+  for (const m of ['Layers a hit test cannot see are possible covers too', '`pointer-events:none` layer', 'the fade of a truncated block', 'the top layer is respected', 'a non-modal open dialog is not inert', 'the end of every inner scrollport', 'The width screen uses the same rule', 'Automated contrast incomplete results:', 'in BOTH renderings', 'cites the screenshot', 'must appear in its cited source', 'an SVG, which is mostly transparent shapes']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['must appear in its cited source', 'resolves an automated colour-contrast incomplete result']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+  const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
+  const para = quality.slice(quality.indexOf('Rendered-visibility backstop:'));
+  assert.doesNotMatch(para.slice(0, 9000), vendors); assert.doesNotMatch(para.slice(0, 9000), /digital[\s_-]*cloud|\bgaza\b|palestin|\baxe-core\b.*\bdeque\b/i);
+});
