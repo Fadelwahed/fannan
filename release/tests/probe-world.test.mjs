@@ -33,6 +33,7 @@ test('R11 C3: a page script that patches getComputedStyle, querySelectorAll and 
       const real = window.getComputedStyle;
       window.getComputedStyle = (e, p) => new Proxy(real(e, p), { get: (t, k) => k === 'backdropFilter' ? 'none' : (typeof t[k] === 'function' ? t[k].bind(t) : t[k]) });
       Document.prototype.querySelectorAll = function () { return []; };
+      Object.defineProperty(Document.prototype, 'styleSheets', { get: () => [] }); // R12 M05: designProbe now reads CSSOM sheets too
       Object.defineProperty(window, 'axe', { value: { run: async () => ({ violations: [], incomplete: [], passes: [] }) }, writable: false, configurable: false });
     </script></head><body><main><h1>x</h1><div class="card">card</div><button aria-label="Close dialog">Submit order</button></main></body></html>`;
     writeFileSync(join(dir, 'hostile.html'), hostile);

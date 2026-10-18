@@ -179,5 +179,50 @@ test('R11 panel A: the accent fails closed at handoff, names the variable, binds
   assert.match(source, /const approvedAccentToken = approvedAccent\(handoff\);/);
   assert.match(source, /ev\.checks\.accent = await accentFor\(p, design\);\nif \(!ev\.checks\.accent\.pass\) fail = true;/, 'the page');
   assert.match(source, /const accent = await accentFor\(p, d\);/, 'every state');
-  assert.match(source, /&& accent\.pass && stateResult\.focusFailures/, 'a state fails on the accent');
+  assert.match(source, /&& accent\.pass && frames\.pass && integrity\.pass && stateResult\.focusFailures/, 'a state fails on the accent');
+});
+
+test('R12 M04/M05: served HTML/JS/SVG script forms and CSS-escaped property names count as glass; only an explicit none does not', async () => {
+  const { rawGlass } = await import('../tools/design-probe.mjs');
+  for (const t of ["el.style.webkitBackdropFilter='blur(4px)'", "el.style.WebkitBackdropFilter = 'blur(4px)'", "el.style.backdropFilter='blur(4px)'", "el.style.setProperty('-webkit-backdrop-filter','blur(4px)')", "el.style.setProperty('backdrop-filter', v)", "el.style['backdrop-filter'] = 'blur(2px)'", '<div style="backdrop-filter:blur(2px)">', '<svg><style>.a{-webkit-backdrop-filter:blur(1px)}</style></svg>']) assert.equal(rawGlass(t, 'script'), true, t);
+  for (const t of ['.a{backdrop\\2d filter:blur(2px)}', 'html{backdrop\\-filter:blur(2px)}', '.a{back\\64 rop-filter:blur(2px)}', '.a{-webkit-backdrop\\-filter:blur(2px)}', '.a{backdrop-filter/**/:/**/blur(2px)}']) {
+    assert.equal(rawGlass(t, 'css'), true, t); assert.equal(rawGlass(t, 'script'), true, `${t} in HTML`);
+  }
+  for (const t of ['.a{backdrop-filter:none}', '.a{color:red}', '/* backdrop-filter: blur(2px) */']) assert.equal(rawGlass(t, 'css'), false, t);
+  for (const t of ["el.style.setProperty('color','red')", '<div style="backdrop-filter: none">', '<p>filters</p>']) assert.equal(rawGlass(t, 'script'), false, t);
+  assert.equal(rawGlass("el.style.backdropFilter='blur(4px)'"), false, 'CSS files keep the declaration rule only (identifiers are not CSS)');
+  const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
+  assert.match(source, /rawGlass\(body\.toString\('utf8'\), \/text\\\/css\/\.test\(contentType\) \? 'css' : 'script'\)/, 'the served-file scan passes the kind');
+});
+
+test('R12 M05: real Chrome: an escaped root-element glass rule in a stylesheet is counted through the CSSOM (test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<style>html{backdrop\\2d filter:blur(2px)}</style><main><h1>x</h1></main>');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).backdropFilter), 'none', 'Chrome 155 computes none on html');
+    assert.ok((await page.evaluate(designProbe)).glass >= 1, 'counted anyway');
+    await page.setContent('<style>html{backdrop-filter:none}</style><main><h1>x</h1></main>');
+    assert.equal((await page.evaluate(designProbe)).glass, 0);
+  } finally { await browser.close(); }
+});
+
+test('R12 M03: any frame, readable or not, fails the final handoff (axe and probes do not run inside frames); wireframes record it', async () => {
+  const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
+  assert.match(source, /const framesCheck = d => \(\{ frames: d\.glassScopes\.frames \+ d\.glassScopes\.unscannedFrames\.length,/);
+  assert.match(source, /status: phase === 'wireframe' \? 'DEFERRED' : d\.glassScopes\.frames \+ d\.glassScopes\.unscannedFrames\.length \? 'FAIL' : 'PASS'/);
+  assert.match(source, /ev\.checks\.frames = framesCheck\(design\);\nif \(!ev\.checks\.frames\.pass\) fail = true;/);
+  assert.match(source, /const frames = framesCheck\(d\);/);
+  if (!(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome))) return;
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    for (const html of ['<iframe src="data:text/html,<p>x</p>"></iframe>', '<iframe sandbox srcdoc="<p>x</p>"></iframe>', '<iframe srcdoc="<p>x</p>"></iframe>']) {
+      const page = await browser.newPage();
+      await page.setContent(`<main><h1>x</h1>${html}</main>`); await page.waitForTimeout(100);
+      const g = (await page.evaluate(designProbe)).glassScopes;
+      assert.ok(g.frames + g.unscannedFrames.length >= 1, `${html} is seen as a frame`);
+    }
+  } finally { await browser.close(); }
 });

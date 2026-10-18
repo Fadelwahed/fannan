@@ -32,7 +32,8 @@ export function designProbe() {
   const filtered = c => !!c && c.backdropFilter && c.backdropFilter !== 'none';
   const rendered = c => c.content !== 'none' && c.content !== 'normal';
   const glassRaw = /(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$))[^;}]+/i;
-  const stripComments = text => text.replace(/\/\*[\s\S]*?\*\//g, '');
+  // R12 M05: comments are removed and CSS escapes resolved (backdrop\2d filter parses as the property) before matching.
+  const stripComments = text => text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?/g, (_, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return ''; } }).replace(/\\([^\n0-9a-fA-F])/g, '$1');
   const glassNodes = [document.documentElement, document.body, ...rects.map(({e}) => e)].filter(Boolean);
   let glass = glassNodes.filter(e => filtered(getComputedStyle(e)) || ['::before', '::after'].some(pseudo => { const c = getComputedStyle(e, pseudo); return rendered(c) && filtered(c); })).length
     + [...document.querySelectorAll('[style]')].filter(e => glassRaw.test(stripComments(e.getAttribute('style') || '')) && !filtered(getComputedStyle(e))).length
@@ -41,7 +42,9 @@ export function designProbe() {
   // R11 panel D1 (decision D): open shadow roots and same-origin frames are screened the same way (computed on every
   // element and rendered pseudo-element, style attributes, <style> text and constructed stylesheets). Closed shadow
   // roots cannot be reached from script; cross-origin frames are blocked by the checker and are counted as unscanned.
-  function sheetGlass(scope) { let n = 0; for (const sheet of scope.adoptedStyleSheets || []) { try { if (glassRaw.test(stripComments([...sheet.cssRules].map(r => r.cssText).join('\n')))) n++; } catch { n++; } } return n; }
+  // R12 M05: ordinary CSSOM sheets are read too (parsed rules keep a root-element filter that computes to none); a
+  // sheet whose rules cannot be read is left to the checker's served-file scan, a constructed one counts.
+  function sheetGlass(scope) { let n = 0; for (const sheet of scope.adoptedStyleSheets || []) { try { if (glassRaw.test(stripComments([...sheet.cssRules].map(r => r.cssText).join('\n')))) n++; } catch { n++; } } for (const sheet of scope.styleSheets || []) { try { if (glassRaw.test([...sheet.cssRules].map(r => r.cssText).join('\n'))) n++; } catch {} } return n; }
   const scopes = [], unscannedFrames = [];
   const visit = (root, inFrame) => {
     for (const el of root.querySelectorAll('*')) {
@@ -71,9 +74,14 @@ export function designProbe() {
 
 // R11 (Asad panel S2): node side. True when CSS or HTML text declares a backdrop filter other than none, prefixed or
 // not, outside comments. Used on every CSS/HTML file the checker serves, because Chrome discards the -webkit- alias.
-export function rawGlass(text) {
-  const css = String(text).replace(/\/\*[\s\S]*?\*\//g, '');
-  return /(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$))[^;}]+/i.test(css);
+export function rawGlass(text, kind = 'css') {
+  // R12 M05: comments removed and CSS escapes resolved first. R12 M04: in HTML, JavaScript and SVG text any script form
+  // also counts, with no colon needed (style.backdropFilter, style.webkitBackdropFilter, setProperty('-webkit-backdrop-
+  // filter', ...), style['backdrop-filter']); only an explicit `: none` is not glass. Fail closed.
+  const t = String(text).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?/g, (_, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return ''; } }).replace(/\\([^\n0-9a-fA-F])/g, '$1');
+  if (/(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$|["'`]))[^;}]+/i.test(t)) return true;
+  if (kind === 'css') return false;
+  return /\b[wW]ebkitBackdropFilter\b|\bbackdropFilter\b/.test(t) || /(?:-webkit-)?backdrop-filter(?!\s*:\s*none\b)/i.test(t);
 }
 
 // R11 panel D1 (decision A). Browser side: a colour normalised by a detached canvas (as in designProbe), or null.
