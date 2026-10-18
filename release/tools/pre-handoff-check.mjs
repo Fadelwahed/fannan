@@ -84,7 +84,8 @@ const projectRoot = join(OUTPUT_BASE, project);
 const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
 // R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)
 const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG
-const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
+const served = new Set(); // R13 N07: URLs whose bytes the checker served and scanned
+const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); served.add(u); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
 await ctx.route('**/*', routeLocal);
 const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world
 const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });
@@ -95,18 +96,23 @@ const copyProbe = (page, st) => page.evaluate(({ slots, lang, dir }) => {
   const norm = x => (x || '').replace(/\s+/g, ' ').trim();
   const wanted = new Map(slots.map(c => [c.id, norm(c.variants?.find(v => v.lang === lang && v.dir === dir)?.text || c.text)]));
   const errors = [], used = new Set();
-  const nodes = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  while (nodes.nextNode()) {
-    const n = nodes.currentNode, value = norm(n.nodeValue);
+  // R13 N20: the composed tree (open shadow roots included); slots are found through composed ancestors.
+  const texts = [], elements = [];
+  const walk = root => { const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT); while (w.nextNode()) { const n = w.currentNode; if (n.nodeType === 3) texts.push(n); else { elements.push(n); if (n.shadowRoot) walk(n.shadowRoot); } } };
+  walk(document.body);
+  const parentOf = el => el.assignedSlot ?? el.parentElement ?? (el.getRootNode() instanceof ShadowRoot ? el.getRootNode().host : null);
+  const slotOf = el => { for (let a = el; a; a = parentOf(a)) if (a.hasAttribute?.('data-copy-slot')) return a; return null; };
+  for (const n of texts) {
+    const value = norm(n.nodeValue);
     if (!value || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(n.parentElement?.tagName)) continue;
     const style = getComputedStyle(n.parentElement), range = document.createRange(); range.selectNodeContents(n);
     if (style.display === 'none' || style.visibility === 'hidden' || range.getClientRects().length === 0) continue;
-    const el = n.parentElement?.closest('[data-copy-slot]'), id = el?.getAttribute('data-copy-slot');
+    const el = slotOf(n.parentElement), id = el?.getAttribute('data-copy-slot');
     if (!id || !wanted.has(id)) { errors.push(`unlisted visible copy: ${value.slice(0, 60)}`); continue; }
     used.add(id);
   }
   for (const [id, text] of wanted) {
-    const matches = [...document.querySelectorAll('[data-copy-slot]')].filter(e => e.getAttribute('data-copy-slot') === id);
+    const matches = elements.filter(e => e.getAttribute('data-copy-slot') === id);
     if (matches.length !== 1 || norm(matches[0].textContent) !== text) errors.push(`copy slot ${id} differs from deck`);
     if (!used.has(id)) errors.push(`copy slot ${id} not visible`);
   }
@@ -123,6 +129,11 @@ if (!ev.checks.accent.pass) fail = true;
 const framesCheck = d => ({ frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, unscanned: d.glassScopes.unscannedFrames, status: phase === 'wireframe' ? 'DEFERRED' : d.glassScopes.frames + d.glassScopes.unscannedFrames.length ? 'FAIL' : 'PASS', note: 'axe and the probes do not run inside frames', pass: phase === 'wireframe' || d.glassScopes.frames + d.glassScopes.unscannedFrames.length === 0 });
 ev.checks.frames = framesCheck(design);
 if (!ev.checks.frames.pass) fail = true;
+// R13 N07: data:/blob: stylesheets are refused, and a stylesheet whose rules could not be read and whose bytes the
+// checker did not serve and scan is unscanned; both fail (glass is gated in both phases).
+const sheetsCheck = d => { const list = d.stylesheets || [], refused = list.filter(x => /^(data|blob):/i.test(x.href || '')), unscanned = list.filter(x => !x.readable && !refused.includes(x) && !(x.href && served.has(x.href))); return { sheets: list.length, refused: refused.map(x => (x.href || '').slice(0, 80)), unscanned: unscanned.map(x => x.href || x.owner), pass: refused.length === 0 && unscanned.length === 0 }; };
+ev.checks.stylesheets = sheetsCheck(design);
+if (!ev.checks.stylesheets.pass) fail = true;
 // R12 M07/M09/M20: the positional page is scoped by its declared state (screen, state, lang).
 const declaredStates = (handoff?.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
 const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
@@ -167,10 +178,15 @@ const integrityFor = async (pagePath, scope) => {
   try {
     const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
     const widthsFor = validWidths(handoff?.settings?.desktopWidths) ? handoff.settings.desktopWidths : [1440];
+    // R13 N11/N12: the canonical gate result, per width where the gate is per width.
     const measure = async pg => { try {
       const d = await pg.evaluate(designProbe), sp = await pg.evaluate(spacingProbe, approvedScale.values), ct = await pg.evaluate(contrastProbe);
-      const rs = (await screenWidths(pg, widthsFor, null)).results, sum = k => rs.reduce((n, r) => n + (r[k]?.length ?? 0), 0), r320 = rs.find(r => r.width === 320);
-      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: rs.some(r => r.horizontalOverflow), clipped: sum('clipped'), offscreenLeft: sum('offscreenLeft'), unreachable: sum('unreachable'), scrolledText: sum('scrolledText'), unmeasured: sum('unmeasured'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures }, content: await pg.evaluate(contentProbe) };
+      Object.assign(d, copySignals(d.visibleText, d.headlines));
+      const doc = await pg.evaluate(() => document.documentElement.scrollHeight), ratios = [];
+      for (let y = 0; y < doc; y += 900) { await pg.evaluate(y => scrollTo(0, y), y); ratios.push((await pg.evaluate(designProbe)).accentViewportRatio); }
+      await pg.evaluate(() => scrollTo(0, 0));
+      const rs = (await screenWidths(pg, widthsFor, null)).results, per = k => Object.fromEntries(rs.map(r => [r.width, k === 'horizontalOverflow' ? Number(r.horizontalOverflow) : r[k]?.length ?? 0])), r320 = rs.find(r => r.width === 320);
+      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked }, content: await pg.evaluate(contentProbe) };
     } catch (e) { return { vector: null, content: null, error: e.message }; } };
     const href = pathToFileURL(resolve(pagePath)).href;
     const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);
@@ -183,6 +199,27 @@ const integrityFor = async (pagePath, scope) => {
     return compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope });
   } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
   finally { for (const c of contexts) await c.close().catch(() => {}); }
+};
+// R12 M13, R13 N18: one hardened reduced-motion routine for the positional page and every declared state: running Web
+// Animations, moved elements, and the private rAF counter (rafCounterInit, read in the main world on purpose).
+const motionFor = async pagePath => {
+  const c = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
+  try {
+    await c.routeWebSocket(/.*/, ws => ws.close());
+    await c.addInitScript(rafCounterInit);
+    await c.route('**/*', routeLocal);
+    const main = await c.newPage(), pg = await isolatedPage(main);
+    await pg.goto(pathToFileURL(resolve(pagePath)).href); await pg.waitForTimeout(300);
+    const snap = () => pg.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height), c.transform, c.opacity].join('|'); }));
+    const s1 = await snap(); const raf1 = await main.evaluate(() => window.__raf);
+    await pg.waitForTimeout(700);
+    const s2 = await snap(); const raf2 = await main.evaluate(() => window.__raf);
+    const waapi = await pg.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
+    const moved = s1.reduce((n, v, k) => n + (v !== s2[k] ? 1 : 0), 0) + Math.abs(s1.length - s2.length);
+    const rafLoop = rafLoopFrom(raf1, raf2); // a non-finite or decreasing reading counts as a loop
+    return { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: Number.isFinite(raf2 - raf1) ? raf2 - raf1 : null, rafLoop, pass: waapi === 0 && moved === 0 && !rafLoop };
+  } catch (e) { return { pass: false, error: `reduced-motion check could not run: ${e.message}` }; }
+  finally { await c.close().catch(() => {}); }
 };
 ev.checks.states = [];
 if (phase === 'handoff' && handoff?.screens) {
@@ -221,20 +258,11 @@ if (phase === 'handoff' && handoff?.screens) {
       const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
       const frames = framesCheck(d); // R12 M03
       const integrity = await integrityFor(st.page, scopeOf(st)); // R12 M07: every declared state
-      const rmState = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
-      await rmState.routeWebSocket(/.*/, ws => ws.close());
-      await rmState.route('**/*', routeLocal);
-      const rp = await isolatedPage(await rmState.newPage());
-      await rp.goto(pathToFileURL(resolve(st.page)).href);
-      await rp.waitForTimeout(300);
-      const motion1 = await rp.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r=e.getBoundingClientRect(), c=getComputedStyle(e); return `${Math.round(r.x)}|${Math.round(r.y)}|${c.transform}|${c.opacity}`; }));
-      await rp.waitForTimeout(700);
-      const motion2 = await rp.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r=e.getBoundingClientRect(), c=getComputedStyle(e); return `${Math.round(r.x)}|${Math.round(r.y)}|${c.transform}|${c.opacity}`; }));
-      const running = await rp.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
-      await rmState.close();
+      const stylesheets = sheetsCheck(d); // R13 N07
+      const reducedMotion = await motionFor(st.page); // R13 N18: the same hardened routine as the page
       const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // ARGON-R5-01: Math.max(null) is 0
-      const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion: { running, changed: motion1.some((x,i) => x !== motion2[i]) }, language: doc.lang, direction: doc.dir };
-      stateResult.pass = renderedSha256 === st.frame?.sha256 && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && a.incomplete.length === 0 && d.centered <= q.centeredSectionsPerPage && d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && !d.placeholders && d.spacingOffScale.length <= q.spacingOffScale && d.h1 === 1 && accent.pass && frames.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.pass && running === 0 && !stateResult.reducedMotion.changed && doc.lang === st.lang && doc.dir === st.dir;
+      const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion, stylesheets, language: doc.lang, direction: doc.dir };
+      stateResult.pass = renderedSha256 === st.frame?.sha256 && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && a.incomplete.length === 0 && d.centered <= q.centeredSectionsPerPage && d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && !d.placeholders && d.spacingOffScale.length <= q.spacingOffScale && d.h1 === 1 && accent.pass && frames.pass && stylesheets.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.pass && reducedMotion.pass && doc.lang === st.lang && doc.dir === st.dir;
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
       if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
       evidenceWrite(filename, frameBytes);
@@ -251,20 +279,7 @@ const spacingItems = [{ scope: pageScope, list: design.spacingExceptions }, ...e
 const spacingResolved = resolveScoped({ items: spacingItems, entries: handoff?.spacingExceptions, roles: [handoff?.settings?.roles?.approver], phase, what: 'spacingExceptions' });
 ev.checks.spacingExceptions = { exceptions: spacingResolved.items, unresolved: spacingResolved.unresolved, status: spacingResolved.status, pass: spacingResolved.pass };
 if (!ev.checks.spacingExceptions.pass) fail = true;
-const rm = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
-await rm.routeWebSocket(/.*/, ws => ws.close());
-await rm.addInitScript(rafCounterInit); // R12 M13: private, non-writable counter; the wrapper cannot be replaced
-await rm.route('**/*', routeLocal);
-const p2main = await rm.newPage(); const p2 = await isolatedPage(p2main); // the rAF counter is read in the main world on purpose
-await p2.goto(pathToFileURL(resolve(page)).href); await p2.waitForTimeout(300);
-const snap = () => p2.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height), c.transform, c.opacity].join('|'); }));
-const s1 = await snap(); const raf1 = await p2main.evaluate(() => window.__raf);
-await p2.waitForTimeout(700);
-const s2 = await snap(); const raf2 = await p2main.evaluate(() => window.__raf);
-const waapi = await p2.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
-const moved = s1.reduce((n, v, k) => n + (v !== s2[k] ? 1 : 0), 0);
-const rafLoop = rafLoopFrom(raf1, raf2); // R12 M13: a non-finite or decreasing reading counts as a loop
-ev.checks.reducedMotion = { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: Number.isFinite(raf2 - raf1) ? raf2 - raf1 : null, pass: waapi === 0 && moved === 0 && !rafLoop };
+ev.checks.reducedMotion = await motionFor(page); // R12 M13, R13 N18
 if (!ev.checks.reducedMotion.pass) fail = true;
 // R11 panel D1 (decisions C, T4), R12 M06-M08: integrity cross-checks on the positional page (and, above, every state).
 ev.checks.integrity = await integrityFor(page, pageScope);

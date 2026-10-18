@@ -17,9 +17,9 @@ test('R11 C3: the checker wraps every page in the isolated probe world; only the
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
   assert.match(source, /import \{ isolatedPage \} from '\.\/probe-world\.mjs';/);
   assert.match(source, /const p = await isolatedPage\(await ctx\.newPage\(\)\);/);
-  assert.match(source, /const rp = await isolatedPage\(await rmState\.newPage\(\)\);/);
-  assert.match(source, /const p2main = await rm\.newPage\(\); const p2 = await isolatedPage\(p2main\);/);
-  assert.deepEqual(source.match(/p2main\.evaluate\([^;]*/g), ['p2main.evaluate(() => window.__raf)', 'p2main.evaluate(() => window.__raf)']);
+  // R13 N18: one reduced-motion routine (motionFor) serves the page and every state; only its rAF counter reads the main world.
+  assert.match(source, /const main = await c\.newPage\(\), pg = await isolatedPage\(main\);/);
+  assert.deepEqual(source.match(/main\.evaluate\([^;]*/g).filter(x => !x.startsWith('icMain')), ['main.evaluate(() => window.__raf)', 'main.evaluate(() => window.__raf)']);
 });
 
 test('R11 C3: a page script that patches getComputedStyle, querySelectorAll and axe fools the main world but not the probe world (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {

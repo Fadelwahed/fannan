@@ -13,61 +13,81 @@ const deps = process.env.FANNAN_DEPS || resolve(release, '..', 'runtime-deps');
 const chrome = process.env.FANNAN_TEST_CHROME || '/usr/bin/google-chrome';
 const haveChrome = existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome);
 
-const vector = { glass: 0, h1: 1, placeholders: false, centered: 0, typeSizes: 3, heroGradient: false, purpleBlue: false, iconRows: 0, accent: '#123456', spacingOffScale: 0, horizontalOverflow: false, clipped: 0, offscreenLeft: 0, unreachable: 0, scrolledText: 0, unmeasured: 0, reflowFail: false, contrastFailures: 0 };
-const content = { slots: ['hero', 'lede'], h1: 1, lang: 'en', dir: 'ltr' };
+const widths = (n = 0) => ({ 1440: 0, 320: n });
+const vector = { glass: 0, h1: 1, placeholders: false, centered: 0, typeSizes: 3, heroGradient: false, purpleBlue: false, iconRows: 0, accent: '#123456', accentRatio: 0.05, maxViewportAccent: 0.1, filler: false, ruleOfThree: false, frames: 0, stylesheetsUnscanned: 0, spacingOffScale: 0, horizontalOverflow: widths(), clipped: widths(), offscreenLeft: widths(), unreachable: widths(), scrolledText: widths(), unmeasured: widths(), unscannedScopes: widths(), reflowFail: false, contrastFailures: 0, contrastUnknown: 0, contrastChecked: 5 };
+const content = { slots: [['hero', 'Welcome home'], ['lede', 'Plans that fit']], headings: [[1, 'Welcome home']], h1: 1, lang: 'en', dir: 'ltr' };
 const run = (v = {}, c = {}) => ({ vector: { ...vector, ...v }, content: { ...content, ...c } });
 const clean = run();
 const scope = { screen: 'home', state: 'default', lang: 'en' };
 const roles = { settings: { roles: { qaGate: 'Amin', approver: 'Fadel' } } };
+const cmp = a => compareIntegrity({ tamperSigns: [], scope, ...a }); // R13 N19: tamperSigns is required, so tests pass []
+const worse = k => ({ count: vector[k] + 1, flag: true, text: '#ff00ff', ratio: (vector[k] ?? 0) + 0.5, widths: widths(1) })[VECTOR[k]];
 
 test('R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch', () => {
-  assert.deepEqual([compareIntegrity({ probe: clean, page: clean, jsOff: clean, scope }).status, compareIntegrity({ probe: clean, page: clean, jsOff: clean, scope }).pass], ['PASS', true]);
-  const tamper = compareIntegrity({ probe: run({ glass: 1 }), page: clean, jsOff: run({ glass: 1 }), scope });
+  assert.deepEqual([cmp({ probe: clean, page: clean, jsOff: clean }).status, cmp({ probe: clean, page: clean, jsOff: clean }).pass], ['PASS', true]);
+  const tamper = cmp({ probe: run({ glass: 1 }), page: clean, jsOff: run({ glass: 1 }) });
   assert.equal(tamper.status, 'integrity mismatch'); assert.match(tamper.mismatches[0].detail, /page world 0, probe world 1/);
-  const native = compareIntegrity({ probe: clean, page: clean, jsOff: clean, tamperSigns: ['window.getComputedStyle'], scope });
+  const native = cmp({ probe: clean, page: clean, jsOff: clean, tamperSigns: ['window.getComputedStyle'] });
   assert.deepEqual([native.pass, native.mismatches[0].check], [false, 'native']);
-  const jsGlass = compareIntegrity({ probe: clean, page: clean, jsOff: run({ glass: 2 }), scope });
+  const jsGlass = cmp({ probe: clean, page: clean, jsOff: run({ glass: 2 }) });
   assert.deepEqual([jsGlass.status, jsGlass.mismatches[0].check, jsGlass.mismatches[0].source], ['integrity mismatch', 'glass', 'js-off'], 'scripts hide glass that is there without them');
-  const post = compareIntegrity({ probe: run({ glass: 1 }), page: run({ glass: 1 }), jsOff: clean, scope });
+  const post = cmp({ probe: run({ glass: 1 }), page: run({ glass: 1 }), jsOff: clean });
   assert.deepEqual([post.pass, post.postScriptDifferences.length], [true, 1], 'scripted page worse: recorded here, failed by the main glass check');
 });
 
-test('R12 M06/M17: every hard-fail field is cross-checked between worlds and with JavaScript off, not only glass and reflow', () => {
+test('R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off', () => {
   assert.deepEqual(INTEGRITY_CHECKS, [...Object.keys(VECTOR), 'content']);
-  for (const k of ['h1', 'placeholders', 'centered', 'typeSizes', 'heroGradient', 'purpleBlue', 'iconRows', 'accent', 'spacingOffScale', 'horizontalOverflow', 'clipped', 'offscreenLeft', 'unreachable', 'scrolledText', 'unmeasured', 'reflowFail', 'contrastFailures']) {
-    const worse = VECTOR[k] === 'count' ? vector[k] + 1 : VECTOR[k] === 'flag' ? true : '#ff00ff';
-    const between = compareIntegrity({ probe: run({ [k]: worse }), page: clean, jsOff: run({ [k]: worse }), scope });
+  for (const k of ['accentRatio', 'maxViewportAccent', 'filler', 'ruleOfThree', 'frames', 'stylesheetsUnscanned', 'unscannedScopes', 'contrastUnknown', 'contrastChecked']) assert.ok(k in VECTOR, `R13 N11/N12: the vector carries ${k}`);
+  for (const k of Object.keys(VECTOR)) {
+    const changed = VECTOR[k] === 'coverage' ? vector[k] + 1 : worse(k);
+    const between = cmp({ probe: run({ [k]: changed }), page: clean, jsOff: run({ [k]: changed }) });
     assert.deepEqual([between.status, between.mismatches[0]?.check], ['integrity mismatch', k], `${k}: page world vs probe world`);
-    const off = compareIntegrity({ probe: clean, page: clean, jsOff: run({ [k]: worse }), scope });
+    if (VECTOR[k] === 'coverage') continue;
+    const off = cmp({ probe: clean, page: clean, jsOff: run({ [k]: changed }) });
     assert.deepEqual([off.status, off.mismatches[0]?.check, off.mismatches[0]?.source], ['integrity mismatch', k, 'js-off'], `${k}: worse with JavaScript off`);
   }
+  // N11: per-width maps; the same total at different widths is a difference.
+  const a = run({ horizontalOverflow: { 1440: 1, 320: 0 } }), b = run({ horizontalOverflow: { 1440: 0, 320: 1 } });
+  assert.equal(cmp({ probe: a, page: b, jsOff: a }).status, 'integrity mismatch', 'a failure moved to another width between worlds');
+  assert.equal(cmp({ probe: a, page: a, jsOff: b }).mismatches[0]?.check, 'horizontalOverflow', 'a failure moved to another width with JavaScript off');
+  // N11: an accent ratio the JavaScript-off pass could not measure is worse, never ignored.
+  assert.equal(cmp({ probe: clean, page: clean, jsOff: run({ accentRatio: null }) }).mismatches[0]?.check, 'accentRatio');
+  // N12: zero contrast coverage with JavaScript off, while the scripted page had coverage, proves nothing.
+  const blind = cmp({ probe: clean, page: clean, jsOff: run({ contrastChecked: 0, contrastFailures: 0 }) });
+  assert.deepEqual([blind.status, blind.pass], ['INCOMPLETE', false]); assert.match(blind.incomplete.join(' '), /coverage is zero/);
+  assert.equal(cmp({ probe: clean, page: clean, jsOff: run({ contrastUnknown: 3 }) }).mismatches[0]?.check, 'contrastUnknown');
 });
 
-test('R12 M08: non-equivalent JavaScript-off content and missing or malformed vectors are INCOMPLETE, never PASS', () => {
-  for (const c of [{ slots: ['hero'] }, { h1: 0 }, { lang: 'ar' }, { dir: 'rtl' }]) {
-    const r = compareIntegrity({ probe: clean, page: clean, jsOff: run({}, c), scope });
-    assert.deepEqual([r.status, r.pass, r.mismatches[0].check], ['INCOMPLETE', false, 'content'], `JS-off content ${JSON.stringify(c)}`);
+test('R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS', () => {
+  for (const c of [{ slots: [['hero', 'Welcome home']] }, { slots: [['hero', 'Welcome home'], ['lede', '']] }, { headings: [[1, 'Loading']] }, { headings: [] }, { h1: 0 }, { lang: 'ar' }, { dir: 'rtl' }]) {
+    const r = cmp({ probe: clean, page: clean, jsOff: run({}, c) });
+    assert.deepEqual([r.status, r.pass, r.mismatches[0]?.check], ['INCOMPLETE', false, 'content'], `JS-off content ${JSON.stringify(c)}`);
   }
-  assert.equal(compareIntegrity({ probe: clean, page: run({}, { slots: ['hero'] }), jsOff: clean, scope }).status, 'integrity mismatch', 'worlds see different content');
-  for (const bad of [null, { vector: null, content }, { vector: { ...vector, glass: '0' }, content }, { vector: { ...vector, reflowFail: undefined }, content }, { vector, content: null }, { vector: { glass: 0, reflowPass: true, scrolledText: 0 }, content }]) {
+  assert.equal(cmp({ probe: clean, page: run({}, { slots: [['hero', 'Welcome home']] }), jsOff: clean }).status, 'integrity mismatch', 'worlds see different content');
+  assert.equal(cmp({ probe: clean, page: run({ glass: 1 }), jsOff: run({}, { h1: 0 }) }).status, 'integrity mismatch', 'a tampering sign outranks INCOMPLETE');
+  const old = { slots: ['hero', 'lede'], h1: 1, lang: 'en', dir: 'ltr' };
+  for (const bad of [null, { vector: null, content }, { vector: { ...vector, glass: '0' }, content }, { vector: { ...vector, reflowFail: undefined }, content }, { vector: { ...vector, horizontalOverflow: 0 }, content }, { vector: { ...vector, clipped: {} }, content }, { vector: { ...vector, accentRatio: NaN }, content }, { vector: { ...vector, contrastChecked: undefined }, content }, { vector, content: null }, { vector, content: old }, { vector: { glass: 0, reflowPass: true, scrolledText: 0 }, content }]) {
     for (const which of ['probe', 'page', 'jsOff']) {
-      const r = compareIntegrity({ probe: clean, page: clean, jsOff: clean, [which]: bad, scope });
+      const r = cmp({ probe: clean, page: clean, jsOff: clean, [which]: bad });
       assert.deepEqual([r.status, r.pass], ['INCOMPLETE', false], `${which} ${JSON.stringify(bad)?.slice(0, 60)}`);
     }
   }
-  assert.deepEqual([compareIntegrity({ probe: clean, page: clean, jsOff: clean, tamperSigns: null, scope }).status], ['INCOMPLETE'], 'a native check that could not run is incomplete');
+  for (const signs of [null, undefined, 'none', {}]) assert.equal(compareIntegrity({ probe: clean, page: clean, jsOff: clean, tamperSigns: signs, scope }).status, 'INCOMPLETE', `R13 N19: tamperSigns ${String(signs)} is incomplete`);
+  assert.equal(compareIntegrity({ probe: clean, page: clean, jsOff: clean, scope }).status, 'INCOMPLETE', 'R13 N19: an omitted native check has no default');
 });
 
-test('R12 M21: a JavaScript-off difference is excused only by an entry with the check, this scope, a reason and a qaGate or approver reviewer', () => {
+test('R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS', () => {
   const off = run({ reflowFail: true });
   const entry = { ...scope, check: 'reflowFail', reason: 'the menu collapses only once its script loads', reviewer: 'Amin' };
-  const ok = compareIntegrity({ probe: clean, page: clean, jsOff: off, handoff: { ...roles, jsOffDifferences: [entry] }, scope });
+  const ok = cmp({ probe: clean, page: clean, jsOff: off, handoff: { ...roles, jsOffDifferences: [entry] } });
   assert.deepEqual([ok.pass, ok.expectedDifferences.map(d => [d.check, d.reason, d.reviewer])], [true, [['reflowFail', entry.reason, 'Amin']]]);
   for (const bad of [{ ...entry, reviewer: undefined }, { ...entry, reviewer: 'Writer' }, { ...entry, reason: ' ' }, { ...entry, state: 'error' }, { ...entry, lang: 'ar' }, { ...entry, screen: undefined }, { ...entry, check: 'glass' }]) {
-    assert.equal(compareIntegrity({ probe: clean, page: clean, jsOff: off, handoff: { ...roles, jsOffDifferences: [bad] }, scope }).pass, false, `entry ${JSON.stringify(bad)} excuses nothing`);
+    assert.equal(cmp({ probe: clean, page: clean, jsOff: off, handoff: { ...roles, jsOffDifferences: [bad] } }).pass, false, `entry ${JSON.stringify(bad)} excuses nothing`);
   }
-  const contentOk = compareIntegrity({ probe: clean, page: clean, jsOff: run({}, { slots: ['hero'] }), handoff: { ...roles, jsOffDifferences: [{ ...scope, check: 'content', reason: 'lede is written by script', reviewer: 'Fadel' }] }, scope });
-  assert.equal(contentOk.status, 'PASS', 'a reviewed content difference is recorded');
+  const waived = cmp({ probe: clean, page: clean, jsOff: run({ glass: 3 }, { slots: [['hero', 'Welcome home']] }), handoff: { ...roles, jsOffDifferences: [{ ...scope, check: 'content', reason: 'lede is written by script', reviewer: 'Fadel' }] } });
+  assert.deepEqual([waived.status, waived.pass], ['INCOMPLETE', false], 'R13 N14: a reviewed content waiver is recorded but never PASS');
+  assert.deepEqual(waived.expectedDifferences.map(d => [d.check, d.reviewer]), [['content', 'Fadel']], 'the waiver is kept as evidence');
+  assert.match(waived.incomplete.join(' '), /reviewed waiver recorded/);
 });
 
 test('R12 M13: a non-finite or decreasing rAF reading counts as a loop', () => {
@@ -84,11 +104,16 @@ test('R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on 
   assert.match(source, /catch \(e\) \{ return \{ scope, status: 'INCOMPLETE', pass: false/);
   assert.match(source, /ev\.checks\.integrity = await integrityFor\(page, pageScope\);/);
   assert.match(source, /const integrity = await integrityFor\(st\.page, scopeOf\(st\)\);/);
-  assert.match(source, /&& frames\.pass && integrity\.pass && stateResult\.focusFailures/);
+  assert.match(source, /&& frames\.pass && stylesheets\.pass && integrity\.pass && stateResult\.focusFailures/);
   assert.match(source, /if \(!ev\.checks\.integrity\.pass\) fail = true;/);
   for (const k of Object.keys(VECTOR)) assert.match(source, new RegExp(`\\b${k}: `), `the measured vector carries ${k}`);
-  assert.match(source, /await rm\.addInitScript\(rafCounterInit\);/);
+  assert.match(source, /await c\.addInitScript\(rafCounterInit\);/);
   assert.match(source, /const rafLoop = rafLoopFrom\(raf1, raf2\);/);
+  // R13 N18: the positional page and every declared state use the same hardened reduced-motion routine.
+  assert.match(source, /ev\.checks\.reducedMotion = await motionFor\(page\);/);
+  assert.match(source, /const reducedMotion = await motionFor\(st\.page\);/);
+  assert.match(source, /&& widths\.pass && reducedMotion\.pass && doc\.lang/);
+  assert.doesNotMatch(source, /rmState/, 'the weaker per-state routine is gone');
 });
 
 test('R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)', { skip: !haveChrome && 'test-only deps or local Chrome absent' }, async () => {
@@ -108,9 +133,9 @@ test('R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off 
     const [gOn, gOff] = [(await on.evaluate(designProbe)).glass, (await off.evaluate(designProbe)).glass];
     assert.ok(gOff > gOn, `JS off shows more glass (${gOff} > ${gOn})`);
     const [cOn, cOff] = [await on.evaluate(contentProbe), await off.evaluate(contentProbe)];
-    assert.deepEqual([cOn.slots, cOff.slots], [[], ['lede']], 'the content probe sees the slot a script removes');
-    assert.equal(compareIntegrity({ probe: run({ glass: gOn }, cOn), page: run({ glass: gOn }, cOn), jsOff: run({ glass: gOff }, cOff), scope }).status, 'INCOMPLETE', 'JS-off content differs, so its metrics prove nothing');
-    assert.equal(compareIntegrity({ probe: run({ glass: gOn }), page: run({ glass: gOn }), jsOff: run({ glass: gOff }), scope }).status, 'integrity mismatch');
+    assert.deepEqual([cOn.slots, cOff.slots], [[], [['lede', 'g']]], 'the content probe sees the slot (and its text) a script removes');
+    assert.equal(cmp({ probe: run({ glass: gOn }, cOn), page: run({ glass: gOn }, cOn), jsOff: run({ glass: gOff }, cOff) }).status, 'INCOMPLETE', 'JS-off content differs, so its metrics prove nothing');
+    assert.equal(cmp({ probe: run({ glass: gOn }), page: run({ glass: gOn }), jsOff: run({ glass: gOff }) }).status, 'integrity mismatch');
     await page.setContent('<main><h1>x</h1><p style="color:#777;background:#888">low</p><p style="color:#000;background:#fff">ok</p></main>');
     const ct = await page.evaluate(contrastProbe);
     assert.equal(ct.contrastFailures, 1, 'the contrast diagnostic counts low-contrast text with JavaScript off too');

@@ -37,8 +37,8 @@ const launcherBoundary = '"/workspace/design-output/$FANNAN_PROJECT"/*)';
 if (!readFileSync(join(task, 'release/tools/launcher-impeccable.sh.internal'), 'utf8').includes(launcherBoundary)) throw Error('production launcher boundary changed');
 patch(join(tools, 'launcher-impeccable.sh.internal'), launcherBoundary, `${JSON.stringify(realpathSync(root) + '/')}"$FANNAN_PROJECT"/*)`);
 const missingBinary = 'impeccable (Fannan launcher): pinned binary missing; no download fallback';
-const runChecker = (evidenceDir, quiet = false) => {
-  const r = spawnSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidenceDir, 'test', handoff], { env, encoding: 'utf8' });
+const runChecker = (evidenceDir, quiet = false, extra = []) => {
+  const r = spawnSync(process.execPath, [join(tools, 'pre-handoff-check.mjs'), design, html, evidenceDir, 'test', handoff, ...extra], { env, encoding: 'utf8' });
   if (!quiet) { process.stdout.write(r.stdout); process.stderr.write(r.stderr); }
   const result = JSON.parse(readFileSync(join(evidenceDir, 'evidence.json'), 'utf8'));
   // CODEX-R3-03: the full gate must stop at the missing pinned binary (launcher exit 3), not at any other detector error.
@@ -105,10 +105,36 @@ status = status2;
 if (status !== 1 || !second.checks.contract.pass || second.checks.states.length !== 1 || !second.checks.states[0].pass || second.checks.impeccable.pass) throw Error('expected valid contract and all applicable state browser checks, with pinned binary blocking');
 if (!second.checks.widths?.pass || second.checks.states[0].widths?.results.map(r => r.width).join() !== '1440,320' || !second.checks.states[0].widths.pass) throw Error('R8: declared desktop width 1440 and 320 px reflow must be screened on the page and the state');
 // R12 M18: the claims VERIFICATION.md makes about this run are asserted here, not inferred.
-const claims = { integrity: second.checks.integrity?.status, stateIntegrity: second.checks.states[0].integrity?.status, glassSource: second.checks.glassSource?.pass, accent: second.checks.accent?.status, stateAccent: second.checks.states[0].accent?.status, frames: second.checks.frames?.status, spacingExceptions: second.checks.spacingExceptions?.status, reflowCandidates: second.checks.reflowCandidates?.status };
-console.log('R12 fixture claims: ' + JSON.stringify(claims));
-if (!second.checks.integrity?.pass || !second.checks.states[0].integrity?.pass || second.checks.glassSource?.pass !== true || !second.checks.accent?.pass || second.checks.accent.status !== 'PASS' || !second.checks.states[0].accent?.pass || second.checks.states[0].accent.status !== 'PASS' || !second.checks.frames?.pass || !second.checks.spacingExceptions?.pass) throw Error('R12 M18: integrity (page and state), glassSource, accent (page and state), frames and spacingExceptions must PASS on the valid fixture: ' + JSON.stringify(claims));
+const claims = { integrity: second.checks.integrity?.status, stateIntegrity: second.checks.states[0].integrity?.status, glassSource: second.checks.glassSource?.pass, accent: second.checks.accent?.status, stateAccent: second.checks.states[0].accent?.status, frames: second.checks.frames?.status, spacingExceptions: second.checks.spacingExceptions?.status, reflowCandidates: second.checks.reflowCandidates?.status, stylesheets: second.checks.stylesheets?.pass, stateStylesheets: second.checks.states[0].stylesheets?.pass, reducedMotion: second.checks.reducedMotion?.pass, stateReducedMotion: second.checks.states[0].reducedMotion?.pass, stateRafCounted: Number.isFinite(second.checks.states[0].reducedMotion?.rafCallsOver700ms) };
+console.log('R12/R13 fixture claims: ' + JSON.stringify(claims));
+if (!second.checks.integrity?.pass || !second.checks.states[0].integrity?.pass || second.checks.glassSource?.pass !== true || !second.checks.accent?.pass || second.checks.accent.status !== 'PASS' || !second.checks.states[0].accent?.pass || second.checks.states[0].accent.status !== 'PASS' || !second.checks.frames?.pass || !second.checks.spacingExceptions?.pass || !claims.stylesheets || !claims.stateStylesheets || !claims.reducedMotion || !claims.stateReducedMotion || !claims.stateRafCounted) throw Error('R12 M18, R13 N07/N18: integrity (page and state), glassSource, accent (page and state), frames and spacingExceptions must PASS on the valid fixture: ' + JSON.stringify(claims));
 if (process.env.FANNAN_FIXTURE_EVIDENCE_COPY) cpSync(join(evidence2, 'evidence.json'), process.env.FANNAN_FIXTURE_EVIDENCE_COPY);
+// R13 N05/N06: executed negative runs of the frames, spacing-exception and per-state integrity gates (not source regexes).
+const original = readFileSync(html, 'utf8');
+const negative = {};
+writeFileSync(html, original.replace('</main>', '<iframe title="embedded note" srcdoc="<p>note</p>"></iframe></main>'));
+const { result: framed } = runChecker(join(output, 'evidence-frame'), true);
+const { result: framedWire } = runChecker(join(output, 'evidence-frame-wireframe'), true, ['--phase=wireframe']);
+negative.frames = { handoff: framed.checks.frames?.status, statePass: framed.checks.states[0]?.frames?.pass, wireframe: framedWire.checks.frames?.status };
+if (framed.checks.frames?.status !== 'FAIL' || framed.checks.frames.pass !== false || framed.pass || framed.checks.states[0]?.frames?.pass !== false || framedWire.checks.frames?.status !== 'DEFERRED') throw Error('R13 N05: a same-origin srcdoc frame must FAIL the handoff (page and state) and be DEFERRED in a wireframe: ' + JSON.stringify(negative.frames));
+writeFileSync(html, original.replace('<h1 data-copy-slot="headline">', '<h1 id="title" data-copy-slot="headline" data-fannan-spacing-exception="optical alignment of the title" style="margin-left:3px">'));
+const { result: excused } = runChecker(join(output, 'evidence-spacing-unapproved'), true);
+writeFileSync(handoff, JSON.stringify({ ...authored, spacingExceptions: [{ screen: 'home', state: 'default', lang: 'en', id: 'title', reason: 'optical alignment of the title', reviewer: 'approver-fixture' }] }));
+const { result: approvedExc } = runChecker(join(output, 'evidence-spacing-approved'), true);
+negative.spacingExceptions = { withoutEntry: excused.checks.spacingExceptions?.status, unresolved: excused.checks.spacingExceptions?.unresolved?.length, withEntry: approvedExc.checks.spacingExceptions?.status, contractWithEntry: approvedExc.checks.contract?.pass };
+if (excused.checks.spacingExceptions?.status !== 'FAIL' || excused.pass || approvedExc.checks.spacingExceptions?.status !== 'PASS' || !approvedExc.checks.contract?.pass) throw Error('R13 N05: a spacing exception without an approver entry must FAIL, and PASS with a matching entry: ' + JSON.stringify(negative.spacingExceptions));
+writeFileSync(html, original);
+const statePage = join(output, 'loading.html');
+writeFileSync(statePage, original.replace('</main>', '<div id="wide" style="width:2000px;height:1px"></div></main><script>document.getElementById("wide").remove();</script>'));
+const twoStates = JSON.parse(JSON.stringify(authored));
+twoStates.screens[0].states[states.indexOf('loading')] = { state: 'loading', lang: 'en', dir: 'ltr', page: statePage, frame: { path: shot, width: 1440, version: 'v1', sha256: hash } };
+writeFileSync(handoff, JSON.stringify(twoStates));
+const { result: stateOnly } = runChecker(join(output, 'evidence-state-integrity'), true);
+const loadingState = stateOnly.checks.states.find(x => x.state === 'loading'), defaultState = stateOnly.checks.states.find(x => x.state === 'default');
+negative.stateIntegrity = { positional: stateOnly.checks.integrity?.status, defaultState: defaultState?.integrity?.status, loadingState: loadingState?.integrity?.status, loadingMismatch: loadingState?.integrity?.mismatches?.map(m => m.check), loadingPass: loadingState?.pass };
+if (stateOnly.checks.integrity?.status !== 'PASS' || defaultState?.integrity?.status !== 'PASS' || loadingState?.integrity?.status !== 'integrity mismatch' || loadingState.pass !== false || stateOnly.pass) throw Error('R13 N06: an integrity mismatch on a non-positional state must fail that state while the positional page passes: ' + JSON.stringify(negative.stateIntegrity));
+console.log('R13 fixture negative runs: ' + JSON.stringify(negative));
+writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
 const { result: mutated } = runChecker(evidence3, true);

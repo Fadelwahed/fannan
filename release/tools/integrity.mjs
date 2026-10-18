@@ -12,6 +12,10 @@
 //     that check for this screen, state and lang with a reason and a qaGate/approver reviewer.
 // A vector that is missing a field or holds a non-finite or negative count is INCOMPLETE (never PASS). Contrast is a
 // diagnostic computed by contrastProbe (axe does not complete with page scripts disabled in Chrome 155).
+// R13 (panel round 13, threat model in release/FANNAN-PLAN.md): the vector is the canonical gate result (N11: every
+// hard-fail input, per-width maps, ratios and scrolled-viewport accent; N12: contrast unknown and coverage), the
+// content record carries slot and heading text (N13), a content difference is never PASS even with a reviewed
+// waiver (N14: INCOMPLETE), tamperSigns is required (N19) and call/apply/bind/Reflect.apply are native-checked (N17).
 // Browser side, page world: returns the names of probe functions that are no longer native.
 export function nativeCheck() {
   const toString = Function.prototype.toString;
@@ -31,6 +35,11 @@ export function nativeCheck() {
     'Element.prototype.scrollWidth (get)': desc(Element.prototype, 'scrollWidth')?.get,
     'CanvasRenderingContext2D.prototype.fillStyle (set)': desc(CanvasRenderingContext2D.prototype, 'fillStyle')?.set,
     'Array.prototype.filter': Array.prototype.filter,
+    // R13 N17: the rAF wrapper binds call at install time; patched invocation helpers are a tamper sign as well.
+    'Function.prototype.call': Function.prototype.call,
+    'Function.prototype.apply': Function.prototype.apply,
+    'Function.prototype.bind': Function.prototype.bind,
+    'Reflect.apply': Reflect.apply,
   };
   return Object.entries(fns).filter(([, f]) => !native(f)).map(([name]) => name);
 }
@@ -58,10 +67,16 @@ export function contrastProbe() {
   return { contrastFailures: failures, contrastUnknown: unknown, contrastChecked: checked };
 }
 
-// Browser side: the visible copy slots, h1 count, lang and dir that make two renderings equivalent content.
+// Browser side: what makes two renderings equivalent content. R13 N13: each visible copy slot with its normalised
+// visible text, every visible heading with its level and text (open shadow roots included), the h1 count, lang and
+// dir; a JavaScript-off skeleton with empty fixed-size slots is therefore not equivalent.
 export function contentProbe() {
   const shown = e => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; };
-  return { slots: [...new Set([...document.querySelectorAll('[data-copy-slot]')].filter(shown).map(e => e.getAttribute('data-copy-slot')))].sort(), h1: document.querySelectorAll('h1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
+  const norm = x => (x || '').replace(/\s+/g, ' ').trim();
+  const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
+  const slots = all.filter(e => e.hasAttribute('data-copy-slot') && shown(e)).map(e => [e.getAttribute('data-copy-slot'), norm(e.innerText)]).sort((a, b) => (a[0] + '\u0000' + a[1]).localeCompare(b[0] + '\u0000' + b[1]));
+  const headings = all.filter(e => /^H[1-6]$/.test(e.tagName) && shown(e)).map(e => [Number(e.tagName[1]), norm(e.innerText)]);
+  return { slots, headings, h1: all.filter(e => e.tagName === 'H1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
 }
 
 // R12 M13: the reduced-motion rAF counter, installed by addInitScript in every frame. The counter is private (a
@@ -73,41 +88,64 @@ export function rafCounterInit() {
   const lock = (o, k, d) => { try { Object.defineProperty(o, k, { configurable: false, enumerable: false, ...d }); } catch {} };
   if (window === window.top) { lock(window, '__fannanRafTick', { value: () => { count++; }, writable: false }); lock(window, '__raf', { get: () => count }); }
   let tick = () => {}; try { tick = window.top.__fannanRafTick || tick; } catch {}
-  const native = window.requestAnimationFrame;
-  lock(window, 'requestAnimationFrame', { value: function requestAnimationFrame(cb) { try { tick(); } catch {} return native.call(window, cb); }, writable: false });
+  // R13 N17: the native rAF is bound at install time, so no later lookup of Function.prototype.call can capture it.
+  const callNative = Function.prototype.call.bind(window.requestAnimationFrame);
+  lock(window, 'requestAnimationFrame', { value: function requestAnimationFrame(cb) { try { tick(); } catch {} return callNative(window, cb); }, writable: false });
 }
 
 // R12 M13: a rAF reading that is not a finite non-negative number (tampering or a missing counter) counts as a loop.
 export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Number.isFinite(after) && after >= before) || after - before > 10;
 
-export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', spacingOffScale: 'count', horizontalOverflow: 'flag', clipped: 'count', offscreenLeft: 'count', unreachable: 'count', scrolledText: 'count', unmeasured: 'count', reflowFail: 'flag', contrastFailures: 'count' };
+// R13 N11/N12: the vector is the canonical gate result. Types: count (non-negative integer), flag (boolean), text
+// (string or null), ratio (finite non-negative number or null; null means the gate could not measure it), widths
+// (per-width counts keyed by CSS width, so {1440:1, 320:0} and {1440:0, 320:1} differ) and coverage (a count that
+// must match between worlds but is never "worse"; zero JavaScript-off contrast coverage makes the run INCOMPLETE).
+export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage' };
 export const INTEGRITY_CHECKS = [...Object.keys(VECTOR), 'content'];
-const validVector = v => v && typeof v === 'object' && Object.entries(VECTOR).every(([k, t]) => t === 'count' ? Number.isInteger(v[k]) && v[k] >= 0 : t === 'flag' ? typeof v[k] === 'boolean' : typeof v[k] === 'string' || v[k] === null);
-const validContent = c => c && Array.isArray(c.slots) && c.slots.every(x => typeof x === 'string') && Number.isInteger(c.h1) && c.h1 >= 0 && typeof c.lang === 'string' && typeof c.dir === 'string';
-const worseOff = (k, on, off) => VECTOR[k] === 'count' ? off[k] > on[k] : VECTOR[k] === 'flag' ? off[k] && !on[k] : off[k] !== on[k];
+const isCount = x => Number.isInteger(x) && x >= 0;
+const validField = (t, x) => t === 'count' || t === 'coverage' ? isCount(x) : t === 'flag' ? typeof x === 'boolean' : t === 'text' ? typeof x === 'string' || x === null : t === 'ratio' ? x === null || (typeof x === 'number' && Number.isFinite(x) && x >= 0) : !!x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length > 0 && Object.entries(x).every(([w, n]) => /^\d+$/.test(w) && isCount(n));
+const validVector = v => !!v && typeof v === 'object' && Object.entries(VECTOR).every(([k, t]) => validField(t, v[k]));
+const validContent = c => !!c && Array.isArray(c.slots) && c.slots.every(x => Array.isArray(x) && x.length === 2 && x.every(y => typeof y === 'string')) && Array.isArray(c.headings) && c.headings.every(x => Array.isArray(x) && x.length === 2 && Number.isInteger(x[0]) && typeof x[1] === 'string') && isCount(c.h1) && typeof c.lang === 'string' && typeof c.dir === 'string';
+const canon = x => JSON.stringify(x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort((a, b) => a - b).map(k => [k, x[k]]) : x);
+const worseOff = (k, on, off) => {
+  const t = VECTOR[k], a = on[k], b = off[k];
+  if (t === 'count') return b > a;
+  if (t === 'flag') return b && !a;
+  if (t === 'text') return b !== a;
+  if (t === 'ratio') return (a !== null && b === null) || (a !== null && b !== null && b > a + 1e-9);
+  if (t === 'widths') return canon(Object.keys(a).sort()) !== canon(Object.keys(b).sort()) || Object.keys(b).some(w => b[w] > a[w]);
+  return false; // coverage
+};
 const nonempty = x => typeof x === 'string' && !!x.trim();
 
 // Node side. probe = isolated world, page = page world, jsOff = isolated world with page scripts disabled; each is
-// { vector, content }. tamperSigns from nativeCheck; scope = { screen, state, lang } of the rendering.
-export function compareIntegrity({ probe, page, jsOff, tamperSigns = [], handoff, scope = { screen: null, state: null, lang: null } }) {
-  const base = { scope, probeWorld: probe, pageWorld: page, jsOff, tamperSigns };
+// { vector, content }. tamperSigns from nativeCheck (R13 N19: required; omitted, undefined or null is INCOMPLETE);
+// scope = { screen, state, lang } of the rendering.
+export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, scope = { screen: null, state: null, lang: null } }) {
+  const base = { scope, probeWorld: probe, pageWorld: page, jsOff, tamperSigns: tamperSigns ?? null };
   const incomplete = [probe, page, jsOff].flatMap((run, i) => [validVector(run?.vector) ? null : `${['probe world', 'page world', 'JavaScript off'][i]} vector incomplete`, validContent(run?.content) ? null : `${['probe world', 'page world', 'JavaScript off'][i]} content record incomplete`]).filter(Boolean);
   if (!Array.isArray(tamperSigns)) incomplete.push('native-function check incomplete');
   if (incomplete.length) return { ...base, mismatches: [], incomplete, expectedDifferences: [], postScriptDifferences: [], status: 'INCOMPLETE', pass: false };
-  const mismatches = [], expected = [], recorded = [];
+  const mismatches = [], expected = [], recorded = [], notes = [];
   for (const name of tamperSigns) mismatches.push({ check: 'native', detail: `${name} is not native in the page world` });
-  for (const k of Object.keys(VECTOR)) if (page.vector[k] !== probe.vector[k]) mismatches.push({ check: k, detail: `page world ${JSON.stringify(page.vector[k])}, probe world ${JSON.stringify(probe.vector[k])}` });
-  if (JSON.stringify(page.content) !== JSON.stringify(probe.content)) mismatches.push({ check: 'content', detail: 'page world and probe world see different content' });
+  for (const k of Object.keys(VECTOR)) if (canon(page.vector[k]) !== canon(probe.vector[k])) mismatches.push({ check: k, detail: `page world ${canon(page.vector[k])}, probe world ${canon(probe.vector[k])}` });
+  if (canon(page.content) !== canon(probe.content)) mismatches.push({ check: 'content', detail: 'page world and probe world see different content' });
   const roles = [handoff?.settings?.roles?.qaGate, handoff?.settings?.roles?.approver].filter(nonempty);
   const explain = check => (Array.isArray(handoff?.jsOffDifferences) ? handoff.jsOffDifferences : []).find(d => d?.check === check && d.screen === scope.screen && d.state === scope.state && d.lang === scope.lang && nonempty(d.reason) && roles.includes(d.reviewer));
   const differences = [];
-  if (JSON.stringify(jsOff.content) !== JSON.stringify(probe.content)) differences.push({ check: 'content', detail: `with JavaScript off the content differs (slots ${jsOff.content.slots.join(',') || 'none'} vs ${probe.content.slots.join(',') || 'none'}, h1 ${jsOff.content.h1} vs ${probe.content.h1}, ${jsOff.content.lang}/${jsOff.content.dir} vs ${probe.content.lang}/${probe.content.dir})` });
+  const sameContent = canon(jsOff.content) === canon(probe.content);
+  if (!sameContent) differences.push({ check: 'content', detail: `with JavaScript off the content differs (slots ${jsOff.content.slots.length} vs ${probe.content.slots.length}, headings ${jsOff.content.headings.length} vs ${probe.content.headings.length}, h1 ${jsOff.content.h1} vs ${probe.content.h1}, ${jsOff.content.lang}/${jsOff.content.dir} vs ${probe.content.lang}/${probe.content.dir}; text compared per slot and heading)` });
   for (const k of Object.keys(VECTOR)) {
-    if (worseOff(k, probe.vector, jsOff.vector)) differences.push({ check: k, detail: `with JavaScript off ${k} is ${JSON.stringify(jsOff.vector[k])} vs ${JSON.stringify(probe.vector[k])}` });
+    if (worseOff(k, probe.vector, jsOff.vector)) differences.push({ check: k, detail: `with JavaScript off ${k} is ${canon(jsOff.vector[k])} vs ${canon(probe.vector[k])}` });
     else if (worseOff(k, jsOff.vector, probe.vector)) recorded.push({ check: k, detail: `the scripted page is worse than JavaScript off (${k}); failed by the main check` });
   }
-  let contentUnexplained = false;
-  for (const d of differences) { const e = explain(d.check); if (e) expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); else { mismatches.push({ ...d, source: 'js-off' }); if (d.check === 'content') contentUnexplained = true; } }
-  const status = contentUnexplained ? 'INCOMPLETE' : mismatches.length ? 'integrity mismatch' : 'PASS';
-  return { ...base, mismatches, incomplete: contentUnexplained ? ['JavaScript-off content is not equivalent; its metrics prove nothing'] : [], expectedDifferences: expected, postScriptDifferences: recorded, status, pass: status === 'PASS' };
+  // R13 N12: JavaScript-off text that could not be contrast-checked at all, where the scripted page could, proves nothing.
+  if (jsOff.vector.contrastChecked === 0 && probe.vector.contrastChecked > 0) notes.push('JavaScript-off contrast coverage is zero; its contrast diagnostic proves nothing');
+  for (const d of differences) { const e = explain(d.check); if (e) expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); else mismatches.push({ ...d, source: 'js-off' }); }
+  // R12 M08, R13 N14: non-equivalent JavaScript-off content is never PASS. An unexplained difference is a mismatch;
+  // a reviewed `content` entry is kept as evidence, but the JavaScript-off metrics stay unverified (INCOMPLETE).
+  if (!sameContent) notes.push(explain('content') ? 'JavaScript-off content differs (reviewed waiver recorded); its metrics are unverified' : 'JavaScript-off content is not equivalent; its metrics prove nothing');
+  // A between-world or native mismatch (a tampering sign) outranks INCOMPLETE; both fail.
+  const status = mismatches.some(m => m.source !== 'js-off') ? 'integrity mismatch' : notes.length ? 'INCOMPLETE' : mismatches.length ? 'integrity mismatch' : 'PASS';
+  return { ...base, mismatches, incomplete: notes, expectedDifferences: expected, postScriptDifferences: recorded, status, pass: status === 'PASS' };
 }
