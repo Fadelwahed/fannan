@@ -130,7 +130,7 @@ test('R22-GPT-02: glyphRatio: punctuation size is relative to the font: a thin l
   assert.deepEqual([visibility.zoneOf(2.5, 4.5), visibility.zoneOf(3.6, 4.5), visibility.zoneOf(4.54, 4.5), visibility.zoneOf(7.9, 4.5), visibility.zoneOf(3.4, 3), visibility.zoneOf(null, 4.5)], ['fail', 'incomplete', 'incomplete', 'pass', 'pass', 'incomplete']);
 });
 
-test('R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass; a real caption cut by the same crop still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+test('R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass, and the visibility backstop does not count fallback text; a real caption cut by the same crop still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const crop = inner => W(`<div style="overflow:hidden;height:200px;max-width:900px;position:relative">${inner}</div><p>Body copy.</p>`);
   assert.deepEqual({
@@ -140,6 +140,9 @@ test('R22-GPT-03: real Chrome: fallback content inside video, audio, object and 
     audio: await gate({ default: W('<audio>Your browser does not support audio.</audio><p>Body copy.</p>') }),
     captionCut: await gate({ default: crop('<video muted style="display:block;width:100%;min-width:500px;aspect-ratio:16/10;background:#333">Fallback.</video><p style="position:absolute;top:185px;left:20px;margin:0;font-size:24px">A caption cut by the crop</p>') }),
   }, { video: { pass: true, rules: [] }, videoNested: { pass: true, rules: [] }, canvas: { pass: true, rules: [] }, audio: { pass: true, rules: [] }, captionCut: { pass: false, rules: ['partly clipped'] } });
+  // the visibility backstop does not count fallback text as on-screen text either (it was unmeasured: no box)
+  const vis = await visibility.visibilityScan((await open(crop('<video muted style="display:block;width:100%;min-width:500px;aspect-ratio:16/10;background:#333">Your browser does not support this video.</video>'))).probe);
+  assert.deepEqual({ measured: vis.textMeasured, unmeasured: vis.textUnmeasured }, { measured: 2, unmeasured: 0 }); // the h1 and the body copy
 }));
 
 test('R22-GPT-04, R22-GPT-05: real Chrome: prints are typed: an icon-only link (aria-label), a checkbox named by aria-labelledby and a button hidden at 320 are lost even when the same words remain as text; a control shown at 320 under the same role and name passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {

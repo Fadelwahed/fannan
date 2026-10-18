@@ -134,6 +134,7 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   };
   const named = el => (el.hasAttribute('aria-label') && el.getAttribute('aria-label').trim()) || el.hasAttribute('aria-labelledby');
   const idOf = (key, t) => { let id = R.ids.get(key); if (!id) { id = 't' + R.next++; R.ids.set(key, id); } R.byId.set(id, t); return id; };
+  const fallback = el => /^(VIDEO|AUDIO|OBJECT|CANVAS)$/.test(el.tagName);
   // every target of the document (composed tree), in document order
   const collect = () => {
     const out = [];
@@ -146,12 +147,14 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
       if (s.display !== 'none' && (!boxed || boxed.checkVisibility())) {
         if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) { if (controlShows(el) && s.visibility === 'visible' && el.getClientRects().length) out.push({ kind: 'control', el, id: idOf(el, { kind: 'control', el }) }); }
         else {
-          let own = false;
-          if (s.visibility === 'visible') for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) { own = true; out.push({ kind: 'text', node: n, el, id: idOf(n, { kind: 'text', node: n, el }) }); }
+          // R22-GPT-03 (Fadel's tiebreak): the fallback content of video, audio, object and canvas is not rendered, so it
+          // is not text on screen (neither its own text nor its descendants are targets)
+          let own = fallback(el);
+          if (s.visibility === 'visible' && !own) for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) { own = true; out.push({ kind: 'text', node: n, el, id: idOf(n, { kind: 'text', node: n, el }) }); }
           if (!own && named(el) && s.visibility === 'visible' && el.getClientRects().length && !el.closest?.('[hidden]')) out.push({ kind: 'name', el, id: idOf(el, { kind: 'name', el }) });
         }
         if (el.shadowRoot) visit(el.shadowRoot);
-        visit(el);
+        if (!fallback(el)) visit(el);
       }
     } };
     if (document.body) visit(document.body);
