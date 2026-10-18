@@ -171,6 +171,44 @@ test('R11 (Asad note): left and right margins are screened too; auto margins are
     assert.deepEqual(logical.spacingOffScale.map(v => `${v.property}=${v.value}`).sort(), ['marginLeft=13px', 'marginLeft=9px'].sort(), 'logical margins are measured (they compute to left/right); 0 passes');
     const exc = await run('<p data-fannan-spacing-exception="optical alignment of the logo mark" style="margin-left:3px">a</p><p data-fannan-spacing-exception=" " style="margin-left:5px">b</p>');
     assert.deepEqual(exc.spacingOffScale.map(v => v.value), ['5px'], 'a blank exception reason does not excuse');
-    assert.deepEqual(exc.spacingExceptions, [{ element: 'p', reason: 'optical alignment of the logo mark', values: ['3px'] }], 'a documented exception is recorded, not silently skipped');
+    assert.deepEqual(exc.spacingExceptions, [{ element: 'p', id: null, reason: 'optical alignment of the logo mark', values: ['3px'] }], 'a documented exception is recorded, not silently skipped');
   } finally { await browser.close(); }
+});
+
+test('R12 M15: margins on html and body are screened too (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { spacingProbe } = await import('../tools/spacing-scale.mjs');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const run = async css => { const page = await browser.newPage(); await page.setContent(`<style>*{margin:0;padding:0}${css}</style><p>a</p>`); const r = await page.evaluate(spacingProbe, ['8px', '1rem', '24px']); await page.close(); return r.spacingOffScale.map(v => `${v.example}:${v.property}=${v.value}`).sort(); };
+    assert.deepEqual(await run('body{margin-left:13px}'), ['body:marginLeft=13px']);
+    assert.deepEqual(await run('html{padding-top:5px}'), ['html:paddingTop=5px']);
+    assert.deepEqual(await run('body{margin:0 24px}'), [], 'on-scale body margins pass');
+  } finally { await browser.close(); }
+});
+
+test('R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches', async () => {
+  const { resolveScoped } = await import('../tools/exceptions.mjs');
+  const home = { screen: 'home', state: 'default', lang: 'en' };
+  const item = { ...home, element: 'p#logo', id: 'logo', reason: 'optical alignment of the logo mark', values: ['3px'] };
+  const roles = [ 'Fadel' ];
+  const ok = resolveScoped({ items: [item], entries: [{ ...home, id: 'logo', reason: 'logo optical alignment', reviewer: 'Fadel' }], roles, phase: 'handoff', what: 'spacingExceptions' });
+  assert.deepEqual([ok.pass, ok.status, ok.items[0].resolved], [true, 'PASS', true]);
+  const reasons = [[[{ ...item, id: null }], []], [[item], []], [[item], [{ ...home, id: 'logo', reason: 'r', reviewer: 'Amin' }]], [[item], [{ ...home, id: 'logo', reason: ' ', reviewer: 'Fadel' }]], [[item], [{ ...home, state: 'error', id: 'logo', reason: 'r', reviewer: 'Fadel' }]], [[{ ...item, screen: null, state: null, lang: null }], [{ ...home, id: 'logo', reason: 'r', reviewer: 'Fadel' }]]];
+  for (const [items, entries] of reasons) {
+    const r = resolveScoped({ items, entries, roles, phase: 'handoff', what: 'spacingExceptions' });
+    assert.deepEqual([r.pass, r.status], [false, 'FAIL'], JSON.stringify([items, entries]).slice(0, 200));
+  }
+  assert.equal(resolveScoped({ items: [item], entries: [], roles, phase: 'wireframe', what: 'spacingExceptions' }).status, 'DEFERRED');
+  const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
+  assert.match(source, /resolveScoped\(\{ items: spacingItems, entries: handoff\?\.spacingExceptions, roles: \[handoff\?\.settings\?\.roles\?\.approver\], phase, what: 'spacingExceptions' \}\)/);
+  assert.match(source, /if \(!ev\.checks\.spacingExceptions\.pass\) fail = true;/);
+  assert.match(source, /\{ scope: pageScope, list: design\.spacingExceptions \}, \.\.\.ev\.checks\.states\.map\(st => \(\{ scope: scopeOf\(st\), list: st\.spacingExceptions \}\)\)/);
+});
+
+test('R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)', () => {
+  const config = JSON.parse(readFileSync(join(release, 'runtime/quality-checks.json'), 'utf8'));
+  assert.doesNotMatch(config.thresholds.spacingOffScaleReason ?? config.spacingOffScaleReason ?? JSON.stringify(config), /Horizontal margins are not counted/);
+  assert.match(JSON.stringify(config), /margin \(left, right, top and bottom, on html and body too\)/);
+  assert.match(JSON.stringify(config), /spacingExceptions entry that names the approver/);
 });

@@ -24,7 +24,7 @@ export function spacingProbe(approved = []) {
   const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'rowGap', 'columnGap'];
   const cssName = { marginLeft: 'margin-left', marginRight: 'margin-right', marginTop: 'margin-top', marginBottom: 'margin-bottom' };
   const off = new Map(), exceptions = [];
-  for (const el of document.querySelectorAll('body *')) {
+  for (const el of document.querySelectorAll('html, body, body *')) { // R12 M15: html and body margins too
     const r = el.getBoundingClientRect(), c = getComputedStyle(el);
     if (!(r.width > 0 && r.height > 0) || c.visibility === 'hidden' || c.display === 'none') continue;
     // R11 panel D1: a documented exception (data-fannan-spacing-exception="<reason>") excuses this element's own
@@ -42,7 +42,7 @@ export function spacingProbe(approved = []) {
       if (excuse) { offHere.push(value); continue; }
       if (!off.has(value)) off.set(value, { value, property: key, example: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') });
     }
-    if (offHere.length) exceptions.push({ element: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : ''), reason: excuse, values: [...new Set(offHere)] });
+    if (offHere.length) exceptions.push({ element: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : ''), id: el.id || null, reason: excuse, values: [...new Set(offHere)] }); // R12 M20: the id resolves it
   }
   return { spacingScale: [...scale].sort(), spacingScaleEm: units.em.map(n => n + 'em'), rootFontSize: rootPx + 'px', spacingOffScale: [...off.values()], spacingExceptions: exceptions };
 }
