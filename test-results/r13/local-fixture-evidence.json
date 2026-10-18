@@ -1,0 +1,798 @@
+{
+ "when": "2026-10-18T02:52:18.013Z",
+ "designMd": "/tmp/fannan-browser-fixture-lakvjj/design-output/test/fixture-DESIGN.md",
+ "page": "/tmp/fannan-browser-fixture-lakvjj/design-output/test/home.html",
+ "checks": {
+  "contract": {
+   "errors": [],
+   "pass": true
+  },
+  "spacingTokens": {
+   "source": {
+    "path": "/tmp/fannan-browser-fixture-lakvjj/design-output/test/tokens.json",
+    "sha256": "8ab02a8a7ac21324736ab8692e9dd6714ab313973269143582d5a910bb410a4e"
+   },
+   "values": [
+    "16px",
+    "32px",
+    "8px"
+   ],
+   "pass": true
+  },
+  "lint": {
+   "errors": 0,
+   "pass": true
+  },
+  "assets": {
+   "brokenImages": [],
+   "failedFonts": [],
+   "pass": true
+  },
+  "design": {
+   "centered": 0,
+   "typeSizes": [
+    "16px",
+    "32px"
+   ],
+   "accent": "rgb(11,61,145)",
+   "accentVar": "--accent",
+   "accentInvalid": [],
+   "accentArea": 3158.25,
+   "accentRatio": 0.0024369212962962964,
+   "accentViewportRatio": 0.0024369212962962964,
+   "gradients": 0,
+   "heroGradient": false,
+   "glass": 0,
+   "glassScopes": {
+    "shadowRoots": 0,
+    "frames": 0,
+    "glassInScopes": 0,
+    "unscannedFrames": []
+   },
+   "iconRows": 0,
+   "purpleBlue": false,
+   "placeholders": false,
+   "h1": 1,
+   "stylesheets": [
+    {
+     "href": "file:///tmp/fannan-browser-fixture-lakvjj/design-output/test/variables.css",
+     "owner": "link",
+     "readable": true
+    },
+    {
+     "href": null,
+     "owner": "style",
+     "readable": true
+    }
+   ],
+   "spacingScale": [
+    "16px",
+    "32px",
+    "8px"
+   ],
+   "spacingScaleEm": [],
+   "rootFontSize": "16px",
+   "spacingOffScale": [],
+   "spacingExceptions": [],
+   "filler": false,
+   "ruleOfThree": false,
+   "basis": "DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required",
+   "pass": true
+  },
+  "accent": {
+   "variable": "--accent",
+   "value": "rgb(11,61,145)",
+   "approvedToken": "colors.primary",
+   "approvedValue": "#0B3D91",
+   "areaBasis": "DOM background-area proxy: approximate; overlapping or transformed boxes are not pixel-measured",
+   "status": "PASS",
+   "message": null,
+   "pass": true
+  },
+  "frames": {
+   "frames": 0,
+   "unscanned": [],
+   "status": "PASS",
+   "note": "axe and the probes do not run inside frames",
+   "pass": true
+  },
+  "stylesheets": {
+   "sheets": 2,
+   "refused": [],
+   "unscanned": [],
+   "pass": true
+  },
+  "axe": {
+   "version": "4.14.0",
+   "targetSizeEnabled": true,
+   "violations": [],
+   "incomplete": [],
+   "pass": true
+  },
+  "custom22": {
+   "tabStops": 1,
+   "targetUnder24": [],
+   "focusNotVisible": [],
+   "focusObscured": [],
+   "keyboardTrapSuspect": false,
+   "pass": true,
+   "note": "focus appearance change is a screening heuristic (settled after transitions; colour-only changes under the configured focusStateContrast (3:1 floor) between states, indicators below it against their backdrop and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review"
+  },
+  "widths": {
+   "results": [
+    {
+     "width": 1440,
+     "documentWidth": 1440,
+     "horizontalOverflow": false,
+     "clipped": [],
+     "offscreenLeft": [],
+     "unreachable": [],
+     "scrolledText": [],
+     "reflowCandidates": [],
+     "unmeasured": [],
+     "unscannedScopes": [],
+     "lang": "en",
+     "dir": "ltr",
+     "purpose": "declared desktop width",
+     "pass": true
+    },
+    {
+     "width": 320,
+     "documentWidth": 320,
+     "horizontalOverflow": false,
+     "clipped": [],
+     "offscreenLeft": [],
+     "unreachable": [],
+     "scrolledText": [],
+     "reflowCandidates": [],
+     "unmeasured": [],
+     "unscannedScopes": [],
+     "lang": "en",
+     "dir": "ltr",
+     "purpose": "desktop accessibility reflow (400% of 1280); not mobile approval",
+     "pass": true
+    }
+   ],
+   "pass": true,
+   "note": "Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision."
+  },
+  "states": [
+   {
+    "screen": "home",
+    "lang": "en",
+    "state": "default",
+    "renderedSha256": "9eef76fbcf6580318646176e0cadf60552388d8b4f1a083ca8ddf6db430c2d53",
+    "approvedSha256": "9eef76fbcf6580318646176e0cadf60552388d8b4f1a083ca8ddf6db430c2d53",
+    "browserVersion": "155.0.8059.84",
+    "axeViolations": [],
+    "axeIncomplete": [],
+    "assets": {
+     "brokenImages": [],
+     "failedFonts": []
+    },
+    "copy": {
+     "errors": [],
+     "pass": true
+    },
+    "centered": 0,
+    "typeSizes": 2,
+    "accentRatio": 0.0024369212962962964,
+    "maxViewportAccent": 0.0024369212962962964,
+    "gradients": 0,
+    "heroGradient": false,
+    "glass": 0,
+    "purpleBlue": false,
+    "iconRows": 0,
+    "spacingOffScale": [],
+    "spacingExceptions": [],
+    "accent": {
+     "variable": "--accent",
+     "value": "rgb(11,61,145)",
+     "approvedToken": "colors.primary",
+     "approvedValue": "#0B3D91",
+     "areaBasis": "DOM background-area proxy: approximate; overlapping or transformed boxes are not pixel-measured",
+     "status": "PASS",
+     "message": null,
+     "pass": true
+    },
+    "frames": {
+     "frames": 0,
+     "unscanned": [],
+     "status": "PASS",
+     "note": "axe and the probes do not run inside frames",
+     "pass": true
+    },
+    "integrity": {
+     "scope": {
+      "screen": "home",
+      "state": "default",
+      "lang": "en"
+     },
+     "probeWorld": {
+      "vector": {
+       "glass": 0,
+       "h1": 1,
+       "placeholders": false,
+       "centered": 0,
+       "typeSizes": 2,
+       "heroGradient": false,
+       "purpleBlue": false,
+       "iconRows": 0,
+       "accent": "rgb(11,61,145)",
+       "accentRatio": 0.0024369212962962964,
+       "maxViewportAccent": 0.0024369212962962964,
+       "filler": false,
+       "ruleOfThree": false,
+       "frames": 0,
+       "stylesheetsUnscanned": 0,
+       "spacingOffScale": 0,
+       "horizontalOverflow": {
+        "320": 0,
+        "1440": 0
+       },
+       "clipped": {
+        "320": 0,
+        "1440": 0
+       },
+       "offscreenLeft": {
+        "320": 0,
+        "1440": 0
+       },
+       "unreachable": {
+        "320": 0,
+        "1440": 0
+       },
+       "scrolledText": {
+        "320": 0,
+        "1440": 0
+       },
+       "unmeasured": {
+        "320": 0,
+        "1440": 0
+       },
+       "unscannedScopes": {
+        "320": 0,
+        "1440": 0
+       },
+       "reflowFail": false,
+       "contrastFailures": 0,
+       "contrastUnknown": 0,
+       "contrastChecked": 3
+      },
+      "content": {
+       "slots": [
+        [
+         "button",
+         "Start"
+        ],
+        [
+         "description",
+         "A service for residents."
+        ],
+        [
+         "headline",
+         "Specific service"
+        ]
+       ],
+       "headings": [
+        [
+         1,
+         "Specific service"
+        ]
+       ],
+       "h1": 1,
+       "lang": "en",
+       "dir": "ltr"
+      }
+     },
+     "pageWorld": {
+      "vector": {
+       "glass": 0,
+       "h1": 1,
+       "placeholders": false,
+       "centered": 0,
+       "typeSizes": 2,
+       "heroGradient": false,
+       "purpleBlue": false,
+       "iconRows": 0,
+       "accent": "rgb(11,61,145)",
+       "accentRatio": 0.0024369212962962964,
+       "maxViewportAccent": 0.0024369212962962964,
+       "filler": false,
+       "ruleOfThree": false,
+       "frames": 0,
+       "stylesheetsUnscanned": 0,
+       "spacingOffScale": 0,
+       "horizontalOverflow": {
+        "320": 0,
+        "1440": 0
+       },
+       "clipped": {
+        "320": 0,
+        "1440": 0
+       },
+       "offscreenLeft": {
+        "320": 0,
+        "1440": 0
+       },
+       "unreachable": {
+        "320": 0,
+        "1440": 0
+       },
+       "scrolledText": {
+        "320": 0,
+        "1440": 0
+       },
+       "unmeasured": {
+        "320": 0,
+        "1440": 0
+       },
+       "unscannedScopes": {
+        "320": 0,
+        "1440": 0
+       },
+       "reflowFail": false,
+       "contrastFailures": 0,
+       "contrastUnknown": 0,
+       "contrastChecked": 3
+      },
+      "content": {
+       "slots": [
+        [
+         "button",
+         "Start"
+        ],
+        [
+         "description",
+         "A service for residents."
+        ],
+        [
+         "headline",
+         "Specific service"
+        ]
+       ],
+       "headings": [
+        [
+         1,
+         "Specific service"
+        ]
+       ],
+       "h1": 1,
+       "lang": "en",
+       "dir": "ltr"
+      }
+     },
+     "jsOff": {
+      "vector": {
+       "glass": 0,
+       "h1": 1,
+       "placeholders": false,
+       "centered": 0,
+       "typeSizes": 2,
+       "heroGradient": false,
+       "purpleBlue": false,
+       "iconRows": 0,
+       "accent": "rgb(11,61,145)",
+       "accentRatio": 0.0024369212962962964,
+       "maxViewportAccent": 0.0024369212962962964,
+       "filler": false,
+       "ruleOfThree": false,
+       "frames": 0,
+       "stylesheetsUnscanned": 0,
+       "spacingOffScale": 0,
+       "horizontalOverflow": {
+        "320": 0,
+        "1440": 0
+       },
+       "clipped": {
+        "320": 0,
+        "1440": 0
+       },
+       "offscreenLeft": {
+        "320": 0,
+        "1440": 0
+       },
+       "unreachable": {
+        "320": 0,
+        "1440": 0
+       },
+       "scrolledText": {
+        "320": 0,
+        "1440": 0
+       },
+       "unmeasured": {
+        "320": 0,
+        "1440": 0
+       },
+       "unscannedScopes": {
+        "320": 0,
+        "1440": 0
+       },
+       "reflowFail": false,
+       "contrastFailures": 0,
+       "contrastUnknown": 0,
+       "contrastChecked": 3
+      },
+      "content": {
+       "slots": [
+        [
+         "button",
+         "Start"
+        ],
+        [
+         "description",
+         "A service for residents."
+        ],
+        [
+         "headline",
+         "Specific service"
+        ]
+       ],
+       "headings": [
+        [
+         1,
+         "Specific service"
+        ]
+       ],
+       "h1": 1,
+       "lang": "en",
+       "dir": "ltr"
+      }
+     },
+     "tamperSigns": [],
+     "mismatches": [],
+     "incomplete": [],
+     "expectedDifferences": [],
+     "postScriptDifferences": [],
+     "status": "PASS",
+     "pass": true
+    },
+    "filler": false,
+    "ruleOfThree": false,
+    "placeholders": false,
+    "focusFailures": [],
+    "widths": {
+     "results": [
+      {
+       "width": 1440,
+       "documentWidth": 1440,
+       "horizontalOverflow": false,
+       "clipped": [],
+       "offscreenLeft": [],
+       "unreachable": [],
+       "scrolledText": [],
+       "reflowCandidates": [],
+       "unmeasured": [],
+       "unscannedScopes": [],
+       "lang": "en",
+       "dir": "ltr",
+       "purpose": "declared desktop width",
+       "pass": true
+      },
+      {
+       "width": 320,
+       "documentWidth": 320,
+       "horizontalOverflow": false,
+       "clipped": [],
+       "offscreenLeft": [],
+       "unreachable": [],
+       "scrolledText": [],
+       "reflowCandidates": [],
+       "unmeasured": [],
+       "unscannedScopes": [],
+       "lang": "en",
+       "dir": "ltr",
+       "purpose": "desktop accessibility reflow (400% of 1280); not mobile approval",
+       "pass": true
+      }
+     ],
+     "pass": true,
+     "note": "Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision."
+    },
+    "reducedMotion": {
+     "runningWebAnimations": 0,
+     "elementsChangedOver700ms": 0,
+     "rafCallsOver700ms": 0,
+     "rafLoop": false,
+     "pass": true
+    },
+    "stylesheets": {
+     "sheets": 2,
+     "refused": [],
+     "unscanned": [],
+     "pass": true
+    },
+    "language": "en",
+    "direction": "ltr",
+    "pass": true
+   }
+  ],
+  "reflowCandidates": {
+   "candidates": [],
+   "unresolved": 0,
+   "status": "PASS",
+   "pass": true
+  },
+  "spacingExceptions": {
+   "exceptions": [],
+   "unresolved": 0,
+   "status": "PASS",
+   "pass": true
+  },
+  "reducedMotion": {
+   "runningWebAnimations": 0,
+   "elementsChangedOver700ms": 0,
+   "rafCallsOver700ms": 0,
+   "rafLoop": false,
+   "pass": true
+  },
+  "integrity": {
+   "scope": {
+    "screen": "home",
+    "state": "default",
+    "lang": "en"
+   },
+   "probeWorld": {
+    "vector": {
+     "glass": 0,
+     "h1": 1,
+     "placeholders": false,
+     "centered": 0,
+     "typeSizes": 2,
+     "heroGradient": false,
+     "purpleBlue": false,
+     "iconRows": 0,
+     "accent": "rgb(11,61,145)",
+     "accentRatio": 0.0024369212962962964,
+     "maxViewportAccent": 0.0024369212962962964,
+     "filler": false,
+     "ruleOfThree": false,
+     "frames": 0,
+     "stylesheetsUnscanned": 0,
+     "spacingOffScale": 0,
+     "horizontalOverflow": {
+      "320": 0,
+      "1440": 0
+     },
+     "clipped": {
+      "320": 0,
+      "1440": 0
+     },
+     "offscreenLeft": {
+      "320": 0,
+      "1440": 0
+     },
+     "unreachable": {
+      "320": 0,
+      "1440": 0
+     },
+     "scrolledText": {
+      "320": 0,
+      "1440": 0
+     },
+     "unmeasured": {
+      "320": 0,
+      "1440": 0
+     },
+     "unscannedScopes": {
+      "320": 0,
+      "1440": 0
+     },
+     "reflowFail": false,
+     "contrastFailures": 0,
+     "contrastUnknown": 0,
+     "contrastChecked": 3
+    },
+    "content": {
+     "slots": [
+      [
+       "button",
+       "Start"
+      ],
+      [
+       "description",
+       "A service for residents."
+      ],
+      [
+       "headline",
+       "Specific service"
+      ]
+     ],
+     "headings": [
+      [
+       1,
+       "Specific service"
+      ]
+     ],
+     "h1": 1,
+     "lang": "en",
+     "dir": "ltr"
+    }
+   },
+   "pageWorld": {
+    "vector": {
+     "glass": 0,
+     "h1": 1,
+     "placeholders": false,
+     "centered": 0,
+     "typeSizes": 2,
+     "heroGradient": false,
+     "purpleBlue": false,
+     "iconRows": 0,
+     "accent": "rgb(11,61,145)",
+     "accentRatio": 0.0024369212962962964,
+     "maxViewportAccent": 0.0024369212962962964,
+     "filler": false,
+     "ruleOfThree": false,
+     "frames": 0,
+     "stylesheetsUnscanned": 0,
+     "spacingOffScale": 0,
+     "horizontalOverflow": {
+      "320": 0,
+      "1440": 0
+     },
+     "clipped": {
+      "320": 0,
+      "1440": 0
+     },
+     "offscreenLeft": {
+      "320": 0,
+      "1440": 0
+     },
+     "unreachable": {
+      "320": 0,
+      "1440": 0
+     },
+     "scrolledText": {
+      "320": 0,
+      "1440": 0
+     },
+     "unmeasured": {
+      "320": 0,
+      "1440": 0
+     },
+     "unscannedScopes": {
+      "320": 0,
+      "1440": 0
+     },
+     "reflowFail": false,
+     "contrastFailures": 0,
+     "contrastUnknown": 0,
+     "contrastChecked": 3
+    },
+    "content": {
+     "slots": [
+      [
+       "button",
+       "Start"
+      ],
+      [
+       "description",
+       "A service for residents."
+      ],
+      [
+       "headline",
+       "Specific service"
+      ]
+     ],
+     "headings": [
+      [
+       1,
+       "Specific service"
+      ]
+     ],
+     "h1": 1,
+     "lang": "en",
+     "dir": "ltr"
+    }
+   },
+   "jsOff": {
+    "vector": {
+     "glass": 0,
+     "h1": 1,
+     "placeholders": false,
+     "centered": 0,
+     "typeSizes": 2,
+     "heroGradient": false,
+     "purpleBlue": false,
+     "iconRows": 0,
+     "accent": "rgb(11,61,145)",
+     "accentRatio": 0.0024369212962962964,
+     "maxViewportAccent": 0.0024369212962962964,
+     "filler": false,
+     "ruleOfThree": false,
+     "frames": 0,
+     "stylesheetsUnscanned": 0,
+     "spacingOffScale": 0,
+     "horizontalOverflow": {
+      "320": 0,
+      "1440": 0
+     },
+     "clipped": {
+      "320": 0,
+      "1440": 0
+     },
+     "offscreenLeft": {
+      "320": 0,
+      "1440": 0
+     },
+     "unreachable": {
+      "320": 0,
+      "1440": 0
+     },
+     "scrolledText": {
+      "320": 0,
+      "1440": 0
+     },
+     "unmeasured": {
+      "320": 0,
+      "1440": 0
+     },
+     "unscannedScopes": {
+      "320": 0,
+      "1440": 0
+     },
+     "reflowFail": false,
+     "contrastFailures": 0,
+     "contrastUnknown": 0,
+     "contrastChecked": 3
+    },
+    "content": {
+     "slots": [
+      [
+       "button",
+       "Start"
+      ],
+      [
+       "description",
+       "A service for residents."
+      ],
+      [
+       "headline",
+       "Specific service"
+      ]
+     ],
+     "headings": [
+      [
+       1,
+       "Specific service"
+      ]
+     ],
+     "h1": 1,
+     "lang": "en",
+     "dir": "ltr"
+    }
+   },
+   "tamperSigns": [],
+   "mismatches": [],
+   "incomplete": [],
+   "expectedDifferences": [],
+   "postScriptDifferences": [],
+   "status": "PASS",
+   "pass": true
+  },
+  "resourceBoundary": {
+   "pass": true,
+   "blockedRequests": 0
+  },
+  "glassSource": {
+   "files": [],
+   "pass": true
+  },
+  "impeccable": {
+   "ran": false,
+   "exit": 3,
+   "pass": false,
+   "note": "detect did not run or gave no parseable output"
+  }
+ },
+ "browser": {
+  "path": "/opt/google/chrome/google-chrome",
+  "sha256": "aea09d69ce7f24d5901f6bfb15dd44d0c856e793e0a498f8d8393ec7d2c308ec",
+  "version": "155.0.8059.84"
+ },
+ "externalRequestsBlocked": [],
+ "phase": "handoff",
+ "pass": false,
+ "handoffReady": false
+}
