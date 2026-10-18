@@ -181,3 +181,10 @@ test('R19: hidden layers, the top layer, inner scrollports, hidden content in th
   const para = quality.slice(quality.indexOf('Rendered-visibility backstop:'));
   assert.doesNotMatch(para.slice(0, 9000), vendors); assert.doesNotMatch(para.slice(0, 9000), /digital[\s_-]*cloud|\bgaza\b|palestin|\baxe-core\b.*\bdeque\b/i);
 });
+
+// R19b (Mi'mar's tiebreak): a script-only declared state may resolve a colour-contrast incomplete on its scripted rendering
+test('R19b: the requiresScript state, its trigger and the false-claim mismatch are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
+  for (const m of ['`requiresScript: true` with its trigger recorded', 'resolves on the scripted rendering alone', 'the default state always needs both renderings', 'fails as an integrity mismatch']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['`requiresScript: true` with `trigger`', 'The default state cannot declare it.']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+});
