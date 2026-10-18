@@ -25,7 +25,18 @@ export function designProbe() {
   const accentViewportArea = accentComputed ? painted.reduce((sum,{r}) => sum + Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0)), 0) : null;
   const gradients = rects.filter(({c}) => c.backgroundImage.includes('gradient(')).length;
   const heroGradient = [...document.querySelectorAll('main > section:first-child, main > header:first-child, .hero, [data-hero]')].some(e => getComputedStyle(e).backgroundImage.includes('gradient('));
-  const glass = rects.filter(({c}) => c.backdropFilter !== 'none').length;
+  // R11 (Asad panel S2): glass is counted on html, body, every visible element and its rendered ::before/::after.
+  // Any declared backdrop filter other than none is glass, rendered by Chrome or not: Chrome drops the
+  // -webkit-backdrop-filter alias at parse time (Safari renders it) and computes none on the root element, so the raw
+  // text of style attributes and <style> elements is scanned too; pre-handoff-check scans every served CSS/HTML file.
+  const filtered = c => !!c && c.backdropFilter && c.backdropFilter !== 'none';
+  const rendered = c => c.content !== 'none' && c.content !== 'normal';
+  const glassRaw = /(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$))[^;}]+/i;
+  const stripComments = text => text.replace(/\/\*[\s\S]*?\*\//g, '');
+  const glassNodes = [document.documentElement, document.body, ...rects.map(({e}) => e)].filter(Boolean);
+  const glass = glassNodes.filter(e => filtered(getComputedStyle(e)) || ['::before', '::after'].some(pseudo => { const c = getComputedStyle(e, pseudo); return rendered(c) && filtered(c); })).length
+    + [...document.querySelectorAll('[style]')].filter(e => glassRaw.test(stripComments(e.getAttribute('style') || '')) && !filtered(getComputedStyle(e))).length
+    + [...document.querySelectorAll('style')].filter(e => glassRaw.test(stripComments(e.textContent))).length;
   // ARGON-R2-09: a centred icon trio is any visible container with exactly three visible item children that each
   // hold an icon, centred on the container or on every item (tags and wrappers do not exempt it), plus the R3
   // section rule (a centred section with exactly three icons) when no such row sits inside that section.
@@ -39,4 +50,11 @@ export function designProbe() {
   const purpleBlue = rects.some(({c}) => /rgb\((?:1[0-5]\d|[2-9]\d),\s*(?:[0-9]|[1-9]\d),\s*(?:1[3-9]\d|2\d\d)\)/.test(c.backgroundColor)) && rects.some(({c}) => /rgb\((?:[0-9]|[1-9]\d),\s*(?:[0-9]|[1-9]\d),\s*(?:1[3-9]\d|2\d\d)\)/.test(c.backgroundColor));
   const text = document.body.innerText;
   return { centered, typeSizes: sizes, accent, accentVar, accentInvalid, accentArea, accentRatio: accentArea === null ? null : accentArea / pageArea, accentViewportRatio: accentViewportArea === null ? null : accentViewportArea / (innerWidth * innerHeight), gradients, heroGradient, glass, iconRows, purpleBlue, visibleText: text, headlines: [...document.querySelectorAll('h1,h2,[data-tagline]')].map(e => e.innerText), placeholders: /\[placeholder\]|lorem ipsum|\btbd\b/i.test(text), h1: document.querySelectorAll('h1').length }
+}
+
+// R11 (Asad panel S2): node side. True when CSS or HTML text declares a backdrop filter other than none, prefixed or
+// not, outside comments. Used on every CSS/HTML file the checker serves, because Chrome discards the -webkit- alias.
+export function rawGlass(text) {
+  const css = String(text).replace(/\/\*[\s\S]*?\*\//g, '');
+  return /(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$))[^;}]+/i.test(css);
 }

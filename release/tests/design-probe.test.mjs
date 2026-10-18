@@ -16,7 +16,7 @@ test('ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-q
   assert.doesNotMatch(config.reason, /backdrop filters are signals/);
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
   assert.equal(source.split('design.glass <= q.stockGlass').length - 1 + source.split('d.glass <= q.stockGlass').length - 1, 2, 'page gate (both phases) and every declared state');
-  assert.match(source, /import \{ designProbe \} from '\.\/design-probe\.mjs';/);
+  assert.match(source, /import \{ designProbe, rawGlass \} from '\.\/design-probe\.mjs';/); // R11: rawGlass for served CSS/HTML
 });
 
 test('ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
@@ -88,4 +88,30 @@ test('ARGON-R5-01: the gate treats a null accent as a FAIL on the page and on ev
   assert.match(source, /design\.accentRatio !== null && design\.accentRatio <= q\.accentAreaRatioFullPage && design\.accentViewportRatio !== null/);
   assert.match(source, /const maxViewportAccent = viewportRatios\.length && !viewportRatios\.includes\(null\) \? Math\.max\(\.\.\.viewportRatios\) : null;/, 'Math.max(null) is 0, so a null ratio must not reach it');
   assert.match(source, /d\.accentRatio !== null && d\.accentRatio <= q\.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q\.accentAreaRatioViewport/);
+});
+
+test('R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const run = async html => { const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }); await page.setContent(html); const r = await page.evaluate(designProbe); await page.close(); return r; };
+    const body = '<main><h1>x</h1><div class="card">card</div></main>';
+    for (const [name, css] of [['html', 'html{backdrop-filter:blur(8px)}'], ['body', 'body{backdrop-filter:blur(8px)}'], ['::before', '.card::before{content:"";backdrop-filter:blur(8px)}'], ['::after', '.card::after{content:"";position:absolute;inset:0;backdrop-filter:blur(8px)}'], ['element', '.card{backdrop-filter:blur(8px)}'], ['-webkit- in a style element', '.card{-webkit-backdrop-filter:blur(8px)}']]) {
+      assert.ok((await run(`<style>${css}</style>${body}`)).glass >= 1, `${name}: glass counted`);
+    }
+    assert.ok((await run(`<main><h1>x</h1><div style="-webkit-backdrop-filter: blur(4px)">card</div></main>`)).glass >= 1, '-webkit- in a style attribute');
+    assert.ok((await run(`<style>.card::after{backdrop-filter:blur(8px)}</style>${body}`)).glass >= 1, 'a declared filter counts even on an unrendered ::after (fail closed)');
+    assert.equal((await run(`<style>.card{backdrop-filter:none;-webkit-backdrop-filter:none}</style>${body}`)).glass, 0, 'none is not glass');
+    assert.equal((await run(`<style>/* .card{-webkit-backdrop-filter:blur(2px)} */</style>${body}`)).glass, 0, 'a commented-out rule is not glass');
+  } finally { await browser.close(); }
+});
+
+test('R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops', async () => {
+  const { rawGlass } = await import('../tools/design-probe.mjs');
+  assert.equal(rawGlass('.a{-webkit-backdrop-filter: blur(6px)}'), true);
+  assert.equal(rawGlass('.a{backdrop-filter:saturate(2)}'), true);
+  assert.equal(rawGlass('.a{backdrop-filter: none; -webkit-backdrop-filter:none}'), false);
+  assert.equal(rawGlass('/* .a{-webkit-backdrop-filter: blur(6px)} */ .b{color:red}'), false);
+  const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
+  assert.match(source, /ev\.checks\.glassSource = \{ files: \[\.\.\.glassFiles\], pass: glassFiles\.size === 0 \};\nif \(!ev\.checks\.glassSource\.pass\) fail = true;/);
 });
