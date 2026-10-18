@@ -66,7 +66,10 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
 const gateOf = open => async (states, dir = 'ltr') => {
-  const scopes = []; for (const [state, html] of Object.entries(states)) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(html)).main, [1440], null) });
+  // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
+  const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -108,13 +111,16 @@ const menuPage = ({ dir = 'rtl', open: isOpen = false, panel = '20px', links, fo
   return W(`<style>.dnav a{display:inline-block;padding:8px}.mnav{display:none;position:relative}.mnav .panel{position:absolute;top:40px;${side}:-134px;width:240px;background:#fff}.mnav[open] .panel{${side}:${panel}}@media (max-width:700px){.dnav{display:none}.mnav{display:block}}</style><header><nav class="dnav">${L.map(t => `<a href="#x">${t}</a>`).join('')}</nav><details class="mnav"${isOpen ? ' open' : ''}><summary>${rtl ? 'القائمة' : 'Menu'}</summary><div class="panel">${a}</div></details></header><p style="margin-top:260px">${rtl ? 'نص الصفحة.' : 'Page copy.'}</p>${footer ? `<footer>${a}</footer>` : ''}`, '', dir);
 };
 
+// R29: the declared menu-open state names its opener (the summary) and the region it reveals (the panel)
+const menuOpen = o => ({ html: menuPage(o), opener: '.mnav summary', reveals: '.mnav .panel' });
+
 test('R21-MIMAR-02: real Chrome: the links of a closed <details> menu are not on screen at 320 (RTL and LTR), so they are not off-screen content; an open menu whose panel is really cut still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   assert.deepEqual({
-    rtlClosedWithOpenState: await gate({ default: menuPage({}), 'menu-open': menuPage({ open: true }) }, 'rtl'),
-    ltrClosedWithOpenState: await gate({ default: menuPage({ dir: 'ltr' }), 'menu-open': menuPage({ dir: 'ltr', open: true }) }),
+    rtlClosedWithOpenState: await gate({ default: menuPage({}), 'menu-open': menuOpen({ open: true }) }, 'rtl'),
+    ltrClosedWithOpenState: await gate({ default: menuPage({ dir: 'ltr' }), 'menu-open': menuOpen({ dir: 'ltr', open: true }) }),
     rtlFooterLinks: await gate({ default: menuPage({ footer: true }) }, 'rtl'),
-    rtlOpenCut: await gate({ default: menuPage({}), 'menu-open': menuPage({ open: true, panel: '-134px' }) }, 'rtl'),
+    rtlOpenCut: await gate({ default: menuPage({}), 'menu-open': menuOpen({ open: true, panel: '-134px' }) }, 'rtl'),
   }, {
     rtlClosedWithOpenState: { pass: true, rules: [] }, ltrClosedWithOpenState: { pass: true, rules: [] },
     // R23 (Fadel's one-to-one tiebreak): the footer's copies no longer stand in for the hidden desktop nav links; the
@@ -130,9 +136,9 @@ test('R21-GPT-04: real Chrome: text or a control shown at 1440 and display:none 
   const iconOnly = W('<style>.lbl{display:inline}@media (max-width:600px){.lbl{display:none}}</style><button aria-label="Search the site"><span class="lbl">Search the site</span></button>');
   assert.deepEqual({
     hiddenCta: await gate({ default: form }),
-    menuDeclared: await gate({ default: menuPage({ dir: 'ltr' }), 'menu-open': menuPage({ dir: 'ltr', open: true }) }),
+    menuDeclared: await gate({ default: menuPage({ dir: 'ltr' }), 'menu-open': menuOpen({ dir: 'ltr', open: true }) }),
     menuUndeclared: await gate({ default: menuPage({ dir: 'ltr' }) }),
-    menuOtherText: await gate({ default: menuPage({ dir: 'ltr' }), 'menu-open': menuPage({ dir: 'ltr', open: true, links: ['Products', 'How we work', 'Privacy', 'Contact'] }) }),
+    menuOtherText: await gate({ default: menuPage({ dir: 'ltr' }), 'menu-open': menuOpen({ dir: 'ltr', open: true, links: ['Products', 'How we work', 'Privacy', 'Contact'] }) }),
     labelToName: await gate({ default: iconOnly }),
   }, {
     hiddenCta: { pass: false, rules: ['not shown at this width'] }, menuDeclared: { pass: true, rules: [] }, menuUndeclared: { pass: false, rules: ['not shown at this width'] },
@@ -164,8 +170,8 @@ test('R21-GPT-03 (P3): real Chrome: a reveal is matched by text, not DOM positio
   const q = (exp, inner) => W(`<button aria-expanded="${exp}">What does it cost?</button><div style="${exp ? '' : 'max-height:0;overflow:hidden'}">${inner}</div>`);
   const answer = '<p>Plans start at ten dollars.</p>';
   assert.deepEqual({
-    wrapper: await gate({ default: q(false, answer), expanded: q(true, `<div class="inner">${answer}</div>`) }),
-    unrelated: await gate({ default: q(false, answer), expanded: q(true, '<p>Unrelated sentence in the same place.</p>') }),
+    wrapper: await gate({ default: q(false, answer), expanded: { html: q(true, `<div class="inner">${answer}</div>`), opener: 'button[aria-expanded]', reveals: 'button[aria-expanded] + div' } }),
+    unrelated: await gate({ default: q(false, answer), expanded: { html: q(true, '<p>Unrelated sentence in the same place.</p>'), opener: 'button[aria-expanded]', reveals: 'button[aria-expanded] + div' } }),
   }, { wrapper: { pass: true, rules: [] }, unrelated: { pass: false, rules: ['reveal'] } });
 }));
 

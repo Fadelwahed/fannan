@@ -67,7 +67,10 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
 const gateOf = open => async (states, dir = 'ltr') => {
-  const scopes = []; for (const [state, html] of Object.entries(states)) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(html)).main, [1440], null) });
+  // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
+  const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -82,14 +85,18 @@ const P = x => W(LS + x);
 
 
 
+// R29: a declared state that rescues hidden content names its opener and the region it reveals
+const D = (html, opener, reveals) => ({ html, opener, reveals });
+const ACC = html => D(html, 'button[aria-expanded]', 'button[aria-expanded] + div');
+
 test('R25-GPT-01: real Chrome: a hidden control counts once per owning control: a button>span inside a collapsed accordion passes with its expanded state; two real same-name buttons with one shown still fail (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const acc = (exp, inner) => W(`<button aria-expanded="${exp}">Downloads</button><div style="${exp ? '' : 'max-height:0;overflow:hidden'}"><p>Files for this release.</p>${inner}</div>`);
   const nested = '<button><span>Download</span></button>', two = '<button><span>Download</span></button> <button>Download</button>';
   assert.deepEqual({
-    nestedLabel: await gate({ default: acc(false, nested), expanded: acc(true, nested) }),
-    nestedLabelDeep: await gate({ default: acc(false, '<a href="/f"><span><b>Get</b> the file</span></a>'), expanded: acc(true, '<a href="/f"><span><b>Get</b> the file</span></a>') }),
-    twoShownOne: (await gate({ default: acc(false, two), expanded: acc(true, nested) })).pass,
+    nestedLabel: await gate({ default: acc(false, nested), expanded: ACC(acc(true, nested)) }),
+    nestedLabelDeep: await gate({ default: acc(false, '<a href="/f"><span><b>Get</b> the file</span></a>'), expanded: ACC(acc(true, '<a href="/f"><span><b>Get</b> the file</span></a>')) }),
+    twoShownOne: (await gate({ default: acc(false, two), expanded: ACC(acc(true, nested)) })).pass,
   }, { nestedLabel: { pass: true, rules: [] }, nestedLabelDeep: { pass: true, rules: [] }, twoShownOne: false });
 }));
 
@@ -99,8 +106,8 @@ test('R25-GPT-02: real Chrome: the one-to-one count is shared across clipping bo
   const slides = ['Shop shoes', 'Shop bags', 'Shop hats'];
   const carousel = i => W(`<div style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${slides.map((s, k) => `<div style="flex:0 0 300px"><p>Slide ${k + 1}</p><button>${s}</button></div>`).join('')}</div></div>`);
   const r = {
-    siblingsShowOne: (await gate({ default: panels(false), expanded: panels(true, 1) })).pass,
-    siblingsShowBoth: await gate({ default: panels(false), expanded: panels(true, 2) }),
+    siblingsShowOne: (await gate({ default: panels(false), expanded: ACC(panels(true, 1)) })).pass,
+    siblingsShowBoth: await gate({ default: panels(false), expanded: ACC(panels(true, 2)) }),
     carousel: (await gate({ default: carousel(0), 'slide-2': carousel(1), 'slide-3': carousel(2) })).pass,
   };
   assert.deepEqual(r, { siblingsShowOne: false, siblingsShowBoth: { pass: true, rules: [] }, carousel: true });
@@ -112,10 +119,10 @@ test('R25-GPT-03: real Chrome: a nav collapsed at 320 by max-height:0 and overfl
   const mh = 'max-height:0;overflow:hidden', h0 = 'height:0;overflow:hidden', dn = 'display:none', part = 'max-height:1.5em;overflow:hidden';
   assert.deepEqual({
     maxHeightAlone: (await gate({ default: nav(mh, false) })).pass,
-    maxHeightMenuOpen: await gate({ default: nav(mh, false), 'menu-open': nav(mh, true) }),
-    heightZeroMenuOpen: await gate({ default: nav(h0, false), 'menu-open': nav(h0, true) }),
-    displayNoneMenuOpen: await gate({ default: nav(dn, false), 'menu-open': nav(dn, true) }),
-    partialMenuOpen: (await gate({ default: nav(part, false), 'menu-open': nav(part, true) })).pass,
+    maxHeightMenuOpen: await gate({ default: nav(mh, false), 'menu-open': D(nav(mh, true), '.menu', '.nav') }),
+    heightZeroMenuOpen: await gate({ default: nav(h0, false), 'menu-open': D(nav(h0, true), '.menu', '.nav') }),
+    displayNoneMenuOpen: await gate({ default: nav(dn, false), 'menu-open': D(nav(dn, true), '.menu', '.nav') }),
+    partialMenuOpen: (await gate({ default: nav(part, false), 'menu-open': D(nav(part, true), '.menu', '.nav') })).pass,
   }, { maxHeightAlone: false, maxHeightMenuOpen: { pass: true, rules: [] }, heightZeroMenuOpen: { pass: true, rules: [] }, displayNoneMenuOpen: { pass: true, rules: [] }, partialMenuOpen: false });
 }));
 

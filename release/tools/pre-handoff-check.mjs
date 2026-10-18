@@ -116,6 +116,10 @@ const declaredStates = (handoff?.screens || []).flatMap(s => (s.states || []).fi
 // R19-MIMAR-01: the PASS wcag-review manual record for a scope (screen, language, state)
 const reviewFor = scope => scope ? (handoff?.manualChecks || []).find(m => m.id === 'wcag-review' && m.screen === scope.screen && m.lang === scope.lang && m.state === scope.state && m.decision === 'PASS') ?? null : null;
 const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
+// R29 (Mi'mar's decision): a state that rescues hidden content declares `opener` and `reveals`; every rendering of the
+// screen and language probes those selectors at each width so the gate can verify the declaration
+const declarationOf = sc => { const st = sc && declaredStates.find(x => x.screen === sc.screen && x.lang === sc.lang && x.state === sc.state); return st && st.opener && st.reveals ? { opener: st.opener, reveals: st.reveals } : null; };
+const probesFor = sc => sc ? declaredStates.filter(x => x.screen === sc.screen && x.lang === sc.lang && x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals })) : [];
 const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
 ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
 const pagePaths = await contrastPaths(await isolatedPage(p), axe.incomplete); // R19-MIMAR-01, resolved after integrity
@@ -150,7 +154,7 @@ ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVis
 if (!ev.checks.custom22.pass) fail = true;
 evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
 // R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
-ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null);
+ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null, 900, probesFor(pageScope));
 if (!ev.checks.widths.passExceptReveal) fail = true; // R20: reveal clips are resolved across the declared states below
 // R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
 // measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
@@ -258,7 +262,7 @@ if (handoff?.screens) {
         f.invisible = !focusVisible;
         focus.push(f);
       }
-      const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
+      const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }, 900, probesFor(scopeOf(st))); // R8, R29 probes
       const frames = framesCheck(d); // R12 M03
       let integrity = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path)); // R12 M07: every declared state; R20-GPT-03 glyph targets
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
@@ -281,7 +285,7 @@ if (handoff?.screens) {
 // R11 panel D1 (decisions B, T2): every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
 // R20 (Mi'mar's clipping tiebreak): content cut wholly at 1440 in a state counts as not displayed only when another
 // declared state of the screen shows it; otherwise it fails that state (and the positional page).
-ev.checks.reveals = resolveReveals([{ scope: pageScope, widths: ev.checks.widths }, ...ev.checks.states.filter(st => st.widths).map(st => ({ scope: scopeOf(st), widths: st.widths }))], phase);
+ev.checks.reveals = resolveReveals([{ scope: pageScope, widths: ev.checks.widths, declaration: declarationOf(pageScope) }, ...ev.checks.states.filter(st => st.widths).map(st => ({ scope: scopeOf(st), widths: st.widths, declaration: declarationOf(scopeOf(st)) }))], phase);
 for (const u of ev.checks.reveals.unresolved.filter(u => !u.deferred)) { fail = true; for (const st of ev.checks.states) if (st.screen === u.screen && st.lang === u.lang && st.state === u.state) st.pass = false; }
 ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // R12 M09: scoped
 if (!ev.checks.reflowCandidates.pass) fail = true;
