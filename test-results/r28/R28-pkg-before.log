@@ -1,0 +1,24 @@
+# R28 before: R28 tests against 9cc38f1 sources
+.........F..s........s......ss................F.s
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (scripts.test_package_r3.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 159, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r28/') for n in names), 'R28 evidence is archived like R4-R27')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R28 evidence is archived like R4-R27
+
+======================================================================
+FAIL: test_r28_sections (scripts.test_package_r3.RequiredSectionTests.test_r28_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 431, in test_r28_sections
+    self.assertIn('R28 loss accounting has two steps', required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'R28 loss accounting has two steps' not found in ['The feedback-log artifact records each item', '`grid-per-width`', 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:', 'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)', 'Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:', 'Clipping is one rule based on states and widths, whatever the CSS pattern:', 'Designers must declare reveal states:', 'A high percentile of all ink is never used for AA.', 'Cropped media is never clipped content', 'Content Chrome does not render is not on screen', 'A read-more clamp is the one partial cut that can pass', 'The faintest-text measure never drops a faint glyph', 'Text over images is graded in three zones on the faintest real glyph cluster', 'AND names the worst region checked in `worstRegion`', 'text matches only text, so a heading with the same words never stands in for a lost button', 'is not rendered either, so it is not text on screen', 'matches its 1440 control only by the SAME accessible name, one to one', 'a clamp may only hide text', "A control's label text is always measured, whatever its border", 'The only role swaps allowed are a tablist adapted into an accordion', 'content tabs becoming headed sections', 'exactly as it rescues display:none; a partial cut still fails', 'R26 replaces name counting with element identity', 'R27 makes element identity a stable key, not position']
+
+----------------------------------------------------------------------
+Ran 49 tests in 0.587s
+
+FAILED (failures=2, skipped=5)
