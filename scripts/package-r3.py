@@ -222,7 +222,9 @@ REQUIRED_SECTIONS = {
     'release/skills/design-canvas/SKILL.md': ['The seven baseline states are a minimum.', 'For every form, specify labels'],
     # R15 B1/B3/B4
     'release/skills/design-prototype/SKILL.md': ['after the task and navigation-findability tests and necessary retests'],
-    'release/references/design-quality.md': ['The feedback-log artifact records each item', '`grid-per-width`'],
+    'release/references/design-quality.md': ['The feedback-log artifact records each item', '`grid-per-width`',
+                                             # R17: fail-closed compositing, ENH backlog, rendered-visibility backstop
+                                             'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:'],
     'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows', '## Cross-screen component comparison'],
 }
 # R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
@@ -337,6 +339,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r15')  # R15 before/after evidence and raw panel logs (panel round 15)
     if (ROOT / 'test-results/r16').is_dir():
         paths += files(ROOT / 'test-results/r16')  # R16 before/after evidence and raw panel logs (panel round 16)
+    if (ROOT / 'test-results/r17').is_dir():
+        paths += files(ROOT / 'test-results/r17')  # R17 before/after evidence and raw panel logs (panel round 17)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 

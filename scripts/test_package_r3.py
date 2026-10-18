@@ -138,6 +138,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r15/') for n in names), 'R15 evidence is archived like R4-R14')
         if (ROOT / 'test-results/r16').is_dir():
             self.assertTrue(any(n.startswith('test-results/r16/') for n in names), 'R16 evidence is archived like R4-R15')
+        if (ROOT / 'test-results/r17').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r17/') for n in names), 'R17 evidence is archived like R4-R16')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -328,6 +330,15 @@ class RequiredSectionTests(unittest.TestCase):
         self.assertIn('Maintain one canonical specification for each reused component', required.get('release/FANNAN-PLAN.md', []))
         self.assertIn('## Cross-screen component comparison', required.get('release/references/critic-rubric.md', []))
         self.assertTrue(any('component-consistency' in m for m in required.get('release/references/handoff-contract.md', [])))
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r17_sections(self):
+        # R17: the fail-closed compositing sentence, the ENH backlog entry and the rendered-visibility backstop are
+        # required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        self.assertIn('Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', required)
+        self.assertTrue(any(m.startswith('ENH backlog:') for m in required))
+        self.assertIn('Rendered-visibility backstop:', required)
         self.assertEqual(package.missing_sections(), [])
 
     def test_r14_build_checks_sections_before_any_output(self):

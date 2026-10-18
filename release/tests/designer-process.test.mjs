@@ -141,3 +141,21 @@ test('R16-GPT-03/04: wireframe coverage of every screen and locale; one shared c
   const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
   for (const t of Object.values(R16)) { assert.doesNotMatch(t, vendors); assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
 });
+
+// R17 (panel round 17): the filter decision (fail-closed, GPT's sentence verbatim), the pixel-measured exception as
+// ENH backlog, and the rendered-visibility backstop documented with its method.
+const R17 = {
+  filter: 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE. Token contrast proofs and `jsOffDifferences` cannot waive it. Retaining the effect requires a reviewed measurement implementation that resolves its actual composition for every applicable rendering. Backdrop-filter remains a hard FAIL.',
+  backlog: 'ENH backlog: a future exception for an unresolved compositing effect is acceptable only with a pixel-measured proof per rendering',
+  backstop: 'Rendered-visibility backstop: the CSS contrast computation is the first pass; what the browser actually painted is the backstop, in both renderings (JavaScript on and off).',
+};
+
+test('R17: fail-closed compositing sentence, ENH backlog and the rendered-visibility backstop method are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
+  for (const t of Object.values(R17)) assert.ok(quality.includes(t), `design-quality.md: ${t.slice(0, 40)}`);
+  assert.ok(contract.includes(R17.filter), 'handoff-contract.md mirrors the compositing sentence');
+  for (const k of ['textMeasured', 'textObscured', 'textUnreadable', 'textUnmeasured']) assert.ok(contract.includes('`' + k + '`'), `jsOffDifferences lists ${k}`);
+  for (const m of ['hit test', '90th percentile', 'modal colour', '3:1', 'INCOMPLETE, never PASS', 'accessible names']) assert.ok(quality.includes(m), `method: ${m}`);
+  const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
+  for (const t of Object.values(R17)) { assert.doesNotMatch(t, vendors); assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
+});
