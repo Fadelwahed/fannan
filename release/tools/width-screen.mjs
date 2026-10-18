@@ -129,9 +129,23 @@ export function inspectLayout({ reflow = false } = {}) {
   // (not html, and not a propagated body) holds it. html's own fixed-height hidden box is the same case.
   const viewportY = rootStyle.overflowY !== 'visible' ? rootStyle.overflowY : bodyPropagates && document.body ? getComputedStyle(document.body).overflowY : 'visible';
   if (['hidden', 'clip'].includes(viewportY)) {
-    const innerScroller = el => { for (let a = parentOf(el); a && a !== document.documentElement; a = parentOf(a)) if (clipBox(a) && ['auto', 'scroll'].includes(getComputedStyle(a).overflowY)) return true; return false; };
+    // R15 A1 (R15-GPT-01): an ancestor with overflow-y auto/scroll holds the box only when that scroller's scrollport
+    // lies inside the visible viewport (its bottom at or above innerHeight and above every clipping ancestor's bottom)
+    // and its scroll range reaches the box. An unbounded auto-height wrapper (an app shell missing its height) grows
+    // past the fold, cannot scroll, and holds nothing.
+    const visibleBottom = a => { let limit = innerHeight; for (let c = parentOf(a); c && c !== document.documentElement; c = parentOf(c)) if (clipBox(c) && getComputedStyle(c).overflowY !== 'visible') limit = Math.min(limit, c.getBoundingClientRect().bottom); return limit; };
+    const innerScroller = el => {
+      const lowest = Math.max(...contentRects(el).map(b => b.bottom));
+      for (let a = parentOf(el); a && a !== document.documentElement; a = parentOf(a)) {
+        if (!clipBox(a) || !['auto', 'scroll'].includes(getComputedStyle(a).overflowY)) continue;
+        const port = a.getBoundingClientRect();
+        if (port.bottom > visibleBottom(a) + 1) continue; // scrollport extends past the fold: its lower part is unreachable
+        if (lowest - port.top + a.scrollTop <= a.scrollHeight + 1) return true;
+      }
+      return false;
+    };
     for (const e of all) {
-      if (!isContent(e) || !shown(e) || innerScroller(e) || getComputedStyle(e).position === 'fixed') continue;
+      if (!isContent(e) || !shown(e) || getComputedStyle(e).position === 'fixed' || innerScroller(e)) continue;
       const below = contentRects(e).filter(b => b.bottom > innerHeight + 1);
       if (below.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x: false, y: true, viewport: true, top: Math.round(Math.min(...below.map(b => b.top))) });
     }

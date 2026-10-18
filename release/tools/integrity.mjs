@@ -48,7 +48,6 @@ export function nativeCheck() {
 // large text). Backgrounds with images or non-sRGB colours are counted as unknown, not as passes.
 export function contrastProbe() {
   const parse = v => { const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(v || ''); return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null; };
-  const over = (top, under) => top.slice(0, 3).map((c, i) => c * top[3] + under[i] * (1 - top[3])).concat(1);
   const lum = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
   let failures = 0, unknown = 0, checked = 0;
   // R14-GPT-02: the composed tree (open shadow roots); backgrounds resolve through slots and shadow hosts; text is
@@ -60,12 +59,20 @@ export function contrastProbe() {
     if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
     const c = getComputedStyle(el);
     if (c.visibility !== 'visible' || c.display === 'none' || !textArea(el)) continue;
-    const layers = []; let known = true;
-    for (let a = el; a; a = up(a)) { const s = getComputedStyle(a); if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg) { known = false; break; } if (bg[3] > 0) layers.push(bg); if (bg[3] >= 1) break; }
+    // R15 A3 (R15-GPT-03): CSS opacity on the element and its composed ancestors is composited (premultiplied
+    // groups), so a fade or scroll reveal that starts near-transparent is measured as rendered. The walk stops at an
+    // opaque background only when no node from there up is translucent; a blend mode on the chain is unknown.
+    const chain = []; for (let a = el; a; a = up(a)) chain.push([a, getComputedStyle(a)]);
+    const opaqueFrom = []; for (let i = chain.length - 1, all = true; i >= 0; i--) { all = all && Number(chain[i][1].opacity) >= 1; opaqueFrom[i] = all ? 1 : 0; }
+    const levels = []; let known = true;
+    for (let i = 0; i < chain.length; i++) { const s = chain[i][1]; if (s.backgroundImage !== 'none' || (s.mixBlendMode && s.mixBlendMode !== 'normal')) { known = false; break; } const bg = parse(s.backgroundColor), op = Number(s.opacity); if (!bg || !(op >= 0 && op <= 1)) { known = false; break; } levels.push([bg, op]); if (bg[3] >= 1 && opaqueFrom[i] === 1) break; }
     const fg = parse(c.color);
     if (!known || !fg) { unknown++; continue; }
-    const bg = layers.reverse().reduce((under, top) => over(top, under), [255, 255, 255, 1]);
-    const text = over(fg, bg), [l1, l2] = [lum(text), lum(bg)].sort((x, y) => y - x), ratio = (l1 + 0.05) / (l2 + 0.05);
+    const pm = ([r, g, b, a]) => [r * a, g * a, b * a, a], fade = (x, o) => x.map(v => v * o), on = (top, under) => top.map((v, i) => v + under[i] * (1 - top[3]));
+    let tx = on(pm(fg), pm(levels[0][0])), bx = pm(levels[0][0]);
+    for (let i = 1; i < levels.length; i++) { const own = pm(levels[i][0]), o = levels[i - 1][1]; tx = on(fade(tx, o), own); bx = on(fade(bx, o), own); }
+    const lastOp = levels.at(-1)[1], canvas = [255, 255, 255, 1], flat = x => on(fade(x, lastOp), canvas).slice(0, 3);
+    const text = flat(tx), bg = flat(bx), [l1, l2] = [lum(text), lum(bg)].sort((x, y) => y - x), ratio = (l1 + 0.05) / (l2 + 0.05);
     const size = parseFloat(c.fontSize), large = size >= 24 || (size >= 18.66 && Number(c.fontWeight) >= 700);
     checked++; if (ratio < (large ? 3 : 4.5)) failures++;
   }
