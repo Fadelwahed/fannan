@@ -74,7 +74,16 @@ export function designProbe() {
   const iconRows = rows.length + sections.filter(e => getComputedStyle(e).textAlign === 'center' && e.querySelectorAll(iconSel).length === 3 && !rows.some(r => e.contains(r))).length;
   const purpleBlue = rects.some(({c}) => /rgb\((?:1[0-5]\d|[2-9]\d),\s*(?:[0-9]|[1-9]\d),\s*(?:1[3-9]\d|2\d\d)\)/.test(c.backgroundColor)) && rects.some(({c}) => /rgb\((?:[0-9]|[1-9]\d),\s*(?:[0-9]|[1-9]\d),\s*(?:1[3-9]\d|2\d\d)\)/.test(c.backgroundColor));
   const shadowText = composed.filter(e => e.shadowRoot).flatMap(e => [...e.shadowRoot.children].filter(c => !['STYLE', 'SCRIPT', 'TEMPLATE'].includes(c.tagName)).map(c => c.innerText || ''));
-  const text = [document.body.innerText, ...shadowText].join('\n');
+  // R17-GPT-03: authored native strings are copy too: button-type input values, placeholders, every option label of a
+  // shown select (datalist options too) and accessible names (aria-label, alt, title) join the screened text, so the
+  // placeholder and filler screens see them.
+  const nativeText = composed.filter(visible).flatMap(e => [
+    e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type) ? e.value : '',
+    /^(INPUT|TEXTAREA)$/.test(e.tagName) ? e.getAttribute('placeholder') || '' : '',
+    e.tagName === 'SELECT' ? [...e.options].map(o => o.text).join('\n') : '',
+    e.getAttribute('aria-label') || '', e.tagName === 'IMG' ? e.getAttribute('alt') || '' : '', e.getAttribute('title') || '',
+  ]).concat(composed.filter(e => e.tagName === 'DATALIST').flatMap(d => [...d.options].map(o => o.value || o.text))).filter(x => x && x.trim());
+  const text = [document.body.innerText, ...shadowText, ...nativeText].join('\n');
   // R13 N07: every stylesheet (link, style, @import, constructed; open shadow roots too) is listed with its URL and
   // whether its rules could be read. The checker refuses data:/blob: sheets and fails any unreadable sheet it did
   // not serve and scan itself.

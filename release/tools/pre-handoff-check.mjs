@@ -20,7 +20,7 @@ import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.m
 import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
 import { axeOptions } from './axe-tags.mjs';
 import { isolatedPage } from './probe-world.mjs';
-import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
+import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges, visibilityScan, VISIBILITY_FIELDS } from './integrity.mjs';
 import { scopeOf, resolveScoped } from './exceptions.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
@@ -111,9 +111,24 @@ const copyProbe = (page, st) => page.evaluate(({ slots, lang, dir }) => {
     if (!id || !wanted.has(id)) { errors.push(`unlisted visible copy: ${value.slice(0, 60)}`); continue; }
     used.add(id);
   }
+  // R17-GPT-03: authored native strings are displayed or announced copy as well: a button-type input's value, a
+  // placeholder, every option label of a select and an aria-label. Each must sit in a copy slot whose approved text
+  // contains it; typed or fixture values of text fields are user data and are not matched.
+  const native = e => [e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type) ? e.value : '', /^(INPUT|TEXTAREA)$/.test(e.tagName) ? e.getAttribute('placeholder') : '', ...(e.tagName === 'SELECT' ? [...e.options].map(o => o.text) : []), e.getAttribute('aria-label')].map(norm).filter(Boolean);
+  for (const e of elements) {
+    const style = getComputedStyle(e), box = e.getBoundingClientRect();
+    if (style.display === 'none' || style.visibility === 'hidden' || !(box.width > 0 && box.height > 0)) continue;
+    for (const value of native(e)) {
+      const el = slotOf(e), id = el?.getAttribute('data-copy-slot');
+      if (!id || !wanted.has(id)) { errors.push(`unlisted native copy: ${value.slice(0, 60)}`); continue; }
+      if (!wanted.get(id).includes(value)) { errors.push(`native copy in slot ${id} differs from deck: ${value.slice(0, 60)}`); continue; }
+      used.add(id);
+    }
+  }
+  const slotText = e => norm(e.textContent) || native(e).join(' ');
   for (const [id, text] of wanted) {
     const matches = elements.filter(e => e.getAttribute('data-copy-slot') === id);
-    if (matches.length !== 1 || norm(matches[0].textContent) !== text) errors.push(`copy slot ${id} differs from deck`);
+    if (matches.length !== 1 || slotText(matches[0]) !== text) errors.push(`copy slot ${id} differs from deck`);
     if (!used.has(id)) errors.push(`copy slot ${id} not visible`);
   }
   return { errors, pass: errors.length === 0 };
@@ -179,23 +194,26 @@ const integrityFor = async (pagePath, scope) => {
     const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
     const widthsFor = validWidths(handoff?.settings?.desktopWidths) ? handoff.settings.desktopWidths : [1440];
     // R13 N11/N12: the canonical gate result, per width where the gate is per width.
-    const measure = async pg => { try {
+    // R17: the rendered-visibility backstop runs once per rendering in the probe world (screenshots are shared by both
+    // worlds) and its counts enter both vectors; its items are kept as evidence.
+    const measure = async (pg, vis) => { try {
       const d = await pg.evaluate(designProbe), sp = await pg.evaluate(spacingProbe, approvedScale.values), ct = await pg.evaluate(contrastProbe);
       Object.assign(d, copySignals(d.visibleText, d.headlines));
       const doc = await pg.evaluate(() => document.documentElement.scrollHeight), ratios = [];
       for (let y = 0; y < doc; y += 900) { await pg.evaluate(y => scrollTo(0, y), y); ratios.push((await pg.evaluate(designProbe)).accentViewportRatio); }
       await pg.evaluate(() => scrollTo(0, 0));
       const rs = (await screenWidths(pg, widthsFor, null)).results, per = k => Object.fromEntries(rs.map(r => [r.width, k === 'horizontalOverflow' ? Number(r.horizontalOverflow) : r[k]?.length ?? 0])), r320 = rs.find(r => r.width === 320);
-      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked, contrastEffects: ct.contrastEffects }, content: await pg.evaluate(contentProbe) };
+      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked, contrastEffects: ct.contrastEffects, ...Object.fromEntries(VISIBILITY_FIELDS.map(k => [k, vis?.[k]])) }, content: await pg.evaluate(contentProbe), visibility: vis ? { ...vis } : null };
     } catch (e) { return { vector: null, content: null, error: e.message }; } };
     const href = pathToFileURL(resolve(pagePath)).href;
     const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);
     await icProbe.goto(href); await ready(icProbe);
-    const probe = await measure(icProbe), pageWorld = await measure(icMain);
+    const scan = async pg => { try { return await visibilityScan(pg); } catch (e) { return { error: e.message }; } };
+    const vis = await scan(icProbe), probe = await measure(icProbe, vis), pageWorld = await measure(icMain, vis);
     let tamperSigns = null; try { tamperSigns = await icMain.evaluate(nativeCheck); } catch {}
     const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
     await jsOffPage.goto(href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
-    const jsOff = await measure(jsOffPage);
+    const jsOff = await measure(jsOffPage, await scan(jsOffPage));
     return compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope });
   } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
   finally { for (const c of contexts) await c.close().catch(() => {}); }

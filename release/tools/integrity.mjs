@@ -51,6 +51,9 @@ export function nativeCheck() {
 // mask cannot be resolved, so the text is unknown and counted in contrastEffects (integrity is then INCOMPLETE).
 // R16-GPT-02: native control text (input and textarea values or placeholders, button-type input labels, the
 // selected option of a select) is measured too, with the placeholder colour where the placeholder shows.
+// R17-GPT-02: a shown placeholder is measured with its own computed opacity composited onto its colour and with its
+// own font size and weight. R17-MIMAR-02: the text colour is the computed -webkit-text-fill-color (it computes to
+// the color value unless set). Anything this CSS pass misses is caught by the pixel backstop (visibility.mjs).
 export function contrastProbe() {
   const parse = v => { const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(v || ''); return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null; };
   const lum = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
@@ -97,15 +100,16 @@ export function contrastProbe() {
   const boxed = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   for (const el of all) {
     const c = getComputedStyle(el);
-    let colour;
+    let colour, typo = c, own = 1;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) {
       const t = controlText(el);
       if (!t || c.visibility !== 'visible' || c.display === 'none' || !boxed(el)) continue;
-      colour = t.placeholder ? getComputedStyle(el, '::placeholder').color : c.color;
+      if (t.placeholder) { const ps = getComputedStyle(el, '::placeholder'); colour = ps.webkitTextFillColor || ps.color; own = Number(ps.opacity); typo = ps; }
+      else colour = c.webkitTextFillColor || c.color;
     } else {
       if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
       if (c.visibility !== 'visible' || c.display === 'none' || !textArea(el)) continue;
-      colour = c.color;
+      colour = c.webkitTextFillColor || c.color;
     }
     // R15 A3: CSS opacity on the element and its composed ancestors is composited (premultiplied groups). The walk
     // over backgrounds stops at an opaque one only when no node from there up is translucent.
@@ -114,14 +118,14 @@ export function contrastProbe() {
     const opaqueFrom = []; for (let i = chain.length - 1, all = true; i >= 0; i--) { all = all && chain[i][1] >= 1; opaqueFrom[i] = all ? 1 : 0; }
     const levels = []; let known = true;
     for (let i = 0; i < chain.length; i++) { const [s, op] = chain[i]; if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg || !(op >= 0 && op <= 1)) { known = false; break; } levels.push([bg, op]); if (bg[3] >= 1 && opaqueFrom[i] === 1) break; }
-    const fg = parse(colour);
+    const parsed = parse(colour), fg = parsed && own >= 0 && own <= 1 ? [parsed[0], parsed[1], parsed[2], parsed[3] * own] : null;
     if (!known || !fg) { unknown++; continue; }
     const pm = ([r, g, b, a]) => [r * a, g * a, b * a, a], fade = (x, o) => x.map(v => v * o), on = (top, under) => top.map((v, i) => v + under[i] * (1 - top[3]));
     let tx = on(pm(fg), pm(levels[0][0])), bx = pm(levels[0][0]);
     for (let i = 1; i < levels.length; i++) { const own = pm(levels[i][0]), o = levels[i - 1][1]; tx = on(fade(tx, o), own); bx = on(fade(bx, o), own); }
     const lastOp = levels.at(-1)[1], canvas = [255, 255, 255, 1], flat = x => on(fade(x, lastOp), canvas).slice(0, 3);
     const text = flat(tx), bg = flat(bx), [l1, l2] = [lum(text), lum(bg)].sort((x, y) => y - x), ratio = (l1 + 0.05) / (l2 + 0.05);
-    const size = parseFloat(c.fontSize), large = size >= 24 || (size >= 18.66 && Number(c.fontWeight) >= 700);
+    const size = parseFloat(typo.fontSize), large = size >= 24 || (size >= 18.66 && Number(typo.fontWeight) >= 700);
     checked++; if (ratio < (large ? 3 : 4.5)) failures++;
   }
   return { contrastFailures: failures, contrastUnknown: unknown, contrastChecked: checked, contrastEffects: effects };
@@ -155,7 +159,14 @@ export function contentProbe() {
     if (!/^(INPUT|TEXTAREA|SELECT|IMG)$/.test(e.tagName)) { const t = text(e); if (t) return t; }
     return norm(e.getAttribute('title')) || norm(e.getAttribute('placeholder'));
   };
-  const shownValue = e => e.tagName === 'SELECT' ? norm(e.selectedOptions?.[0]?.text) : /^(INPUT|TEXTAREA)$/.test(e.tagName) && !['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'submit', 'reset', 'button'].includes(e.type) ? norm(e.value) || norm(e.placeholder) : '';
+  // R17-GPT-01: the displayed value is recorded separately from the accessible name: a button-type input shows its
+  // value (the browser's default label for submit and reset without one), so a value that only script supplies
+  // differs with JavaScript off even when an aria-label keeps the name the same.
+  const shownValue = e => {
+    if (e.tagName === 'SELECT') return norm(e.selectedOptions?.[0]?.text);
+    if (e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type)) return e.hasAttribute('value') ? norm(e.value) : e.type === 'button' ? '' : e.type;
+    return /^(INPUT|TEXTAREA)$/.test(e.tagName) && !['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image'].includes(e.type) ? norm(e.value) || norm(e.placeholder) : '';
+  };
   const named = e => /^(INPUT|TEXTAREA|SELECT|BUTTON|IMG)$/.test(e.tagName) || (e.tagName === 'A' && e.hasAttribute('href')) || e.hasAttribute('role') || e.hasAttribute('aria-label') || e.hasAttribute('aria-labelledby');
   const controls = all.filter(e => named(e) && !(e.tagName === 'INPUT' && e.type === 'hidden') && shown(e)).map(e => [e.tagName.toLowerCase() + (e.tagName === 'INPUT' ? ':' + e.type : '') + (e.getAttribute('role') ? '[' + e.getAttribute('role') + ']' : ''), nameOf(e), shownValue(e)]);
   return { slots, headings, controls, h1: all.filter(e => e.tagName === 'H1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
@@ -194,7 +205,11 @@ export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Numbe
 // (string or null), ratio (finite non-negative number or null; null means the gate could not measure it), widths
 // (per-width counts keyed by CSS width, so {1440:1, 320:0} and {1440:0, 320:1} differ) and coverage (a count that
 // must match between worlds but is never "worse"; zero JavaScript-off contrast coverage makes the run INCOMPLETE).
-export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count' };
+export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count', textMeasured: 'coverage', textObscured: 'count', textUnreadable: 'count', textUnmeasured: 'count' };
+// R17: the rendered-visibility backstop (visibility.mjs) supplies textMeasured, textObscured, textUnreadable and
+// textUnmeasured for each rendering.
+export { visibilityScan, VISIBILITY } from './visibility.mjs';
+export const VISIBILITY_FIELDS = ['textMeasured', 'textObscured', 'textUnreadable', 'textUnmeasured'];
 export const INTEGRITY_CHECKS = [...Object.keys(VECTOR), 'content'];
 const isCount = x => Number.isInteger(x) && x >= 0;
 const validField = (t, x) => t === 'count' || t === 'coverage' ? isCount(x) : t === 'flag' ? typeof x === 'boolean' : t === 'text' ? typeof x === 'string' || x === null : t === 'ratio' ? x === null || (typeof x === 'number' && Number.isFinite(x) && x >= 0) : !!x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length > 0 && Object.entries(x).every(([w, n]) => /^\d+$/.test(w) && isCount(n));
@@ -238,7 +253,14 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   // R16-GPT-01: text under a filter, blend mode, backdrop filter or mask that the probe cannot resolve, in either
   // rendering, is never a silent pass; the cross-check is INCOMPLETE (the main gates still fail glass).
   for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.contrastEffects > 0) notes.push(`${where}: ${run.vector.contrastEffects} text element(s) under compositing effects the contrast probe cannot resolve`);
-  for (const d of differences) { const e = explain(d.check); if (e) expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); else mismatches.push({ ...d, source: 'js-off' }); }
+  // R17: the rendered-visibility backstop. Text the scripted page paints but leaves covered by another layer or below
+  // the pixel readability floor fails outright; JavaScript-off text that is worse (obscured, unreadable or
+  // unmeasurable where the scripted page painted it) is an integrity mismatch through the vector comparison above,
+  // and a reviewed jsOffDifferences entry for it keeps the evidence but never makes it PASS (INCOMPLETE). Text that
+  // cannot be measured in either rendering is INCOMPLETE.
+  for (const k of ['textObscured', 'textUnreadable']) if (probe.vector[k] > 0) mismatches.push({ check: k, source: 'rendered', detail: `the scripted page paints ${probe.vector[k]} text element(s) ${k === 'textObscured' ? 'covered by another painted layer' : 'below the pixel readability floor'}` });
+  for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.textUnmeasured > 0) notes.push(`${where}: ${run.vector.textUnmeasured} text element(s) the visibility backstop cannot measure (no box, clipped to nothing, off-screen or too few pixels)`);
+  for (const d of differences) { const e = explain(d.check); if (e) { expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); if (['textObscured', 'textUnreadable', 'textUnmeasured'].includes(d.check)) notes.push(`JavaScript-off ${d.check} differs (reviewed waiver recorded); text visible only with JavaScript is never PASS`); } else mismatches.push({ ...d, source: 'js-off' }); }
   // R12 M08, R13 N14: non-equivalent JavaScript-off content is never PASS. An unexplained difference is a mismatch;
   // a reviewed `content` entry is kept as evidence, but the JavaScript-off metrics stay unverified (INCOMPLETE).
   if (!sameContent) notes.push(explain('content') ? 'JavaScript-off content differs (reviewed waiver recorded); its metrics are unverified' : 'JavaScript-off content is not equivalent; its metrics prove nothing');

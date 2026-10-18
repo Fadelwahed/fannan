@@ -181,6 +181,39 @@ const r16Want = {
   wireframe: r16.wireframe.homeEn !== undefined && r16.wireframe.aboutEn === false && /no rendering declared/.test(r16.wireframe.homeAr || '') && /no rendering declared/.test(r16.wireframe.aboutAr || '') && r16.wireframe.contractNamesAbout && r16.wireframe.pass === false,
 };
 if (Object.values(r16Want).some(v => !v)) throw Error('R16-GPT-01/02/03 full-run expectations failed: ' + JSON.stringify(r16Want));
+// R17 (panel round 17): full pre-handoff runs for the rendered-visibility backstop (R17-MIMAR-01/02, R17-GPT-02), the
+// control value/name split (R17-GPT-01), native copy screening (R17-GPT-03) and a healthy scroll reveal (no false
+// positive). Results are collected first so a checker without the fixes shows every gap.
+writeFileSync(handoff, JSON.stringify(authored));
+const r17 = {};
+const r17Run = (name, extraHtml, script, head = '') => {
+  writeFileSync(html, original.replace('</head>', `${head}</head>`).replace('</main>', `${extraHtml}</main>${script ? `<script>${script}</script>` : ''}`));
+  const started = Date.now();
+  const { result } = runChecker(join(output, `evidence-r17-${name}`), true);
+  const state = result.checks.states.find(x => x.state === 'default');
+  const vis = [result.checks.integrity?.probeWorld?.visibility, result.checks.integrity?.jsOff?.visibility];
+  return { page: result.checks.integrity?.status, state: state?.integrity?.status, checks: [...new Set([...(result.checks.integrity?.mismatches || []), ...(state?.integrity?.mismatches || [])].map(m => `${m.check}/${m.source || 'world'}`))].sort(), copy: state?.copy?.errors || [], placeholders: result.checks.design?.placeholders, filler: result.checks.design?.filler, visibilityMs: vis.map(v => v?.ms ?? null), runMs: Date.now() - started, pass: result.pass };
+};
+r17.clipPath = r17Run('clip-path', '<p id="r17c" style="clip-path:inset(0 100% 0 0)">Revealed later</p>', 'document.getElementById("r17c").style.clipPath = "none";');
+r17.scale = r17Run('scale', '<p id="r17s" style="transform:scale(.02)">Scaled in later</p>', 'document.getElementById("r17s").style.transform = "none";');
+r17.preloader = r17Run('preloader', '<div id="r17p" style="position:fixed;inset:0;background:#fff"></div>', 'document.getElementById("r17p").remove();');
+r17.placeholderOpacity = r17Run('placeholder', '<input id="r17i" placeholder="name@example.org">', 'document.getElementById("r17i").classList.add("ok");', '<style>#r17i::placeholder{color:#000;opacity:.05}#r17i.ok::placeholder{opacity:1}</style>');
+r17.textFill = r17Run('text-fill', '<p id="r17t" style="-webkit-text-fill-color:transparent">Filled in later</p>', 'document.getElementById("r17t").style.webkitTextFillColor = "currentColor";');
+r17.gradient = r17Run('gradient', '<div style="position:relative"><p>First line<br>second line<br>third line</p><div id="r17g" style="position:absolute;inset:0;background:linear-gradient(transparent,#fff 60%)"></div></div>', 'document.getElementById("r17g").remove();');
+r17.ariaSubmit = r17Run('aria-submit', '<input id="r17a" type="submit" aria-label="Start now" value="">', 'document.getElementById("r17a").value = "Start now";');
+r17.nativeCopy = r17Run('native-copy', '<input placeholder="[placeholder]"><input type="submit" value="Lorem ipsum">');
+r17.healthyReveal = r17Run('healthy-reveal', '<p class="r17r" style="margin-top:1200px">Revealed on scroll</p>', 'const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add("in"))); document.querySelectorAll(".r17r").forEach(e => io.observe(e));', '<style>.r17r{opacity:0;transition:opacity .6s}.r17r.in{opacity:1}</style><noscript><style>.r17r{opacity:1}</style></noscript>');
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R17 fixture runs: ' + JSON.stringify(r17));
+const lost17 = r => r.page === 'integrity mismatch' && r.state === 'integrity mismatch' && r.checks.some(c => /^text(Obscured|Unreadable)\/js-off$/.test(c)) && r.pass === false;
+const r17Want = {
+  clipPath: lost17(r17.clipPath), scale: lost17(r17.scale), preloader: lost17(r17.preloader), placeholderOpacity: lost17(r17.placeholderOpacity), textFill: lost17(r17.textFill), gradient: lost17(r17.gradient),
+  ariaSubmit: r17.ariaSubmit.page !== 'PASS' && r17.ariaSubmit.checks.includes('content/js-off') && r17.ariaSubmit.pass === false,
+  nativeCopy: r17.nativeCopy.copy.some(e => /unlisted native copy: \[placeholder\]/.test(e)) && r17.nativeCopy.copy.some(e => /unlisted native copy: Lorem ipsum/.test(e)) && r17.nativeCopy.placeholders === true && r17.nativeCopy.pass === false,
+  healthyReveal: r17.healthyReveal.page === 'PASS' && r17.healthyReveal.state === 'PASS',
+};
+if (Object.values(r17Want).some(v => !v)) throw Error('R17 full-run expectations failed: ' + JSON.stringify(r17Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
