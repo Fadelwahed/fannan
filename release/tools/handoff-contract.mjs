@@ -108,6 +108,10 @@ export function checkHandoff(h, phase = 'handoff') {
   }
   for (const s of h?.screens || []) {
     need(nonempty(s.id) && nonempty(s.page), `screen ${s.id || '?'}: id/page required`);
+    need(file(s.page), `screen ${s.id || '?'}: page must exist`); // R16-GPT-03
+    // R16-GPT-03: a wireframe PASS covers every declared screen and locale: each declared language/direction has an
+    // applicable default rendering with an existing page (frames and approval are not required yet).
+    if (phase === 'wireframe') for (const lang of h.languages || []) need((s.states || []).some(st => st.state === 'default' && st.lang === lang.lang && st.dir === lang.dir && st.applicable !== false && file(st.page)), `screen ${s.id}: wireframe rendering for ${lang.lang}/${lang.dir} needs a default state with an existing page`);
     need(Array.isArray(s.headingOutline) && s.headingOutline.filter(x => x.level === 1).length === 1, `screen ${s.id}: exactly one H1 in outline`);
     need(nonempty(s.seoIntent) && nonempty(s.schemaIntent), `screen ${s.id}: SEO/schema intent required`);
     need(Array.isArray(s.images) && s.images.every(i => nonempty(i.id) && nonempty(i.altIntent) && typeof i.alt === 'string'), `screen ${s.id}: image alt text and intent required`);
@@ -131,12 +135,30 @@ export function checkHandoff(h, phase = 'handoff') {
     }
   }
   need(Array.isArray(h.languages) && h.languages.length > 0 && h.languages.every(l => nonempty(l.lang) && ['ltr', 'rtl'].includes(l.dir)), 'languages/directions required');
+  // R16-GPT-04: one shared definition per reused component (variants, states, token bindings, behaviour) that every
+  // screen instance references by id. An instance may choose a declared variant and account for its states, but any
+  // specification field it repeats must equal the shared definition, so one component specified differently on two
+  // screens fails. Token bindings may be empty in the grayscale wireframe phase.
+  const stable = x => JSON.stringify(x, (k, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(key => [key, v[key]])) : v);
+  const inventory = Array.isArray(h?.components) ? h.components : [];
+  need(inventory.length > 0 && new Set(inventory.map(c => c?.id)).size === inventory.length && inventory.every(c => nonempty(c?.id) && Array.isArray(c.variants) && c.variants.length > 0 && c.variants.every(nonempty) && Array.isArray(c.states) && c.states.includes('default') && c.states.every(nonempty) && !!c.tokens && typeof c.tokens === 'object' && !Array.isArray(c.tokens) && (phase !== 'handoff' || Object.keys(c.tokens).length > 0) && nonempty(c.behaviour)), 'components: one shared definition per component (unique id, variants, states including default, token bindings, behaviour) required');
+  const shared = new Map(inventory.filter(c => nonempty(c?.id)).map(c => [c.id, c]));
+  const SPEC = ['variants', 'tokens', 'behaviour', 'anatomy', 'sizes', 'usage', 'content'];
+  for (const s of h?.screens || []) for (const c of Array.isArray(s.components) ? s.components : []) {
+    const def = shared.get(c?.id);
+    need(!!def, `screen ${s.id}: component ${c?.id} must reference the shared component inventory`);
+    if (!def) continue;
+    if (c.variant !== undefined) need(def.variants?.includes(c.variant), `screen ${s.id}: component ${c.id} uses variant ${c.variant}, not in its shared definition`);
+    for (const k of SPEC) if (c[k] !== undefined) need(stable(c[k]) === stable(def[k]), `screen ${s.id}: component ${c.id} specifies ${k} differently from its shared definition`);
+    for (const st of Array.isArray(c.states) ? c.states : []) if (st?.applicable !== false) need(def.states?.includes(st?.state), `screen ${s.id}: component ${c.id} state ${st?.state} is not in its shared definition`);
+  }
   const manual = h?.manualChecks || [];
   need(new Set(manual.map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`)).size === manual.length, 'manual check IDs must be unique per screen/language/state');
   const ids = new Set(manual.filter(m => m.decision === 'PASS' && nonempty(m.reviewer) && file(m.artifact) && nonempty(m.note) && m.briefRefs?.length > 0 && m.briefRefs.every(ref)).map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`));
   const deferred = new Set(manual.filter(m => m.decision === 'DEFERRED' && nonempty(m.reviewer) && file(m.artifact) && nonempty(m.note)).map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`));
   need(manual.every(m => m.decision === 'PASS' || (phase === 'wireframe' && m.decision === 'DEFERRED' && [...wireframeDeferred, ...wireframeDeferrable].includes(m.id))), 'manual FAIL or unjustified DEFERRED blocks');
-  for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : [{ state: 'wireframe', lang: h.languages?.[0]?.lang }])) {
+  // R16-GPT-03: wireframe manual records are required for every screen in every declared language, not only the first.
+  for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : (h.languages || []).map(l => ({ state: 'wireframe', lang: l.lang })))) {
     if (st.applicable === false) continue;
     for (const id of manualIds) {
       const key = `${s.id}/${st.lang}/${st.state}/${id}`;
@@ -164,6 +186,9 @@ export function checkHandoff(h, phase = 'handoff') {
     const checksOf = r => [...(Array.isArray(r?.copyChecks) ? r.copyChecks : []), ...(Array.isArray(r?.designChecks) ? r.designChecks : [])];
     need(rounds.every(r => checksOf(r).every(c => criticRows.includes(c?.row))), `critic checks must each name a rubric row (${criticRows.join(', ')})`);
     const last = rounds.at(-1);
+    // R16-GPT-04: the critic compares equivalent component instances across every screen in the final round.
+    const comparison = last?.componentComparison;
+    need(comparison?.decision === 'PASS' && file(comparison.evidence) && Array.isArray(comparison.screens) && (h.screens || []).every(sc => comparison.screens.includes(sc.id)), 'critic final round needs a passing, evidenced componentComparison covering every screen');
     for (const row of criticRows) need(checksOf(last).some(c => c?.row === row && c.decision === 'PASS' && file(c.evidence)), `critic row ${row}: the final round needs a passing, evidenced check`);
     const frameIds = (h.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => `${s.id}/${st.lang}/${st.state}/${st.frame?.version}/${st.frame?.sha256}`));
     const approvalText = file(h.approval?.record) ? readFileSync(resolve(h.approval.record), 'utf8') : '';

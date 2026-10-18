@@ -94,8 +94,9 @@ const authored = {
     { id: 'button', screen: 'home', kind: 'interface', purpose: 'start flow', text: 'Start', minChars: 1, maxChars: 20, tone: 'direct', placementScreenshot: shot, placements: [{ lang: 'en', state: 'default', screenshot: shot }], source: { kind: 'brief', path: brief, ref: 'brief.md:4' }, lang: 'en', dir: 'ltr', variants: [{ lang: 'en', dir: 'ltr', text: 'Start', source: { path: brief, ref: 'brief.md:4' } }] }
   ],
   facts: [], placeholders: [], openQuestions: [], languages: [{ lang: 'en', dir: 'ltr' }], assets: [], motion: [],
+  components: [{ id: 'start-button', variants: ['primary'], states: ['default'], tokens: { background: 'colors.primary', label: 'typography.label' }, behaviour: 'starts the service flow; one per viewport' }],
   manualChecks: manualIds.map(id => ({ id, screen: 'home', lang: 'en', state: 'default', decision: 'PASS', reviewer: 'fixture-reviewer', artifact: shot, note: 'test fixture only', briefRefs: ['brief.md:1'] })),
-  critic: { referenceWork: shot, rounds: [{ decision: 'PASS', reviewer: 'fixture-critic', evidence: shot, copyChecks: [{ row: 'copy-truth', decision: 'PASS', evidence: shot }], designChecks: criticRows.filter(row => row !== 'copy-truth').map(row => ({ row, decision: 'PASS', evidence: shot })) }] },
+  critic: { referenceWork: shot, rounds: [{ decision: 'PASS', reviewer: 'fixture-critic', evidence: shot, copyChecks: [{ row: 'copy-truth', decision: 'PASS', evidence: shot }], designChecks: criticRows.filter(row => row !== 'copy-truth').map(row => ({ row, decision: 'PASS', evidence: shot })), componentComparison: { screens: ['home'], decision: 'PASS', evidence: shot } }] },
   approval: { decision: 'approved', approver: 'approver-fixture', record: approved, frameIds: [frameId] }
 };
 writeFileSync(handoff, JSON.stringify(authored));
@@ -148,6 +149,38 @@ const movingLoading = movingState.checks.states.find(x => x.state === 'loading')
 const motionRuns = { page: { pass: movingPage.checks.reducedMotion?.pass, changed: movingPage.checks.reducedMotion?.elementsChangedOver700ms, raf: movingPage.checks.reducedMotion?.rafCallsOver700ms }, state: { positional: movingState.checks.reducedMotion?.pass, defaultState: movingDefault?.reducedMotion?.pass, loading: movingLoading?.reducedMotion?.pass, loadingChanged: movingLoading?.reducedMotion?.elementsChangedOver700ms, loadingStatePass: movingLoading?.pass } };
 console.log('R14 fixture shadow-motion runs: ' + JSON.stringify(motionRuns));
 if (movingPage.checks.reducedMotion?.pass !== false || !(movingPage.checks.reducedMotion.elementsChangedOver700ms > 0) || movingPage.pass || movingState.checks.reducedMotion?.pass !== true || movingDefault?.reducedMotion?.pass !== true || movingLoading?.reducedMotion?.pass !== false || movingLoading.pass !== false) throw Error('R14-GPT-05: shadow-root timer motion must fail reduced motion on the page and on the state that has it: ' + JSON.stringify(motionRuns));
+// R16 (panel round 16): full pre-handoff runs for R16-GPT-01/02 (positional page and its declared state) and the
+// wireframe-phase coverage of R16-GPT-03. Results are collected first so a checker without the fixes shows every gap.
+writeFileSync(handoff, JSON.stringify(authored));
+const r16 = {};
+const r16Run = (name, extraHtml, script) => {
+  writeFileSync(html, original.replace('</main>', `${extraHtml}</main><script>${script}</script>`));
+  const { result } = runChecker(join(output, `evidence-r16-${name}`), true);
+  const state = result.checks.states.find(x => x.state === 'default');
+  return { page: result.checks.integrity?.status, state: state?.integrity?.status, checks: [...new Set([...(result.checks.integrity?.mismatches || []), ...(state?.integrity?.mismatches || [])].map(m => `${m.check}/${m.source || 'world'}`))].sort(), pass: result.pass };
+};
+r16.filterReveal = r16Run('filter', '<p id="r16f" style="filter:blur(8px)">Revealed later</p>', 'document.getElementById("r16f").style.filter = "none";');
+r16.fadedSubmit = r16Run('submit', '<input id="r16s" type="submit" value="Start now" style="opacity:.05">', 'document.getElementById("r16s").style.opacity = "1";');
+r16.scriptedLabel = r16Run('label', '<label id="r16l" for="r16e"></label><input id="r16e" type="email">', 'document.getElementById("r16l").textContent = "Email address";');
+writeFileSync(html, original);
+const aboutPage = join(output, 'about.html');
+writeFileSync(aboutPage, original.replace('</main>', '<h1>Second top heading</h1></main>'));
+const wide = JSON.parse(JSON.stringify(authored));
+wide.languages = [{ lang: 'en', dir: 'ltr' }, { lang: 'ar', dir: 'rtl' }];
+wide.screens.push({ ...JSON.parse(JSON.stringify(authored.screens[0])), id: 'about', page: aboutPage, states: [{ state: 'default', lang: 'en', dir: 'ltr', page: aboutPage }] });
+writeFileSync(handoff, JSON.stringify(wide));
+const { result: wideWire } = runChecker(join(output, 'evidence-r16-wireframe-coverage'), true, ['--phase=wireframe']);
+const scopeOf16 = (screen, lang) => wideWire.checks.states.find(x => x.screen === screen && x.lang === lang);
+r16.wireframe = { homeEn: scopeOf16('home', 'en')?.pass, homeAr: scopeOf16('home', 'ar')?.error, aboutEn: scopeOf16('about', 'en')?.pass, aboutAr: scopeOf16('about', 'ar')?.error, contractNamesAbout: (wideWire.checks.contract?.errors || []).some(e => /manual about\/ar\/wireframe/.test(e)), pass: wideWire.pass };
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R16 fixture runs: ' + JSON.stringify(r16));
+const r16Want = {
+  filterReveal: r16.filterReveal.page === 'INCOMPLETE' && r16.filterReveal.state === 'INCOMPLETE' && r16.filterReveal.pass === false,
+  fadedSubmit: r16.fadedSubmit.page === 'integrity mismatch' && r16.fadedSubmit.checks.includes('contrastFailures/js-off') && r16.fadedSubmit.pass === false,
+  scriptedLabel: r16.scriptedLabel.page !== 'PASS' && r16.scriptedLabel.checks.includes('content/js-off') && r16.scriptedLabel.pass === false,
+  wireframe: r16.wireframe.homeEn !== undefined && r16.wireframe.aboutEn === false && /no rendering declared/.test(r16.wireframe.homeAr || '') && /no rendering declared/.test(r16.wireframe.aboutAr || '') && r16.wireframe.contractNamesAbout && r16.wireframe.pass === false,
+};
+if (Object.values(r16Want).some(v => !v)) throw Error('R16-GPT-01/02/03 full-run expectations failed: ' + JSON.stringify(r16Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');

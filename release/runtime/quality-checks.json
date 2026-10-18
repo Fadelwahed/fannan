@@ -44,7 +44,8 @@
     "emphasis-order",
     "type-measure",
     "colour-roles",
-    "grid-per-width"
+    "grid-per-width",
+    "component-consistency"
   ],
   "wireframeDeferred": [
     "accent-area",

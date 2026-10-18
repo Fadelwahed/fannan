@@ -41,8 +41,9 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
       screens: [{ id: 'home', page: frame, headingOutline: [{ level: 1, text: 'Specific headline.' }], seoIntent: 'service page', schemaIntent: 'none', images: [], actions: [], states: [{ state: 'default', lang: 'en', dir: 'ltr', page: frame, frame: { path: frame, width: 1440, version: 'v1', sha256: hash } }, ...states.slice(1).map(na)], components: [{ id: 'heading', states: [{ state: 'default', lang: 'en', dir: 'ltr', applicable: true, evidence: frame }, ...states.slice(1).map(na)] }], acceptance: [{ id: 'title', severity: 'BLOCK', decision: 'PASS', check: 'title visible', evidence: frame }], wcag: { standard: '2.2 AA', contrastEvidence: frame, focusOrderEvidence: frame, targetSizeEvidence: frame } }],
       copySlots: [{ id: 'hero', screen: 'home', kind: 'interface', purpose: 'state service', text: 'Specific headline.', minChars: 5, maxChars: 30, tone: 'direct', placementScreenshot: frame, placements: [{ lang: 'en', state: 'default', screenshot: frame }], source: { kind: 'brief', path: brief, ref: 'brief.md:2' }, lang: 'en', dir: 'ltr', variants: [{ lang: 'en', dir: 'ltr', text: 'Specific headline.', source: { path: brief, ref: 'brief.md:2' } }] }],
       facts: [], placeholders: [], openQuestions: [], languages: [{ lang: 'en', dir: 'ltr' }], assets: [], motion: [],
+      components: [{ id: 'heading', variants: ['page-title'], states: ['default'], tokens: { color: 'colors.primary', size: 'typography.title' }, behaviour: 'static page heading; wraps, never truncates' }],
       manualChecks: manualIds.map(id => ({ id, screen: 'home', lang: 'en', state: 'default', decision: 'PASS', reviewer: 'reviewer-x', artifact: frame, note: 'inspected', briefRefs: ['brief.md:1'] })),
-      critic: { referenceWork: frame, rounds: [{ decision: 'PASS', reviewer: 'critic-x', evidence: frame, copyChecks: [{ row: 'copy-truth', decision: 'PASS', evidence: frame }], designChecks: RUBRIC_ROWS.filter(row => row !== 'copy-truth').map(row => ({ row, decision: 'PASS', evidence: frame })) }] },
+      critic: { referenceWork: frame, rounds: [{ decision: 'PASS', reviewer: 'critic-x', evidence: frame, copyChecks: [{ row: 'copy-truth', decision: 'PASS', evidence: frame }], designChecks: RUBRIC_ROWS.filter(row => row !== 'copy-truth').map(row => ({ row, decision: 'PASS', evidence: frame })), componentComparison: { screens: ['home'], decision: 'PASS', evidence: frame } }] },
       approval: { decision: 'approved', approver: 'approver-x', record: approved, frameIds: [frameId] }
     };
     assert.deepEqual(checkHandoff(h), []);
@@ -142,5 +143,53 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     const handoffDeferred = JSON.parse(JSON.stringify(h)); handoffDeferred.manualChecks = handoffDeferred.manualChecks.map(m => m.id === 'type-measure' ? { ...m, decision: 'DEFERRED' } : m);
     r15.handoffDeferredFails = checkHandoff(handoffDeferred).some(e => /manual/.test(e));
     assert.deepEqual(r15, { manualIds: [], criticRows: RUBRIC_ROWS, missingFeedbackLog: true, missingCraft: [], missingRow: [], unkeyedFails: true, earlierRoundOk: true, wireframeDeferredCraft: [], wireframePassedCraft: [], wireframeDeferredTaskTest: true, wireframeAccentPassFails: true, handoffDeferredFails: true });
+    // R16-GPT-03: the wireframe phase covers every screen and every declared language, with existing pages.
+    const r16 = {};
+    const wf2 = JSON.parse(JSON.stringify(h)); wf2.phase = 'wireframe';
+    wf2.languages = [{ lang: 'en', dir: 'ltr' }, { lang: 'ar', dir: 'rtl' }];
+    wf2.copySlots.forEach(c => c.variants.push({ lang: 'ar', dir: 'rtl', text: c.text, source: c.source }));
+    wf2.screens.push({ ...JSON.parse(JSON.stringify(wf2.screens[0])), id: 'about', page: join(dir, 'missing-about.html') });
+    wf2.screens[1].states = wf2.screens[1].states.map(st => ({ ...st, page: join(dir, 'missing-about.html') }));
+    wf2.screens[0].states.push({ state: 'default', lang: 'ar', dir: 'rtl', page: frame });
+    wf2.manualChecks = wf2.screens.flatMap(sc => manualIds.map(id => ({ id, screen: sc.id, lang: 'en', state: 'wireframe', decision: ['accent-area', 'palette'].includes(id) ? 'DEFERRED' : 'PASS', reviewer: 'reviewer-x', artifact: frame, note: 'grayscale review', briefRefs: ['brief.md:1'] })));
+    const wfErrors = checkHandoff(wf2, 'wireframe').join('\n');
+    r16.missingPage = /screen about: page must exist/.test(wfErrors);
+    r16.secondScreenRendering = /screen about: wireframe rendering for en\/ltr/.test(wfErrors);
+    r16.secondLocaleRendering = /screen about: wireframe rendering for ar\/rtl/.test(wfErrors) && !/screen home: wireframe rendering/.test(wfErrors);
+    r16.secondLocaleManual = /manual home\/ar\/wireframe\/point-of-view/.test(wfErrors) && /manual about\/ar\/wireframe/.test(wfErrors) && !/manual home\/en\/wireframe/.test(wfErrors);
+    // R16-GPT-04: one shared component definition, referenced by every screen; differences fail.
+    r16.componentInventory = manualIds.includes('component-consistency') && checkHandoff(h).length === 0;
+    const noInventory = JSON.parse(JSON.stringify(h)); delete noInventory.components;
+    r16.missingInventory = /components: one shared definition/.test(checkHandoff(noInventory).join('\n'));
+    const two = JSON.parse(JSON.stringify(h));
+    two.screens.push({ ...JSON.parse(JSON.stringify(two.screens[0])), id: 'about' });
+    two.critic.rounds[0].componentComparison.screens = ['home', 'about'];
+    const twoSpec = () => checkHandoff(two).filter(e => /component heading|componentComparison/.test(e));
+    two.screens[0].components[0].tokens = { color: 'colors.primary', size: 'typography.title' };
+    two.screens[1].components[0].tokens = { size: 'typography.title', color: 'colors.primary' };
+    r16.sameSpecOnTwoScreens = twoSpec();
+    two.screens[1].components[0].tokens = { color: 'colors.accent', size: 'typography.section' };
+    two.screens[1].components[0].behaviour = 'truncates after one line';
+    r16.differentSpecOnTwoScreens = twoSpec();
+    two.screens[1].components[0].tokens = two.screens[0].components[0].tokens; delete two.screens[1].components[0].behaviour;
+    two.screens[1].components[0].variant = 'hero-title';
+    r16.undeclaredVariant = twoSpec();
+    delete two.screens[1].components[0].variant;
+    two.screens[1].components[0].id = 'badge';
+    r16.unknownComponent = checkHandoff(two).some(e => /component badge must reference the shared component inventory/.test(e));
+    two.screens[1].components[0].id = 'heading';
+    two.critic.rounds[0].componentComparison.screens = ['home'];
+    r16.comparisonMissesScreen = twoSpec();
+    r16.missingConsistencyCheck = /manual home\/en\/default\/component-consistency/.test(dropManual('component-consistency'));
+    assert.deepEqual(r16, {
+      missingPage: true, secondScreenRendering: true, secondLocaleRendering: true, secondLocaleManual: true,
+      componentInventory: true, missingInventory: true,
+      sameSpecOnTwoScreens: [],
+      differentSpecOnTwoScreens: ['screen about: component heading specifies tokens differently from its shared definition', 'screen about: component heading specifies behaviour differently from its shared definition'],
+      undeclaredVariant: ['screen about: component heading uses variant hero-title, not in its shared definition'],
+      unknownComponent: true,
+      comparisonMissesScreen: ['critic final round needs a passing, evidenced componentComparison covering every screen'],
+      missingConsistencyCheck: true,
+    });
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
