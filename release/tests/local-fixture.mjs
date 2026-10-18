@@ -265,7 +265,7 @@ const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored,
   let extraState = null;
   // R20: statePageHtml may also be a list of [state, html] pairs (reveal states: an accordion's open state, each slide)
   const extra = !statePageHtml ? [] : Array.isArray(statePageHtml) ? statePageHtml : [['dialog-open', statePageHtml]];
-  if (extra.length) { const h = JSON.parse(JSON.stringify(handoffJson)); for (const [stName, stHtml] of extra) { const sp = join(output, `r19-${name}-${stName}.html`); writeFileSync(sp, stHtml); extraState = stName; h.screens[0].states.push({ state: stName, lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: stName }))]; } handoffJson = h; }
+  if (extra.length) { const h = JSON.parse(JSON.stringify(handoffJson)); for (const [stName, stHtml] of extra) { const sp = join(output, `r19-${name}-${stName}.html`); writeFileSync(sp, stHtml); extraState = stName; h.screens[0].states.push({ state: stName, lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: stName, ...(stateExtra.frame ? { artifact: stateExtra.frame.path } : {}) }))]; } handoffJson = h; } // R20: a state with its own approved frame is reviewed on that frame
   writeFileSync(handoff, JSON.stringify(handoffJson));
   const { result } = runChecker(join(output, `evidence-r19-${name}`), true);
   const st = result.checks.states.find(x => x.state === (extraState || 'default'));
