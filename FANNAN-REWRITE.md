@@ -452,9 +452,9 @@ The automated probes and axe run in a separate browser world (`tools/probe-world
 
 At the 320 px reflow width, ordinary text or media overflowing any sideways scroller, to the left or the right, fails. A `table`, `pre`, `code`, `role="grid"`/`role="table"` with real rows, or an element marked `data-fannan-2d="reason"` is only a **candidate**, recorded in `evidence.json` with its element and reason and never excused automatically: its scroller must fit inside 320 px and be keyboard-usable, the text around it must reflow, resizable media is not a candidate, and every candidate needs a `reflowExceptions` decision in the handoff, or the final handoff is blocked. There is no cap on the number of candidates.
 
-The accent must be the approved palette token (`colors.accent`, else `colors.primary`, from the hash-checked tokens). At final handoff an invalid or missing accent variable, or one that differs from the approved token, fails with a message naming the variable; the wireframe phase records the accent as DEFERRED, never PASS. The accent area is a DOM background-area proxy and is approximate; the screenshot review decides. The accent does not have to appear on a control.
+The accent must be the approved palette token (`colors.accent`, else `colors.primary`, from the hash-checked tokens). At final handoff an invalid or missing accent variable, or one that differs from the approved token, fails with a message naming the variable; the wireframe phase records the accent as DEFERRED, never PASS. The accent area is a DOM background-area proxy and is approximate; the screenshot review decides. The automated check does not measure accent area or coverage exactly and does not fail other off-palette colours painted on the page: accent area, coverage and stray colours are decided by the screenshots and the manual `accent-area` and `palette` reviews (panel A; R12 M19 closed on that basis). The accent does not have to appear on a control.
 
-The spacing-scale probe checks all four margins (logical margins included; `auto` and 0 are ignored), padding and gaps. An element marked `data-fannan-spacing-exception="reason"` is excused and recorded for review; a blank reason excuses nothing.
+The spacing-scale probe checks all four margins (logical margins included; `auto` and 0 are ignored), padding and gaps. An element marked `data-fannan-spacing-exception="reason"` is recorded with its element, id, reason, values and screen/state/lang in the handoff evidence (`checks.spacingExceptions`). At final handoff it excuses its values only when the handoff has a matching `spacingExceptions` entry for that element id and screen/state/lang, with a reason and the approver as reviewer; otherwise the handoff is blocked (wireframes record it as DEFERRED). A blank reason, or an element without an id, excuses nothing. Margins on `html` and `body` are screened too.
 
 ## Pass/fail checklist
 
@@ -757,6 +757,19 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R12 additions (Mi'mar, 18 October 2026, panel round 12)
+
+All browser checks below ran in Chrome 155 headless only.
+
+- **Accent area and stray colours (M19, closed):** the accent check binds the declared variable to the approved token only. Accent area and coverage are approximate (a DOM background-area proxy) and are decided by screenshots and the manual `accent-area` and `palette` reviews (panel A). A page that paints large areas in another, unapproved colour is NOT failed automatically. UNTESTED by design.
+- **Frames (M03):** any frame (same-origin, `data:`, sandboxed or cross-origin) fails the final handoff and is recorded as DEFERRED in wireframes, because axe and the probes run in the main frame only. The R11 line below that called such frames "blocked" was wrong: they were recorded, not gated. Frame content is still not inspected (a frame is a stop, not a scan).
+- **Raw glass (M04/M05):** served HTML, JavaScript and SVG count any `backdrop-filter`/`-webkit-backdrop-filter` mention not followed by `: none`, and the identifiers `backdropFilter`/`webkitBackdropFilter`; CSS escapes are resolved first; ordinary CSSOM sheets are read in the page. UNTESTED: glass built from strings at run time (`'backdrop' + 'Filter'`), and sheets whose rules the page cannot read (left to the served-file scan).
+- **Integrity (M06-M08, M17):** the full hard-fail vector (glass, h1, placeholders, centred, type sizes, hero gradient, purple-blue, icon rows, accent, spacing off-scale, overflow, clipped, offscreen-left, unreachable, scrolled text, unmeasured, reflow, contrast) is compared page world vs probe world and with JavaScript off, on the positional page and on every declared state. Contrast is a custom diagnostic (text vs resolved solid background, 4.5:1 / 3:1), not axe: axe cannot run with JavaScript off. JavaScript-off content (visible copy slots, h1 count, lang, dir) must match or the cross-check is INCOMPLETE. UNTESTED: text over images or gradients in the contrast diagnostic (counted as unknown, not failed); the native-function check stays a heuristic.
+- **320 px reflow (M01, M02, M09-M11, M14):** scrollers are measured with their own text, open shadow roots and same-origin frames; content outside a scroller's reachable range is `unreachable` at every width; keyboard use means an explicit `tabindex >= 0` scroller or usable targets that step across the whole extent; candidates and their exceptions are scoped to screen/state/lang. UNTESTED: closed shadow roots, `overflow: overlay`, scroll snapping, and whether a resolved candidate genuinely needs 2D layout (the reviewer's decision).
+- **Reduced motion (M13):** the rAF counter is private and the wrapper non-writable; a non-finite or decreasing reading counts as a loop. UNTESTED: animation driven by timers or CSS that a page starts after the 700 ms window.
+- **Spacing (M15, M20):** `html` and `body` margins are screened; every `data-fannan-spacing-exception` needs a scoped handoff `spacingExceptions` entry naming the approver. UNTESTED: exceptions on pseudo-elements.
+- **Package (M12):** environment files (`.env*`), editor locks (`.#*`), credential folders (`.ssh`, `.gnupg`, `.aws`) and credential names (`credentials`, `secrets`, `service-account`, `token`, `.npmrc`, `.netrc`, `.pypirc`, `.git-credentials`) are refused with any suffix. Plural `tokens` stays allowed because design-token files are named `tokens.json`. UNTESTED: secrets inside ordinarily named files (names only; the secret grep is manual).
+
 ## R11 additions (Mi'mar, 18 October 2026, Asad panel round 5 and panel D1 decisions)
 
 All browser checks below ran in Chrome 155 headless only.
@@ -831,6 +844,28 @@ Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs 
 Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
+
+## R12 executed verification (Mi'mar's box, 18 October 2026, about 5:10 AM UTC+3)
+
+Panel round 12 (M01-M18 agreed, M20 and M21 fixed, M19 closed; `reviews/panel-r12/`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0. Test-only deps: the existing locked tree, no new installs.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 88 PASS, 0 FAIL, 0 skipped | `test-results/r12/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 60 PASS, 0 FAIL, 28 SKIPPED (need deps or Chrome) | `test-results/r12/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r12/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r12/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 27 PASS / 23 PASS + 4 SKIPPED | `test-results/r12/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r12/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=35 (R11's 34 + `tools/exceptions.mjs`) sh=4 py=4 plus the launcher, 0 failures | `test-results/r12/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r12/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 82 PASS, 6 FAIL: the same six Style Dictionary tests that fail on Node 20 in R11 (it needs Node 22); not a gate | `test-results/r12/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r12/local-fixture.log`). From R12 the fixture ASSERTS, and prints in its log, what this file claims: integrity PASS on the page and on the declared state (full vector, page world = probe world = JavaScript off, same content), `glassSource` pass, accent PASS on the page and on the state, frames PASS, `spacingExceptions` PASS. The evidence JSON is kept as `test-results/r12/R12-fixture-evidence-valid.json`. The R11 entry below stated accent, integrity and `glassSource` as passing on the fixture without the fixture asserting them (M18); those values were true in that run's evidence but were not checked, so they were an unasserted claim.
+
+Per-finding before/after logs: `test-results/r12/R12-*-before.log` / `-after.log` (before = R12 tests against the R11 sources, d8408d4). Chrome reproduction of the browser items: `test-results/r12/R12-chrome-repro-before.log` / `-after.log` (script `repro.mjs.txt`). Harnesses: `before-after-harness.sh.txt`, `suites-harness.sh.txt`.
 
 ## R11 executed verification (Mi'mar's box, 18 October 2026, about 4:20 AM UTC+3)
 
