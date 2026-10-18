@@ -1,0 +1,4 @@
+g1ariaSubmit   JS-on  {"contrastFailures":0,"contrastUnknown":0,"contrastChecked":2,"contrastEffects":0} [["input:submit","Start now",""]]
+g1ariaSubmit   JS-off {"contrastFailures":0,"contrastUnknown":0,"contrastChecked":1,"contrastEffects":0} [["input:submit","Start now",""]]
+g2phRestore    JS-on  {"contrastFailures":0,"contrastUnknown":0,"contrastChecked":2,"contrastEffects":0} [["input:text","name@example.org","name@example.org"]]
+g2phRestore    JS-off {"contrastFailures":0,"contrastUnknown":0,"contrastChecked":2,"contrastEffects":0} [["input:text","name@example.org","name@example.org"]]

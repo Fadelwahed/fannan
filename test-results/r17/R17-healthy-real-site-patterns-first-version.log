@@ -1,0 +1,360 @@
+TAP version 13
+# Subtest: R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+not ok 1 - R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+  ---
+  duration_ms: 8611.552804
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:79:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        animated: {
+          measured: true,
+          problems: [],
+          status: 'PASS'
+    ...
+        real: {
+    +     measured: false,
+    +     problems: [
+    +       {
+    +         id: 'body/MAIN:0/A:1',
+    +         kind: 'text',
+    +         problem: 'unmeasured',
+    +         reason: 'off-screen',
+    +         text: 'Skip to content'
+    +       },
+    +       {
+    +         id: 'body/MAIN:0/A:2',
+    +         kind: 'text',
+    +         problem: 'unmeasured',
+    +         reason: 'off-screen',
+    +         text: 'Skip again'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 0,
+    +         id: 'body/MAIN:0/DETAILS:3/NAV:1/A:0',
+    +         ink: 0,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1,
+    +         text: 'Hidden link'
+    +       },
+    +       {
+    +         id: 'body/MAIN:0/DIV:4/BUTTON:0',
+    +         kind: 'name',
+    +         problem: 'unmeasured',
+    +         reason: 'no box',
+    +         text: 'Close menu'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 0,
+    +         id: 'body/MAIN:0/P:5',
+    +         ink: 568,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1.64,
+    +         text: 'Tweened paragraph 0'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 0,
+    +         id: 'body/MAIN:0/P:6',
+    +         ink: 550,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1.64,
+    +         text: 'Tweened paragraph 1'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 450,
+    +         id: 'body/MAIN:0/P:7',
+    +         ink: 715,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 2.61,
+    +         text: 'Tweened paragraph 2'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 450,
+    +         id: 'body/MAIN:0/P:8',
+    +         ink: 154,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1.24,
+    +         text: 'Tweened paragraph 3'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 900,
+    +         id: 'body/MAIN:0/P:9',
+    +         ink: 644,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1.9,
+    +         text: 'Tweened paragraph 4'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 900,
+    +         id: 'body/MAIN:0/P:10',
+    +         ink: 161,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1.24,
+    +         text: 'Tweened paragraph 5'
+    +       },
+    +       {
+    +         id: 'body/MAIN:0/A:1',
+    +         kind: 'text',
+    +         problem: 'unmeasured',
+    +         reason: 'off-screen',
+    +         text: 'Skip to content'
+    +       },
+    +       {
+    +         id: 'body/MAIN:0/A:2',
+    +         kind: 'text',
+    +         problem: 'unmeasured',
+    +         reason: 'off-screen',
+    +         text: 'Skip again'
+    +       },
+    +       {
+    +         background: [
+    +           255,
+    +           255,
+    +           255
+    +         ],
+    +         band: 0,
+    +         id: 'body/MAIN:0/DETAILS:3/NAV:1/A:0',
+    +         ink: 0,
+    +         kind: 'text',
+    +         problem: 'unreadable',
+    +         ratio: 1,
+    +         text: 'Hidden link'
+    +       },
+    +       {
+    +         id: 'body/MAIN:0/DIV:4/BUTTON:0',
+    +         kind: 'name',
+    +         problem: 'unmeasured',
+    +         reason: 'no box',
+    +         text: 'Close menu'
+    +       }
+    +     ],
+    +     status: 'integrity mismatch'
+    -     measured: true,
+    -     problems: [],
+    -     status: 'PASS'
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    healthy:
+      measured: true
+      problems:
+      status: 'PASS'
+    animated:
+      measured: true
+      problems:
+      status: 'PASS'
+    real:
+      measured: true
+      problems:
+      status: 'PASS'
+  actual:
+    healthy:
+      measured: true
+      problems:
+      status: 'PASS'
+    animated:
+      measured: true
+      problems:
+      status: 'PASS'
+    real:
+      measured: false
+      problems:
+        0:
+          id: 'body/MAIN:0/A:1'
+          kind: 'text'
+          text: 'Skip to content'
+          problem: 'unmeasured'
+          reason: 'off-screen'
+        1:
+          id: 'body/MAIN:0/A:2'
+          kind: 'text'
+          text: 'Skip again'
+          problem: 'unmeasured'
+          reason: 'off-screen'
+        2:
+          id: 'body/MAIN:0/DETAILS:3/NAV:1/A:0'
+          kind: 'text'
+          text: 'Hidden link'
+          problem: 'unreadable'
+          ratio: 1
+          ink: 0
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 0
+        3:
+          id: 'body/MAIN:0/DIV:4/BUTTON:0'
+          kind: 'name'
+          text: 'Close menu'
+          problem: 'unmeasured'
+          reason: 'no box'
+        4:
+          id: 'body/MAIN:0/P:5'
+          kind: 'text'
+          text: 'Tweened paragraph 0'
+          problem: 'unreadable'
+          ratio: 1.64
+          ink: 568
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 0
+        5:
+          id: 'body/MAIN:0/P:6'
+          kind: 'text'
+          text: 'Tweened paragraph 1'
+          problem: 'unreadable'
+          ratio: 1.64
+          ink: 550
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 0
+        6:
+          id: 'body/MAIN:0/P:7'
+          kind: 'text'
+          text: 'Tweened paragraph 2'
+          problem: 'unreadable'
+          ratio: 2.61
+          ink: 715
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 450
+        7:
+          id: 'body/MAIN:0/P:8'
+          kind: 'text'
+          text: 'Tweened paragraph 3'
+          problem: 'unreadable'
+          ratio: 1.24
+          ink: 154
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 450
+        8:
+          id: 'body/MAIN:0/P:9'
+          kind: 'text'
+          text: 'Tweened paragraph 4'
+          problem: 'unreadable'
+          ratio: 1.9
+          ink: 644
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 900
+        9:
+          id: 'body/MAIN:0/P:10'
+          kind: 'text'
+          text: 'Tweened paragraph 5'
+          problem: 'unreadable'
+          ratio: 1.24
+          ink: 161
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 900
+        10:
+          id: 'body/MAIN:0/A:1'
+          kind: 'text'
+          text: 'Skip to content'
+          problem: 'unmeasured'
+          reason: 'off-screen'
+        11:
+          id: 'body/MAIN:0/A:2'
+          kind: 'text'
+          text: 'Skip again'
+          problem: 'unmeasured'
+          reason: 'off-screen'
+        12:
+          id: 'body/MAIN:0/DETAILS:3/NAV:1/A:0'
+          kind: 'text'
+          text: 'Hidden link'
+          problem: 'unreadable'
+          ratio: 1
+          ink: 0
+          background:
+            0: 255
+            1: 255
+            2: 255
+          band: 0
+        13:
+          id: 'body/MAIN:0/DIV:4/BUTTON:0'
+          kind: 'name'
+          text: 'Close menu'
+          problem: 'unmeasured'
+          reason: 'no box'
+      status: 'integrity mismatch'
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:93:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8684.438613
