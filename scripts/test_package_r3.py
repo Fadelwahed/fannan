@@ -206,5 +206,62 @@ class BuildOrderTests(unittest.TestCase):
         self.assertLess(body.index('archive_paths()'), body.index('write_bytes('))
         self.assertLess(body.index('coverage(start)'), body.index('write_bytes('))
 
+
+class RegistryInputTests(unittest.TestCase):
+    """ARGON-R5-04: every changed path that the registry will hash is validated BEFORE the first output is written."""
+    OUTPUTS = BuildOrderTests.OUTPUTS
+    NAMED = ['ORIGINAL-ASSIGNMENT.md', 'GROK-HANDOFF.md', 'CLOUD-HANDOFF.md', 'reviews/GROK-R3-d2c36c1.md', 'scripts/package-r3.py', 'scripts/test_package_r3.py']
+
+    def run_build(self, extra, damage):
+        saved = package.ROOT, package.combined, package.changed
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'release/tools').mkdir(parents=True)
+            (root / 'release/tools/ok.mjs').write_text('ok')
+            (root / 'input').mkdir()
+            (root / 'input/brief.md').write_text('brief')
+            for name in self.NAMED:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_text(name)
+            before = {}
+            for name in self.OUTPUTS:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_bytes(b'previous ' + name.encode())
+                before[name] = (root / name).read_bytes()
+            damage(root)
+            package.ROOT = root
+            package.combined = lambda: 'regenerated'
+            package.changed = lambda start: sorted(['release/tools/ok.mjs', package.REGISTRY, *extra])
+            try:
+                with self.assertRaises(ValueError) as caught:
+                    package.build('9ee1ca6')
+            finally:
+                package.ROOT, package.combined, package.changed = saved
+            for name in self.OUTPUTS:
+                self.assertEqual((root / name).read_bytes(), before[name], name + ' was changed by a rejected build')
+            return str(caught.exception)
+
+    def test_missing_changed_path_fails_before_any_write(self):
+        message = self.run_build(['docs/deleted.md'], lambda root: None)
+        self.assertIn('docs/deleted.md', message)
+
+    def test_symlinked_changed_path_fails_before_any_write(self):
+        def damage(root):
+            (root / 'docs').mkdir(); (root / 'docs/link.md').symlink_to(root / 'input/brief.md')
+        message = self.run_build(['docs/link.md'], damage)
+        self.assertIn('docs/link.md', message)
+
+    def test_changed_path_under_a_symlinked_folder_fails_before_any_write(self):
+        def damage(root):
+            (root / 'real').mkdir(); (root / 'real/x.md').write_text('x'); (root / 'docs').symlink_to(root / 'real')
+        message = self.run_build(['docs/x.md'], damage)
+        self.assertIn('docs/x.md', message)
+
+    def test_build_computes_registry_names_once_before_writing(self):
+        src = SCRIPT.read_text()
+        body = src[src.index('def build(start):'):src.index('def verify_release_archive')]
+        self.assertEqual(body.count('coverage(start)'), 1, 'one coverage list, reused for the registry')
+        self.assertLess(body.index('coverage(start)'), body.index('write_bytes('))
+
 if __name__ == '__main__':
     unittest.main()

@@ -154,6 +154,16 @@ def archive_paths():
     return sorted(paths)
 
 
+def regular_in_root(name):
+    """ARGON-R5-04: True only for a regular file inside ROOT with no symlink at any level of its path."""
+    path = ROOT
+    for part in Path(name).parts:
+        path = path / part
+        if path.is_symlink():
+            return False
+    return path.is_file()
+
+
 GENERATED = ('FANNAN-REWRITE.md', 'trust/MANIFEST.sha256', 'trust/PINNED.sha256')
 
 
@@ -163,10 +173,16 @@ def build(start):
     release = ROOT / 'release'
     release_files = files(release)               # refuses symlinks, caches, dependency and git entries
     paths = archive_paths()                      # same refusals for every packaged tree; computed once
-    coverage(start)                              # a bad --start fails here, before any write
+    names, _ = coverage(start)                   # a bad --start fails here, before any write; computed once (ARGON-R5-04)
     missing = [p for p in paths if p.relative_to(ROOT).as_posix() not in GENERATED and (p.is_symlink() or not p.is_file())]
     if missing:
         raise ValueError('package input missing or not a regular file: ' + missing[0].relative_to(ROOT).as_posix())
+    # ARGON-R5-04: every path the registry will hash must already be a regular file reached without a symlink, except
+    # the outputs this build writes; a deleted or symlinked changed path fails here, not after five outputs were replaced.
+    written = set(GENERATED) | {ARCHIVE, REPORT, REGISTRY}
+    unhashable = [name for name in names if name not in written and not regular_in_root(name)]
+    if unhashable:
+        raise ValueError('changed path missing, symlinked or not a regular file (registry input): ' + unhashable[0])
     generated = {'FANNAN-REWRITE.md': combined().encode('utf-8')}
     covers = ' '.join(sorted(p.name for p in release.iterdir()))
     generated['trust/MANIFEST.sha256'] = manifest(release_files, release, covers).encode('utf-8')
@@ -187,7 +203,6 @@ def build(start):
     write_bytes(ROOT / ARCHIVE, buffer.getvalue())
     report = verify_release_archive(paths)
     write(ROOT / REPORT, json.dumps(report, indent=2) + '\n')
-    names, _ = coverage(start)
     write(ROOT / REGISTRY, manifest([ROOT / name for name in names], ROOT, 'changed paths since ' + start), True)
     return verify(start, allow_unanchored=True)  # build's own consistency check; the anchored verify follows from the record
 
