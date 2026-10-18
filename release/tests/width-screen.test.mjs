@@ -14,9 +14,10 @@ test('R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
   assert.match(source, /import \{ screenWidths, resolveReflowCandidates, validWidths, resolveReveals \} from '\.\/width-screen\.mjs';/); // R11 panel B adds the resolver, R12 the width list check, R20 the reveal resolver
   assert.equal(source.split('await screenWidths(p, handoff?.settings?.desktopWidths').length - 1, 2, 'page and every declared state');
-  assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null\);\nif \(!ev\.checks\.widths\.passExceptReveal\) fail = true;/); // R20: reveal clips resolved across the declared states
-  assert.match(source, /ev\.checks\.reveals = resolveReveals\(\[\{ scope: pageScope, widths: ev\.checks\.widths \}/);
-  assert.match(source, /const widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, \{ lang: st\.lang, dir: st\.dir \}\);/);
+  // R29: both calls also pass the declared reveal probes (opener + reveals) for the gate to verify
+  assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null, 900, probesFor\(pageScope\)\);\nif \(!ev\.checks\.widths\.passExceptReveal\) fail = true;/); // R20: reveal clips resolved across the declared states
+  assert.match(source, /ev\.checks\.reveals = resolveReveals\(\[\{ scope: pageScope, widths: ev\.checks\.widths, declaration: declarationOf\(pageScope\) \}/);
+  assert.match(source, /const widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, \{ lang: st\.lang, dir: st\.dir \}, 900, probesFor\(scopeOf\(st\)\)\);/);
   assert.match(source, /&& widths\.passExceptReveal && reducedMotion\.pass && doc\.lang/, 'a failing width fails the state');
   const focusEnd = source.indexOf("ev.checks.custom22 = {"), widthsAt = source.indexOf('ev.checks.widths = await screenWidths');
   assert.ok(focusEnd > 0 && widthsAt > focusEnd, 'runs after the page focus probe');
