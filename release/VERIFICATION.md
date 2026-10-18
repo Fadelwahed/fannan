@@ -1,5 +1,27 @@
 # R3 executed verification — 17 October 2026
 
+## R19 executed verification (Mi'mar's box, 18 October 2026, about 12:05 PM UTC+3)
+
+Panel round 19 (5 P2: R19-GPT-01, 02, 04, R19-MIMAR-01/02; P3 R19-GPT-03, 05, 06; GPT only, cross-checked by Mi'mar; `reviews/panel-r19/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 132 PASS, 0 FAIL, 0 skipped (R18's 125 + 6 in `tests/panel-r19.test.mjs` + 1 in `tests/designer-process.test.mjs`; R19-GPT-06 added to `tests/handoff-contract.test.mjs`) | `test-results/r19/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 75 PASS, 0 FAIL, 57 SKIPPED (need deps or Chrome) | `test-results/r19/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r19/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r19/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 41 PASS / 36 PASS + 5 SKIPPED | `test-results/r19/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r19/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=45 sh=4 py=4 plus the launcher, 0 failures | `test-results/r19/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r19/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 126 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R18 (it needs Node 22); not a gate | `test-results/r19/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r19/local-fixture.log`). R17 and R18 full runs unchanged in outcome. R19 full pre-handoff runs: inactive carousel slides with a collapsed accordion pass the width screen on the page and its state (`widths.pass` true, `textHidden` 3 in both renderings); a script-removed `::after` loading veil is a `textUnreadable/js-off` mismatch; a pointer-events:none 70% veil and light lazy text inside an app panel are `textUnreadable/rendered` mismatches; a photo hero with a scrim and a PASS `wcag-review` record citing the frame resolves axe's colour-contrast incomplete (page and state), while dark text on the photo and a record that does not cite the screenshot stay blocking; a declared modal-dialog state is integrity PASS (`textHidden` 3 with JavaScript on), a non-modal open dialog covering the page is `textObscured/rendered`; an `ariaLabel` absent from the cited brief is a contract error.
+
+**Honest patterns and the real site:** `test-results/r19/R19-honest-patterns.log` (the R18 set and the R19 repro pages, both renderings, plus the dialog and popover repros as declared states: only true positives and the round's misses report problems) and `test-results/r19/R19-real-site.log` (a built bilingual site, English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; 6.4-11.2 s per rendering, 8-12 steps).
+
+Per-finding before/after logs: `test-results/r19/R19-*-before.log` / `-after.log` (before = R19 tests against the 613f489 sources, documents included; every before failure is an assertion failure, checked for load errors).
+
 ## R18 executed verification (Mi'mar's box, 18 October 2026, about 10:15 AM UTC+3)
 
 Panel round 18 (8 P2: R18-GPT-01, 03 to 07, R18-MIMAR-01/02; P3 R18-GPT-02; GPT only, cross-checked by Mi'mar; `reviews/panel-r18/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
