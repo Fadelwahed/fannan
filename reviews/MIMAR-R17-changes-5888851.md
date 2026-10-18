@@ -32,7 +32,7 @@ Rounds 15-17 each found one more CSS way to hide text. Instead of another proper
 
 ## Run time
 
-Backstop per rendering: about 0.2 s on the fixture page (1.2 s with a scroll reveal), about 2.6 s on a 13-band synthetic page, about 9-13 s on the real site (13 bands; most of it is Chrome screenshots after scrolling and GSAP settle). A full checker run on the fixture went from about 5.8 s to 6.5 s; the whole fixture script from 136 s (before) to 175 s (after, same R17 runs).
+Backstop per rendering: about 0.2 s on the fixture page (1.2 s with a scroll reveal), about 9-13 s on the real site (13 bands; most of it is Chrome screenshots after scrolling and GSAP settle). A full checker run on the fixture went from about 5.8 s to 6.5 s; the whole fixture script from 136 s (before) to 175 s (after, same R17 runs).
 
 ## Tests and evidence
 
@@ -43,4 +43,4 @@ Backstop per rendering: about 0.2 s on the fixture page (1.2 s with a scroll rev
 
 ## Untested
 
-See `release/UNTESTED.md` (R17). In short: text over photos, video or canvas; very thin or tiny fonts near the floors; pseudo-element, SVG and closed-shadow-root text; horizontally scrolled containers (clipped text is INCOMPLETE); autoplay carousels (measured mid-motion at the 2 s bound); other viewports and device scales; very long pages (60-band cap, then INCOMPLETE); `pointer-events:none` covers are caught by pixels only; datalist, `aria-description`, file and date pickers. Only GPT reviewed this round; these fixes had no second-model review.
+See `release/UNTESTED.md` (R17). In short: text over photos, video or canvas; very thin or tiny fonts near the floors; pseudo-element, SVG and closed-shadow-root text; horizontally scrolled containers (clipped text is INCOMPLETE); autoplay carousels (measured mid-motion at the 2 s bound); other viewports and device scales; pages taller than about 20 viewports (one screenshot per half viewport; the scan stops at 60 bands); `pointer-events:none` covers are caught by pixels only; `aria-description`, `aria-placeholder`, file and date pickers, `<button>` labels from CSS generated content. Only GPT reviewed this round; these fixes had no second-model review.
