@@ -3,6 +3,7 @@ import { resolve, basename } from 'node:path';
 import { createHash } from 'node:crypto';
 import { inflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { INTEGRITY_CHECKS } from './integrity.mjs';
 
 // OPUS-R2-09: the focus-state contrast is configurable upward only; 3:1 (WCAG 1.4.11 AA) is the floor.
 export function validateQualityChecks(config) {
@@ -61,8 +62,13 @@ export function checkHandoff(h, phase = 'handoff') {
   need(Array.isArray(widths) && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length, 'settings.desktopWidths must declare unique positive integer CSS widths including the canonical 1440');
   // R11 panel D1 (decisions B and C): optional review records for 2D reflow candidates and expected JavaScript-off differences.
   const roleNames = [h?.settings?.roles?.qaGate, h?.settings?.roles?.approver].filter(nonempty);
-  if (h?.reflowExceptions !== undefined) need(Array.isArray(h.reflowExceptions) && h.reflowExceptions.every(x => nonempty(x?.id) && nonempty(x?.reason) && roleNames.includes(x?.reviewer)) && new Set(h.reflowExceptions.map(x => x?.id)).size === h.reflowExceptions.length, 'reflowExceptions entries need a unique element id, a reason and a qaGate or approver reviewer');
-  if (h?.jsOffDifferences !== undefined) need(Array.isArray(h.jsOffDifferences) && h.jsOffDifferences.every(x => ['glass', 'reflow'].includes(x?.check) && nonempty(x?.reason)) && new Set(h.jsOffDifferences.map(x => x?.check)).size === h.jsOffDifferences.length, 'jsOffDifferences entries need a check (glass or reflow) and a reason, once per check');
+  // R12 M09/M20/M21: every review record is scoped to one declared screen/state/lang and names its reviewer, so a
+  // reason recorded for one state never excuses another, and nothing is excused by a reason alone.
+  const declaredScope = x => (h?.screens || []).some(sc => sc.id === x?.screen && (sc.states || []).some(st => st.state === x?.state && st.lang === x?.lang && st.applicable !== false));
+  const scoped = (list, key, ok) => Array.isArray(list) && list.every(x => ok(x) && nonempty(x?.reason) && declaredScope(x)) && new Set(list.map(x => [x?.[key], x?.screen, x?.state, x?.lang].join('|'))).size === list.length;
+  if (h?.reflowExceptions !== undefined) need(scoped(h.reflowExceptions, 'id', x => nonempty(x?.id) && roleNames.includes(x?.reviewer)), 'reflowExceptions entries need an element id, a declared screen/state/lang, a reason and a qaGate or approver reviewer, once per scope');
+  if (h?.jsOffDifferences !== undefined) need(scoped(h.jsOffDifferences, 'check', x => INTEGRITY_CHECKS.includes(x?.check) && roleNames.includes(x?.reviewer)), `jsOffDifferences entries need a check (${INTEGRITY_CHECKS.join(', ')}), a declared screen/state/lang, a reason and a qaGate or approver reviewer, once per check and scope`);
+  if (h?.spacingExceptions !== undefined) need(scoped(h.spacingExceptions, 'id', x => nonempty(x?.id) && nonempty(h?.settings?.roles?.approver) && x?.reviewer === h.settings.roles.approver), 'spacingExceptions entries need an element id, a declared screen/state/lang, a reason and the approver as reviewer, once per scope');
   need(Array.isArray(h?.copySlots) && h.copySlots.length > 0, 'copy slots required before layout');
   need(new Set((h?.copySlots || []).map(c => c.id)).size === (h?.copySlots || []).length, 'copy slot IDs must be unique');
   need(new Set((h?.facts || []).map(f => f.id)).size === (h?.facts || []).length, 'fact IDs must be unique');

@@ -57,18 +57,27 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     }
     wire.settings.desktopWidths = [1440];
     assert.doesNotMatch(checkHandoff(wire, 'wireframe').join('\n'), /settings\.desktopWidths/, 'wireframe with [1440] satisfies the width rule');
-    // R11 panel D1: optional reflowExceptions / jsOffDifferences records are validated when present.
-    h.reflowExceptions = [{ id: 't1', reason: 'comparison table', reviewer: 'qa-x' }, { id: 't2', reason: 'route map', reviewer: 'approver-x' }];
-    h.jsOffDifferences = [{ check: 'reflow', reason: 'menu collapses after its script loads' }];
+    // R11 panel D1, R12 M09/M20/M21: optional reflowExceptions / jsOffDifferences / spacingExceptions records are scoped
+    // to a declared screen/state/lang and name their reviewer; a reason alone excuses nothing.
+    const home = { screen: 'home', state: 'default', lang: 'en' };
+    h.reflowExceptions = [{ ...home, id: 't1', reason: 'comparison table', reviewer: 'qa-x' }, { ...home, id: 't2', reason: 'route map', reviewer: 'approver-x' }];
+    h.jsOffDifferences = [{ ...home, check: 'reflowFail', reason: 'menu collapses after its script loads', reviewer: 'qa-x' }, { ...home, check: 'content', reason: 'the status line is written by script', reviewer: 'approver-x' }];
+    h.spacingExceptions = [{ ...home, id: 'logo', reason: 'optical alignment of the logo mark', reviewer: 'approver-x' }];
     assert.deepEqual(checkHandoff(h), [], 'valid records pass');
-    for (const bad of [{}, [{ id: 't1', reason: '', reviewer: 'qa-x' }], [{ id: 't1', reason: 'r', reviewer: 'writer-x' }], [{ reason: 'r', reviewer: 'qa-x' }], [{ id: 'a', reason: 'r', reviewer: 'qa-x' }, { id: 'a', reason: 'r', reviewer: 'qa-x' }]]) {
+    for (const bad of [{}, [{ ...home, id: 't1', reason: '', reviewer: 'qa-x' }], [{ ...home, id: 't1', reason: 'r', reviewer: 'writer-x' }], [{ ...home, reason: 'r', reviewer: 'qa-x' }], [{ ...home, id: 'a', reason: 'r', reviewer: 'qa-x' }, { ...home, id: 'a', reason: 'r', reviewer: 'qa-x' }], [{ id: 't1', reason: 'r', reviewer: 'qa-x' }], [{ ...home, state: 'error', id: 't1', reason: 'r', reviewer: 'qa-x' }], [{ ...home, lang: 'ar', id: 't1', reason: 'r', reviewer: 'qa-x' }]]) {
       h.reflowExceptions = bad; assert.match(checkHandoff(h).join('\n'), /reflowExceptions/, `reflowExceptions ${JSON.stringify(bad)} must fail`);
     }
+    h.reflowExceptions = [{ ...home, id: 't1', reason: 'r', reviewer: 'qa-x' }, { ...home, screen: 'about', id: 't1', reason: 'r', reviewer: 'qa-x' }];
+    assert.match(checkHandoff(h).join('\n'), /reflowExceptions/, 'an undeclared screen fails');
     delete h.reflowExceptions;
-    for (const bad of [{}, [{ check: 'contrast', reason: 'r' }], [{ check: 'glass', reason: ' ' }], [{ check: 'glass', reason: 'a' }, { check: 'glass', reason: 'b' }]]) {
+    for (const bad of [{}, [{ ...home, check: 'contrast', reason: 'r', reviewer: 'qa-x' }], [{ ...home, check: 'glass', reason: ' ', reviewer: 'qa-x' }], [{ ...home, check: 'glass', reason: 'a', reviewer: 'qa-x' }, { ...home, check: 'glass', reason: 'b', reviewer: 'qa-x' }], [{ ...home, check: 'glass', reason: 'r' }], [{ ...home, check: 'glass', reason: 'r', reviewer: 'writer-x' }], [{ check: 'glass', reason: 'r', reviewer: 'qa-x' }]]) {
       h.jsOffDifferences = bad; assert.match(checkHandoff(h).join('\n'), /jsOffDifferences/, `jsOffDifferences ${JSON.stringify(bad)} must fail`);
     }
     delete h.jsOffDifferences;
+    for (const bad of [{}, [{ ...home, id: 'logo', reason: 'r', reviewer: 'qa-x' }], [{ ...home, id: 'logo', reason: 'r' }], [{ ...home, reason: 'r', reviewer: 'approver-x' }], [{ ...home, id: 'logo', reason: ' ', reviewer: 'approver-x' }], [{ id: 'logo', reason: 'r', reviewer: 'approver-x' }], [{ ...home, id: 'a', reason: 'r', reviewer: 'approver-x' }, { ...home, id: 'a', reason: 'r', reviewer: 'approver-x' }]]) {
+      h.spacingExceptions = bad; assert.match(checkHandoff(h).join('\n'), /spacingExceptions/, `spacingExceptions ${JSON.stringify(bad)} must fail`);
+    }
+    delete h.spacingExceptions;
     h.settings.desktopWidths = [1440, 1280];
     h.manualChecks.push({ ...h.manualChecks[0], decision: 'FAIL' });
     assert.match(checkHandoff(h).join('\n'), /manual check IDs must be unique|manual FAIL/);
