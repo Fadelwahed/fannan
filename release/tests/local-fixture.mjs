@@ -426,7 +426,7 @@ const r23 = {};
 const ls23 = '<style>@media (max-width:600px){.r23l{display:none}}@media (min-width:601px){.r23s{display:none}}</style>';
 r23.saveAs = r19Run('save-as', '<div><button>Save</button> <button class="r23l">Save as</button></div>', '', ls23);
 const more23 = isOpen => `${ls23}<div role="toolbar" aria-label="Report"><button>Print</button> <button class="r23l">Export report</button> <button class="r23s" aria-expanded="${isOpen}">More</button>${isOpen ? '<div role="menu" class="r23s"><div role="menuitem" tabindex="-1">Export report</div></div>' : ''}</div>`;
-r23.exportMenu = r19Run('export-menu', more23(false), '', '', authored, [['more-open', at20(more23(true))]]);
+r23.exportMenu = r19Run('export-menu', more23(false), '', '', authored, [['more-open', at20(more23(true)), { opener: 'button.r23s[aria-expanded]', reveals: 'div.r23s[role="menu"]' }]]);
 r23.shortLabel = r19Run('short-label', '<button><span class="r23l">Request a demo</span><span class="r23s">Demo</span></button>', '', ls23);
 r23.shortLabelAria = r19Run('short-label-aria', '<button aria-label="Request a demo"><span class="r23l">Request a demo</span><span class="r23s">Demo</span></button>', '', ls23);
 r23.labelCut = r19Run('label-cut', '<div style="width:100px;overflow:hidden"><a href="#r" style="display:inline-block;width:100px;white-space:nowrap">Download the annual report</a></div>');
