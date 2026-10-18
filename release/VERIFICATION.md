@@ -1,5 +1,25 @@
 # R3 executed verification — 17 October 2026
 
+## R17 executed verification (Mi'mar's box, 18 October 2026, about 9:15 AM UTC+3)
+
+Panel round 17 (4 P2: R17-GPT-01 to 03, R17-MIMAR-01; P3 R17-MIMAR-02; GPT only, cross-checked by Mi'mar; `reviews/panel-r17/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 119 PASS, 0 FAIL, 0 skipped (R16's 112 + 6 in `tests/panel-r17.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r17/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 73 PASS, 0 FAIL, 46 SKIPPED (need deps or Chrome) | `test-results/r17/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r17/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r17/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 39 PASS / 34 PASS + 5 SKIPPED | `test-results/r17/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r17/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=42 sh=4 py=4 plus the launcher, 0 failures | `test-results/r17/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r17/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 113 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R16 (it needs Node 22); not a gate | `test-results/r17/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r17/local-fixture.log`). The healthy fixture page keeps integrity PASS with the backstop. R17 full pre-handoff runs: clip-path, `scale(.02)`, white preloader, `::placeholder` opacity, text-fill colour and gradient overlay (each removed by script) are `integrity mismatch` on the page and its state with `textUnreadable/js-off` or `textObscured/js-off`; the aria-labelled submit whose value only script sets is a `content/js-off` difference; unlisted `[placeholder]`/`Lorem ipsum` native strings fail the copy deck and set `placeholders`; a scroll reveal with a `noscript` fallback stays PASS. Backstop time per rendering on the fixture page: about 0.2 s (1.2 s with the scroll reveal); per checker run about 6.5 s (9.5 s with the reveal).
+
+Per-finding before/after logs: `test-results/r17/R17-*-before.log` / `-after.log` (before = R17 tests against the 86e2a31 sources, documents included, `visibility.mjs` removed; every before failure is an assertion failure, checked for load errors). `R17-healthy-real-site-patterns-first-version.log`: the real-site regression against the first backstop version (cc052a8), showing its false positives.
+
 ## R16 executed verification (Mi'mar's box, 18 October 2026, about 7:55 AM UTC+3)
 
 Panel round 16 (4 P2: R16-GPT-01 to 04, GPT only, cross-checked by Mi'mar; `reviews/panel-r16/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
