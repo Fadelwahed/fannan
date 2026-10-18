@@ -48,6 +48,15 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     }
     h.settings.desktopWidths = [1440];
     assert.deepEqual(checkHandoff(h), [], '1440 alone is enough');
+    // ARGON-R5-03 (not reproduced, pinned): the wireframe phase is a handoff too, so it must declare desktopWidths with 1440;
+    // there is no wireframe early return and no default to [1440].
+    const wire = JSON.parse(JSON.stringify({ ...h, phase: 'wireframe' }));
+    for (const bad of [undefined, [], [1280]]) {
+      wire.settings.desktopWidths = bad;
+      assert.match(checkHandoff(wire, 'wireframe').join('\n'), /settings\.desktopWidths/, `wireframe desktopWidths ${JSON.stringify(bad)} must fail`);
+    }
+    wire.settings.desktopWidths = [1440];
+    assert.doesNotMatch(checkHandoff(wire, 'wireframe').join('\n'), /settings\.desktopWidths/, 'wireframe with [1440] satisfies the width rule');
     h.settings.desktopWidths = [1440, 1280];
     h.manualChecks.push({ ...h.manualChecks[0], decision: 'FAIL' });
     assert.match(checkHandoff(h).join('\n'), /manual check IDs must be unique|manual FAIL/);
