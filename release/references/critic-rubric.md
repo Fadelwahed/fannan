@@ -21,6 +21,10 @@ Every row and every page receives a public **PASS or FAIL**, a score, an artifac
 
 For a wireframe review, typography means hierarchy/readability, color means grayscale restraint, and interaction means state intent. Record color/font/motion polish as **deferred to Step 6**, outside that phase's score. Do not reward visual polish before structure is approved. The handoff rubric covers all rows without those deferrals.
 
+## Cross-screen component comparison
+
+In every round, compare the equivalent instances of each reused component across all screens in scope against its shared definition: anatomy, variant, size, token bindings, content constraints, states and usage. Record the screens compared, each difference with its reason or defect, and a PASS or FAIL in the final round's `componentComparison`. An unexplained difference fails `component-consistency` and the relevant rubric row.
+
 ## Specificity test and reference comparison
 
 For each page, quote its actual hero line from the approved copy deck, mask the brand name and compare its meaning with two unrelated business categories. If both could use it unchanged, mark `generic-hero` FAIL. A factual descriptor, named audience job or specific proposition must make the line belong to this brief. Do not invent competitor quotations. The writer owns revisions and existing approval still applies.

@@ -214,14 +214,16 @@ def verify_hashes(path, root, digest, exact=None):
 REQUIRED_SECTIONS = {
     'release/FANNAN-PLAN.md': ['Maintain a discovery ledger for audience needs', 'Navigation model and findability:', "neutral scenario, realistic starting point and observable completion criterion", "## Folding in the approver's feedback", 'intended emphasis order', 'named roles in the token JSON', 'For each width in `settings.desktopWidths`', '## Threat model for the pre-handoff gate', '## Review convergence rule',
                                # R15 B1/B2: the wireframe gate runs inside Step 5; column counts are unitless, not spacing tokens
-                               'after the task and navigation-findability tests and necessary retests, run the complete wireframe quality gate; require PASS before structure approval and Step 6', 'Column counts are positive unitless integers recorded beside the grid spec, not spacing tokens.'],
-    'release/references/handoff-contract.md': ['The seven baseline states are a minimum.', 'For every form, specify labels, required/optional indicators', 'feedback log with every item resolved or explicitly deferred'],
+                               'after the task and navigation-findability tests and necessary retests, run the complete wireframe quality gate; require PASS before structure approval and Step 6', 'Column counts are positive unitless integers recorded beside the grid spec, not spacing tokens.',
+                               # R16-GPT-03/04: wireframe coverage of every screen and locale; one shared component specification
+                               'A wireframe PASS covers every declared desktop screen and locale.', 'Maintain one canonical specification for each reused component'],
+    'release/references/handoff-contract.md': ['Shared component inventory (`components`, `component-consistency`)', 'Wireframe coverage: A wireframe PASS covers every declared desktop screen and locale.', 'The seven baseline states are a minimum.', 'For every form, specify labels, required/optional indicators', 'feedback log with every item resolved or explicitly deferred'],
     'release/skills/design-research/SKILL.md': ['Maintain a discovery ledger for audience needs'],
     'release/skills/design-canvas/SKILL.md': ['The seven baseline states are a minimum.', 'For every form, specify labels'],
     # R15 B1/B3/B4
     'release/skills/design-prototype/SKILL.md': ['after the task and navigation-findability tests and necessary retests'],
     'release/references/design-quality.md': ['The feedback-log artifact records each item', '`grid-per-width`'],
-    'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows'],
+    'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows', '## Cross-screen component comparison'],
 }
 # R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
 RETIRED_SECTIONS = {
@@ -333,6 +335,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r14')  # R14 before/after evidence and raw panel logs (panel round 14)
     if (ROOT / 'test-results/r15').is_dir():
         paths += files(ROOT / 'test-results/r15')  # R15 before/after evidence and raw panel logs (panel round 15)
+    if (ROOT / 'test-results/r16').is_dir():
+        paths += files(ROOT / 'test-results/r16')  # R16 before/after evidence and raw panel logs (panel round 16)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 

@@ -136,6 +136,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r14/') for n in names), 'R14 evidence is archived like R4-R13')
         if (ROOT / 'test-results/r15').is_dir():
             self.assertTrue(any(n.startswith('test-results/r15/') for n in names), 'R15 evidence is archived like R4-R14')
+        if (ROOT / 'test-results/r16').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r16/') for n in names), 'R16 evidence is archived like R4-R15')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -317,6 +319,16 @@ class RequiredSectionTests(unittest.TestCase):
             plan = root / 'release/FANNAN-PLAN.md'
             plan.write_text(plan.read_text() + '\nFor each width, list the column count; each value is a spacing-scale token.\n')
             self.assertTrue(any('retired wording' in m and 'spacing-scale token' in m for m in package.missing_sections(root)), 'the unit-breaking grid clause is refused')
+
+    def test_r16_sections(self):
+        # R16-GPT-03/04: the wireframe coverage rule and the shared component specification are required in the plan
+        # and the contract guide, and the critic rubric carries the cross-screen comparison step.
+        required = getattr(package, 'REQUIRED_SECTIONS', {})
+        self.assertIn('A wireframe PASS covers every declared desktop screen and locale.', required.get('release/FANNAN-PLAN.md', []))
+        self.assertIn('Maintain one canonical specification for each reused component', required.get('release/FANNAN-PLAN.md', []))
+        self.assertIn('## Cross-screen component comparison', required.get('release/references/critic-rubric.md', []))
+        self.assertTrue(any('component-consistency' in m for m in required.get('release/references/handoff-contract.md', [])))
+        self.assertEqual(package.missing_sections(), [])
 
     def test_r14_build_checks_sections_before_any_output(self):
         import inspect

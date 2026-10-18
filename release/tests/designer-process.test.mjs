@@ -116,3 +116,28 @@ test('R15-B3/B4: feedback-log and the four craft checks are manual IDs; critic c
   const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
   for (const t of Object.values(R15)) { assert.doesNotMatch(t, vendors); assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
 });
+
+// R16-GPT-03/04 (panel round 16): exact wording from the merged review.
+const R16 = {
+  wireframe: 'A wireframe PASS covers every declared desktop screen and locale. Each rendering must declare an existing page and receive the applicable structural/copy, accessibility, integrity and manual checks; missing coverage blocks structure approval.',
+  components: 'Maintain one canonical specification for each reused component: anatomy, semantic variants, sizes, token bindings, content constraints and composition/usage rules. Map every screen instance to that specification and the existing component where available. Compare equivalent instances across screens; unexplained differences fail.',
+};
+
+test('R16-GPT-03/04: wireframe coverage of every screen and locale; one shared component specification compared across screens', async () => {
+  const plan = read('FANNAN-PLAN.md');
+  assert.ok(flat(section(plan, '### 5. Test and approve')).includes(R16.wireframe), 'wireframe coverage sits in Step 5');
+  const step6 = flat(section(plan, '### 6. Desktop visual design'));
+  assert.ok(step6.includes(R16.components), 'component rule sits in Step 6');
+  assert.ok(step6.indexOf(R16.components) < step6.indexOf('Use at most **six distinct rendered type sizes per page**'), 'after the opening paragraph');
+  const contract = flat(read('references/handoff-contract.md'));
+  for (const t of Object.values(R16)) assert.ok(contract.includes(t), `handoff-contract.md mirrors: ${t.slice(0, 40)}`);
+  assert.ok(contract.includes('`componentComparison: {screens, decision, evidence}`'));
+  assert.match(read('references/critic-rubric.md'), /\n## Cross-screen component comparison\n/);
+  assert.ok(flat(read('references/design-quality.md')).includes('`component-consistency`'));
+  assert.ok(flat(read('skills/design-prototype/SKILL.md')).includes('compares each reused component across all screens'));
+  const { manualIds } = await import('../tools/handoff-contract.mjs');
+  assert.ok(manualIds.includes('component-consistency'));
+  assert.deepEqual([...plan.matchAll(/^### (\d+)\. /gm)].map(m => Number(m[1])), [1, 2, 3, 4, 5, 6, 7, 8, 9], 'nine steps unchanged');
+  const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
+  for (const t of Object.values(R16)) { assert.doesNotMatch(t, vendors); assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
+});
