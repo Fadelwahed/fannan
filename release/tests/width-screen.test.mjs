@@ -76,3 +76,53 @@ test('CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing
     assert.equal(cut.length, 1); assert.equal(cut[0].ellipsis, false);
   } finally { await browser.close(); }
 });
+
+test('ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { screenWidths } = await import('../tools/width-screen.mjs');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const en = { lang: 'en', dir: 'ltr' };
+    const wide = '<main style="width:1400px"><h1>Fixed wide layout</h1></main>';
+    for (const [name, html, body] of [['body hidden', '', 'overflow-x:hidden'], ['body clip', '', 'overflow-x:clip'], ['html hidden', 'overflow-x:hidden', ''], ['html and body hidden', 'overflow-x:hidden', 'overflow-x:hidden'], ['html and body clip', 'overflow-x:clip', 'overflow-x:clip'], ['html clip', 'overflow-x:clip', ''], ['html hidden, body clip', 'overflow-x:hidden', 'overflow-x:clip'], ['html clip, body hidden', 'overflow-x:clip', 'overflow-x:hidden']]) {
+      await page.setContent(`<html lang="en" style="${html}"><body style="margin:0;${body}">${wide}</body></html>`);
+      const r = await screenWidths(page, [1440, 1280], en);
+      assert.equal(r.results[1].pass, false, `${name}: a 1400px layout at 1280 must fail`);
+      assert.ok(r.results[1].horizontalOverflow || r.results[1].clipped.some(c => c.tag === 'BODY' && c.x), `${name}: recorded as overflow or a body clip`);
+    }
+    await page.setContent('<html lang="en" style="overflow-x:hidden"><body style="margin:0;overflow-x:hidden"><main style="max-width:60rem;margin:auto"><h1>Fluid</h1><p>Wraps.</p></main></body></html>');
+    assert.equal((await screenWidths(page, [1440, 1280], en)).pass, true, 'a fluid page with hidden overflow still passes');
+  } finally { await browser.close(); }
+});
+
+test('ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { inspectLayout } = await import('../tools/width-screen.mjs');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const run = async body => { await page.setContent(`<html lang="en"><body style="margin:0">${body}</body></html>`); return page.evaluate(inspectLayout); };
+    const left = await run('<p style="position:relative;left:-200px;width:300px">Pushed off the left edge</p>');
+    assert.equal(left.offscreenLeft.length, 1, 'text past the left edge is recorded');
+    const img = await run('<img alt="x" style="position:relative;left:-50px;width:100px;height:100px" src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22/%3E">');
+    assert.equal(img.offscreenLeft.length, 1, 'an image past the left edge is recorded');
+    const srOnly = await run('<a href="#m" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Skip to content</a><p id="m">ok</p>');
+    assert.deepEqual([srOnly.offscreenLeft, srOnly.clipped], [[], []], 'sr-only pattern is neither off-screen content nor a clip');
+    const skip = await run('<a href="#m" style="position:absolute;left:-9999px;top:0">Skip to content</a><p id="m">ok</p>');
+    assert.deepEqual(skip.offscreenLeft, [], 'an off-screen focusable skip link (shown on focus) is exempt');
+    const hiddenText = await run('<p style="position:absolute;left:-9999px">Not focusable, pushed away</p>');
+    assert.equal(hiddenText.offscreenLeft.length, 1, 'non-focusable text pushed off-screen is not a skip link');
+    const scroller = await run(`<div id="s" style="width:600px;overflow-x:auto;white-space:nowrap">${'<span style="display:inline-block;width:300px">card</span>'.repeat(6)}</div>`);
+    await page.evaluate(() => { document.getElementById('s').scrollLeft = 400; });
+    const scrolled = await page.evaluate(inspectLayout);
+    assert.deepEqual([scroller.offscreenLeft, scrolled.offscreenLeft], [[], []], 'items inside a horizontal scroller are exempt');
+    const ok = await run('<main style="max-width:60rem;margin:auto"><h1>Fine</h1></main>');
+    assert.deepEqual(ok.offscreenLeft, []);
+  } finally { await browser.close(); }
+});
+
+test('ARGON-R5-05: off-screen-left content fails the width screen', () => {
+  const source = readFileSync(join(release, 'tools/width-screen.mjs'), 'utf8');
+  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && language/);
+});
