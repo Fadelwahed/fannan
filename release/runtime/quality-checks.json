@@ -34,6 +34,11 @@
     "accent-area",
     "palette",
     "rules-copy",
-    "language-overflow"
+    "language-overflow",
+    "discovery-evidence",
+    "navigation-findability",
+    "interaction-states",
+    "form-behavior",
+    "task-test"
   ]
 }
