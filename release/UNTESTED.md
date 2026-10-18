@@ -1,5 +1,15 @@
 # R3 checks not established
 
+## R24 additions (Mi'mar, 18 October 2026, panel round 24)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Mi'mar's R24 tiebreaks.
+
+- **Controls before media (R24-GPT-01):** a control is classified before the media-crop branch, so its box and own text ranges are measured whatever its border. Executed: a borderless button and a nested label cut by the button box (fail), a fitting borderless button (pass). UNTESTED: `input` value text and `select` option text cut inside their own box.
+- **One-to-one reveal matches (R24-GPT-02):** each hidden control consumes one shown control of the same name (action family) in a declared state; text keeps any-copy matching. Executed: a collapsed panel with two Downloads against an expanded state showing one (fail) or two (pass), a carousel with distinct slide buttons. UNTESTED: carousels whose slides repeat one button name (for example every slide "Shop now") at narrow widths, where the cut copies are already shown at 1440.
+- **Closed role-swap list (R24-GPT-03):** a tablist adapted into an accordion (`summary`, or a button with `aria-expanded`, with the same names) and a menubar adapted into a menu in a declared state; a container is covered only when every item is matched one to one by name. Executed: tabs to `details`, a missing tab, tabs to plain buttons, tabs to listbox options, a menubar to a menu, a menu missing an item. UNTESTED: tab panels whose text differs from the accordion's, nested menus (submenus), a tablist adapted into an accordion only in a declared state.
+- **Backlog, P3 (R24-MIMAR-01, no change):** collapsed pagination (1, 2, …, 10 with Previous and Next at 320) fails as `link:3`…`link:9` lost although Previous and Next reach every page. Not fixed by Mi'mar's tiebreak: the designer lets the links wrap. A breadcrumb that hides middle crumbs with no expander fails too, which is a true positive.
+- **Fixture clamp reason (R24-MIMAR-02):** the full-run fixture now asserts the specific failure reason for `clampControl` (a `partly clipped` truncation at 1440 holding `button:Download`, with the expanded state declared).
+
 ## R23 additions (Mi'mar, 18 October 2026, panel round 23)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel's R23 tiebreaks.

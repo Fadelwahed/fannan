@@ -152,6 +152,7 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r22/') for n in names), 'R22 evidence is archived like R4-R21')
         if (ROOT / 'test-results/r23').is_dir():
             self.assertTrue(any(n.startswith('test-results/r23/') for n in names), 'R23 evidence is archived like R4-R22')
+            self.assertTrue(any(n.startswith('test-results/r24/') for n in names), 'R24 evidence is archived like R4-R23')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -397,6 +398,13 @@ class RequiredSectionTests(unittest.TestCase):
         # R23: same-name one-to-one control matching and clamps that only hide text are required in design-quality.md.
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         for m in ['matches its 1440 control only by the SAME accessible name, one to one', 'a clamp may only hide text']:
+            self.assertIn(m, required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r24_sections(self):
+        # R24: control labels measured whatever the border and the closed list of role swaps are required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        for m in ["A control's label text is always measured, whatever its border", 'The only role swaps allowed are a tablist adapted into an accordion']:
             self.assertIn(m, required)
         self.assertEqual(package.missing_sections(), [])
 

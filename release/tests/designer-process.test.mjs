@@ -239,3 +239,11 @@ test('R23: same-name one-to-one matching, the action family, widget roles, cut l
   assert.ok(!quality.includes('prefix or abbreviation') && !contract.includes('prefix or abbreviation'), 'R23: prefix and abbreviation matching is retired');
   for (const m of ['matches only by the same accessible name, one to one', 'Every WAI-ARIA widget role and its native equivalent is a control']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
 });
+
+// R24 (panel round 24, Mi'mar's tiebreaks): control labels measured whatever the border, one-to-one reveal matches, and
+// the closed list of role swaps (tabs to an accordion, a menubar to a menu)
+test('R24: borderless control labels, one-to-one reveal matches, the closed list of role swaps and wrapping pagination are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
+  for (const m of ["A control's label text is always measured, whatever its border", 'two hidden Downloads need two shown', 'The only role swaps allowed are a tablist adapted into an accordion', 'No other role swap is accepted', 'let the page links wrap']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['Role swaps at narrow widths: the list is closed', 'Let pagination links wrap rather than collapse']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+});
