@@ -124,5 +124,37 @@ test('ARGON-R5-05: content pushed past the left edge fails; visually hidden and 
 
 test('ARGON-R5-05: off-screen-left content fails the width screen', () => {
   const source = readFileSync(join(release, 'tools/width-screen.mjs'), 'utf8');
-  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && language/);
+  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.scrolledText\.length === 0 && language/); // R11 S3 adds scrolledText
+});
+
+test('R11 S3: at 320 px, ordinary text that needs sideways scrolling in a scroller fails; only 2D content is excused (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { screenWidths } = await import('../tools/width-screen.mjs');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const en = { lang: 'en', dir: 'ltr' };
+    const at320 = async inner => { await page.setContent(`<html lang="en"><body style="margin:0"><main><h1>Page</h1>${inner}</main></body></html>`); return (await screenWidths(page, [1440], en)).results.find(r => r.width === 320); };
+    const cards = `<div style="overflow-x:auto;white-space:nowrap">${'<span style="display:inline-block;width:280px">Ordinary card text</span>'.repeat(4)}</div>`;
+    const text = await at320(cards);
+    assert.equal(text.pass, false, 'ordinary text in a horizontal scroller fails at 320 px');
+    assert.equal(text.scrolledText.length, 1);
+    const wideP = await at320('<div style="overflow-x:auto"><p style="width:900px">A paragraph that needs sideways scrolling to read.</p></div>');
+    assert.equal(wideP.pass, false);
+    for (const [name, inner] of [['table', '<div style="overflow-x:auto"><table style="width:900px"><tr><td>a</td><td>b</td></tr></table></div>'], ['pre', '<div style="overflow-x:auto"><pre>const aVeryLongLineOfCode = somethingThatDoesNotWrap(1, 2, 3, 4, 5, 6, 7);</pre></div>'], ['role=grid', '<div style="overflow-x:auto"><div role="grid" style="width:900px">grid cells</div></div>'], ['svg', '<div style="overflow-x:auto"><svg width="900" height="50"><text x="10" y="20">diagram</text></svg></div>']]) {
+      const r = await at320(inner);
+      assert.equal(r.pass, true, `${name}: 2D content is excused`);
+      assert.equal(r.twoDimensional.length, 1, `${name}: the excused scroller is recorded`);
+    }
+    const marked = await at320('<div data-fannan-2d="timeline diagram" style="overflow-x:auto"><div style="width:900px">2026 · 2027 · 2028</div></div>');
+    assert.equal(marked.pass, true);
+    assert.deepEqual(marked.twoDimensional.map(t => t.reason), ['timeline diagram'], 'the data-fannan-2d reason is recorded for review');
+    const mixed = await at320('<div style="overflow-x:auto"><table style="width:900px"><tr><td>a</td></tr></table><p style="width:900px">Ordinary text next to the table.</p></div>');
+    assert.equal(mixed.pass, false, 'ordinary text beside a table in the same scroller still fails');
+    const fits = await at320('<div style="overflow-x:auto"><p>Short text that fits.</p></div>');
+    assert.equal(fits.pass, true, 'a scroller that does not scroll is fine');
+    await page.setContent(`<html lang="en"><body style="margin:0"><main><h1>Page</h1>${cards}</main></body></html>`);
+    const desktop = (await screenWidths(page, [1440], en)).results[0];
+    assert.equal(desktop.width, 1440); assert.deepEqual(desktop.scrolledText, [], 'declared desktop widths keep the scroller exemption');
+  } finally { await browser.close(); }
 });

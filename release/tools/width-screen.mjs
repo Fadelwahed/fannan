@@ -4,8 +4,14 @@
 // WCAG reflow exceptions and layout quality still need manual evidence. 320 px is not a mobile design approval.
 export const REFLOW_WIDTH = 320;
 
-export function inspectLayout() {
-  const clipped = [], offscreenLeft = [];
+// R11 (Asad panel S3): WCAG 1.4.10 excuses only content that needs a two-dimensional layout. At the 320 px reflow width a
+// horizontal scroller passes only when everything that overflows it is inside such content: table, pre, code, img, svg,
+// canvas, video, iframe, role=grid/table, or an element marked data-fannan-2d="<reason>" (recorded for review).
+export const TWO_D = 'table, pre, code, img, svg, canvas, video, iframe, [role="grid"], [role="table"], [data-fannan-2d]';
+
+export function inspectLayout({ reflow = false } = {}) {
+  const TWO_D = 'table, pre, code, img, svg, canvas, video, iframe, [role="grid"], [role="table"], [data-fannan-2d]';
+  const clipped = [], offscreenLeft = [], scrolledText = [], twoDimensional = [];
   // ARGON-R5-05: visually hidden (sr-only) content is not a clip: a box of at most 1x1 px, or clip: rect(0...) / clip-path inset(50%).
   const srOnly = (r, c) => (r.width <= 1 && r.height <= 1) || /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(c.clip) || c.clipPath === 'inset(50%)';
   const focusable = e => e.matches('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');
@@ -27,9 +33,25 @@ export function inspectLayout() {
     // viewport that appears on focus; the focus probe checks it is visible when focused).
     if (r.left < -1 && e !== document.body && !inHorizontalScroller(e) && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.right <= 0)) offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), left: Math.round(r.left) });
   }
+  if (reflow) {
+    const ownContent = d => d.matches('img, svg, video, canvas, iframe, input, select, textarea, button') || [...d.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim());
+    for (const e of document.querySelectorAll('body, body *')) {
+      const c = getComputedStyle(e);
+      if (!['auto', 'scroll'].includes(c.overflowX) || e.scrollWidth <= e.clientWidth + 1 || c.display === 'none' || c.visibility === 'hidden') continue;
+      const box = e.getBoundingClientRect();
+      const self2d = e.matches(TWO_D) ? e : null;
+      const over = [...e.querySelectorAll('*')].filter(d => { const b = d.getBoundingClientRect(); return b.width > 0 && b.height > 0 && ownContent(d) && (b.right > box.right + 1 || b.left < box.left - 1); });
+      const plain = self2d ? [] : over.filter(d => { const t = d.closest(TWO_D); return !t || !e.contains(t); });
+      if (plain.length) scrolledText.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), sample: (plain[0].textContent || plain[0].tagName).trim().slice(0, 60) });
+      else {
+        const content = self2d ?? over.map(d => d.closest(TWO_D)).find(Boolean) ?? e;
+        twoDimensional.push({ tag: e.tagName, content: content.tagName, role: content.getAttribute('role'), reason: content.getAttribute('data-fannan-2d') ?? (content.getAttribute('role') || content.tagName.toLowerCase()) });
+      }
+    }
+  }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, lang: root.lang, dir: getComputedStyle(root).direction };
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, scrolledText, twoDimensional, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
@@ -42,9 +64,9 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
     for (const width of [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])]) {
       await page.setViewportSize({ width, height });
       await page.evaluate(() => scrollTo(0, 0));
-      const result = await page.evaluate(inspectLayout);
+      const result = await page.evaluate(inspectLayout, { reflow: width === REFLOW_WIDTH });
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
-      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && language });
+      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && result.scrolledText.length === 0 && language });
     }
   } finally {
     await page.setViewportSize({ width: 1440, height });
