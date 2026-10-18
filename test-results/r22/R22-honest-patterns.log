@@ -1,0 +1,306 @@
+# R22 honest patterns (R18 set, R19-R22 repro pages), both renderings: backstop counts plus the width screen after resolveReveals (no declared states), with each clip's rule, lost prints (typed), media crops and off-screen counts
+## h-r18
+scratch/r18/cases/case-accordion.html        on  {"m":5,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":501}
+scratch/r18/cases/case-accordion.html        off {"m":5,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":422}
+scratch/r18/cases/case-arabic.html           on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+scratch/r18/cases/case-arabic.html           off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":440}
+scratch/r18/cases/case-badgeOverlap.html     on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+scratch/r18/cases/case-badgeOverlap.html     off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":422}
+scratch/r18/cases/case-bigHeading.html       on  {"m":5,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":648}
+scratch/r18/cases/case-bigHeading.html       off {"m":5,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":642}
+scratch/r18/cases/case-carousel.html         on  {"m":5,"o":0,"u":0,"un":0,"h":2,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":427}
+scratch/r18/cases/case-carousel.html         off {"m":5,"o":0,"u":0,"un":0,"h":2,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+scratch/r18/cases/case-carouselAuto.html     on  {"m":5,"o":0,"u":0,"un":0,"h":2,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+scratch/r18/cases/case-carouselAuto.html     off {"m":5,"o":0,"u":0,"un":0,"h":2,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":425}
+scratch/r18/cases/case-control.html          on  {"m":6,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":464}
+scratch/r18/cases/case-control.html          off {"m":6,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+scratch/r18/cases/case-cookieBanner.html     on  {"m":42,"o":1,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1517}
+     {"id":"t40","kind":"text","text":"Paragraph 40 of ordinary body copy that explains the service","problem":"obscured","line":0,"covered":"3/3"}
+scratch/r18/cases/case-cookieBanner.html     off {"m":42,"o":1,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1541}
+     {"id":"t40","kind":"text","text":"Paragraph 40 of ordinary body copy that explains the service","problem":"obscured","line":0,"covered":"3/3"}
+scratch/r18/cases/case-fixedHeader.html      on  {"m":81,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1593}
+scratch/r18/cases/case-fixedHeader.html      off {"m":81,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1624}
+scratch/r18/cases/case-gAppShell.html        on  {"m":31,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":972}
+scratch/r18/cases/case-gAppShell.html        off {"m":31,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":951}
+scratch/r18/cases/case-gDisplayContents.html on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+scratch/r18/cases/case-gDisplayContents.html off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":619}
+     {"id":"t1","kind":"text","text":"Display contents reveal text","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1,"peak":1,"predicted":21,"ink":0,"background":[255,25
+scratch/r18/cases/case-gLayer3.html          on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":423}
+scratch/r18/cases/case-gLayer3.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":419}
+scratch/r18/cases/case-gPartial.html         on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":425}
+scratch/r18/cases/case-gPartial.html         off {"m":2,"o":0,"u":2,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":850}
+     {"id":"t2","kind":"text","text":"Second line hidden","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1,"peak":1,"predicted":21,"ink":0,"background":[255,255,255]}
+     {"id":"t3","kind":"text","text":"Third line hidden","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1,"peak":1,"predicted":21,"ink":0,"background":[255,255,255]}
+scratch/r18/cases/case-iconsUnderline.html   on  {"m":6,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":432}
+scratch/r18/cases/case-iconsUnderline.html   off {"m":6,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+scratch/r18/cases/case-longCvAuto.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":759}
+scratch/r18/cases/case-longCvAuto.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":714}
+scratch/r18/cases/case-longLazy.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":619}
+scratch/r18/cases/case-longLazy.html         off {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":418}
+scratch/r18/cases/case-longStatic.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":604}
+scratch/r18/cases/case-longStatic.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":606}
+scratch/r18/cases/case-marquee.html          on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":477}
+scratch/r18/cases/case-marquee.html          off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":503}
+scratch/r18/cases/case-photoImgScrim.html    on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":807}
+scratch/r18/cases/case-photoImgScrim.html    off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":805}
+scratch/r18/cases/case-photoScrim.html       on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":818}
+scratch/r18/cases/case-photoScrim.html       off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":801}
+scratch/r18/cases/case-stickyHeader.html     on  {"m":82,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1686}
+scratch/r18/cases/case-stickyHeader.html     off {"m":82,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1590}
+scratch/r18/cases/case-tabStrip.html         on  {"m":18,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1252}
+scratch/r18/cases/case-tabStrip.html         off {"m":18,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1276}
+scratch/r18/cases/case-thin-matrix.html      on  {"m":180,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":2640}
+scratch/r18/cases/case-thin-matrix.html      off {"m":180,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":2642}
+scratch/r18/cases/case-thinLight.html        on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":422}
+scratch/r18/cases/case-thinLight.html        off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+scratch/r18/cases/case-tooltipHidden.html    on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":458}
+scratch/r18/cases/case-tooltipHidden.html    off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+## h-r19
+panel-r19/repro/case-clippedCard.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":457}
+panel-r19/repro/case-clippedCard.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r19/repro/case-control.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r19/repro/case-control.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":420}
+panel-r19/repro/case-darkTextDarkImg.html    on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":993}
+     {"id":"t1","kind":"text","text":"Dark text over a dark photo, no scrim","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1.17,"peak":1.32,"predicted":15.91,"ink":1442
+panel-r19/repro/case-darkTextDarkImg.html    off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":979}
+     {"id":"t1","kind":"text","text":"Dark text over a dark photo, no scrim","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1.17,"peak":1.32,"predicted":15.91,"ink":1442
+panel-r19/repro/case-dialogOpen.html         on  {"m":1,"o":2,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":787}
+     {"id":"t0","kind":"text","text":"Page heading","problem":"obscured","line":0,"covered":"3/3"}
+     {"id":"t1","kind":"text","text":"Background paragraph behind a modal.","problem":"obscured","line":0,"covered":"3/3"}
+panel-r19/repro/case-dialogOpen.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r19/repro/case-docLazyLight.html       on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":789}
+     {"id":"t1","kind":"text","text":"Lazy doc text, very light","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1,"peak":1,"predicted":1.16,"ink":0,"background":[254,254
+panel-r19/repro/case-docLazyLight.html       off {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r19/repro/case-focusRing.html          on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":417}
+panel-r19/repro/case-focusRing.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":419}
+panel-r19/repro/case-heroImgNoScrim.html     on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":642}
+panel-r19/repro/case-heroImgNoScrim.html     off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":660}
+panel-r19/repro/case-heroImgSibling.html     on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":734}
+panel-r19/repro/case-heroImgSibling.html     off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":724}
+panel-r19/repro/case-innerLazy.html          on  {"m":2,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1174}
+     {"id":"t3","kind":"text","text":"Lazy panel text, very light","problem":"unreadable","line":0,"graded":"not painted (CSS colours known)","ratio":1,"peak":1,"predicted":1.16,"ink":0,"background":[254,2
+panel-r19/repro/case-innerLazy.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":618}
+panel-r19/repro/case-pngSticker.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+panel-r19/repro/case-pngSticker.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":422}
+panel-r19/repro/case-popoverOpen.html        on  {"m":3,"o":1,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":612}
+     {"id":"t0","kind":"text","text":"Page heading","problem":"obscured","line":0,"covered":"3/3"}
+panel-r19/repro/case-popoverOpen.html        off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":432}
+panel-r19/repro/case-pseudoFade.html         on  {"m":2,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":601}
+     {"id":"t1","kind":"text","text":"Line one of a long story that is truncated with a fade, line","problem":"unreadable","line":2,"graded":"pixel readability (CSS colours unknown)","ratio":1.83,"peak":2.
+panel-r19/repro/case-pseudoFade.html         off {"m":2,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":610}
+     {"id":"t1","kind":"text","text":"Line one of a long story that is truncated with a fade, line","problem":"unreadable","line":2,"graded":"pixel readability (CSS colours unknown)","ratio":1.83,"peak":2.
+panel-r19/repro/case-pseudoVeilJs.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":420}
+panel-r19/repro/case-pseudoVeilJs.html       off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":603}
+     {"id":"t1","kind":"text","text":"Card text under a loading veil a script removes.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.52,"peak":1.52,"predicte
+panel-r19/repro/case-stickyThead.html        on  {"m":43,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1242}
+panel-r19/repro/case-stickyThead.html        off {"m":43,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":1212}
+panel-r19/repro/case-svgOverlay.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r19/repro/case-svgOverlay.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":434}
+panel-r19/repro/case-veil70.html             on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":606}
+     {"id":"t1","kind":"text","text":"Body text under a 70% white veil.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.94,"peak":1.94,"predicted":null,"ink":9
+panel-r19/repro/case-veil70.html             off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":613}
+     {"id":"t1","kind":"text","text":"Body text under a 70% white veil.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.94,"peak":1.94,"predicted":null,"ink":9
+panel-r19/repro/case-veilPE70.html           on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":602}
+     {"id":"t1","kind":"text","text":"Body text under a 70% white veil with pointer-events none.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.94,"peak":1.94
+panel-r19/repro/case-veilPE70.html           off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":602}
+     {"id":"t1","kind":"text","text":"Body text under a 70% white veil with pointer-events none.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.94,"peak":1.94
+panel-r19/repro/case-veilPE70js.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+panel-r19/repro/case-veilPE70js.html         off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":616}
+     {"id":"t1","kind":"text","text":"Body text under a veil a script removes.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.94,"peak":1.94,"predicted":null,
+## h-r20
+panel-r20/repro/c-accbare.html               on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":445}
+panel-r20/repro/c-accbare.html               off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r20/repro/c-cardbelow.html             on  {"m":3,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+panel-r20/repro/c-cardbelow.html             off {"m":3,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+panel-r20/repro/c-carmid.html                on  {"m":2,"o":0,"u":0,"un":0,"h":2,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":418}
+panel-r20/repro/c-carmid.html                off {"m":2,"o":0,"u":0,"un":0,"h":2,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":434}
+panel-r20/repro/c-fade.html                  on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":623}
+     {"id":"t1","kind":"text","text":"Line one of an important description. Line two keeps going w","problem":"unreadable","line":3,"graded":"pixel readability (CSS colours unknown)","ratio":1.87,"peak":2.
+panel-r20/repro/c-fade.html                  off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":604}
+     {"id":"t1","kind":"text","text":"Line one of an important description. Line two keeps going w","problem":"unreadable","line":3,"graded":"pixel readability (CSS colours unknown)","ratio":1.87,"peak":2.
+panel-r20/repro/c-gveil.html                 on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":614}
+     {"id":"t1","kind":"text","text":"Card text that fully fits inside the card.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.36,"peak":1.39,"predicted":nul
+panel-r20/repro/c-gveil.html                 off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":606}
+     {"id":"t1","kind":"text","text":"Card text that fully fits inside the card.","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.36,"peak":1.39,"predicted":nul
+panel-r20/repro/c-photo.html                 on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":601}
+     {"id":"t1","kind":"text","text":"Pale caption text over a light photo with a dark detail","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.35,"peak":1.35,"p
+panel-r20/repro/c-photo.html                 off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":600}
+     {"id":"t1","kind":"text","text":"Pale caption text over a light photo with a dark detail","problem":"unreadable","line":0,"graded":"pixel readability (CSS colours unknown)","ratio":1.35,"peak":1.35,"p
+panel-r20/repro/c-repl.html                  on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r20/repro/c-repl.html                  off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":427}
+panel-r20/repro/c-wrap.html                  on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r20/repro/c-wrap.html                  off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":432}
+panel-r20/repro/case-cardBlockEnd.html       on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+panel-r20/repro/case-cardBlockEnd.html       off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r20/repro/case-cardPartial.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":424}
+panel-r20/repro/case-cardPartial.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":425}
+panel-r20/repro/case-control.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+panel-r20/repro/case-control.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":432}
+panel-r20/repro/case-navOverflow.html        on  {"m":8,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":417}
+panel-r20/repro/case-navOverflow.html        off {"m":8,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":419}
+panel-r20/repro/case-tableCut.html           on  {"m":11,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["320:shown at 1440, lost at this width"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+panel-r20/repro/case-tableCut.html           off {"m":11,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["320:shown at 1440, lost at this width"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+panel-r20/repro/d-160.html                   on  {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":427}
+panel-r20/repro/d-160.html                   off {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":443}
+panel-r20/repro/d-320.html                   on  {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r20/repro/d-320.html                   off {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":434}
+panel-r20/repro/d-40.html                    on  {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":480}
+panel-r20/repro/d-40.html                    off {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+panel-r20/repro/d-80.html                    on  {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+panel-r20/repro/d-80.html                    off {"m":1,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":416}
+## h-r21
+panel-r21/repro/b-glyph-c8-1word.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":477}
+panel-r21/repro/b-glyph-c8-1word.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":453}
+panel-r21/repro/b-glyph-c8-2words.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":434}
+panel-r21/repro/b-glyph-c8-2words.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":435}
+panel-r21/repro/b-glyph-c8-3words.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":420}
+panel-r21/repro/b-glyph-c8-3words.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r21/repro/b-glyph-c8-half.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":436}
+panel-r21/repro/b-glyph-c8-half.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":427}
+panel-r21/repro/b-glyph-nopatch.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+panel-r21/repro/b-glyph-nopatch.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r21/repro/b-glyph-patch1word.html      on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":446}
+panel-r21/repro/b-glyph-patch1word.html      off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+panel-r21/repro/b-glyph-patch3words.html     on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":451}
+panel-r21/repro/b-glyph-patch3words.html     off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":461}
+panel-r21/repro/b-hidden-submit.html         on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:button:Subscribe","320:text:Terms apply to all plans."],"crops":[0,0],"offL":[0,0],"ms":442}
+panel-r21/repro/b-hidden-submit.html         off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:button:Subscribe","320:text:Terms apply to all plans."],"crops":[0,0],"offL":[0,0],"ms":435}
+panel-r21/repro/b-rev-d-same.html            on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":417}
+panel-r21/repro/b-rev-d-same.html            off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r21/repro/b-rev-d-unrelated.html       on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r21/repro/b-rev-d-unrelated.html       off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":433}
+panel-r21/repro/b-rev-d-wrapper.html         on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r21/repro/b-rev-d-wrapper.html         off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r21/repro/b-rev-e-same.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r21/repro/b-rev-e-same.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+panel-r21/repro/b-rev-e-unrelated.html       on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":418}
+panel-r21/repro/b-rev-e-unrelated.html       off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":433}
+panel-r21/repro/b-rev-e-wrapper.html         on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":434}
+panel-r21/repro/b-rev-e-wrapper.html         off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":418}
+panel-r21/repro/b-wrap6.html                 on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r21/repro/b-wrap6.html                 off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r21/repro/case-avatarCircle.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":426}
+panel-r21/repro/case-avatarCircle.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":432}
+panel-r21/repro/case-bgImage.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r21/repro/case-bgImage.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":418}
+panel-r21/repro/case-blobDiv.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":431}
+panel-r21/repro/case-blobDiv.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":416}
+panel-r21/repro/case-control.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r21/repro/case-control.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":425}
+panel-r21/repro/case-heroImgCrop.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":431}
+panel-r21/repro/case-heroImgCrop.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":414}
+panel-r21/repro/case-marquee.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":461}
+panel-r21/repro/case-marquee.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":461}
+panel-r21/repro/case-objectFit.html          on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":436}
+panel-r21/repro/case-objectFit.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":416}
+panel-r21/repro/case-pictureCentered.html    on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":428}
+panel-r21/repro/case-pictureCentered.html    off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":424}
+panel-r21/repro/case-svgDecorCrop.html       on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":428}
+panel-r21/repro/case-svgDecorCrop.html       off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":431}
+panel-r21/repro/case-videoCrop.html          on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":420}
+panel-r21/repro/case-videoCrop.html          off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":427}
+panel-r21/repro/case-zoomHover.html          on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":425}
+panel-r21/repro/case-zoomHover.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":425}
+panel-r21/repro/d-fadefits.html              on  {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":615}
+     {"id":"t1","kind":"text","text":"Short text that fits. Second line fits too and sits under th","problem":"unreadable","line":1,"graded":"pixel readability (CSS colours unknown)","ratio":2.67,"peak":3.
+panel-r21/repro/d-fadefits.html              off {"m":1,"o":0,"u":1,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":616}
+     {"id":"t1","kind":"text","text":"Short text that fits. Second line fits too and sits under th","problem":"unreadable","line":1,"graded":"pixel readability (CSS colours unknown)","ratio":2.67,"peak":3.
+## h-r22
+panel-r22/repro/b-glyph-c8-1word.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":483}
+panel-r22/repro/b-glyph-c8-1word.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r22/repro/b-glyph-c8-2words.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-glyph-c8-2words.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":437}
+panel-r22/repro/b-glyph-c8-3words.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":447}
+panel-r22/repro/b-glyph-c8-3words.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r22/repro/b-glyph-c8-half.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r22/repro/b-glyph-c8-half.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":419}
+panel-r22/repro/b-glyph-nopatch.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":423}
+panel-r22/repro/b-glyph-nopatch.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":464}
+panel-r22/repro/b-glyph-patch1word.html      on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":481}
+panel-r22/repro/b-glyph-patch1word.html      off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-glyph-patch3words.html     on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":438}
+panel-r22/repro/b-glyph-patch3words.html     off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-hidden-submit.html         on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:button:Subscribe","320:text:Terms apply to all plans."],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-hidden-submit.html         off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:button:Subscribe","320:text:Terms apply to all plans."],"crops":[0,0],"offL":[0,0],"ms":435}
+panel-r22/repro/b-rev-d-same.html            on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-rev-d-same.html            off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-rev-d-unrelated.html       on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":425}
+panel-r22/repro/b-rev-d-unrelated.html       off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":435}
+panel-r22/repro/b-rev-d-wrapper.html         on  {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r22/repro/b-rev-d-wrapper.html         off {"m":2,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:reveal","320:reveal"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":417}
+panel-r22/repro/b-rev-e-same.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":431}
+panel-r22/repro/b-rev-e-same.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":434}
+panel-r22/repro/b-rev-e-unrelated.html       on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r22/repro/b-rev-e-unrelated.html       off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":429}
+panel-r22/repro/b-rev-e-wrapper.html         on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r22/repro/b-rev-e-wrapper.html         off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":432}
+panel-r22/repro/b-wrap6.html                 on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":419}
+panel-r22/repro/b-wrap6.html                 off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":427}
+panel-r22/repro/case-avatarCircle.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":429}
+panel-r22/repro/case-avatarCircle.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":419}
+panel-r22/repro/case-bgImage.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":422}
+panel-r22/repro/case-bgImage.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":423}
+panel-r22/repro/case-blobDiv.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":430}
+panel-r22/repro/case-blobDiv.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":421}
+panel-r22/repro/case-control.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":420}
+panel-r22/repro/case-control.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":420}
+panel-r22/repro/case-heroImgCrop.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":421}
+panel-r22/repro/case-heroImgCrop.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":425}
+panel-r22/repro/case-marquee.html            on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":453}
+panel-r22/repro/case-marquee.html            off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":["1440:partly clipped","320:partly clipped"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":471}
+panel-r22/repro/case-objectFit.html          on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r22/repro/case-objectFit.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":433}
+panel-r22/repro/case-pictureCentered.html    on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":429}
+panel-r22/repro/case-pictureCentered.html    off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":426}
+panel-r22/repro/case-svgDecorCrop.html       on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":432}
+panel-r22/repro/case-svgDecorCrop.html       off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":421}
+panel-r22/repro/case-videoCrop.html          on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":423}
+panel-r22/repro/case-videoCrop.html          off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":423}
+panel-r22/repro/case-zoomHover.html          on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":421}
+panel-r22/repro/case-zoomHover.html          off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":428}
+panel-r22/repro/e-g595959-11-italic.html     on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r22/repro/e-g595959-11-italic.html     off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":393}
+panel-r22/repro/e-g6b6b6b-12.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":393}
+panel-r22/repro/e-g6b6b6b-12.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":395}
+panel-r22/repro/e-g767676-12.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":418}
+panel-r22/repro/e-g767676-12.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r22/repro/e-g767676-14-300.html        on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r22/repro/e-g767676-14-300.html        off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":458}
+panel-r22/repro/e-g767676-16.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":455}
+panel-r22/repro/e-g767676-16.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":461}
+panel-r22/repro/e-rewordHeading.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:text:Everything you need to ru"],"crops":[0,0],"offL":[0,0],"ms":461}
+panel-r22/repro/e-rewordHeading.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:text:Everything you need to ru"],"crops":[0,0],"offL":[0,0],"ms":433}
+panel-r22/repro/e-shadowCaption.html         on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":455}
+panel-r22/repro/e-shadowCaption.html         off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":465}
+panel-r22/repro/e-shortLabel.html            on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":404}
+panel-r22/repro/e-shortLabel.html            off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":400}
+panel-r22/repro/e-shortLabelAria.html        on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+panel-r22/repro/e-shortLabelAria.html        off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":396}
+panel-r22/repro/e-tableToCards.html          on  {"m":5,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":401}
+panel-r22/repro/e-tableToCards.html          off {"m":5,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":393}
+panel-r22/repro/e-whiteOnGradient.html       on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":424}
+panel-r22/repro/e-whiteOnGradient.html       off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":425}
+panel-r22/repro/e-wordmark.html              on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:link:Northwind Studio"],"crops":[0,0],"offL":[0,0],"ms":390}
+panel-r22/repro/e-wordmark.html              off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:link:Northwind Studio"],"crops":[0,0],"offL":[0,0],"ms":432}
+panel-r22/repro/f-btnhead.html               on  {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:button:Subscribe"],"crops":[0,0],"offL":[0,0],"ms":428}
+panel-r22/repro/f-btnhead.html               off {"m":4,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:button:Subscribe"],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r22/repro/f-clampd.html                on  {"m":3,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:truncated","320:truncated"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":382}
+panel-r22/repro/f-clampd.html                off {"m":3,"o":0,"u":0,"un":0,"h":1,"widths":false,"clips":["1440:truncated","320:truncated"],"lost":[],"crops":[0,0],"offL":[0,0],"ms":423}
+panel-r22/repro/f-clampe.html                on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":400}
+panel-r22/repro/f-clampe.html                off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":true,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":422}
+panel-r22/repro/f-iconlink.html              on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:link:Your profile"],"crops":[0,0],"offL":[0,0],"ms":394}
+panel-r22/repro/f-iconlink.html              off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:link:Your profile"],"crops":[0,0],"offL":[0,0],"ms":393}
+panel-r22/repro/f-lblby.html                 on  {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:checkbox:Email me offers"],"crops":[0,0],"offL":[0,0],"ms":430}
+panel-r22/repro/f-lblby.html                 off {"m":3,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":["320:checkbox:Email me offers"],"crops":[0,0],"offL":[0,0],"ms":421}
+panel-r22/repro/f-op70.html                  on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":395}
+panel-r22/repro/f-op70.html                  off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":414}
+panel-r22/repro/f-op70a.html                 on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":398}
+panel-r22/repro/f-op70a.html                 off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":426}
+panel-r22/repro/f-thin12.html                on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":398}
+panel-r22/repro/f-thin12.html                off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":393}
+panel-r22/repro/f-thin14.html                on  {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":398}
+panel-r22/repro/f-thin14.html                off {"m":2,"o":0,"u":0,"un":0,"h":0,"widths":false,"clips":[],"lost":[],"crops":[0,0],"offL":[0,0],"ms":421}
+panel-r22/repro/f-vidfb.html                 on  {"m":1,"o":0,"u":0,"un":1,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":386}
+     {"id":"t1","kind":"text","text":"Your browser does not support this video.","problem":"unmeasured","reason":"no box"}
+panel-r22/repro/f-vidfb.html                 off {"m":1,"o":0,"u":0,"un":1,"h":0,"widths":true,"clips":[],"lost":[],"crops":[1,1],"offL":[0,0],"ms":452}
+     {"id":"t1","kind":"text","text":"Your browser does not support this video.","problem":"unmeasured","reason":"no box"}
