@@ -1,5 +1,14 @@
 # R3 checks not established
 
+## R15 additions (Mi'mar, 18 October 2026, panel round 15)
+
+All browser checks below ran in Chrome 155 headless only. Panel round 15 had one reviewer (GPT); B4 was found by Mi'mar alone. Scope follows the threat model in `FANNAN-PLAN.md`.
+
+- **Width screen (A1):** an `overflow-y: auto`/`scroll` ancestor holds lower text only when its scrollport ends inside the visible viewport (and above every clipping ancestor) and its scroll range reaches the text. UNTESTED: scrollers moved by transforms, scroll-snap or scroll-driven animation; a scroller whose visible part is cut by a sibling overlay rather than an ancestor clip.
+- **Package (A2):** JSON files (by suffix, or text starting with `{` or `[`) are parsed and every key is screened with `credential_key()` (any case or separator, camelCase too), 8+ character string values; the regex stays for other text and now names access/refresh tokens and secret/access keys case-insensitively. Known limit: credentials in YAML, TOML or `.env`-style text under keys the regex does not name; JSON with comments (not parseable) falls back to the regex only.
+- **Contrast (A3):** CSS `opacity` on the text and its composed ancestors is composited (premultiplied groups); a `mix-blend-mode` on the chain is counted unknown. UNTESTED: `filter: opacity()`/`brightness()`, opacity set through the Web Animations API mid-animation, `mask`, and colour-mix or relative colours that compute to non-`rgb()` strings (counted unknown, not measured).
+- **Designer process (B1-B4):** the complete wireframe gate now runs inside Step 5 after the task and findability tests; column counts are unitless; `feedback-log`, `emphasis-order`, `type-measure`, `colour-roles` and `grid-per-width` are manual IDs (the last four PASS or DEFERRED in the wireframe phase); every critic check names a rubric row and the final round needs a passing check per row. The contract checks that the records exist with evidence; whether the feedback log, emphasis check, type measure, colour matrix, grid and critic judgments are good is a reviewer judgment, not machine-checked. No real project was run through the new Step 5 order.
+
 ## R14 additions (Mi'mar, 18 October 2026, panel round 14)
 
 All browser checks below ran in Chrome 155 headless only. Panel round 14 had one reviewer (GPT) and no cross-check; Mi'mar acted as the second Part B reviewer. Scope follows the threat model in `FANNAN-PLAN.md`.

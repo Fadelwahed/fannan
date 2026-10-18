@@ -1,5 +1,27 @@
 # R3 executed verification — 17 October 2026
 
+## R15 executed verification (Mi'mar's box, 18 October 2026, about 7:20 AM UTC+3)
+
+Panel round 15 (7 P2: A1-A3 from GPT, confirmed by Mi'mar in Chrome 155 or in process; B1-B3 from GPT; B4 Mi'mar only; `reviews/panel-r15/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 109 PASS, 0 FAIL, 0 skipped (R14's 104 + 2 in `tests/panel-r15.test.mjs` + 3 in `tests/designer-process.test.mjs`; the B3/B4 contract cases extend the existing handoff-contract test) | `test-results/r15/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 71 PASS, 0 FAIL, 38 SKIPPED (need deps or Chrome) | `test-results/r15/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r15/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r15/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 37 PASS / 32 PASS + 5 SKIPPED (the real-build test needs Git) | `test-results/r15/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r15/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=39 sh=4 py=4 plus the launcher, 0 failures | `test-results/r15/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r15/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 103 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R14 (it needs Node 22); not a gate | `test-results/r15/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r15/local-fixture.log`, evidence `local-fixture-evidence.json`). Its handoff now carries one critic check per rubric row and the five new manual checks, and the contract passes.
+
+**A2 through a real package build:** `test_r15_real_build_refuses_camel_case_json_credentials` clones the checkout, lays the working files on top and runs `package-r3.py build`: a camelCase `accessToken` value in a changed path and in package input stops the build with "secret-looking content" and leaves the registry untouched; the same file with an empty value builds (`test-results/r15/R15-A2-real-build-after.log`; before, with the 67f3577 `package-r3.py`, the build accepted it: `-before.log`).
+
+Per-finding before/after logs: `test-results/r15/R15-*-before.log` / `-after.log` (before = R15 tests against the 67f3577 sources, documents and runtime JSON included; every before failure is an assertion failure, checked for load errors).
+
 ## R14 executed verification (Mi'mar's box, 18 October 2026, about 6:55 AM UTC+3)
 
 Panel round 14 (R14-GPT-01 to 11, single reviewer; Mi'mar's own Part B pass added R14-MIMAR-01 to 05; `reviews/panel-r14/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
