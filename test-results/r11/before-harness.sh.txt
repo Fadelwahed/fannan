@@ -1,0 +1,16 @@
+#!/bin/bash
+# R11 before-logs: final R11 tests against the R10 head (607b2e4) sources. Every non-test file changed in R11 is
+# restored from 607b2e4 and the two new tool modules are removed; tests stay at their R11 version.
+set -u
+W=/workspace/fannan-mimar-wt; O=$W/test-results/r11
+clean(){ sed 's#/tmp/r5s#<scratch>#g'; }
+prep='for f in $(git -C '$W' diff --name-only 607b2e4 -- release scripts | grep -v "^release/tests/\|^scripts/test_"); do git -C '$W' show 607b2e4:$f > $f; done; rm -f release/tools/axe-tags.mjs release/tools/probe-world.mjs'
+run(){ name=$1; shift; /workspace/r5run.sh bash -c "$prep; echo '# R11 before: R11 tests against 607b2e4 sources'; $*" 2>&1 | clean > $O/$name-before.log; echo "$name exit=${PIPESTATUS[0]}"; }
+run R11-C1-axe-tags 'node --test release/tests/axe-tags.test.mjs'
+run R11-S2-glass "node --test --test-name-pattern='R11 S2' release/tests/design-probe.test.mjs"
+run R11-S3-scroller "node --test --test-name-pattern='R11 S3|ARGON-R5-05' release/tests/width-screen.test.mjs"
+run R11-C3-probe-world 'node --test release/tests/probe-world.test.mjs'
+run R11-C4-junk 'cd scripts && python3 -B -m unittest -v test_package_r3.JunkAndSecretTests'
+run R11-C5-generic 'node --test release/tests/generic-instructions.test.mjs'
+run R11-spacing-horizontal "node --test --test-name-pattern='R11' release/tests/spacing-scale.test.mjs"
+run R11-zip-evidence 'cd scripts && python3 -B -m unittest -v test_package_r3.FinalRecordTests'

@@ -1,0 +1,171 @@
+# R11 before: R11 tests against 607b2e4 sources
+TAP version 13
+# Subtest: ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+ok 1 - ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+  ---
+  duration_ms: 703.518887
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: off-screen-left content fails the width screen
+not ok 2 - ARGON-R5-05: off-screen-left content fails the width screen
+  ---
+  duration_ms: 1.557824
+  type: 'test'
+  location: '<scratch>/release/tests/width-screen.test.mjs:125:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.scrolledText\.length === 0 && language/. Input:
+    
+    '// width-screen.mjs: R8, ported from codex/fannan-r3-review 2733317 (release/tools/browser-probes.mjs screenWidths/inspectLayout).\n' +
+      '// Screening only: renders the page at every declared desktop width plus 320 CSS px (desktop 400% reflow equivalent) and\n' +
+      '// flags horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Actual zoom, text spacing,\n' +
+      '// WCAG reflow exceptions and layout quality still need manual evidence. 320 px is not a mobile design approval.\n' +
+      'export const REFLOW_WIDTH = 320;\n' +
+      '\n' +
+      'export function inspectLayout() {\n' +
+      '  const clipped = [], offscreenLeft = [];\n' +
+      '  // ARGON-R5-05: visually hidden (sr-only) content is not a clip: a box of at most 1x1 px, or clip: rect(0...) / clip-path inset(50%).\n' +
+      "  const srOnly = (r, c) => (r.width <= 1 && r.height <= 1) || /^rect\\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\\)$/.test(c.clip) || c.clipPath === 'inset(50%)';\n" +
+      `  const focusable = e => e.matches('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');\n` +
+      "  const inHorizontalScroller = e => { for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) if (['auto', 'scroll'].includes(getComputedStyle(a).overflowX)) return true; return false; };\n" +
+      "  const beyond = (e, r) => [...e.querySelectorAll('*')].some(d => { const b = d.getBoundingClientRect(); return b.width > 0 && b.height > 0 && (b.right > r.right + 1 || b.left < r.left - 1); });\n" +
+      '  // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.\n' +
+      "  for (const e of document.querySelectorAll('body, body *')) {\n" +
+      '    const c = getComputedStyle(e), r = e.getBoundingClientRect();\n' +
+      "    if (!r.width || !r.height || c.visibility === 'hidden' || c.display === 'none' || srOnly(r, c)) continue;\n" +
+      "    const media = e.matches('img, svg, video, canvas, iframe, input, select, textarea, button');\n" +
+      '    if (!e.textContent.trim() && !media) continue;\n' +
+      '    // overflow: clip makes no scroll container, so scrollWidth stays at clientWidth; measure what the box cuts off instead.\n' +
+      "    const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (c.overflowX === 'clip' && beyond(e, r));\n" +
+      "    const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);\n" +
+      '    // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.\n' +
+      "    if (e.textContent.trim() && (x || y)) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });\n" +
+      '    // ARGON-R5-05: text or media pushed past the left edge is lost (no scrollbar reaches it). Exempt: items inside a\n' +
+      '    // horizontal scroller, and the off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the\n' +
+      '    // viewport that appears on focus; the focus probe checks it is visible when focused).\n' +
+      "    if (r.left < -1 && e !== document.body && !inHorizontalScroller(e) && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.right <= 0)) offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), left: Math.round(r.left) });\n" +
+      '  }\n' +
+      '  const root = document.documentElement, body = document.body;\n' +
+      '  const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);\n' +
+      '  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, lang: root.lang, dir: getComputedStyle(root).direction };\n' +
+      '}\n' +
+      '\n' +
+      'export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;\n' +
+      '\n' +
+      '// expected: { lang, dir } for a declared state, or null for the positional page (language checked per state).\n' +
+      'export async function screenWidths(page, widths, expected = null, height = 900) {\n' +
+      "  if (!validWidths(widths)) return { results: [], pass: false, error: 'settings.desktopWidths invalid; no width screened' };\n" +
+      '  const results = [];\n' +
+      '  try {\n' +
+      '    for (const width of [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])]) {\n' +
+      '      await page.setViewportSize({ width, height });\n' +
+      '      await page.evaluate(() => scrollTo(0, 0));\n' +
+      '      const result = await page.evaluate(inspectLayout);\n' +
+      '      const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);\n' +
+      "      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && language });\n" +
+      '    }\n' +
+      '  } finally {\n' +
+      '    await page.setViewportSize({ width: 1440, height });\n' +
+      '  }\n' +
+      "  return { results, pass: results.every(r => r.pass), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence.' };\n" +
+      '}\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    // width-screen.mjs: R8, ported from codex/fannan-r3-review 2733317 (release/tools/browser-probes.mjs screenWidths/inspectLayout).
+    // Screening only: renders the page at every declared desktop width plus 320 CSS px (desktop 400% reflow equivalent) and
+    // flags horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Actual zoom, text spacing,
+    // WCAG reflow exceptions and layout quality still need manual evidence. 320 px is not a mobile design approval.
+    export const REFLOW_WIDTH = 320;
+    
+    export function inspectLayout() {
+      const clipped = [], offscreenLeft = [];
+      // ARGON-R5-05: visually hidden (sr-only) content is not a clip: a box of at most 1x1 px, or clip: rect(0...) / clip-path inset(50%).
+      const srOnly = (r, c) => (r.width <= 1 && r.height <= 1) || /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(c.clip) || c.clipPath === 'inset(50%)';
+      const focusable = e => e.matches('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');
+      const inHorizontalScroller = e => { for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) if (['auto', 'scroll'].includes(getComputedStyle(a).overflowX)) return true; return false; };
+      const beyond = (e, r) => [...e.querySelectorAll('*')].some(d => { const b = d.getBoundingClientRect(); return b.width > 0 && b.height > 0 && (b.right > r.right + 1 || b.left < r.left - 1); });
+      // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
+      for (const e of document.querySelectorAll('body, body *')) {
+        const c = getComputedStyle(e), r = e.getBoundingClientRect();
+        if (!r.width || !r.height || c.visibility === 'hidden' || c.display === 'none' || srOnly(r, c)) continue;
+        const media = e.matches('img, svg, video, canvas, iframe, input, select, textarea, button');
+        if (!e.textContent.trim() && !media) continue;
+        // overflow: clip makes no scroll container, so scrollWidth stays at clientWidth; measure what the box cuts off instead.
+        const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (c.overflowX === 'clip' && beyond(e, r));
+        const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);
+        // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.
+        if (e.textContent.trim() && (x || y)) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });
+        // ARGON-R5-05: text or media pushed past the left edge is lost (no scrollbar reaches it). Exempt: items inside a
+        // horizontal scroller, and the off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the
+        // viewport that appears on focus; the focus probe checks it is visible when focused).
+        if (r.left < -1 && e !== document.body && !inHorizontalScroller(e) && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.right <= 0)) offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), left: Math.round(r.left) });
+      }
+      const root = document.documentElement, body = document.body;
+      const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
+      return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, lang: root.lang, dir: getComputedStyle(root).direction };
+    }
+    
+    export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
+    
+    // expected: { lang, dir } for a declared state, or null for the positional page (language checked per state).
+    export async function screenWidths(page, widths, expected = null, height = 900) {
+      if (!validWidths(widths)) return { results: [], pass: false, error: 'settings.desktopWidths invalid; no width screened' };
+      const results = [];
+      try {
+        for (const width of [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])]) {
+          await page.setViewportSize({ width, height });
+          await page.evaluate(() => scrollTo(0, 0));
+          const result = await page.evaluate(inspectLayout);
+          const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
+          results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && language });
+        }
+      } finally {
+        await page.setViewportSize({ width: 1440, height });
+      }
+      return { results, pass: results.every(r => r.pass), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence.' };
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/width-screen.test.mjs:127:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R11 S3: at 320 px, ordinary text that needs sideways scrolling in a scroller fails; only 2D content is excused (real Chrome, test-only)
+not ok 3 - R11 S3: at 320 px, ordinary text that needs sideways scrolling in a scroller fails; only 2D content is excused (real Chrome, test-only)
+  ---
+  duration_ms: 363.307358
+  type: 'test'
+  location: '<scratch>/release/tests/width-screen.test.mjs:130:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    ordinary text in a horizontal scroller fails at 320 px
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/width-screen.test.mjs:140:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 1
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1141.374724

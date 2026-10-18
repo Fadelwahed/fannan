@@ -1,0 +1,30 @@
+# R11 before: R11 tests against 607b2e4 sources
+test_build_refuses_a_junk_changed_path_before_any_write (test_package_r3.JunkAndSecretTests.test_build_refuses_a_junk_changed_path_before_any_write) ... FAIL
+test_files_refuses_junk_and_secret_names (test_package_r3.JunkAndSecretTests.test_files_refuses_junk_and_secret_names) ... FAIL
+test_live_changed_paths_are_clean (test_package_r3.JunkAndSecretTests.test_live_changed_paths_are_clean) ... skipped 'needs a git checkout'
+test_ordinary_names_still_pass (test_package_r3.JunkAndSecretTests.test_ordinary_names_still_pass) ... ok
+
+======================================================================
+FAIL: test_build_refuses_a_junk_changed_path_before_any_write (test_package_r3.JunkAndSecretTests.test_build_refuses_a_junk_changed_path_before_any_write)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 298, in test_build_refuses_a_junk_changed_path_before_any_write
+    message = RegistryInputTests('run_build').run_build(['docs/.DS_Store'], damage)
+  File "<scratch>/scripts/test_package_r3.py", line 241, in run_build
+    with self.assertRaises(ValueError) as caught:
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_files_refuses_junk_and_secret_names (test_package_r3.JunkAndSecretTests.test_files_refuses_junk_and_secret_names)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 284, in test_files_refuses_junk_and_secret_names
+    with self.assertRaises(ValueError, msg=name) as caught:
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised : .env
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.008s
+
+FAILED (failures=2, skipped=1)
