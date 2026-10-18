@@ -140,6 +140,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r16/') for n in names), 'R16 evidence is archived like R4-R15')
         if (ROOT / 'test-results/r17').is_dir():
             self.assertTrue(any(n.startswith('test-results/r17/') for n in names), 'R17 evidence is archived like R4-R16')
+        if (ROOT / 'test-results/r18').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r18/') for n in names), 'R18 evidence is archived like R4-R17')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -339,6 +341,14 @@ class RequiredSectionTests(unittest.TestCase):
         self.assertIn('Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', required)
         self.assertTrue(any(m.startswith('ENH backlog:') for m in required))
         self.assertIn('Rendered-visibility backstop:', required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r18_sections(self):
+        # R18: the backstop's role (pixels decide visibility; AA stays with the CSS pass) and text that is not displayed
+        # (textHidden) are required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        self.assertIn('Pixels decide visibility, not AA:', required)
+        self.assertIn('is not displayed: it is counted (`textHidden`)', required)
         self.assertEqual(package.missing_sections(), [])
 
     def test_r14_build_checks_sections_before_any_output(self):

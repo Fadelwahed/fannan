@@ -159,3 +159,14 @@ test('R17: fail-closed compositing sentence, ENH backlog and the rendered-visibi
   const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
   for (const t of Object.values(R17)) { assert.doesNotMatch(t, vendors); assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
 });
+
+// R18 (panel round 18): the backstop's role (Fadel's tiebreak: pixels decide visibility, AA stays with the CSS pass),
+// line-by-line and target-directed coverage, hidden text, and the copy deck's separate accessible name.
+test('R18: the backstop role, its coverage, text that is not displayed and the approved accessible name are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
+  for (const m of ['Pixels decide visibility, not AA:', 'line by line', 'directed at targets', 'scrolled into view', 'four passes', 'is INCOMPLETE', 'opaque cover', 'peak under 1.5:1', 'could not resolve the colours', 'is not displayed: it is counted (`textHidden`)', '`ariaLabel`']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['`textHidden`', 'optional `ariaLabel`', 'Pixels decide visibility; AA stays with the CSS pass']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+  const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
+  const para = quality.slice(quality.indexOf('Rendered-visibility backstop:'));
+  assert.doesNotMatch(para.slice(0, 6000), vendors); assert.doesNotMatch(para.slice(0, 6000), /digital[\s_-]*cloud|\bgaza\b|palestin/i);
+});
