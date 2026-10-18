@@ -1,5 +1,27 @@
 # R3 executed verification — 17 October 2026
 
+## R13 executed verification (Mi'mar's box, 18 October 2026, about 5:55 AM UTC+3)
+
+Panel round 13 (N01-N21, D1 closed, q1/q2 decided; `reviews/panel-r13/`). The gate's threat model and the review convergence rule are in `FANNAN-PLAN.md` ("Threat model for the pre-handoff gate", "Review convergence rule"); deliberate obfuscation is a known limit listed in `UNTESTED.md`. Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 94 PASS, 0 FAIL, 0 skipped (R12's 88 + 6 in `tests/panel-r13.test.mjs`) | `test-results/r13/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 63 PASS, 0 FAIL, 31 SKIPPED (need deps or Chrome) | `test-results/r13/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r13/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r13/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 30 PASS / 26 PASS + 4 SKIPPED | `test-results/r13/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r13/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=36 (R12's 35 + `tests/panel-r13.test.mjs`) sh=4 py=4 plus the launcher, 0 failures | `test-results/r13/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r13/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 88 PASS, 6 FAIL: the same six Style Dictionary tests as in R11/R12 (it needs Node 22); not a gate | `test-results/r13/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r13/local-fixture.log`, evidence `test-results/r13/local-fixture-evidence.json`). It asserts the R12 claims plus stylesheets and the hardened reduced-motion routine on the page and the state, then runs three negative fixtures (N05): a `srcdoc` frame fails the handoff and the state (DEFERRED in wireframes); a spacing exception without a handoff entry fails and with an approver entry passes; a state page whose script removes a wide element fails its state with an integrity mismatch while the positional page passes.
+
+Per-finding before/after logs: `test-results/r13/R13-*-before.log` / `-after.log` (before = R13 tests against the R12 sources, f9a8d7e; every before failure is an assertion failure, none a module-load error). Chrome reproduction of the browser items: `test-results/r13/repro-before.log` / `repro-after.log` (script `repro.mjs.txt`).
+
 ## R12 executed verification (Mi'mar's box, 18 October 2026, about 5:10 AM UTC+3)
 
 Panel round 12 (M01-M18 agreed, M20 and M21 fixed, M19 closed; `reviews/panel-r12/`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0. Test-only deps: the existing locked tree, no new installs.

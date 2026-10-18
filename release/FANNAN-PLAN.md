@@ -122,6 +122,16 @@ The four project roles are generic throughout the candidate. Proposed memory sav
 
 **One Step 9 checklist:** yes. Maintain one canonical `handoff.json`, render its `HANDOFF.md`, and attach designer and QA results to the same versioned criteria. QA adds implementation evidence against the build SHA; it does not rewrite design acceptance. Any change to the package invalidates the affected evidence and approval until reviewed.
 
+## Threat model for the pre-handoff gate
+
+Pages are authored by Fannan or a human designer: honest but possibly sloppy, not an attacker. The gate must catch honest mistakes and ordinary authoring patterns completely (body or html clipping, zero-size or `display: contents` wrappers, open shadow roots, frames, objects and embeds, stylesheets loaded from `data:` or `blob:` URLs, state pages), and must fail closed on anything it cannot measure (closed shadow roots, unreadable or unserved stylesheets, frames, a vector field or native-function check that could not run, JavaScript-off content that is not equivalent).
+
+Deliberate obfuscation is outside the main threat model: for example JavaScript string escapes, comment tricks inside strings, patching `Function.prototype`, or base64-encoded stylesheets. Cheap defences are applied where they are simple (escapes are decoded and raw text is matched with and without comment stripping; the reduced-motion counter binds the native `requestAnimationFrame` at install and `call`/`apply`/`bind`/`Reflect.apply` are in the native-function check; `data:`/`blob:` stylesheets are refused). Anything beyond that is listed in `UNTESTED.md` as a known limit and is raised as ENH, not P0-P2, in future rounds. Defence in depth stays: computed-style checks, the JavaScript-off pass and the source scan.
+
+## Review convergence rule
+
+A review round passes when there are zero P0, P1 and P2 findings; P3 and ENH items are batched and don't block.
+
 ## Assumptions and evidence boundaries
 
 Six type sizes, a strict ten-percent accent threshold and a 150-percent long-text stress case are design-policy choices made for this assignment, not scientific detectors of AI authorship. The Impeccable detector's findings are advisory; successful execution is not a design-quality PASS. Card-grid, generic-hero, dashboard-trope and decoration judgments require the scoped independent critic evidence in the same gate. English/Arabic filler and common three-part headline scans provide additional screening; semantic review in every project language remains mandatory. Passing these checks removes known bad patterns; it cannot establish that a human would endorse the result. The independent critic and approver remain essential.
