@@ -2,7 +2,8 @@
 // into the page, so it must stay self-contained. Screening only; reviewers still judge rhythm.
 // CODEX-R3-02: the approved scale is passed in from the hash-checked handoff token JSON (approvedSpacing below);
 // it is never read from the page's own --spacing-* declarations, so a page cannot add a variable to legitimise a value.
-// Horizontal margins are skipped because `auto` margins resolve to used pixel values; 0, auto and normal are skipped.
+// R11: horizontal margins are screened too. getComputedStyle resolves `auto` margins to used pixels, so a margin whose
+// computed value (computedStyleMap) is the `auto` keyword is skipped; 0, auto and normal are skipped.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -20,7 +21,8 @@ export function spacingProbe(approved = []) {
   const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
   const near = (a, b) => Math.abs(a - b) < 0.05;
   const scale = new Set([...units.px.map(n => n + 'px'), ...units.rem.map(n => n * rootPx + 'px')]);
-  const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginBottom', 'rowGap', 'columnGap'];
+  const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'rowGap', 'columnGap'];
+  const cssName = { marginLeft: 'margin-left', marginRight: 'margin-right', marginTop: 'margin-top', marginBottom: 'margin-bottom' };
   const off = new Map();
   for (const el of document.querySelectorAll('body *')) {
     const r = el.getBoundingClientRect(), c = getComputedStyle(el);
@@ -30,6 +32,7 @@ export function spacingProbe(approved = []) {
     for (const key of keys) {
       const value = c[key];
       if (!value || ['0px', 'auto', 'normal'].includes(value)) continue;
+      if (cssName[key] && String(el.computedStyleMap?.().get(cssName[key])) === 'auto') continue; // used px of an auto margin
       const px = /^-?\d*\.?\d+px$/.test(value) ? parseFloat(value) : NaN;
       if (Number.isFinite(px) && allowed.some(a => near(a, px))) continue;
       if (!off.has(value)) off.set(value, { value, property: key, example: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') });

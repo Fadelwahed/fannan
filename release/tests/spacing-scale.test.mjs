@@ -143,3 +143,16 @@ test('CODEX-R4-02: page CSS cannot change the approved scale, and em is converte
     assert.doesNotMatch(source.slice(source.indexOf('export function spacingProbe'), source.indexOf('export function approvedSpacing')), /createElement/, 'no measuring element');
   } finally { await browser.close(); }
 });
+
+test('R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { spacingProbe } = await import('../tools/spacing-scale.mjs');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const run = async html => { const page = await browser.newPage(); await page.setContent(`<style>*{margin:0;padding:0}</style>${html}`); const r = await page.evaluate(spacingProbe, ['8px', '1rem', '24px']); await page.close(); return r; };
+    const off = await run('<p style="margin-left:13px">a</p><p style="margin-right:7px">b</p>');
+    assert.deepEqual(off.spacingOffScale.map(v => `${v.property}=${v.value}`).sort(), ['marginLeft=13px', 'marginRight=7px']);
+    assert.deepEqual((await run('<p style="margin-left:24px;margin-right:1rem">a</p>')).spacingOffScale, [], 'on-scale horizontal margins pass');
+    assert.deepEqual((await run('<div style="width:300px;margin:0 auto">a</div><div style="width:300px;margin-left:auto">b</div>')).spacingOffScale, [], 'auto margins resolve to used pixels and are skipped');
+  } finally { await browser.close(); }
+});
