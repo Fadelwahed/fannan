@@ -299,7 +299,8 @@ const r19Want = {
   hiddenWidths: r19.hiddenWidths.page === 'PASS' && r19.hiddenWidths.state === 'PASS' && r19.hiddenWidths.widths.every(w => w === false) && r19.hiddenWidths.reveals > 0 && r19.hiddenWidths.hidden.every(n => n === 3),
   pseudoVeil: lost19(r19.pseudoVeil, 'textUnreadable/js-off'), peVeil: lost19(r19.peVeil, 'textUnreadable/rendered'), innerLazy: lost19(r19.innerLazy, 'textUnreadable/rendered'),
   heroReviewed: r19.heroReviewed.page === 'PASS' && r19.heroReviewed.axe[0] === true && Array.isArray(r19.heroReviewed.axe[1]) && r19.heroReviewed.axe[1].length === 0 && Array.isArray(r19.heroReviewed.axe[2]) && r19.heroReviewed.axe[2].length === 0,
-  heroDark: axeOpen(r19.heroDark), heroUncited: axeOpen(r19.heroUncited),
+  // R22 (Fadel's three-zone tiebreak): the scrim hero is clearly above AA (zone a), so it passes without a citing review
+  heroDark: axeOpen(r19.heroDark), heroUncited: r19.heroUncited.axe[0] === true,
   dialogState: r19.dialogState.state === 'PASS' && r19.dialogState.hidden[0] === 3 && (r19.dialogState.axe[2] || []).includes('color-contrast'),
   scriptedModal: r19.scriptedModal.state === 'PASS' && r19.scriptedModal.requiresScript?.valid === true && Array.isArray(r19.scriptedModal.axe[2]) && r19.scriptedModal.axe[2].length === 0,
   falseScriptClaim: r19.falseScriptClaim.state === 'integrity mismatch' && r19.falseScriptClaim.stateChecks.includes('requiresScript/js-off') && r19.falseScriptClaim.requiresScript?.rendersWithoutScript === true,
@@ -388,6 +389,33 @@ const r21Want = {
   replacedStillPlaced: r21.replacedStillPlaced.state !== 'PASS' && r21.replacedStillPlaced.stateChecks.includes('content/js-off') && r21.replacedStillPlaced.statePass === false,
 };
 if (Object.values(r21Want).some(v => !v)) throw Error('R21 full-run expectations failed: ' + JSON.stringify(r21Want));
+// R22 (Fadel's three-zone tiebreak for text over images), full gate runs with the authored wcag-review PASS citing the
+// screenshot: a white caption at 70% opacity over a dark photo (R22-GPT-01) and a white hero with a strong dark halo
+// over a light image (R22-MIMAR-01) are clearly above AA and resolve (zone a); thin letters at 12 and 14 px whose first
+// letters sit on a near-white patch stay blocked even with the review naming the worst region (zone b, R22-GPT-02);
+// grey 12 px text just at AA over an image (zone c) stays blocked until the review names the worst region checked.
+const r22 = {};
+const band22 = (name, fill, patch, width) => { writeFileSync(join(output, name), `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200"><rect width="1200" height="200" fill="${fill}"/>${patch ? `<rect width="${width}" height="200" fill="${patch}"/>` : ''}</svg>`); return name; };
+const over22 = (bg, p) => `<div style="position:relative;width:1200px;height:200px;background:url('${bg}')">${p}</div>`;
+const region22 = { ...authored, manualChecks: authored.manualChecks.map(m => m.id === 'wcag-review' ? { ...m, worstRegion: 'the first words, over the lightest part of the image' } : m) };
+r22.opacityCaption = r19Run('opacity-caption', over22(band22('r22-dark.svg', '#1e2a33'), '<p style="position:absolute;top:70px;left:8px;margin:0;font-size:28px;color:#fff;opacity:.7">Seventy percent caption over a dark photo</p>'));
+writeFileSync(join(output, 'r22-light.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200"><defs><linearGradient id="g"><stop offset="0" stop-color="#eee"/><stop offset="1" stop-color="#bbb"/></linearGradient></defs><rect width="1200" height="200" fill="url(#g)"/></svg>');
+r22.haloHero = r19Run('halo-hero', over22('r22-light.svg', '<p style="position:absolute;top:60px;left:24px;margin:0;font-size:48px;font-weight:700;color:#fff;text-shadow:0 0 6px #000,0 0 3px #000">A hero line with a halo</p>'));
+const thin22 = size => over22(band22(`r22-thin${size}.svg`, '#1e2a33', '#e6e6e6', size === 12 ? 16 : 22), `<p style="position:absolute;top:70px;left:4px;margin:0;font-size:${size}px;color:#fff">ill fill lilt and the rest sits on the dark area of the photo</p>`);
+r22.thin12 = r19Run('thin-12', thin22(12), '', '', region22);
+r22.thin14 = r19Run('thin-14', thin22(14), '', '', region22);
+const grey22 = over22(band22('r22-white.svg', '#fff'), '<p style="position:absolute;top:70px;left:8px;margin:0;font-size:12px;color:#767676">Small grey text measured just at the AA floor.</p>');
+r22.greyNoRegion = r19Run('grey-no-region', grey22);
+r22.greyRegion = r19Run('grey-region', grey22, '', '', region22);
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R22 fixture runs: ' + JSON.stringify(r22));
+const r22Want = {
+  opacityCaption: r22.opacityCaption.axe[0] === true, haloHero: r22.haloHero.axe[0] === true,
+  thin12: axeOpen(r22.thin12), thin14: axeOpen(r22.thin14),
+  greyNoRegion: axeOpen(r22.greyNoRegion), greyRegion: r22.greyRegion.axe[0] === true,
+};
+if (Object.values(r22Want).some(v => !v)) throw Error('R22 full-run expectations failed: ' + JSON.stringify(r22Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
