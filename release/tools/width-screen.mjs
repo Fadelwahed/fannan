@@ -41,7 +41,12 @@ export function inspectLayout({ reflow = false } = {}) {
   // boxes) its rendered text ranges.
   const srHidden = new Map();
   const inSrOnly = el => { if (!el) return false; if (srHidden.has(el)) return srHidden.get(el); const v = srOnly(el.getBoundingClientRect(), getComputedStyle(el)) || inSrOnly(parentOf(el)); srHidden.set(el, v); return v; };
-  const shown = el => { const c = getComputedStyle(el); if (c.display === 'none' || c.visibility !== 'visible' || inSrOnly(el)) return false; const r = el.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || textRects(el).length > 0; };
+  // R21-MIMAR-02: what Chrome does not render is not on screen: display:none on any composed ancestor, content-visibility
+  // hidden (the content of a closed <details>), an inert closed popover. checkVisibility() covers all of them, as in
+  // visibility.mjs; a closed menu's links are not measured at all (its open state is graded only when declared).
+  // a display:contents box has no box of its own (checkVisibility is false); its nearest boxed ancestor decides
+  const rendered = el => { let a = el; while (a && getComputedStyle(a).display === 'contents') a = parentOf(a); return !a || typeof a.checkVisibility !== 'function' || a.checkVisibility(); };
+  const shown = el => { const c = getComputedStyle(el); if (c.display === 'none' || c.visibility !== 'visible' || inSrOnly(el) || !rendered(el)) return false; const r = el.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || textRects(el).length > 0; };
   const isContent = el => el.matches(MEDIA) || ownText(el);
   // R13 N03: composed content detection: an element holds content when it or any composed descendant (open shadow
   // trees included) is shown text or media, so a shadow-only host is screened too.
@@ -50,6 +55,7 @@ export function inspectLayout({ reflow = false } = {}) {
   // R13 N01: body's overflow propagates to the viewport when html's is visible; body is then not a scroll or clip box
   // (the viewport is), so content pushed left of it is offscreenLeft.
   const rootStyle = getComputedStyle(document.documentElement);
+  const rtlRoot = rootStyle.direction === 'rtl';
   const bodyPropagates = rootStyle.overflowX === 'visible' && rootStyle.overflowY === 'visible';
   const clipBox = a => a !== document.documentElement && !(a === document.body && bodyPropagates);
   const overflowX = el => getComputedStyle(el).overflowX;
@@ -69,6 +75,16 @@ export function inspectLayout({ reflow = false } = {}) {
   // element is cut while partly shown). The decision is made per state and width in screenWidths and across the
   // declared states in resolveReveals: content shown at 1440 must stay shown (or reachable) at every width; content cut
   // wholly at 1440 counts as not displayed only when another declared state shows it; partial cuts always fail.
+  // R21-MIMAR-01 (Fadel's tiebreak): rules (1)-(3) apply to text and controls only. Cropped media (img, svg, video,
+  // canvas, picture, decoration without text or controls, background images) is never clipped content; text or a
+  // control inside a cropped media wrapper is still checked. Nested documents (iframe, object, embed) stay content.
+  // R21-GPT-03/04: content is matched across widths and states by its print (normalised text, or a control's
+  // accessible name), never by position.
+  const CONTROL = 'input, select, textarea, button';
+  const kindOf = d => d.matches(CONTROL) ? 'control' : d.matches(NESTED) ? 'frame' : ownText(d) ? 'text' : d.matches(MEDIA) ? 'media' : 'text';
+  const norm = t => String(t || '').replace(/\s+/g, ' ').trim();
+  const nameOf = d => norm(d.getAttribute('aria-label') || (d.labels && d.labels[0] ? d.labels[0].textContent : '') || (d.matches('button') ? d.textContent : '') || d.getAttribute('placeholder') || d.getAttribute('title') || (d.matches('input') && ['submit', 'button', 'reset'].includes(d.type) ? d.value : '') || '');
+  const printOf = d => { const k = kindOf(d); const t = k === 'control' ? nameOf(d) : k === 'frame' ? norm(d.getAttribute('title') || d.getAttribute('src') || d.tagName) : norm([...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return (t || `${k}:${d.tagName.toLowerCase()}`).slice(0, 200); };
   const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = parentOf(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
   const contentEls = all.filter(d => isContent(d) && shown(d));
   const cutOf = (e, r) => {
@@ -78,14 +94,15 @@ export function inspectLayout({ reflow = false } = {}) {
     const whole = [], partial = [];
     for (const d of contentEls) {
       if (!(d === e || within(e, d))) continue;
+      if (kindOf(d) === 'media') continue; // R21-MIMAR-01: a media crop is not a content cut
       const rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
       if (!rects.length || rects.every(inside)) continue;
-      const item = { path: pathOf(d), tag: d.tagName, text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
+      const item = { path: pathOf(d), tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
       (rects.every(outside) ? whole : partial).push(item);
     }
     return { whole, partial };
   };
-  const cutPaths = new Set();
+  const cutPaths = new Set(), offPaths = new Set(), mediaCrops = []; // offPaths: off-screen or unreachable content is not shown
   // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
   for (const e of all) {
     const c = getComputedStyle(e), r = e.getBoundingClientRect();
@@ -95,17 +112,24 @@ export function inspectLayout({ reflow = false } = {}) {
     const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (clipBox(e) && ['hidden', 'clip'].includes(c.overflowX) && beyond(e, r));
     const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);
     // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.
-    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', whole: cut.whole, partial: cut.partial }); }
+    // R21-MIMAR-01: a box whose cut set is empty, or holds only media and decoration, cuts no content and is not a clip.
+    // Read-more tiebreak: an intentional truncation (text-overflow: ellipsis on the cut edge, or line-clamp) is marked so
+    // it passes only when a declared state shows the full text.
+    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
     const s = scrollerOf(e);
     // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the
     // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on
     // focus; the focus probe checks it is visible when focused). Inside a scroller, R12 M02 measures its range instead.
     const left = Math.min(r.width > 0 ? r.left : Infinity, ...contentRects(e).map(b => b.left)); // R13 N02: zero-size boxes by their text
-    if (!s && left < -1 && e !== document.body && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.right <= 0)) offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), left: Math.round(left) });
+    if (!s && left < -1 && e !== document.body && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.right <= 0)) { offPaths.add(pathOf(e)); offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), left: Math.round(left) }); }
+    // R21 (found with R21-MIMAR-02): in a right-to-left page the viewport cannot scroll past its RIGHT (start) edge either,
+    // so content pushed past it is lost the same way (recorded in offscreenLeft with side 'right'); same skip-link exemption.
+    const right = Math.max(r.width > 0 ? r.right : -Infinity, ...contentRects(e).map(b => b.right)), vw = document.documentElement.clientWidth;
+    if (!s && rtlRoot && right > vw + 1 && e !== document.body && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.left >= vw)) { offPaths.add(pathOf(e)); offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), side: 'right', right: Math.round(right) }); }
     if (s && ['auto', 'scroll'].includes(overflowX(s)) && (isContent(e) || ['auto', 'scroll'].includes(c.overflowX))) {
       const range = reach(s), rects = isContent(e) ? contentRects(e) : [r];
       const side = rects.some(b => b.left < range.left - 1) ? 'left' : rects.some(b => b.right > range.right + 1) ? 'right' : null;
-      if (side && !(focusable(e) && ['absolute', 'fixed'].includes(c.position))) unreachable.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), side, scroller: label(s) });
+      if (side && !(focusable(e) && ['absolute', 'fixed'].includes(c.position))) { offPaths.add(pathOf(e)); unreachable.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), side, scroller: label(s) }); }
     }
     // R12 M11: a same-origin frame whose document scrolls sideways is screened at 320 px; an unreadable frame is unscanned.
     // R13 N04: every element that can hold a nested document (object, embed, fencedframe, portal too).
@@ -174,8 +198,8 @@ export function inspectLayout({ reflow = false } = {}) {
   }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
-  const shownPaths = [...new Set(contentEls.map(pathOf))].filter(p => !cutPaths.has(p));
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPaths, clipped, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
+  const shownPrints = [...new Set(contentEls.filter(d => kindOf(d) !== 'media' && !cutPaths.has(pathOf(d)) && !offPaths.has(pathOf(d))).map(printOf))];
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
@@ -211,7 +235,7 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
       result.unscannedScopes.push(...closedScopes);
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
       results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', rest: !result.horizontalOverflow && result.offscreenLeft.length === 0 && result.unreachable.length === 0 && result.scrolledText.length === 0 && result.unmeasured.length === 0 && result.unscannedScopes.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
-      results.at(-1).pass = results.at(-1).rest && result.clipped.length === 0;
+      results.at(-1).pass = results.at(-1).rest && result.clipped.length === 0; // refined below (lost content, reveals)
     }
   } finally {
     await page.setViewportSize({ width: 1440, height });
@@ -219,14 +243,24 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   // R20 (Mi'mar's tiebreak): (1) content shown at 1440 must be fully shown or reachable at every width (320 included);
   // (3) content cut partly anywhere fails; (2) content cut wholly at 1440 (and not shown there) is a `reveal` clip: it
   // fails here and resolveReveals passes it only when another declared state of the same screen and language shows it.
-  const shownAt1440 = results.find(r => r.width === 1440)?.shownPaths || [];
-  const shown1440 = new Set(shownAt1440);
+  // R21-GPT-04 (WCAG 1.4.10, Fadel's tiebreak): text or a control shown at 1440 that is not shown at a width (display:none
+  // there, or cut) is `lost` at that width; resolveReveals passes it only when a declared state of the same screen and
+  // language shows the same text or accessible name at that width (a menu-open state). Prints, not positions.
+  // Read-more: a partial cut that is only an intentional truncation is `truncated` and needs a declared state showing
+  // the full text at that width; any other partial cut fails.
+  const shownAt1440 = results.find(r => r.width === 1440)?.shownPrints || [];
+  const shown1440 = new Set(shownAt1440), shownByWidth = {};
   for (const r of results) {
-    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.partial.length ? 'partly clipped' : r.width !== 1440 && c.whole.some(p => shown1440.has(p.path)) ? 'shown at 1440, lost at this width' : 'reveal';
-    r.passExceptReveal = r.rest && r.clipped.every(c => c.rule === 'reveal');
-    delete r.shownPaths; delete r.rest;
+    shownByWidth[r.width] = r.shownPrints;
+    const here = new Set(r.shownPrints);
+    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
+    const lostByClip = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(p => p.print))); // reported once, by its clip rule
+    r.lost = r.width === 1440 ? [] : shownAt1440.filter(p => !here.has(p) && !lostByClip.has(p)).map(print => ({ print }));
+    r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated'].includes(c.rule));
+    r.pass = r.passExceptReveal && r.clipped.length === 0 && r.lost.length === 0;
+    delete r.shownPrints; delete r.rest;
   }
-  return { results, shownAt1440, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
+  return { results, shownAt1440, shownByWidth, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
 }
 
 // R20 (Mi'mar's clipping tiebreak, rule 2): a `reveal` clip (content cut wholly at 1440 in one state) is resolved only
@@ -239,15 +273,23 @@ export function resolveReveals(scopes, phase = 'handoff') {
   for (const { scope, widths: w } of scopes) {
     if (!w?.results) continue;
     for (const r of w.results) {
-      for (const c of r.clipped.filter(c => c.rule === 'reveal')) {
-        // each cut element needs a declared state that shows it (a carousel's slides are shown by different slide states)
-        const others = scopes.filter(o => o.scope && scope && o.scope.screen === scope.screen && o.scope.lang === scope.lang && o.scope.state !== scope.state);
-        const states = c.whole.map(p => others.find(o => (o.widths?.shownAt1440 || []).includes(p.path))?.scope.state);
+      const others = scopes.filter(o => o.scope && scope && o.scope.screen === scope.screen && o.scope.lang === scope.lang && o.scope.state !== scope.state);
+      // R21-GPT-03: matched by print (normalised text or accessible name), never by DOM position
+      const at = (o, width) => (width === 1440 ? o.widths?.shownAt1440 : o.widths?.shownByWidth?.[width]) || [];
+      for (const c of r.clipped.filter(c => ['reveal', 'truncated'].includes(c.rule))) {
+        // each cut element needs a declared state that shows it (a carousel's slides are shown by different slide states);
+        // a reveal is shown at 1440, a truncation's full text at the same width
+        const items = c.rule === 'reveal' ? c.whole : c.partial, width = c.rule === 'reveal' ? 1440 : r.width;
+        const states = items.map(p => others.find(o => at(o, width).includes(p.print))?.scope.state);
         const by = states.every(Boolean);
         c.revealedBy = by ? [...new Set(states)] : null;
-        if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, paths: c.whole.filter((p, i) => !states[i]).map(p => p.path), text: c.whole.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
+        if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: c.rule, paths: items.filter((p, i) => !states[i]).map(p => p.path), text: items.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
       }
-      r.pass = r.passExceptReveal && r.clipped.every(c => c.rule !== 'reveal' || c.revealedBy || c.deferred);
+      for (const l of r.lost || []) {
+        l.reachableIn = others.find(o => at(o, r.width).includes(l.print))?.scope.state || null;
+        if (!l.reachableIn) { l.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: 'shown at 1440, not shown at this width', paths: [], text: [l.print.slice(0, 60)], deferred: l.deferred }); }
+      }
+      r.pass = r.passExceptReveal && r.clipped.every(c => !['reveal', 'truncated'].includes(c.rule) || c.revealedBy || c.deferred) && (r.lost || []).every(l => l.reachableIn || l.deferred);
     }
     w.pass = w.results.every(r => r.pass);
   }

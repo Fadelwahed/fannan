@@ -85,7 +85,8 @@ test('ARGON-R5-02: overflow hidden or clip on html and body together cannot hide
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
     const en = { lang: 'en', dir: 'ltr' };
-    const wide = '<main style="width:1400px"><h1>Fixed wide layout</h1></main>';
+    // R21-MIMAR-01: a box that cuts nothing is not a clip, so the wide layout carries content past 1280 (right-aligned)
+    const wide = '<main style="width:1400px;text-align:right"><h1>Fixed wide layout</h1></main>';
     for (const [name, html, body] of [['body hidden', '', 'overflow-x:hidden'], ['body clip', '', 'overflow-x:clip'], ['html hidden', 'overflow-x:hidden', ''], ['html and body hidden', 'overflow-x:hidden', 'overflow-x:hidden'], ['html and body clip', 'overflow-x:clip', 'overflow-x:clip'], ['html clip', 'overflow-x:clip', ''], ['html hidden, body clip', 'overflow-x:hidden', 'overflow-x:clip'], ['html clip, body hidden', 'overflow-x:clip', 'overflow-x:hidden']]) {
       await page.setContent(`<html lang="en" style="${html}"><body style="margin:0;${body}">${wide}</body></html>`);
       const r = await screenWidths(page, [1440, 1280], en);
