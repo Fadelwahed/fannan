@@ -1,0 +1,3 @@
+OPUS-PING START 06:58:21 AM Gaza
+rc=1 END 06:58:22 AM Gaza
+True 'Failed to authenticate. API Error: 403 Insufficient account balance' 0
