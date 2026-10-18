@@ -1,5 +1,11 @@
 # R3 checks not established
 
+## R10 additions (Mi'mar, 18 October 2026, Argon round 5)
+
+- **Accent fails closed (ARGON-R5-01):** an invalid declared accent, or none, gives null ratios and a handoff FAIL (also the scrolled viewport maximum). Checked in Chrome 155 headless only. In the wireframe phase the accent area stays deferred to Step 6 (unchanged), so an invalid accent is recorded in `accentInvalid` but does not fail a wireframe run.
+- **Width screen (ARGON-R5-02, -05):** `body` and `overflow: clip` boxes are screened; text or media past the left edge fails. Chrome 155 headless only. Not tested: content pushed off the right edge inside a clipping ancestor other than `body` (reported only if it carries text and that box overflows), `transform`-based off-screen content in other browsers, and sr-only variants other than the 1×1 px, `clip: rect(0 0 0 0)` and `clip-path: inset(50%)` patterns (other variants may be reported and need a manual decision). Skip links are exempt only when focusable, absolute or fixed, and wholly left of the viewport; whether they become visible on focus is left to the focus probe and manual review.
+- **Package registry inputs (ARGON-R5-04):** checked with temporary trees (missing path, symlinked file, symlinked folder). The live build ran on a clean tree.
+
 ## R9 additions (Mi'mar, 18 October 2026, Codex round 4)
 
 - **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.

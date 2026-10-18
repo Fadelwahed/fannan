@@ -1,5 +1,31 @@
 # R3 executed verification — 17 October 2026
 
+## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM Gaza)
+
+Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 59 PASS, 0 FAIL | `test-results/r10/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 43 PASS, 0 FAIL | `test-results/r10/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 53 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7-R9) | `test-results/r10/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r10/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r10/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 22 PASS | `test-results/r10/package-tests-git.log` |
+| same, no-git copy | 0 | 19 PASS | `test-results/r10/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r10/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r10/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=27 sh=4 py=4 plus the launcher `.internal`, 0 failures (27 tracked `.mjs` files; no `.mjs` was added or removed in R10) | `test-results/r10/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean (after the R10 fix to `test-results/r9/versions.txt`; before it this gate failed on that file's trailing space) | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 16 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, run in the checkout (its dependency check refuses a symlinked deps folder, so the scratch copy is not used for it), exit 0. Browser, contract, spacing, desktop widths (1440 + 320 reflow, page and state, now including the body and left-edge screens) and state checks run and pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r10/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r10/ARGON-R5-0{1,2,3,4,5}-before.log` / `-after.log` (03 passes before and after: not reproduced) and `R10-zip-evidence-before.log` / `-after.log`.
+
 ## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM Gaza)
 
 Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accent colour measured through a page element). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
