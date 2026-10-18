@@ -1,8 +1,8 @@
 {
-  "releaseManifestSha256": "d86564dfa45d0d13d1a12f8720e987b9dc7796a212cf0fbc83f3e19c3cba4485",
-  "releaseFiles": 99,
-  "archiveFiles": 876,
-  "archiveSha256": "961a99343d1d623500b7be9e0110db3fb6f7c7b5e9d8cbe4de7dc81e949a41a7",
+  "releaseManifestSha256": "32a2f7975b80793cadc28e7add779837f298456ad59be34aca81ab6442b54910",
+  "releaseFiles": 100,
+  "archiveFiles": 891,
+  "archiveSha256": "29a5ecb36deb4bf63a99018a353d178504485c8b66ca25df35e46bc64eb3e580",
   "zipCRC": "PASS",
   "exactInventoryAndBytes": "PASS",
   "sevenDeliverables": "PASS",
