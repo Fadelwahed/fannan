@@ -38,7 +38,7 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
       designLink: { url: 'https://example.invalid/private', private: true, evidence: brief }, tokens: tokenArtifacts, toolEvidence: [{ tool: 'fixture', version: '1', artifact: brief }],
       settings: { desktopWidths: [1440, 1280], path: settings, repository: 'repo-x', stack: 'stack-x', roles: { engineer: 'engineer-x', qaGate: 'qa-x', writer: 'writer-x', approver: 'approver-x' } },
       pointOfView: { idea: 'Residents first', briefRefs: ['brief.md:1'] },
-      screens: [{ id: 'home', page: frame, headingOutline: [{ level: 1, text: 'Specific headline.' }], seoIntent: 'service page', schemaIntent: 'none', images: [], actions: [], states: [{ state: 'default', lang: 'en', dir: 'ltr', page: frame, frame: { path: frame, width: 1440, version: 'v1', sha256: hash } }, ...states.slice(1).map(na)], components: [{ id: 'heading', states: [{ state: 'default', lang: 'en', dir: 'ltr', applicable: true, evidence: frame }, ...states.slice(1).map(na)] }], acceptance: [{ id: 'title', severity: 'BLOCK', decision: 'PASS', check: 'title visible', evidence: frame }], wcag: { standard: '2.2 AA', contrastEvidence: frame, focusOrderEvidence: frame, targetSizeEvidence: frame } }],
+      screens: [{ id: 'home', type: 'marketing', page: frame, headingOutline: [{ level: 1, text: 'Specific headline.' }], seoIntent: 'service page', schemaIntent: 'none', images: [], actions: [], states: [{ state: 'default', lang: 'en', dir: 'ltr', page: frame, frame: { path: frame, width: 1440, version: 'v1', sha256: hash } }, ...states.slice(1).map(na)], components: [{ id: 'heading', states: [{ state: 'default', lang: 'en', dir: 'ltr', applicable: true, evidence: frame }, ...states.slice(1).map(na)] }], acceptance: [{ id: 'title', severity: 'BLOCK', decision: 'PASS', check: 'title visible', evidence: frame }], wcag: { standard: '2.2 AA', contrastEvidence: frame, focusOrderEvidence: frame, targetSizeEvidence: frame } }],
       copySlots: [{ id: 'hero', screen: 'home', kind: 'interface', purpose: 'state service', text: 'Specific headline.', minChars: 5, maxChars: 30, tone: 'direct', placementScreenshot: frame, placements: [{ lang: 'en', state: 'default', screenshot: frame }], source: { kind: 'brief', path: brief, ref: 'brief.md:2' }, lang: 'en', dir: 'ltr', variants: [{ lang: 'en', dir: 'ltr', text: 'Specific headline.', source: { path: brief, ref: 'brief.md:2' } }] }],
       facts: [], placeholders: [], openQuestions: [], languages: [{ lang: 'en', dir: 'ltr' }], assets: [], motion: [],
       components: [{ id: 'heading', variants: ['page-title'], states: ['default'], tokens: { color: 'colors.primary', size: 'typography.title' }, behaviour: 'static page heading; wraps, never truncates' }],
@@ -54,6 +54,18 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     }
     h.settings.desktopWidths = [1440];
     assert.deepEqual(checkHandoff(h), [], '1440 alone is enough');
+    // R20-GPT-06: every screen declares its type; generic-hero is required for marketing and landing screens only, so a
+    // functional Settings screen with a plain task heading passes without it, and a marketing screen without it fails
+    {
+      const noHero = x => ({ ...x, manualChecks: x.manualChecks.filter(m => m.id !== 'generic-hero') });
+      const settingsScreen = noHero(JSON.parse(JSON.stringify(h)));
+      Object.assign(settingsScreen.screens[0], { type: 'functional', headingOutline: [{ level: 1, text: 'Settings' }] });
+      assert.deepEqual(checkHandoff(settingsScreen), [], 'a functional Settings screen passes without generic-hero');
+      assert.match(checkHandoff(noHero(h)).join('\n'), /manual home\/en\/default\/generic-hero/, 'a marketing screen still needs generic-hero');
+      const landing = noHero(JSON.parse(JSON.stringify(h))); landing.screens[0].type = 'landing';
+      assert.match(checkHandoff(landing).join('\n'), /generic-hero/, 'a landing screen needs generic-hero');
+      for (const bad of [undefined, '', 'app', 'Functional']) { const t = JSON.parse(JSON.stringify(h)); t.screens[0].type = bad; if (bad === undefined) delete t.screens[0].type; assert.match(checkHandoff(t).join('\n'), /screen home: type must be one of marketing, landing, functional/, `type ${JSON.stringify(bad)} must fail`); }
+    }
     // ARGON-R5-03 (not reproduced, pinned): the wireframe phase is a handoff too, so it must declare desktopWidths with 1440;
     // there is no wireframe early return and no default to [1440].
     const wire = JSON.parse(JSON.stringify({ ...h, phase: 'wireframe' }));

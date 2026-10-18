@@ -50,6 +50,11 @@ const cited = source => {
   return line > 0 && line <= readFileSync(resolve(source.path), 'utf8').split(/\r?\n/).length;
 };
 
+// R20-GPT-06: screen types. `marketing` and `landing` screens carry promotional hero copy and claims of distinction,
+// which the generic-hero swap test grades; `functional` screens (settings, dashboards, forms, task flows) use clear
+// task headings and are not graded by it.
+export const SCREEN_TYPES = ['marketing', 'landing', 'functional'];
+export const HERO_TYPES = ['marketing', 'landing'];
 export function checkHandoff(h, phase = 'handoff') {
   const errors = [];
   const need = (ok, message) => { if (!ok) errors.push(message); };
@@ -117,6 +122,8 @@ export function checkHandoff(h, phase = 'handoff') {
     // applicable default rendering with an existing page (frames and approval are not required yet).
     if (phase === 'wireframe') for (const lang of h.languages || []) need((s.states || []).some(st => st.state === 'default' && st.lang === lang.lang && st.dir === lang.dir && st.applicable !== false && file(st.page)), `screen ${s.id}: wireframe rendering for ${lang.lang}/${lang.dir} needs a default state with an existing page`);
     need(Array.isArray(s.headingOutline) && s.headingOutline.filter(x => x.level === 1).length === 1, `screen ${s.id}: exactly one H1 in outline`);
+    // R20-GPT-06: each screen declares its type; the generic-hero swap test applies to marketing and landing screens
+    need(SCREEN_TYPES.includes(s.type), `screen ${s.id}: type must be one of ${SCREEN_TYPES.join(', ')}`);
     need(nonempty(s.seoIntent) && nonempty(s.schemaIntent), `screen ${s.id}: SEO/schema intent required`);
     need(Array.isArray(s.images) && s.images.every(i => nonempty(i.id) && nonempty(i.altIntent) && typeof i.alt === 'string'), `screen ${s.id}: image alt text and intent required`);
     need(Array.isArray(s.actions) && s.actions.every(a => nonempty(a.id) && nonempty(a.label) && !/^(click here|learn more|read more)$/i.test(a.label)), `screen ${s.id}: standalone action labels required`);
@@ -167,6 +174,7 @@ export function checkHandoff(h, phase = 'handoff') {
   for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : (h.languages || []).map(l => ({ state: 'wireframe', lang: l.lang })))) {
     if (st.applicable === false) continue;
     for (const id of manualIds) {
+      if (id === 'generic-hero' && !HERO_TYPES.includes(s.type)) continue; // R20-GPT-06: a functional screen has no promotional hero
       const key = `${s.id}/${st.lang}/${st.state}/${id}`;
       need(phase === 'wireframe' && wireframeDeferred.includes(id) ? deferred.has(key) : phase === 'wireframe' && wireframeDeferrable.includes(id) ? deferred.has(key) || ids.has(key) : ids.has(key), `manual ${key}: required phase decision with reviewer/artifact/brief refs`);
     }

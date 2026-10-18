@@ -175,7 +175,7 @@ test('R18: the backstop role, its coverage, text that is not displayed and the a
 // screen's hidden content, the colour-contrast incomplete resolver (Fadel's tiebreak) and the cited accessible name.
 test('R19: hidden layers, the top layer, inner scrollports, hidden content in the width screen and the contrast incomplete resolver are documented', () => {
   const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
-  for (const m of ['Layers a hit test cannot see are possible covers too', '`pointer-events:none` layer', 'the fade of a truncated block', 'the top layer is respected', 'a non-modal open dialog is not inert', 'the end of every inner scrollport', 'The width screen uses the same rule', 'Automated contrast incomplete results:', 'in BOTH renderings', 'cites the screenshot', 'must appear in its cited source', 'an SVG, which is mostly transparent shapes']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['Layers a hit test cannot see are possible covers too', '`pointer-events:none` layer', 'the fade of a truncated block', 'the top layer is respected', 'a non-modal open dialog is not inert', 'the end of every inner scrollport', 'Automated contrast incomplete results:', 'in BOTH renderings', 'cites the screenshot', 'must appear in its cited source', 'an SVG, which is mostly transparent shapes']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
   for (const m of ['must appear in its cited source', 'resolves an automated colour-contrast incomplete result']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
   const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
   const para = quality.slice(quality.indexOf('Rendered-visibility backstop:'));
@@ -187,4 +187,17 @@ test('R19b: the requiresScript state, its trigger and the false-claim mismatch a
   const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
   for (const m of ['`requiresScript: true` with its trigger recorded', 'resolves on the scripted rendering alone', 'the default state always needs both renderings', 'fails as an integrity mismatch']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
   for (const m of ['`requiresScript: true` with `trigger`', 'The default state cannot declare it.']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+});
+
+// R20 (panel round 20, Mi'mar's clipping tiebreak): one clipping rule by states and widths with declared reveal states,
+// the faintest-glyph AA measure, the JavaScript-off baseline of a script-only state, the truncation-fade label and the
+// screen type that scopes generic-hero. The R19 width-screen sentence ("The width screen uses the same rule") is retired.
+test('R20: the clipping rule and reveal states, the faintest-text measure, the script-only baseline and screen types are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md')), rubric = flat(read('references/critic-rubric.md'));
+  for (const m of ['Clipping is one rule based on states and widths, whatever the CSS pattern:', 'at every declared width, 320 included', 'counts as not displayed only if another declared state of the same screen and language shows it', 'or partly clipped anywhere', 'Designers must declare reveal states:', 'the 10th percentile of the clusters', 'A high percentile of all ink is never used for AA.', "the JavaScript-off baseline is the default state's JavaScript-off rendering", 'only when its ancestor clips text that actually overflows', '`generic-hero` (marketing and landing screens only)']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  assert.ok(!quality.includes('The width screen uses the same rule'), 'the R19 width-screen exemption is retired');
+  for (const m of ['Reveal states:', 'designers must declare a state for each expanded panel or slide', "the JavaScript-off baseline is the default state's JavaScript-off rendering", 'approved copy slots whose `placements` include this state and language', 'a `type` (`marketing`, `landing` or `functional`', 'faintest text']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+  for (const m of ['applies to promotional hero copy and claims of distinction', 'A `functional` screen']) assert.ok(rubric.includes(m), `critic-rubric.md: ${m}`);
+  const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
+  for (const doc of [quality, contract, rubric]) { assert.doesNotMatch(doc, vendors); assert.doesNotMatch(doc, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
 });

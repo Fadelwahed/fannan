@@ -27,7 +27,7 @@ In every round, compare the equivalent instances of each reused component across
 
 ## Specificity test and reference comparison
 
-For each page, quote its actual hero line from the approved copy deck, mask the brand name and compare its meaning with two unrelated business categories. If both could use it unchanged, mark `generic-hero` FAIL. A factual descriptor, named audience job or specific proposition must make the line belong to this brief. Do not invent competitor quotations. The writer owns revisions and existing approval still applies.
+The swap test applies to promotional hero copy and claims of distinction, on screens of type `marketing` or `landing`. For each such page, quote its actual hero line from the approved copy deck, mask the brand name and compare its meaning with two unrelated business categories. If both could use it unchanged, mark `generic-hero` FAIL. A factual descriptor, named audience job or specific proposition must make the line belong to this brief. Do not invent competitor quotations. The writer owns revisions and existing approval still applies. A `functional` screen (settings, a dashboard, a form or another task screen) has no promotional hero: it uses a clear task heading such as "Settings", and `generic-hero` is not required for it.
 
 Compare each page with the three inspected reference works selected in Step 3. State the exact aspect being compared, the reference evidence, where this design falls short and how the brief justifies a deliberate difference. “Looks premium” or “feels human” is not a criterion. No reference URL may be presented as inspected unless it was opened and reviewed. The current candidate contains a rubric, not a fabricated comparison against an unbuilt project.
 

@@ -144,6 +144,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r18/') for n in names), 'R18 evidence is archived like R4-R17')
         if (ROOT / 'test-results/r19').is_dir():
             self.assertTrue(any(n.startswith('test-results/r19/') for n in names), 'R19 evidence is archived like R4-R18')
+        if (ROOT / 'test-results/r20').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r20/') for n in names), 'R20 evidence is archived like R4-R19')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -358,6 +360,14 @@ class RequiredSectionTests(unittest.TestCase):
         # colour-contrast incomplete resolver are required in design-quality.md.
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         for m in ['Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:']:
+            self.assertIn(m, required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r20_sections(self):
+        # R20: the clipping rule with declared reveal states and the faintest-text AA measure are required in
+        # design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        for m in ['Clipping is one rule based on states and widths, whatever the CSS pattern:', 'Designers must declare reveal states:', 'A high percentile of all ink is never used for AA.']:
             self.assertIn(m, required)
         self.assertEqual(package.missing_sections(), [])
 
