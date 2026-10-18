@@ -146,6 +146,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r19/') for n in names), 'R19 evidence is archived like R4-R18')
         if (ROOT / 'test-results/r20').is_dir():
             self.assertTrue(any(n.startswith('test-results/r20/') for n in names), 'R20 evidence is archived like R4-R19')
+        if (ROOT / 'test-results/r21').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r21/') for n in names), 'R21 evidence is archived like R4-R20')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -368,6 +370,14 @@ class RequiredSectionTests(unittest.TestCase):
         # design-quality.md.
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         for m in ['Clipping is one rule based on states and widths, whatever the CSS pattern:', 'Designers must declare reveal states:', 'A high percentile of all ink is never used for AA.']:
+            self.assertIn(m, required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r21_sections(self):
+        # R21: media crops, unrendered content, read-more clamps and the minimum-glyph measure are required in
+        # design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        for m in ['Cropped media is never clipped content', 'Content Chrome does not render is not on screen', 'A read-more clamp is the one partial cut that can pass', 'The faintest-text measure never drops a faint glyph']:
             self.assertIn(m, required)
         self.assertEqual(package.missing_sections(), [])
 
