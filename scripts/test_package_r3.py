@@ -2,6 +2,7 @@
 """R4-5 regression tests for scripts/package-r3.py (standard library only; no network, no install)."""
 import hashlib
 import importlib.util
+import json
 import os
 import shutil
 import subprocess
@@ -129,6 +130,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r11/') for n in names), 'R11 evidence is archived like R4-R10')
         if (ROOT / 'test-results/r12').is_dir():
             self.assertTrue(any(n.startswith('test-results/r12/') for n in names), 'R12 evidence is archived like R4-R11')
+        if (ROOT / 'test-results/r13').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r13/') for n in names), 'R13 evidence is archived like R4-R12')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -311,10 +314,70 @@ class JunkAndSecretTests(unittest.TestCase):
         for name in ['test-results/local-fixture/design-output/test/tokens.json', 'test-results/r3/secret-scan.json', 'release/tools/token-references.mjs', 'release/tests/token-validation.test.mjs', 'release/references/environment.md', 'keyboard.md']:
             self.assertFalse(package.junk_or_secret(name), name)
 
+    R13_BAD = ['aws-credentials.json', 'client-secret.json', 'client_secrets.json', 'api-token.json', 'github_token.txt', 'prod.secrets.json', 'oauth-tokens.json', 'tokens.production.json', 'tokens.backup.txt', 'tokens.json', 'db-password.txt', 'my.apikey.json', 'secrets/notes.md']
+
+    def test_r13_credential_words_anywhere_are_refused_as_input_and_changed_paths(self):
+        # R13 N10: a credential word anywhere in a path part refuses it (prefix, infix, suffix, plural, folder).
+        for name in self.R13_BAD:
+            self.assertTrue(package.junk_or_secret(name), name)
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'ok.md').write_text('ok')
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                (root / name).write_text('{}')
+                with self.assertRaises(ValueError, msg=name):
+                    package.files(root)
+        for name in ['oauth-tokens.json', 'tokens.json', 'client-secret.json']:
+            def damage(root, name=name):
+                (root / name).write_text('{}')
+            message = RegistryInputTests('run_build').run_build([name], damage)
+            self.assertIn(name, message)
+        for name in ['release/tools/token-references.mjs', 'release/tests/token-validation.test.mjs', 'test-results/r3/secret-scan.json']:
+            self.assertFalse(package.junk_or_secret(name), name)
+
+    def test_r13_tokens_json_only_at_the_declared_path_with_design_token_content(self):
+        # R13 panel q2: tokens.json passes only when the handoff.json beside it declares that path and hash, and every
+        # leaf is a $value node with no credential keys.
+        good = {'colors': {'primary': {'$value': '#123456', '$type': 'color'}}, 'spacing': {'md': {'$value': '16px'}}}
+        cred = 'access' + '_token'
+        def tree(tokens, declared=True, sha=None, rel='design/tokens.json'):
+            temp = tempfile.TemporaryDirectory(); root = Path(temp.name)
+            (root / 'design').mkdir(); path = root / 'design/tokens.json'; path.write_text(json.dumps(tokens))
+            digest = sha or hashlib.sha256(path.read_bytes()).hexdigest()
+            if declared:
+                (root / 'design/handoff.json').write_text(json.dumps({'tokens': {'json': {'path': '/somewhere/else/' + rel, 'sha256': digest}}}))
+            return temp, root
+        temp, root = tree(good)
+        with temp:
+            self.assertEqual(len(package.files(root)), 2, 'declared, hash-matched design tokens pass')
+        for tokens, kwargs in [(good, {'declared': False}), (good, {'sha': '0' * 64}), (good, {'rel': 'other/tokens.json'}), ({'colors': {'primary': '#123456'}}, {}), ({cred: 'abcdefgh'}, {}), ({'oauth': {'refresh' + '_token': {'$value': 'x'}}}, {}), ({'colors': {'primary': {'$value': {'client' + '_secret': 'x'}}}}, {}), ({}, {})]:
+            temp, root = tree(tokens, **kwargs)
+            with temp, self.assertRaises(ValueError, msg=f'{tokens} {kwargs}'):
+                package.files(root)
+        self.assertFalse(package.junk_or_secret('test-results/local-fixture/design-output/test/tokens.json'), 'the tracked fixture tokens are declared by their handoff and hash-matched')
+
+    def test_r13_secret_content_in_ordinary_names_is_refused(self):
+        # R13 panel q2: obvious secrets inside ordinarily named packaged files fail the package input and changed paths.
+        samples = ['-----BEGIN RSA ' + 'PRIVATE KEY-----\nabc', 'key = "AK' + 'IA' + 'A' * 16 + '"', 'gh' + 'p_' + 'a' * 36, 'xo' + 'xb-' + '1' * 12, '{"refresh' + '_token": "' + 'r' * 20 + '"}']
+        for text in samples:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'notes.md').write_text(text)
+                with self.assertRaises(ValueError, msg=text[:20]) as caught:
+                    package.files(root)
+                self.assertIn('secret-looking content', str(caught.exception))
+        def damage(root):
+            (root / 'docs').mkdir(exist_ok=True); (root / 'docs/notes.md').write_text(samples[1])
+        self.assertIn('docs/notes.md', RegistryInputTests('run_build').run_build(['docs/notes.md'], damage))
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'notes.md').write_text('The AKIA prefix and "refresh_token" are mentioned, not used.')
+            self.assertEqual(len(package.files(root)), 1, 'mentions without a value pass')
+
     def test_ordinary_names_still_pass(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            for name in ['environment.md', 'keys-and-tokens.md', 'env.json', 'pem-notes.txt']:
+            for name in ['environment.md', 'keyboard-notes.md', 'env.json', 'pem-notes.txt']:  # R13 N10: 'keys-and-tokens.md' now carries a credential word
                 (root / name).write_text('x')
             self.assertEqual(len(package.files(root)), 4)
 

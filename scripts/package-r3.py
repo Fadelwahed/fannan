@@ -37,18 +37,84 @@ JUNK_OR_SECRET_STEM = re.compile(r'(?:\.env(?:\..*)?|id_(?:rsa|dsa|ecdsa|ed25519
 # R12 M12: allowlisted suffixes do not launder secret names. Any path part that is an environment file (.env, .envrc,
 # .env-prod ...), an editor lock (.#name), a credential file name with any suffixes (credentials.json, secrets.yaml.md,
 # service-account.json, token.json, .npmrc.json, .git-credentials.txt) or a key or certificate followed by more
-# suffixes (private.key.json) is refused. Design-token files (tokens.json) stay allowed: only the singular `token` is a
-# credential name.
+# suffixes (private.key.json) is refused. R13 N10 replaces the R12 plural allowance: see CREDENTIAL_WORD below.
 SECRET_ANY_SUFFIX = re.compile(r'(?:\.env[^/]*|\.#.*|(?:credentials?|secrets?|service[-_]account(?:[-_][^.]*)?|token|\.npmrc|\.netrc|\.pypirc|\.git-credentials)(?:\..*)?|.*\.(?:pem|key|p12|pfx)(?:\..*)?)', re.I)
 
 
-def junk_or_secret(name):
+# R13 N10 / panel q2: a credential word anywhere in a path part (prefix, infix or suffix; singular or plural) refuses
+# it, except three reviewed tool, test and evidence names and a design-token `tokens.json` that is (a) declared by the
+# `handoff.json` beside it (`tokens.json.path` ends with this path and its sha256 matches) and (b) valid design-token
+# content: every leaf is a node with `$value`, and no credential keys (access_token, refresh_token, client_secret ...).
+CREDENTIAL_WORD = re.compile(r'credential|secret|service[-_.]?account|token|password|passwd|api[-_.]?key|private[-_.]?key|access[-_.]?key', re.I)
+CREDENTIAL_NAME_REVIEWED = {'token-references.mjs', 'token-validation.test.mjs', 'secret-scan.json'}
+CREDENTIAL_KEYS = {'access_token', 'refresh_token', 'client_secret', 'id_token', 'password', 'api_key', 'apikey', 'private_key', 'secret'}
+
+
+def design_tokens_ok(path, rel):
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+        handoff = json.loads((path.parent / 'handoff.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return False
+    declared = ((handoff.get('tokens') or {}).get('json') or {}) if isinstance(handoff, dict) else {}
+    where = str(declared.get('path', '')).replace('\\', '/')
+    if not (where == rel or where.endswith('/' + rel)) or declared.get('sha256') != hashlib.sha256(path.read_bytes()).hexdigest():
+        return False
+    values = []
+
+    def walk(node):
+        if not isinstance(node, dict):
+            return False
+        if any(str(k).lower() in CREDENTIAL_KEYS for k in node):
+            return False
+        if '$value' in node:
+            values.append(1)
+            return not isinstance(node['$value'], dict) or walk_value(node['$value'])
+        return all(walk(v) for k, v in node.items() if not str(k).startswith('$'))
+
+    def walk_value(value):
+        return not any(str(k).lower() in CREDENTIAL_KEYS for k in value) and all(walk_value(v) for v in value.values() if isinstance(v, dict))
+    return walk(data) and bool(values)
+
+
+def credential_name(name, root):
+    parts = Path(name).parts
+    for i, part in enumerate(parts):
+        if not CREDENTIAL_WORD.search(part):
+            continue
+        last = i == len(parts) - 1
+        if last and part in CREDENTIAL_NAME_REVIEWED:
+            continue
+        if last and part == 'tokens.json' and design_tokens_ok(Path(root) / name, Path(name).as_posix()):
+            continue
+        return True
+    return False
+
+
+# R13 panel q2: a stdlib content screen for obvious secrets in every packaged or hashed text file (names alone miss a
+# key pasted into an ordinary file). Patterns are assembled here so this file does not match itself.
+SECRET_CONTENT = re.compile('|'.join([
+    '-----BEGIN [A-Z ]*' + 'PRIVATE KEY-----', 'AK' + 'IA[0-9A-Z]{16}', 'gh' + 'p_[A-Za-z0-9]{36}', 'github' + '_pat_[A-Za-z0-9_]{22,}',
+    'xo' + 'x[baprs]-[A-Za-z0-9-]{10,}', 's' + 'k-[A-Za-z0-9_-]{32,}', 'AI' + 'za[0-9A-Za-z_-]{35}',
+    '"(?:refresh' + '_token|client' + '_secret|access' + '_token)"\\s*:\\s*"[^"]{8,}"']))
+
+
+def secret_content(path):
+    try:
+        return bool(SECRET_CONTENT.search(path.read_bytes().decode('utf-8', 'ignore')))
+    except OSError:
+        return False
+
+
+def junk_or_secret(name, root=None):
     parts = Path(name).parts
     if any(JUNK_OR_SECRET.fullmatch(part) or part in DENIED_PARTS for part in parts):
         return True
     if parts and JUNK_OR_SECRET_STEM.fullmatch(parts[-1]):
         return True
     if any(SECRET_ANY_SUFFIX.fullmatch(part) for part in parts):
+        return True
+    if credential_name(name, ROOT if root is None else root):
         return True
     return Path(name).suffix not in ALLOWED_SUFFIXES and name != ARCHIVE
 
@@ -60,9 +126,12 @@ def files(root):
     bad = [p for p in paths if NON_PACKAGE & set(p.relative_to(root).parts) or p.suffix == '.pyc']
     if bad:
         raise ValueError('cache, dependency or git entry in package input: ' + bad[0].relative_to(root).as_posix())
-    secret = [p for p in paths if (p.is_file() or set(p.relative_to(root).parts) & DENIED_PARTS) and junk_or_secret(p.relative_to(root).as_posix())]
+    secret = [p for p in paths if (p.is_file() or set(p.relative_to(root).parts) & DENIED_PARTS) and junk_or_secret(p.relative_to(root).as_posix(), root)]
     if secret:
         raise ValueError('secret-bearing, junk or non-allowlisted file in package input: ' + secret[0].relative_to(root).as_posix())
+    leaked = [p for p in paths if p.is_file() and secret_content(p)]  # R13 q2: content screen
+    if leaked:
+        raise ValueError('secret-looking content in package input: ' + leaked[0].relative_to(root).as_posix())
     return [p for p in paths if p.is_file()]
 
 
@@ -187,6 +256,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r11')  # R11 before/after evidence (Asad panel round 5)
     if (ROOT / 'test-results/r12').is_dir():
         paths += files(ROOT / 'test-results/r12')  # R12 before/after evidence (panel round 12)
+    if (ROOT / 'test-results/r13').is_dir():
+        paths += files(ROOT / 'test-results/r13')  # R13 before/after evidence (panel round 13)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 
@@ -220,6 +291,9 @@ def build(start):
     junk = [name for name in names if junk_or_secret(name)]  # R11 C4: never hash an environment, key or junk file
     if junk:
         raise ValueError('secret-bearing, junk or non-allowlisted file among the changed paths: ' + junk[0])
+    leaked = [name for name in names if name not in {ARCHIVE} and regular_in_root(name) and secret_content(ROOT / name)]  # R13 q2
+    if leaked:
+        raise ValueError('secret-looking content among the changed paths: ' + leaked[0])
     unhashable = [name for name in names if name not in written and not regular_in_root(name)]
     if unhashable:
         raise ValueError('changed path missing, symlinked or not a regular file (registry input): ' + unhashable[0])
