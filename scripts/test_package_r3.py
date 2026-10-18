@@ -134,6 +134,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r13/') for n in names), 'R13 evidence is archived like R4-R12')
         if (ROOT / 'test-results/r14').is_dir():
             self.assertTrue(any(n.startswith('test-results/r14/') for n in names), 'R14 evidence is archived like R4-R13')
+        if (ROOT / 'test-results/r15').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r15/') for n in names), 'R15 evidence is archived like R4-R14')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -299,6 +301,23 @@ class RequiredSectionTests(unittest.TestCase):
             (root / 'release/skills/design-canvas/SKILL.md').unlink()
             self.assertIn('release/skills/design-canvas/SKILL.md: missing file', package.missing_sections(root))
 
+    def test_r15_sections_and_retired_wording(self):
+        # R15 B1-B4: the Step 5 gate timing, the unitless column count, the feedback-log and critic-row text are
+        # required; the old Step 4 timing and the "each value is a spacing-scale token" grid clause are refused.
+        required = getattr(package, 'REQUIRED_SECTIONS', {})
+        self.assertIn('Column counts are positive unitless integers recorded beside the grid spec, not spacing tokens.', required.get('release/FANNAN-PLAN.md', []))
+        for name in ['release/skills/design-prototype/SKILL.md', 'release/references/design-quality.md', 'release/references/critic-rubric.md']:
+            self.assertIn(name, required)
+        self.assertEqual(package.missing_sections(), [])
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for name in required:
+                (root / name).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(ROOT / name, root / name)
+            plan = root / 'release/FANNAN-PLAN.md'
+            plan.write_text(plan.read_text() + '\nFor each width, list the column count; each value is a spacing-scale token.\n')
+            self.assertTrue(any('retired wording' in m and 'spacing-scale token' in m for m in package.missing_sections(root)), 'the unit-breaking grid clause is refused')
+
     def test_r14_build_checks_sections_before_any_output(self):
         import inspect
         self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
@@ -429,6 +448,57 @@ class JunkAndSecretTests(unittest.TestCase):
             root = Path(temp)
             (root / 'notes.json').write_text('{"' + 'pass' + 'word": ""}')
             self.assertEqual(len(package.files(root)), 1, 'an empty placeholder value passes')
+
+    R15_KEYS = ['Access_' + 'Token', 'access' + 'Token', 'refresh' + 'Token', 'Refresh-' + 'Token', 'CLIENT_' + 'SECRET', 'Api-' + 'Key']
+
+    def test_r15_camel_and_mixed_case_json_credential_keys_are_refused(self):
+        # R15 A2 (R15-GPT-02): ordinary JSON is parsed and every key screened with credential_key(), so camelCase and
+        # mixed-case spellings fail as package input and as changed paths; empty placeholders still pass.
+        for key in self.R15_KEYS:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'notes.json').write_text('{"auth": [{"' + key + '": "' + 'v' * 12 + '"}]}')
+                with self.assertRaises(ValueError, msg=key) as caught:
+                    package.files(root)
+                self.assertIn('secret-looking content', str(caught.exception))
+            def damage(root, key=key):
+                (root / 'docs').mkdir(exist_ok=True); (root / 'docs/notes.json').write_text('{"' + key + '": "' + 'v' * 12 + '"}')
+            self.assertIn('docs/notes.json', RegistryInputTests('run_build').run_build(['docs/notes.json'], damage), key)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / 'notes.json').write_text('{"access' + 'Token": "", "tokenCount": "123456789012"}')
+            self.assertEqual(len(package.files(root)), 1, 'an empty placeholder and a non-credential key pass')
+
+    @unittest.skipUnless((ROOT / '.git').exists() and shutil.which('git'), 'needs the Git checkout')
+    def test_r15_real_build_refuses_camel_case_json_credentials(self):
+        # R15 A2, through a real package build: a local clone carrying this working copy's files runs
+        # `package-r3.py build`; a camelCase credential in a changed path or in package input stops it before any
+        # output, and the same file with an empty value builds.
+        start = '9ee1ca6aaa4a257cb84fb7381056005f48554bf3'
+        def build(name, value):
+            with tempfile.TemporaryDirectory() as temp:
+                clone = Path(temp) / 'c'
+                subprocess.run(['git', 'clone', '-q', '--no-hardlinks', str(ROOT), str(clone)], check=True, capture_output=True)
+                listed = subprocess.run(['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], cwd=ROOT, check=True, capture_output=True).stdout.decode().split('\0')
+                for rel in filter(None, listed):  # the working copy on top of the clone, as `build` would see it here
+                    if (ROOT / rel).is_file() and not (ROOT / rel).is_symlink():
+                        (clone / rel).parent.mkdir(parents=True, exist_ok=True); shutil.copy2(ROOT / rel, clone / rel)
+                for keep in ['trust/MANIFEST.sha256', 'trust/R3-CHANGES.sha256', 'trust/PINNED.sha256']:
+                    if (clone / keep).exists():
+                        os.chmod(clone / keep, 0o644)
+                (clone / name).parent.mkdir(parents=True, exist_ok=True)
+                (clone / name).write_text('{"service": {"access' + 'Token": "' + value + '"}}')
+                before = (clone / 'trust/R3-CHANGES.sha256').read_bytes()
+                done = subprocess.run([sys.executable, '-B', 'scripts/package-r3.py', 'build', '--start', start], cwd=clone, capture_output=True, text=True)
+                return done.returncode, done.stdout + done.stderr, before == (clone / 'trust/R3-CHANGES.sha256').read_bytes()
+        for name in ['docs/service-notes.json', 'release/references/service-notes.json']:
+            code, output, unchanged = build(name, 'v' * 16)
+            self.assertNotEqual(code, 0, f'{name}: the real build accepted a camelCase credential\n{output[-400:]}')
+            self.assertIn('secret-looking content', output, name)
+            self.assertIn(name.split('/', 1)[1] if name.startswith('release/') else name, output, name)
+            self.assertTrue(unchanged, f'{name}: the registry was rewritten by a refused build')
+        code, output, _ = build('docs/service-notes.json', '')
+        self.assertEqual(code, 0, 'control: the same file with an empty value builds\n' + output[-600:])
 
     def test_r13_secret_content_in_ordinary_names_is_refused(self):
         # R13 panel q2: obvious secrets inside ordinarily named packaged files fail the package input and changed paths.

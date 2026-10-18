@@ -108,14 +108,33 @@ SECRET_CONTENT = re.compile('|'.join([
     'xo' + 'x[baprs]-[A-Za-z0-9-]{10,}', 's' + 'k-[A-Za-z0-9_-]{32,}', 'AI' + 'za[0-9A-Za-z_-]{35}',
     '"(?:refresh' + '_token|client' + '_secret|access' + '_token)"\\s*:\\s*"[^"]{8,}"',
     # R14-GPT-06: a JSON credential key (any case or separator) holding a string value of 8+ characters
-    '"(?i:pass' + 'word|pass' + 'wd|secret|client[-_]?secret|api[-_]?key|private[-_]?key|auth[-_]?token|id[-_]?token)"\\s*:\\s*"[^"]{8,}"']))
+    '"(?i:pass' + 'word|pass' + 'wd|secret|client[-_]?secret|api[-_]?key|private[-_]?key|auth[-_]?token|id[-_]?token|access[-_]?token|refresh[-_]?token|secret[-_]?key|access[-_]?key)"\\s*:\\s*"[^"]{8,}"']))
+
+
+def json_credential(node):
+    """R15 A2: a credential key (credential_key: any case or separator, camelCase too) holding a string of 8+
+    characters anywhere in parsed JSON (every dict and list)."""
+    if isinstance(node, dict):
+        return any((credential_key(k) and isinstance(v, str) and len(v.strip()) >= 8) or json_credential(v) for k, v in node.items())
+    if isinstance(node, list):
+        return any(json_credential(v) for v in node)
+    return False
 
 
 def secret_content(path):
     try:
-        return bool(SECRET_CONTENT.search(path.read_bytes().decode('utf-8', 'ignore')))
+        text = path.read_bytes().decode('utf-8', 'ignore')
     except OSError:
         return False
+    if SECRET_CONTENT.search(text):
+        return True
+    # R15 A2: JSON files are parsed and every key is screened with credential_key(); the regex stays for other text.
+    if path.suffix == '.json' or text.lstrip()[:1] in ('{', '['):
+        try:
+            return json_credential(json.loads(text))
+        except ValueError:
+            return False
+    return False
 
 
 def junk_or_secret(name, root=None):
@@ -193,10 +212,21 @@ def verify_hashes(path, root, digest, exact=None):
 # R14 Part B: the designer-process sections the package must carry (R14-GPT-07 to 11, R14-MIMAR-01 to 05). A build
 # refuses a release tree that lacks any of them, before any output is written.
 REQUIRED_SECTIONS = {
-    'release/FANNAN-PLAN.md': ['Maintain a discovery ledger for audience needs', 'Navigation model and findability:', "neutral scenario, realistic starting point and observable completion criterion", "## Folding in the approver's feedback", 'intended emphasis order', 'named roles in the token JSON', 'For each width in `settings.desktopWidths`', '## Threat model for the pre-handoff gate', '## Review convergence rule'],
+    'release/FANNAN-PLAN.md': ['Maintain a discovery ledger for audience needs', 'Navigation model and findability:', "neutral scenario, realistic starting point and observable completion criterion", "## Folding in the approver's feedback", 'intended emphasis order', 'named roles in the token JSON', 'For each width in `settings.desktopWidths`', '## Threat model for the pre-handoff gate', '## Review convergence rule',
+                               # R15 B1/B2: the wireframe gate runs inside Step 5; column counts are unitless, not spacing tokens
+                               'after the task and navigation-findability tests and necessary retests, run the complete wireframe quality gate; require PASS before structure approval and Step 6', 'Column counts are positive unitless integers recorded beside the grid spec, not spacing tokens.'],
     'release/references/handoff-contract.md': ['The seven baseline states are a minimum.', 'For every form, specify labels, required/optional indicators', 'feedback log with every item resolved or explicitly deferred'],
     'release/skills/design-research/SKILL.md': ['Maintain a discovery ledger for audience needs'],
     'release/skills/design-canvas/SKILL.md': ['The seven baseline states are a minimum.', 'For every form, specify labels'],
+    # R15 B1/B3/B4
+    'release/skills/design-prototype/SKILL.md': ['after the task and navigation-findability tests and necessary retests'],
+    'release/references/design-quality.md': ['The feedback-log artifact records each item', '`grid-per-width`'],
+    'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows'],
+}
+# R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
+RETIRED_SECTIONS = {
+    'release/FANNAN-PLAN.md': ['Run the wireframe phase of the quality gate before Step 5', 'each value is a spacing-scale token'],
+    'release/skills/design-prototype/SKILL.md': ['At the end of Step 4, before the existing Step 5'],
 }
 
 
@@ -210,6 +240,12 @@ def missing_sections(root=None):
             out.append(name + ': missing file')
             continue
         out += [name + ': ' + m for m in markers if ' '.join(m.split()) not in text]
+    for name, markers in RETIRED_SECTIONS.items():
+        try:
+            text = ' '.join((root / name).read_text(encoding='utf-8').split())
+        except OSError:
+            continue
+        out += [name + ': retired wording present: ' + m for m in markers if ' '.join(m.split()) in text]
     return out
 
 
@@ -295,6 +331,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r13')  # R13 before/after evidence (panel round 13)
     if (ROOT / 'test-results/r14').is_dir():
         paths += files(ROOT / 'test-results/r14')  # R14 before/after evidence and raw panel logs (panel round 14)
+    if (ROOT / 'test-results/r15').is_dir():
+        paths += files(ROOT / 'test-results/r15')  # R15 before/after evidence and raw panel logs (panel round 15)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 
