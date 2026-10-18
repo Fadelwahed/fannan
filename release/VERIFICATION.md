@@ -1,5 +1,12 @@
 # R3 executed verification — 17 October 2026
 
+## R28 (panel round 28, 19 October 2026)
+
+- Mi'mar's decision applied in `release/tools/width-screen.mjs`: (A) same-state identity is the DOM node, tagged at 1440 in the session; (B) cross-state cover only through a visible opener's revealed region, one to one per region; sections end at the next heading of the same or higher rank; panels without an aria link belong to the nearest tablist before them. The R26/R27 key code (landmark keys, stable-key memo, source-state reservation, cross-state identity matches) is deleted. R28-GPT-06: design-quality.md and handoff-contract.md.
+- Before (R28 tests against 9cc38f1 sources): `test-results/r28/R28-chrome-before.log` 75/82 (all seven R28 tests fail on their assertions), docs 20/21, package 2 failures. After: chrome 82/82, docs 21/21, package OK.
+- Real site (en/ar, JS on/off default-only, menu-open): `R28-real-site-old.log` and `-new.log` identical apart from timings; menu-open passes in both languages. Honest sets R18-R27 (536 renderings): no verdict changes against the 9cc38f1 code. pages28: four renderings now fail (h1, h4 JS on; s1 both), the panel's R28-GPT-01 and 03 pages, as intended.
+- Full Node suite: `test-results/r28/node.log` 192/192.
+
 ## R27 (panel round 27, 18 October 2026)
 
 - R27-GPT-01..04 fixed in `release/tools/width-screen.mjs` (stable identity key, not position; tab panels scope keys; action family keeps identity across role changes; source-state reservation before name matching; tabs to headed sections counts section-local actions, at least each panel's). R27-GPT-06: design-quality.md and handoff-contract.md.
