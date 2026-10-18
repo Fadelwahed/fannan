@@ -1,6 +1,6 @@
 # Mi'mar R20 changes: panel round 20 (GPT plus Mi'mar cross-check; 5 P2, 2 P3)
 
-Branch `mimar-r4-fixes`, from 613f489 (draft PR #1). Last code/package commit: 9cfad70. Written Oct 18 2026, about 2:20 PM Gaza (UTC+3). This is the latest round record: the only file besides the registry that may stay unhashed. The R19 record (`reviews/MIMAR-R19-changes-5890da8.md`, with its R19b note) is now hashed.
+Branch `mimar-r4-fixes`, from 613f489 (draft PR #1). Last code/package commit: 9cfad70. Written Oct 18 2026, about 2:15 PM Gaza (UTC+3). This is the latest round record: the only file besides the registry that may stay unhashed. The R19 record (`reviews/MIMAR-R19-changes-5890da8.md`, with its R19b note) is now hashed.
 
 Inputs: `reviews/panel-r20/MERGED.md` and `r1-gpt.md`, plus Mi'mar's clipping tiebreak (12:48 PM). Starting state: the box checkout was at b4747e3, equal to `origin/mimar-r4-fixes`, clean tree. The work was interrupted once (about 1:38 PM); my own "R20 after" fixture run was let finish, and nothing else was stopped.
 - `panel-r20/out` was copied after a secret scan (strict credential patterns plus the package's `secret_content()`/`junk_or_secret()`; 23 files, no hits): `.runner` and `.time` files as `.txt`, raw `.log` files in `test-results/r20/panel-r20-raw/`, repro scripts in `reviews/panel-r20/repro/`. The generated html and png repro files stay on the box.
