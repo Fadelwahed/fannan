@@ -16,7 +16,7 @@ test('R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the
   assert.equal(source.split('await screenWidths(p, handoff?.settings?.desktopWidths').length - 1, 2, 'page and every declared state');
   assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null\);\nif \(!ev\.checks\.widths\.pass\) fail = true;/);
   assert.match(source, /const widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, \{ lang: st\.lang, dir: st\.dir \}\);/);
-  assert.match(source, /&& widths\.pass && running === 0/, 'a failing width fails the state');
+  assert.match(source, /&& widths\.pass && reducedMotion\.pass && doc\.lang/, 'a failing width fails the state');
   const focusEnd = source.indexOf("ev.checks.custom22 = {"), widthsAt = source.indexOf('ev.checks.widths = await screenWidths');
   assert.ok(focusEnd > 0 && widthsAt > focusEnd, 'runs after the page focus probe');
   assert.ok(widthsAt > source.indexOf("evidenceWrite('page-1440.png'"), 'after the 1440 screenshot, so the reference frame is unchanged');
