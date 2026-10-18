@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { join, resolve, dirname } from 'node:path';
 import { verifiedDeps } from './verify-deps.mjs';
-import { validateReferences } from './token-references.mjs';
+import { fontWeightAliases, inferTokenType, expectsDimension, validateTokens, forbidsNegative, negative, isTypographyPath } from './token-references.mjs';
 let depsRoot;
 try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, dirname(dirname(fileURLToPath(import.meta.url)))); }
 catch (e) { console.error('designmd-to-sd: dependencies untrusted: ' + e.message); process.exit(2); }
@@ -27,31 +27,18 @@ if (!fm || typeof fm !== 'object' || Array.isArray(fm)) die('frontmatter must be
 
 const warnings = [];
 const errors = [];
-const TYPO_TYPE = { fontFamily: 'fontFamily', fontSize: 'dimension', lineHeight: 'number', letterSpacing: 'dimension', fontWeight: 'fontWeight' };
-const dimension = v => typeof v === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(v);
 const color = v => typeof v === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(v));
-
-function typeFor(group, key, v, path) {
-  if (typeof v === 'string' && /^\{[^{}]+\}$/.test(v)) return undefined; // reference: type comes from target
-  if (group === 'colors') return color(v) ? 'color' : undefined;
-  if (group === 'breakpoints' || (group === 'typography' && ['fontSize', 'letterSpacing'].includes(key))) {
-    if (typeof v === 'number') errors.push(`units required at ${path}: use px, rem or em`);
-    return dimension(v) ? 'dimension' : undefined;
-  }
-  if (group === 'typography' && TYPO_TYPE[key]) {
-    if (key === 'lineHeight') return dimension(v) ? 'dimension' : typeof v === 'number' ? 'number' : undefined;
-    return (key === 'fontFamily' ? typeof v === 'string' : typeof v === 'string' || typeof v === 'number') ? TYPO_TYPE[key] : undefined;
-  }
-  if (dimension(v)) return 'dimension';
-  if (color(v)) return 'color';
-  if (typeof v === 'number') return 'number';
-  return undefined;
-}
 function token(group, key, v, path) {
+  if (isTypographyPath(path) && key === 'fontWeight' && typeof v === 'string' && Object.hasOwn(fontWeightAliases, v)) v = fontWeightAliases[v]; // R4-1: CSS-valid number; CODEX-R3-04: component typography too
   const t = { $value: v };
-  const ty = typeFor(group, key, v, path);
+  const ref = typeof v === 'string' && /^\{[^{}]+\}$/.test(v);
+  const ty = ref ? undefined : inferTokenType(path, v);
   if (ty) t.$type = ty;
-  else if (!(typeof v === 'string' && /^\{[^{}]+\}$/.test(v))) errors.push(`unknown token type at ${path}`);
+  else if (!ref) {
+    if (typeof v === 'number' && Number.isFinite(v) && expectsDimension(path)) errors.push(`units required at ${path}: use px, rem or em`); // R4-6 spacing; CODEX-R2-02/OPUS-R2-01: rounded, breakpoints, font sizes and every component dimension
+    else if ((typeof v === 'number' && Number.isFinite(v) || typeof v === 'string' && /^-\d*\.?\d+(px|rem|em)$/.test(v)) && negative(v) && forbidsNegative(path)) errors.push(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07; CODEX-R3-01: numbers too
+    else errors.push(`unknown token type at ${path}`);
+  }
   return t;
 }
 function wrap(group, obj, path) {
@@ -64,6 +51,17 @@ function wrap(group, obj, path) {
       continue;
     }
     if (group === 'colors' && typeof v === 'string' && !/^\{[^{}]+\}$/.test(v) && !color(v)) errors.push(`not a colour at ${p}: ${v}`);
+    const target = typeof v === 'string' && /^\{[^{}]+\}$/.test(v) ? v.slice(1, -1) : null;
+    const node = target && target.split('.').reduce((at, part) => at && typeof at === 'object' && !Array.isArray(at) ? at[part] : undefined, fm);
+    const groupTarget = !!node && typeof node === 'object' && !Array.isArray(node);
+    // OPUS-R2-04: the design.md spec permits composite references only inside components; Fannan accepts them for
+    // the typography sub-token, pointing at a typography group, and expands them to per-property references.
+    if (group === 'components' && k === 'typography' && target) {
+      if (!groupTarget || !target.startsWith('typography.') || !Object.values(node).length || Object.values(node).some(x => x !== null && typeof x === 'object')) { errors.push(`${p} must reference a typography group, e.g. "{typography.label}"`); continue; }
+      outObj[k] = Object.fromEntries(Object.keys(node).map(prop => [prop, token(group, prop, `{${target}.${prop}}`, `${p}.${prop}`)]));
+      continue;
+    }
+    if (groupTarget) { errors.push(`composite reference not allowed at ${p}: only components.<name>.typography may reference a typography group`); continue; }
     if (typeof v === 'object' && !Array.isArray(v)) outObj[k] = wrap(group, v, p);
     else outObj[k] = token(group, k, v, p);
   }
@@ -78,7 +76,7 @@ for (const g of ['colors', 'rounded', 'spacing', 'breakpoints', 'typography', 'c
 }
 if (errors.length) { for (const e of errors) console.error(`designmd-to-sd: error: ${e}`); process.exit(3); }
 if (!Object.keys(tok).length) die('no token groups found (colors, rounded, spacing, breakpoints, typography, components)');
-try { validateReferences(tok); } catch (e) { die(e.message, 3); }
+try { validateTokens(tok); } catch (e) { die(e.message, 3); }
 execFileSync(join(dirname(fileURLToPath(import.meta.url)), 'safe-write.sh'), [project, resolve(out)], { input: JSON.stringify(tok, null, 1) + '\n', encoding: 'utf8' });
 for (const w of warnings) console.error(`designmd-to-sd: warning: ${w}`);
 console.log(`designmd-to-sd: wrote ${out} (${Object.keys(tok).join(', ')})`);
