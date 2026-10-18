@@ -272,7 +272,9 @@ class RegistryInputTests(unittest.TestCase):
 class JunkAndSecretTests(unittest.TestCase):
     """R11 (Asad panel C4): secret-bearing or junk files are never packaged or hashed: .env, .env.*, .DS_Store,
     Thumbs.db, keys and editor swap files are refused in package input and among the changed (registry) paths."""
-    BAD = ['.env', '.env.local', '.env.example', '.DS_Store', 'Thumbs.db', 'desktop.ini', 'id_rsa', 'id_ed25519.pub', 'server.pem', 'tls.key', 'cert.p12', 'x.pfx', '.npmrc', '.netrc', '.pypirc', 'notes.md.swp', 'draft.md~']
+    BAD = ['.env', '.env.local', '.env.example', '.DS_Store', 'Thumbs.db', 'desktop.ini', 'id_rsa', 'id_ed25519.pub', 'server.pem', 'tls.key', 'cert.p12', 'x.pfx', '.npmrc', '.netrc', '.pypirc', 'notes.md.swp', 'draft.md~',
+           # R11 panel D1: allowlist (not a denylist): VCS and editor debris and unlisted file types fail
+           '.gitignore', '.gitattributes', '.vscode/settings.json', '.idea/workspace.xml', 'merge.md.orig', 'patch.rej', 'old.md.bak', 'notes.docx', 'image.png', '.env.md', 'id_rsa.txt']
 
     def test_files_refuses_junk_and_secret_names(self):
         for name in self.BAD:
@@ -280,10 +282,11 @@ class JunkAndSecretTests(unittest.TestCase):
                 root = Path(temp)
                 (root / 'sub').mkdir()
                 (root / 'ok.md').write_text('ok')
+                (root / 'sub' / name).parent.mkdir(parents=True, exist_ok=True)
                 (root / 'sub' / name).write_text('x')
                 with self.assertRaises(ValueError, msg=name) as caught:
                     package.files(root)
-                self.assertIn(name, str(caught.exception))
+                self.assertIn(Path(name).name if '/' not in name else name.split('/')[0], str(caught.exception))
 
     def test_ordinary_names_still_pass(self):
         with tempfile.TemporaryDirectory() as temp:

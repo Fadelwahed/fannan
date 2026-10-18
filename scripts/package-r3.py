@@ -28,8 +28,21 @@ NON_PACKAGE = {'__pycache__', 'node_modules', '.git'}  # R8 PORT-04, ported from
 JUNK_OR_SECRET = re.compile(r'(?:\.env(?:\..*)?|\.DS_Store|Thumbs\.db|desktop\.ini|\.npmrc|\.netrc|\.pypirc|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.pub)?|.*\.(?:pem|key|p12|pfx|swp|swo)|.*~)')
 
 
+# R11 panel D1 (decision D): packaging is an explicit allowlist. A packaged or hashed file must have one of these
+# suffixes (the ZIP itself only at ARCHIVE) and no path part may be VCS or editor debris; JUNK_OR_SECRET is still
+# refused on top, so `.env.md` or `id_rsa.txt` fail too. Adding a new file type is a deliberate edit here.
+ALLOWED_SUFFIXES = {'.md', '.mjs', '.json', '.sh', '.sha256', '.txt', '.py', '.diff', '.internal', '.log'}
+DENIED_PARTS = {'.git', '.gitignore', '.gitattributes', '.gitmodules', '.hg', '.svn', '.idea', '.vscode', '.history'}
+JUNK_OR_SECRET_STEM = re.compile(r'(?:\.env(?:\..*)?|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.pub)?)\.[A-Za-z0-9]+')
+
+
 def junk_or_secret(name):
-    return any(JUNK_OR_SECRET.fullmatch(part) for part in Path(name).parts)
+    parts = Path(name).parts
+    if any(JUNK_OR_SECRET.fullmatch(part) or part in DENIED_PARTS for part in parts):
+        return True
+    if parts and JUNK_OR_SECRET_STEM.fullmatch(parts[-1]):
+        return True
+    return Path(name).suffix not in ALLOWED_SUFFIXES and name != ARCHIVE
 
 
 def files(root):
@@ -39,9 +52,9 @@ def files(root):
     bad = [p for p in paths if NON_PACKAGE & set(p.relative_to(root).parts) or p.suffix == '.pyc']
     if bad:
         raise ValueError('cache, dependency or git entry in package input: ' + bad[0].relative_to(root).as_posix())
-    secret = [p for p in paths if junk_or_secret(p.relative_to(root).as_posix())]
+    secret = [p for p in paths if (p.is_file() or set(p.relative_to(root).parts) & DENIED_PARTS) and junk_or_secret(p.relative_to(root).as_posix())]
     if secret:
-        raise ValueError('secret-bearing or junk file in package input: ' + secret[0].relative_to(root).as_posix())
+        raise ValueError('secret-bearing, junk or non-allowlisted file in package input: ' + secret[0].relative_to(root).as_posix())
     return [p for p in paths if p.is_file()]
 
 
@@ -196,7 +209,7 @@ def build(start):
     written = set(GENERATED) | {ARCHIVE, REPORT, REGISTRY}
     junk = [name for name in names if junk_or_secret(name)]  # R11 C4: never hash an environment, key or junk file
     if junk:
-        raise ValueError('secret-bearing or junk file among the changed paths: ' + junk[0])
+        raise ValueError('secret-bearing, junk or non-allowlisted file among the changed paths: ' + junk[0])
     unhashable = [name for name in names if name not in written and not regular_in_root(name)]
     if unhashable:
         raise ValueError('changed path missing, symlinked or not a regular file (registry input): ' + unhashable[0])
