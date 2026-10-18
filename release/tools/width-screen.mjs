@@ -68,7 +68,11 @@ export function inspectLayout({ reflow = false } = {}) {
     const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;
     const rects = all.filter(d => d !== e && within(e, d) && isContent(d) && shown(d)).flatMap(contentRects).filter(b => b.width > 0 && b.height > 0);
     const out = rects.filter(b => b.left < left - 1 || b.right > right + 1 || b.top < top - 1 || b.bottom > bottom + 1);
-    return out.length > 0 && out.every(b => b.right <= left || b.left >= right || b.bottom <= top || b.top >= bottom);
+    // a collapsed box (no inner width or height) shows nothing; otherwise only content beyond the inline-end or block-end
+    // edge (the next carousel slides, the rest of a panel) is inactive. Content pushed wholly past the start edge (left in
+    // LTR, right in RTL, above the top) is a layout loss and stays a clip (R12 M02, R13 N03).
+    const collapsed = e.clientWidth <= 1 || e.clientHeight <= 1, rtl = getComputedStyle(e).direction === 'rtl';
+    return out.length > 0 && out.every(b => collapsed ? b.right <= left || b.left >= right || b.bottom <= top || b.top >= bottom : (rtl ? b.right <= left : b.left >= right) || b.top >= bottom);
   };
   // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
   for (const e of all) {

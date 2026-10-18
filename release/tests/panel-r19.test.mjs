@@ -72,9 +72,11 @@ test('R19-GPT-01: real Chrome: the width screen does not count content clipped t
     accordion: await at(W('<button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Answer one, collapsed.</p><p>Answer two, collapsed.</p></div><button aria-expanded="true">Open question</button><div><p>Open answer.</p></div>')),
     carousel: await at(W('<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two</p><p style="flex:1 0 0">Slide three</p></div></div>')),
     partly: await at(W('<div style="height:30px;overflow:hidden"><p style="margin:0">Line one<br>Line two<br>Line three</p></div>')),
+    rtlCarousel: await at(W('<div dir="rtl" style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">الشريحة الأولى</p><p style="flex:1 0 0">الشريحة الثانية</p><p style="flex:1 0 0">الشريحة الثالثة</p></div></div>')),
+    pushedPastStart: await at(W('<div style="overflow:hidden;width:300px"><p style="margin:0 0 0 -400px;white-space:nowrap">Pushed past the start</p></div>')),
     straddlingSlide: await at(W('<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:160%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two cut at the edge</p></div></div>')),
   };
-  assert.deepEqual(out, { accordion: { pass: true, clipped: [0, 0] }, carousel: { pass: true, clipped: [0, 0] }, partly: { pass: false, clipped: [1, 1] }, straddlingSlide: { pass: false, clipped: [1, 1] } });
+  assert.deepEqual(out, { accordion: { pass: true, clipped: [0, 0] }, carousel: { pass: true, clipped: [0, 0] }, rtlCarousel: { pass: true, clipped: [0, 0] }, pushedPastStart: { pass: false, clipped: [1, 1] }, partly: { pass: false, clipped: [1, 1] }, straddlingSlide: { pass: false, clipped: [1, 1] } });
 }));
 
 test('R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block, a decorative SVG wave and the R19 honest patterns PASS (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
