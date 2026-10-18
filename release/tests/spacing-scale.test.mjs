@@ -13,7 +13,7 @@ test('OPUS-R2-10: handoff config and both checker passes use the spacing off-sca
   const config = JSON.parse(readFileSync(join(release, 'runtime/quality-checks.json'), 'utf8'));
   assert.equal(config.thresholds.spacingOffScale, 0);
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
-  assert.match(source, /import \{ spacingProbe, approvedSpacing \} from '\.\/spacing-scale\.mjs';/);
+  assert.match(source, /import \{ spacingProbe, approvedSpacing, approvedAccent \} from '\.\/spacing-scale\.mjs';/); // R11 panel A
   assert.match(source, /const approvedScale = approvedSpacing\(handoff\);/); // CODEX-R3-02
   assert.equal(source.split('await p.evaluate(spacingProbe, approvedScale.values)').length - 1, 2, 'page and every declared state, both with the approved scale (CODEX-R3-02)');
   assert.doesNotMatch(source, /evaluate\(spacingProbe\)/, 'no probe call derives the scale from the page');
@@ -114,6 +114,18 @@ test('CODEX-R3-02: the approved spacing scale is read from the hash-checked hand
       [{ tokens: { json: { path: json, sha256: sha } } }, /build evidence/],
       [{ tokens: { json: { path: join(root, 'missing.json'), sha256: sha }, buildEvidence: { path: build } } }, /cannot be read/]
     ]) assert.match(approvedSpacing(bad).error, message);
+    // R11 panel A: the approved accent comes from the same hash-checked tokens (colors.accent, else colors.primary).
+    const { approvedAccent } = await import('../tools/spacing-scale.mjs');
+    assert.deepEqual(approvedAccent(handoff), { token: 'colors.primary', value: '#123456', source: { path: json, sha256: sha } });
+    const withAccent = { ...tokens, colors: { ...tokens.colors, brand: { $type: 'color', $value: '#abcdef' }, accent: { $value: '{colors.brand}' } } };
+    const b2 = JSON.stringify(withAccent), sha2 = createHash('sha256').update(b2).digest('hex');
+    const json2 = join(root, 'tokens2.json'), build2 = join(root, 'b2.json');
+    writeFileSync(json2, b2); writeFileSync(build2, JSON.stringify({ inputSha256: sha2 }));
+    assert.deepEqual(approvedAccent({ tokens: { json: { path: json2, sha256: sha2 }, buildEvidence: { path: build2 } } }).value, '#abcdef', 'colors.accent wins and references resolve');
+    const noColour = JSON.stringify({ spacing: tokens.spacing }), sha3 = createHash('sha256').update(noColour).digest('hex');
+    writeFileSync(json2, noColour); writeFileSync(build2, JSON.stringify({ inputSha256: sha3 }));
+    assert.match(approvedAccent({ tokens: { json: { path: json2, sha256: sha3 }, buildEvidence: { path: build2 } } }).error, /no colors\.accent or colors\.primary/);
+    assert.match(approvedAccent({}).error, /tokens\.json path and SHA-256 required/);
     writeFileSync(build, JSON.stringify({ inputSha256: '1'.repeat(64) }));
     assert.match(approvedSpacing(handoff).error, /build evidence/);
   } finally { rmSync(root, { recursive: true, force: true }); }
@@ -154,5 +166,11 @@ test('R11 (Asad note): left and right margins are screened too; auto margins are
     assert.deepEqual(off.spacingOffScale.map(v => `${v.property}=${v.value}`).sort(), ['marginLeft=13px', 'marginRight=7px']);
     assert.deepEqual((await run('<p style="margin-left:24px;margin-right:1rem">a</p>')).spacingOffScale, [], 'on-scale horizontal margins pass');
     assert.deepEqual((await run('<div style="width:300px;margin:0 auto">a</div><div style="width:300px;margin-left:auto">b</div>')).spacingOffScale, [], 'auto margins resolve to used pixels and are skipped');
+    // R11 panel D1 (decision D): logical margins, 0 and documented exceptions.
+    const logical = await run('<p style="margin-inline-start:13px">a</p><p dir="rtl" style="margin-inline-end:9px">b</p><p style="margin-inline:0">c</p>');
+    assert.deepEqual(logical.spacingOffScale.map(v => `${v.property}=${v.value}`).sort(), ['marginLeft=13px', 'marginLeft=9px'].sort(), 'logical margins are measured (they compute to left/right); 0 passes');
+    const exc = await run('<p data-fannan-spacing-exception="optical alignment of the logo mark" style="margin-left:3px">a</p><p data-fannan-spacing-exception=" " style="margin-left:5px">b</p>');
+    assert.deepEqual(exc.spacingOffScale.map(v => v.value), ['5px'], 'a blank exception reason does not excuse');
+    assert.deepEqual(exc.spacingExceptions, [{ element: 'p', reason: 'optical alignment of the logo mark', values: ['3px'] }], 'a documented exception is recorded, not silently skipped');
   } finally { await browser.close(); }
 });

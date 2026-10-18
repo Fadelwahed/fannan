@@ -16,7 +16,7 @@ test('ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-q
   assert.doesNotMatch(config.reason, /backdrop filters are signals/);
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
   assert.equal(source.split('design.glass <= q.stockGlass').length - 1 + source.split('d.glass <= q.stockGlass').length - 1, 2, 'page gate (both phases) and every declared state');
-  assert.match(source, /import \{ designProbe, rawGlass \} from '\.\/design-probe\.mjs';/); // R11: rawGlass for served CSS/HTML
+  assert.match(source, /import \{ designProbe, rawGlass, normColour, accentCheck \} from '\.\/design-probe\.mjs';/); // R11: rawGlass for served CSS/HTML
 });
 
 test('ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
@@ -106,6 +106,44 @@ test('R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-back
   } finally { await browser.close(); }
 });
 
+test('R11 panel D: glass inside open shadow roots, same-origin frames and constructed stylesheets is counted, also from the isolated probe world (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const { isolatedPage } = await import('../tools/probe-world.mjs');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const body = '<main><h1>x</h1><div id="host">host</div></main>';
+    const shadow = (css, mode = 'open') => `${body}<script>const r = document.getElementById('host').attachShadow({ mode: '${mode}' }); r.innerHTML = '<style>${css}</style><p class="g">inside</p>';</script>`;
+    const cases = [
+      ['shadow <style>', shadow('.g{backdrop-filter:blur(6px)}'), 1],
+      ['shadow ::after', shadow('.g::after{content:attr(class);backdrop-filter:blur(6px)}'), 1],
+      ['shadow -webkit-', shadow('.g{-webkit-backdrop-filter:blur(6px)}'), 1],
+      ['nested shadow', `${body}<script>const a = document.getElementById('host').attachShadow({ mode: 'open' }); a.innerHTML = '<div id="in">x</div>'; const b = a.getElementById('in').attachShadow({ mode: 'open' }); b.innerHTML = '<p style="backdrop-filter:blur(2px)">deep</p>';</script>`, 1],
+      ['adoptedStyleSheets', `${body}<script>const r = document.getElementById('host').attachShadow({ mode: 'open' }); const sh = new CSSStyleSheet(); sh.replaceSync('.unused{backdrop-filter:blur(3px)}'); r.adoptedStyleSheets = [sh]; r.innerHTML = '<p class="g">x</p>';</script>`, 1],
+      ['document adoptedStyleSheets', `${body}<script>const sh = new CSSStyleSheet(); sh.replaceSync('.unused{backdrop-filter:blur(3px)}'); document.adoptedStyleSheets = [sh];</script>`, 1],
+      ['srcdoc frame', `${body}<iframe srcdoc="<style>p{backdrop-filter:blur(4px)}</style><p>framed</p>"></iframe>`, 1],
+      ['frame ::before', `${body}<iframe srcdoc="<style>p::before{content:'';-webkit-backdrop-filter:blur(4px)}</style><p>framed</p>"></iframe>`, 1],
+      ['clean shadow and frame', `${shadow('.g{color:red}')}<iframe srcdoc="<p>framed</p>"></iframe>`, 0],
+    ];
+    for (const [name, html, min] of cases) {
+      const raw = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+      await raw.setContent(html); await raw.waitForTimeout(50);
+      const main = await raw.evaluate(designProbe);
+      const iso = await (await isolatedPage(raw)).evaluate(designProbe);
+      if (min) { assert.ok(main.glass >= min, `${name}: counted`); assert.ok(iso.glass >= min, `${name}: counted from the isolated world`); }
+      else { assert.equal(main.glass, 0, `${name}: none`); assert.equal(iso.glass, 0, `${name}: none (isolated)`); }
+      await raw.close();
+    }
+    // Chrome drops the -webkit- alias when it parses a constructed sheet, so that case is caught only by the checker's
+    // raw scan of the served HTML/JS text (rawGlass), as here:
+    const { rawGlass } = await import('../tools/design-probe.mjs');
+    assert.equal(rawGlass("sh.replaceSync('.g{-webkit-backdrop-filter:blur(3px)}')"), true);
+    const raw = await browser.newPage(); await raw.setContent(`${body}<iframe srcdoc="<p>x</p>"></iframe>`); await raw.waitForTimeout(50);
+    const scopes = (await raw.evaluate(designProbe)).glassScopes;
+    assert.deepEqual([scopes.frames, scopes.unscannedFrames], [1, []], 'scanned frames are recorded');
+    await raw.close();
+  } finally { await browser.close(); }
+});
+
 test('R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops', async () => {
   const { rawGlass } = await import('../tools/design-probe.mjs');
   assert.equal(rawGlass('.a{-webkit-backdrop-filter: blur(6px)}'), true);
@@ -114,4 +152,32 @@ test('R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filte
   assert.equal(rawGlass('/* .a{-webkit-backdrop-filter: blur(6px)} */ .b{color:red}'), false);
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
   assert.match(source, /ev\.checks\.glassSource = \{ files: \[\.\.\.glassFiles\], pass: glassFiles\.size === 0 \};\nif \(!ev\.checks\.glassSource\.pass\) fail = true;/);
+  assert.match(source, /\/text\\\/\(css\|html\|javascript\)\|application\\\/\(javascript\|ecmascript\)\|image\\\/svg\\\+xml\/\.test\(contentType\)/, 'served CSS, HTML, JS and SVG are scanned (panel D)');
+});
+
+test('R11 panel A: the accent fails closed at handoff, names the variable, binds to the approved token and is DEFERRED in wireframes', async () => {
+  const { accentCheck } = await import('../tools/design-probe.mjs');
+  const approved = { token: 'colors.primary', value: '#0B3D91' };
+  const ok = { design: { accentVar: '--colors-primary', accent: '#0b3d91', accentInvalid: [] }, approved, pageColour: '#0b3d91', approvedColour: '#0b3d91' };
+  assert.deepEqual([accentCheck({ ...ok, phase: 'handoff' }).status, accentCheck({ ...ok, phase: 'handoff' }).pass], ['PASS', true]);
+  const cases = [
+    [{ design: { accentVar: '--colors-accent', accent: '#fff', accentInvalid: ['--accent'] } }, /--accent is not a valid colour/],
+    [{ design: { accentVar: null, accent: '', accentInvalid: [] } }, /no accent variable declared/],
+    [{ approved: { token: null, value: null, error: 'tokens.json SHA-256 does not match the handoff' } }, /approved accent token unavailable: tokens\.json SHA-256/],
+    [{ approvedColour: null }, /approved accent token colors\.primary \(#0B3D91\) is not a valid colour/],
+    [{ design: { accentVar: '--colors-primary', accent: '#ff00aa', accentInvalid: [] }, pageColour: '#ff00aa' }, /accent variable --colors-primary \(#ff00aa\) does not match the approved token colors\.primary \(#0B3D91\)/],
+  ];
+  for (const [change, message] of cases) {
+    const r = accentCheck({ ...ok, ...change, phase: 'handoff' });
+    assert.equal(r.status, 'FAIL'); assert.equal(r.pass, false); assert.match(r.message, message);
+    const w = accentCheck({ ...ok, ...change, phase: 'wireframe' });
+    assert.equal(w.status, 'DEFERRED', 'wireframes never PASS or FAIL the accent'); assert.match(w.message, message, 'the problem is still recorded');
+  }
+  assert.equal(accentCheck({ ...ok, phase: 'wireframe' }).status, 'DEFERRED', 'a valid accent in a wireframe is DEFERRED, not PASS');
+  assert.match(accentCheck({ ...ok, phase: 'handoff' }).areaBasis, /approximate/);
+  const source = readFileSync(new URL('../tools/pre-handoff-check.mjs', import.meta.url), 'utf8');
+  assert.match(source, /const approvedAccentToken = approvedAccent\(handoff\);/);
+  assert.match(source, /ev\.checks\.accent = await accentFor\(p, design\);\nif \(!ev\.checks\.accent\.pass\) fail = true;/, 'the page');
+  assert.match(source, /const accent = await accentFor\(p, d\);/, 'every state');
+  assert.match(source, /&& accent\.pass && stateResult\.focusFailures/, 'a state fails on the accent');
 });
