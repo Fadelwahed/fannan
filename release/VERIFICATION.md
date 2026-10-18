@@ -1,5 +1,31 @@
 # R3 executed verification — 17 October 2026
 
+## R11 executed verification (Mi'mar's box, 18 October 2026, about 4:05 AM UTC+3)
+
+Asad panel round 5 (C1, S2/C6, S3, C3, C4, C5, S7 and the R9 syntax count). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Run on a clean tree (everything committed), so every counted file is tracked.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 70 PASS, 0 FAIL | `test-results/r11/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 48 PASS, 0 FAIL | `test-results/r11/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 64 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7-R10) | `test-results/r11/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r11/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r11/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 26 PASS | `test-results/r11/package-tests-git.log` |
+| same, no-git copy | 0 | 22 PASS | `test-results/r11/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r11/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r11/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=32 sh=4 py=4 plus the launcher `.internal`, 0 failures; 32 = R10's 27 tracked + `tools/axe-tags.mjs`, `tools/probe-world.mjs` and three new tests; each file is listed in the log | `test-results/r11/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 22 Node tests in the no-deps copy (need test-only deps or Chrome); 4 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, run in the checkout, exit 0. The checker now runs its probes and axe in the isolated world; browser, contract, spacing, widths (1440 + 320, with `scrolledText` and `twoDimensional` empty), the served-file glass scan (`glassSource`, no files) and state checks pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r11/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r11/R11-*-before.log` / `-after.log`. Before logs run the final R11 tests against the R10 sources (607b2e4); the harness scripts are `before-harness.sh.txt`, `after-harness.sh.txt` and `suites-harness.sh.txt`.
+
 ## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM UTC+3)
 
 Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
@@ -43,7 +69,7 @@ Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accen
 | same, no-git copy | 0 | 15 PASS | `test-results/r9/package-tests.log` |
 | `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r9/package-self-test.log` |
 | design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r9/designmd-lint-offline.log` |
-| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r9/syntax.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures. **R11 correction:** the R9 commit has 27 tracked `.mjs` files under `release/tools` and `release/tests` (as do 7508478, 27554b5, e88cf69, b24fd1f and 2059077); the 28th was an untracked file in the working tree, which the scratch copy included (tracked + untracked). Its name was not logged and cannot be recovered. From R11 the syntax log lists every file. | `test-results/r9/syntax.log` |
 | `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
 
 **SKIPPED (not executed, not counted as pass):** 13 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
