@@ -1,5 +1,19 @@
 # R3 executed verification — 17 October 2026
 
+## R24 executed verification (Mi'mar's box, 18 October 2026, about 7:45 PM UTC+3)
+
+Panel round 24 (3 P2: R24-GPT-01 to R24-GPT-03; P3 R24-MIMAR-01, R24-MIMAR-02; GPT, cross-checked by Mi'mar; `reviews/panel-r24/`), with Mi'mar's R24 tiebreaks. Linux x86_64, Node v22.23.3, Chrome 155 headless. The box was shared and heavily loaded during this round (load average up to 77, memory full from other processes), so some Chrome runs timed out on `page.goto`.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 1 | 168 PASS, 1 FAIL of 169 (R23's 165 + 3 in `tests/panel-r24.test.mjs` + 1 in `tests/designer-process.test.mjs`). The one failure is the R18 autoplay-carousel timing test on the loaded box; it passes in isolation (`node-r18-rerun.log`) | `test-results/r24/node.log` |
+| Python guard; `scripts/test_package_r3.py -v` (git checkout) | 0 | OK; 46 PASS (`test_r24_sections` added) | `test-results/r24/python.log`, `package-tests-git.log` |
+| R24 Chrome before (R24 tests against ec977f2 sources) / after | 1 / 1 | before: all three R24 tests fail at their assertions (tests 50-52); after: the R24 tests pass in the full suite (`node.log` tests 130-132). Both runs also had `page.goto` timeouts in older tests while the box was overloaded, so they are not clean before/after logs | `test-results/r24/R24-chrome-before.log`, `R24-chrome-after.log` |
+
+**Honest patterns and the real site:** `test-results/r24/R24-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; identical to R23: the default state alone fails at 320, and with the declared menu-open state both languages PASS with 0 unresolved). `test-results/r24/R24-honest-patterns.log` (the R18 set and the R19-R24 repro pages).
+
+**Not run this round (time limit):** the full-run fixture (`local-fixture.mjs`, including the R24-MIMAR-02 clamp-reason assertion), the no-deps suite, the no-git package copy, the self-test and syntax sweep.
+
 ## R23 executed verification (Mi'mar's box, 18 October 2026, about 7:00 PM UTC+3)
 
 Panel round 23 (4 P2: R23-GPT-02 to R23-GPT-05; P3 R23-GPT-01, R23-MIMAR-01; GPT, cross-checked by Mi'mar; `reviews/panel-r23/`), with Fadel's R23 tiebreaks. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
