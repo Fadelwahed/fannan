@@ -1,0 +1,17 @@
+# R14 after: R14 sources
+TAP version 13
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+ok 1 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 1.802078
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56.806239
