@@ -103,7 +103,7 @@ test('R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs 
   const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="200" width="40" height="200" fill="#111"/></svg>');
   const block = (bg, colour, size = 24) => W(`<div style="position:relative;width:800px;height:200px;${bg}"><p id="t" style="position:absolute;top:80px;left:20px;margin:0;width:760px;font-size:${size}px;color:${colour}">Caption text over an image with some detail</p></div>`);
   const cases = {
-    paleOverLightPhoto: block(`background:url("data:image/svg+xml,${svg}")`, '#d0d0d0'),
+    paleOverLightPhoto: block(`background:url('data:image/svg+xml,${svg}')`, '#d0d0d0'),
     scrimHero: W('<section style="position:relative;width:800px;height:240px;color:#fff"><img src="photo.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div><p id="t" style="position:relative;margin:0;padding:48px;font-size:48px;font-weight:700">Over a photo</p></section>'),
     darkOverGradient: block('background:linear-gradient(90deg,#fff,#e8eef8)', '#1a1a1a', 18),
   };

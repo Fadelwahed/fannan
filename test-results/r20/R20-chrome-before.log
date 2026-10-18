@@ -3,7 +3,7 @@ TAP version 13
 # Subtest: complete handoff passes; missing provenance, state or approval fails
 not ok 1 - complete handoff passes; missing provenance, state or approval fails
   ---
-  duration_ms: 24.199635
+  duration_ms: 27.229155
   type: 'test'
   location: '<scratch>/release/tests/handoff-contract.test.mjs:16:1'
   failureType: 'testCodeFailure'
@@ -32,37 +32,37 @@ not ok 1 - complete handoff passes; missing provenance, state or approval fails
 # Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
 ok 2 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
   ---
-  duration_ms: 3.299498
+  duration_ms: 3.985071
   type: 'test'
   ...
 # Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
 ok 3 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
   ---
-  duration_ms: 11.305309
+  duration_ms: 9.2796
   type: 'test'
   ...
 # Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
 ok 4 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
   ---
-  duration_ms: 2.655175
+  duration_ms: 1.65362
   type: 'test'
   ...
 # Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
 ok 5 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
   ---
-  duration_ms: 1.385524
+  duration_ms: 0.83055
   type: 'test'
   ...
 # Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
 ok 6 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
   ---
-  duration_ms: 0.256749
+  duration_ms: 0.170337
   type: 'test'
   ...
 # Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
 not ok 7 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
   ---
-  duration_ms: 1.304281
+  duration_ms: 0.955548
   type: 'test'
   location: '<scratch>/release/tests/integrity.test.mjs:97:1'
   failureType: 'testCodeFailure'
@@ -505,21 +505,21 @@ not ok 7 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vecto
 # Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
 ok 8 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
   ---
-  duration_ms: 1187.025818
+  duration_ms: 1087.884066
   type: 'test'
   ...
 # Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
 ok 9 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
   ---
-  duration_ms: 1191.909072
+  duration_ms: 1103.304275
   type: 'test'
   ...
 # Subtest: R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
 not ok 10 - R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
   ---
-  duration_ms: 2811.166696
+  duration_ms: 2471.248229
   type: 'test'
-  location: '<scratch>/release/tests/panel-r19.test.mjs:69:1'
+  location: '<scratch>/release/tests/panel-r19.test.mjs:71:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -649,7 +649,7 @@ not ok 10 - R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped 
         1: ''
   operator: 'deepStrictEqual'
   stack: |-
-    file://<scratch>/release/tests/panel-r19.test.mjs:80:10
+    file://<scratch>/release/tests/panel-r19.test.mjs:82:10
     async withBrowser (file://<scratch>/release/tests/panel-r19.test.mjs:46:9)
     async Test.run (node:internal/test_runner/test:1054:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
@@ -657,34 +657,148 @@ not ok 10 - R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped 
 # Subtest: R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
 ok 11 - R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
   ---
-  duration_ms: 16004.241138
+  duration_ms: 15522.316396
   type: 'test'
   ...
 # Subtest: R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
 ok 12 - R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
   ---
-  duration_ms: 4339.74414
+  duration_ms: 4351.021706
   type: 'test'
   ...
 # Subtest: R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
 ok 13 - R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
   ---
-  duration_ms: 4503.858228
+  duration_ms: 4492.925107
   type: 'test'
   ...
 # Subtest: R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
 not ok 14 - R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
   ---
-  duration_ms: 2623.185878
+  duration_ms: 18281.292589
   type: 'test'
-  location: '<scratch>/release/tests/panel-r19.test.mjs:139:1'
+  location: '<scratch>/release/tests/panel-r19.test.mjs:141:1'
   failureType: 'testCodeFailure'
-  error: 'visibility.glyphContrast is not a function'
-  code: 'ERR_TEST_FAILURE'
-  name: 'TypeError'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        darkText: {
+          incomplete: [
+            'color-contrast'
+          ],
+          reasons: [
+    +       'measured 1.46:1, below 3:1',
+    +       'measured 1.57:1, below 4.5:1'
+    -       'below AA'
+          ],
+          unresolved: [
+            'color-contrast'
+          ]
+        },
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    scrim:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noReview:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    otherArtifact:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    noteCites: <Circular>
+    darkText:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'below AA'
+    scrimByScriptOnly:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: ~
+        1: 'measured 4.12:1, below 4.5:1'
+    otherRule:
+      incomplete:
+        0: 'color-contrast'
+        1: 'aria-valid-attr-value'
+      unresolved:
+        0: 'aria-valid-attr-value'
+      reasons:
+        0: ~
+  actual:
+    scrim:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noReview:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    otherArtifact:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    noteCites:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    darkText:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'measured 1.46:1, below 3:1'
+        1: 'measured 1.57:1, below 4.5:1'
+    scrimByScriptOnly:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: ~
+        1: 'measured 4.12:1, below 4.5:1'
+    otherRule:
+      incomplete:
+        0: 'color-contrast'
+        1: 'aria-valid-attr-value'
+      unresolved:
+        0: 'aria-valid-attr-value'
+      reasons:
+        0: ~
+  operator: 'deepStrictEqual'
   stack: |-
-    resolve19 (file://<scratch>/release/tests/panel-r19.test.mjs:151:48)
-    async file://<scratch>/release/tests/panel-r19.test.mjs:157:12
+    file://<scratch>/release/tests/panel-r19.test.mjs:167:10
     async withBrowser (file://<scratch>/release/tests/panel-r19.test.mjs:46:9)
     async Test.run (node:internal/test_runner/test:1054:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
@@ -692,22 +806,117 @@ not ok 14 - R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete r
 # Subtest: R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
 ok 15 - R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
   ---
-  duration_ms: 845.772728
+  duration_ms: 797.83506
   type: 'test'
   ...
 # Subtest: R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
 not ok 16 - R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
   ---
-  duration_ms: 1508.434597
+  duration_ms: 11323.133843
   type: 'test'
-  location: '<scratch>/release/tests/panel-r19.test.mjs:188:1'
+  location: '<scratch>/release/tests/panel-r19.test.mjs:190:1'
   failureType: 'testCodeFailure'
-  error: 'visibility.glyphContrast is not a function'
-  code: 'ERR_TEST_FAILURE'
-  name: 'TypeError'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        belowAA: {
+    +     reason: 'measured 2.8:1, below 4.5:1',
+    -     reason: 'faintest glyphs measured 2.8:1, below 4.5:1',
+          rendersWithoutScript: false,
+          unresolved: [
+            'color-contrast'
+          ],
+          valid: true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    notDeclared:
+      valid: false
+      rendersWithoutScript: ~
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    noTrigger:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    defaultState:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    belowAA:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'faintest glyphs measured 2.8:1, below 4.5:1'
+    noReview:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'no PASS wcag-review record citing the screenshot'
+    falseClaim:
+      valid: false
+      rendersWithoutScript: true
+      unresolved:
+      reason: ~
+  actual:
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    notDeclared:
+      valid: false
+      rendersWithoutScript: ~
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    noTrigger:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    defaultState:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    belowAA:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'measured 2.8:1, below 4.5:1'
+    noReview:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'no PASS wcag-review record citing the screenshot'
+    falseClaim:
+      valid: false
+      rendersWithoutScript: true
+      unresolved:
+      reason: ~
+  operator: 'deepStrictEqual'
   stack: |-
-    run (file://<scratch>/release/tests/panel-r19.test.mjs:199:53)
-    async file://<scratch>/release/tests/panel-r19.test.mjs:205:15
+    file://<scratch>/release/tests/panel-r19.test.mjs:206:10
     async withBrowser (file://<scratch>/release/tests/panel-r19.test.mjs:46:9)
     async Test.run (node:internal/test_runner/test:1054:7)
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
@@ -715,7 +924,7 @@ not ok 16 - R19b: real Chrome: a declared non-default state reachable only by sc
 # Subtest: R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and widths: content shown at 1440 must stay shown at every width (320 included); content cut wholly at 1440 counts as not displayed only when a declared state shows it; partial cuts and content cut in every state fail (test-only)
 not ok 17 - R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and widths: content shown at 1440 must stay shown at every width (320 included); content cut wholly at 1440 counts as not displayed only when a declared state shows it; partial cuts and content cut in every state fail (test-only)
   ---
-  duration_ms: 5809.704722
+  duration_ms: 5427.713997
   type: 'test'
   location: '<scratch>/release/tests/panel-r20.test.mjs:64:1'
   failureType: 'testCodeFailure'
@@ -890,15 +1099,65 @@ not ok 17 - R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states a
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
   ...
 # Subtest: R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
-ok 18 - R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
+not ok 18 - R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
   ---
-  duration_ms: 4323.056914
+  duration_ms: 3948.507083
   type: 'test'
+  location: '<scratch>/release/tests/panel-r20.test.mjs:102:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        darkOverGradient: {
+          faintBelowAA: false,
+          pass: true
+        },
+        paleOverLightPhoto: {
+    +     faintBelowAA: false,
+    +     pass: true
+    -     faintBelowAA: true,
+    -     pass: false
+        },
+        scrimHero: {
+          faintBelowAA: false,
+          pass: true
+        }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    paleOverLightPhoto:
+      pass: false
+      faintBelowAA: true
+    scrimHero:
+      pass: true
+      faintBelowAA: false
+    darkOverGradient:
+      pass: true
+      faintBelowAA: false
+  actual:
+    paleOverLightPhoto:
+      pass: true
+      faintBelowAA: false
+    scrimHero:
+      pass: true
+      faintBelowAA: false
+    darkOverGradient:
+      pass: true
+      faintBelowAA: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r20.test.mjs:123:10
+    async withBrowser (file://<scratch>/release/tests/panel-r20.test.mjs:45:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast decides; nothing separable is INCOMPLETE (null)
 not ok 19 - R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast decides; nothing separable is INCOMPLETE (null)
   ---
-  duration_ms: 0.67669
+  duration_ms: 0.703917
   type: 'test'
   location: '<scratch>/release/tests/panel-r20.test.mjs:126:1'
   failureType: 'testCodeFailure'
@@ -926,7 +1185,7 @@ not ok 19 - R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast deci
 # Subtest: R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state's JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)
 not ok 20 - R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state's JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)
   ---
-  duration_ms: 2616.007707
+  duration_ms: 2527.066432
   type: 'test'
   location: '<scratch>/release/tests/panel-r20.test.mjs:138:1'
   failureType: 'testCodeFailure'
@@ -982,7 +1241,7 @@ not ok 20 - R20-GPT-05: real Chrome: a valid requiresScript state is compared wi
 # Subtest: R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)
 not ok 21 - R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)
   ---
-  duration_ms: 2590.316157
+  duration_ms: 2489.70568
   type: 'test'
   location: '<scratch>/release/tests/panel-r20.test.mjs:154:1'
   failureType: 'testCodeFailure'
@@ -1029,7 +1288,7 @@ not ok 21 - R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text
 # Subtest: R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)
 not ok 22 - R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)
   ---
-  duration_ms: 1389.232617
+  duration_ms: 1350.824413
   type: 'test'
   location: '<scratch>/release/tests/panel-r20.test.mjs:166:1'
   failureType: 'testCodeFailure'
@@ -1076,7 +1335,7 @@ not ok 22 - R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text
 # Subtest: R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
 not ok 23 - R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
   ---
-  duration_ms: 1.61058
+  duration_ms: 1.67658
   type: 'test'
   location: '<scratch>/release/tests/width-screen.test.mjs:13:1'
   failureType: 'testCodeFailure'
@@ -1517,37 +1776,37 @@ not ok 23 - R8 PORT-02: the checker screens handoff.settings.desktopWidths next 
 # Subtest: R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
 ok 24 - R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
   ---
-  duration_ms: 1.724135
+  duration_ms: 1.89833
   type: 'test'
   ...
 # Subtest: R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
 ok 25 - R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
   ---
-  duration_ms: 1464.490018
+  duration_ms: 1453.172564
   type: 'test'
   ...
 # Subtest: CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
 ok 26 - CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
   ---
-  duration_ms: 417.040803
+  duration_ms: 402.047904
   type: 'test'
   ...
 # Subtest: ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
 ok 27 - ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
   ---
-  duration_ms: 1589.725554
+  duration_ms: 1450.211248
   type: 'test'
   ...
 # Subtest: ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
 ok 28 - ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
   ---
-  duration_ms: 410.126978
+  duration_ms: 409.208717
   type: 'test'
   ...
 # Subtest: ARGON-R5-05: off-screen-left content fails the width screen
 not ok 29 - ARGON-R5-05: off-screen-left content fails the width screen
   ---
-  duration_ms: 1.224768
+  duration_ms: 1.034076
   type: 'test'
   location: '<scratch>/release/tests/width-screen.test.mjs:126:1'
   failureType: 'testCodeFailure'
@@ -1888,27 +2147,27 @@ not ok 29 - ARGON-R5-05: off-screen-left content fails the width screen
 # Subtest: R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
 ok 30 - R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
   ---
-  duration_ms: 1593.914339
+  duration_ms: 1540.746772
   type: 'test'
   ...
 # Subtest: R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
 ok 31 - R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
   ---
-  duration_ms: 1.733156
+  duration_ms: 1.686329
   type: 'test'
   ...
 # Subtest: R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
 ok 32 - R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
   ---
-  duration_ms: 1753.75137
+  duration_ms: 1669.653291
   type: 'test'
   ...
 1..32
 # tests 32
 # suites 0
-# pass 20
-# fail 12
+# pass 19
+# fail 13
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 32704.066058
+# duration_ms 57321.133268
