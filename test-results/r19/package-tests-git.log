@@ -41,6 +41,6 @@ test_policy_is_documented (__main__.WhitespacePolicyTests.test_policy_is_documen
 test_source_only_range_check_passes (__main__.WhitespacePolicyTests.test_source_only_range_check_passes) ... ok
 
 ----------------------------------------------------------------------
-Ran 41 tests in 3.285s
+Ran 41 tests in 3.595s
 
 OK

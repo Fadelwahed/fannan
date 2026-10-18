@@ -1,7 +1,7 @@
 {
- "when": "2026-10-18T08:51:03.981Z",
- "designMd": "/tmp/fannan-browser-fixture-rOb7mB/design-output/test/fixture-DESIGN.md",
- "page": "/tmp/fannan-browser-fixture-rOb7mB/design-output/test/home.html",
+ "when": "2026-10-18T09:20:14.303Z",
+ "designMd": "/tmp/fannan-browser-fixture-Y6y7hb/design-output/test/fixture-DESIGN.md",
+ "page": "/tmp/fannan-browser-fixture-Y6y7hb/design-output/test/home.html",
  "checks": {
   "contract": {
    "errors": [],
@@ -9,7 +9,7 @@
   },
   "spacingTokens": {
    "source": {
-    "path": "/tmp/fannan-browser-fixture-rOb7mB/design-output/test/tokens.json",
+    "path": "/tmp/fannan-browser-fixture-Y6y7hb/design-output/test/tokens.json",
     "sha256": "8ab02a8a7ac21324736ab8692e9dd6714ab313973269143582d5a910bb410a4e"
    },
    "values": [
@@ -55,7 +55,7 @@
    "h1": 1,
    "stylesheets": [
     {
-     "href": "file:///tmp/fannan-browser-fixture-rOb7mB/design-output/test/variables.css",
+     "href": "file:///tmp/fannan-browser-fixture-Y6y7hb/design-output/test/variables.css",
      "owner": "link",
      "readable": true
     },
@@ -108,6 +108,11 @@
    "violations": [],
    "incomplete": [],
    "pass": true,
+   "requiresScript": {
+    "claimed": false,
+    "valid": false,
+    "rendersWithoutScript": null
+   },
    "unresolvedIncomplete": [],
    "contrastNodes": []
   },
@@ -169,6 +174,11 @@
     "axeViolations": [],
     "axeIncomplete": [],
     "axeIncompleteUnresolved": [],
+    "requiresScript": {
+     "claimed": false,
+     "valid": false,
+     "rendersWithoutScript": null
+    },
     "axeContrastNodes": [],
     "assets": {
      "brokenImages": [],
@@ -328,7 +338,7 @@
        "steps": 2,
        "passes": 1,
        "unsettledSteps": 0,
-       "ms": 387,
+       "ms": 413,
        "items": [],
        "itemsTotal": 0,
        "method": "target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under 1.5:1) where the CSS pass resolved the colours, readability (90th-percentile ink under 3:1) where it could not"
@@ -450,7 +460,7 @@
        "steps": 2,
        "passes": 1,
        "unsettledSteps": 0,
-       "ms": 387,
+       "ms": 413,
        "items": [],
        "itemsTotal": 0,
        "method": "target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under 1.5:1) where the CSS pass resolved the colours, readability (90th-percentile ink under 3:1) where it could not"
@@ -572,7 +582,7 @@
        "steps": 2,
        "passes": 1,
        "unsettledSteps": 0,
-       "ms": 374,
+       "ms": 375,
        "items": [],
        "itemsTotal": 0,
        "method": "target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under 1.5:1) where the CSS pass resolved the colours, readability (90th-percentile ink under 3:1) where it could not"
@@ -787,7 +797,7 @@
      "steps": 2,
      "passes": 1,
      "unsettledSteps": 0,
-     "ms": 387,
+     "ms": 377,
      "items": [],
      "itemsTotal": 0,
      "method": "target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under 1.5:1) where the CSS pass resolved the colours, readability (90th-percentile ink under 3:1) where it could not"
@@ -909,7 +919,7 @@
      "steps": 2,
      "passes": 1,
      "unsettledSteps": 0,
-     "ms": 387,
+     "ms": 377,
      "items": [],
      "itemsTotal": 0,
      "method": "target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under 1.5:1) where the CSS pass resolved the colours, readability (90th-percentile ink under 3:1) where it could not"
@@ -1031,7 +1041,7 @@
      "steps": 2,
      "passes": 1,
      "unsettledSteps": 0,
-     "ms": 388,
+     "ms": 415,
      "items": [],
      "itemsTotal": 0,
      "method": "target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under 1.5:1) where the CSS pass resolved the colours, readability (90th-percentile ink under 3:1) where it could not"
