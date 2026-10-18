@@ -482,8 +482,9 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
     // R23-GPT-05: a clamp may only hide text: a clamp or ellipsis box whose cut set (whole or partial) holds a control fails
     // R26-GPT-04: whether a narrow-width whole cut was shown at 1440 is decided by the element itself, not its name.
     // R26 (Fadel): a box collapsed to zero visible area at a narrow width behaves exactly like display:none: its cut is
-    // not a clip; what it hides is accounted in the identity ledger (resolveReveals) like any other loss.
-    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.collapsed ? 'collapsed' : r.width !== 1440 && c.whole.some(p => ids1440.has(idOf(p))) ? 'shown at 1440, lost at this width' : 'reveal';
+    // not a clip; what it hides is accounted in the identity ledger (resolveReveals) like any other loss. Content it hides
+    // that was never shown at 1440 stays a `reveal`, as at 1440.
+    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => ids1440.has(idOf(p))) ? (c.collapsed ? 'collapsed' : 'shown at 1440, lost at this width') : 'reveal';
     r.collapsedBoxes = r.clipped.filter(c => c.rule === 'collapsed'); r.clipped = r.clipped.filter(c => c.rule !== 'collapsed');
     const cutIds = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(idOf))); // reported once, by its clip rule
     const here = new Set((r.ledgerItems || []).map(i => `${i.id}|${i.print}`));
