@@ -15,3 +15,5 @@ Discover the MCP namespace; identify the project from settings, list screens, fe
 
 - A Stitch screen may contain default styling or AI copy. Treat it as evidence to inspect, not authority for project tokens or claims.
 - This skill extracts text; design-system upload/change belongs to `manage-design-system` and needs Fadel's yes.
+- Units (OPUS-R2-08): every spacing, rounded, breakpoint and component size token carries `px`, `rem` or `em` (component sizes: `rounded`, `padding*`, `margin*`, `gap`, `rowGap`, `columnGap`, `inset*`, `size`, `width`, `height`, `min/maxWidth`, `min/maxHeight`); only `0` may be bare. `designmd-to-sd` refuses a bare nonzero number with `units required`.
+- A component's `typography` may reference a whole typography group, `"{typography.<name>}"`, as the design.md spec allows; Fannan expands it per property. Composite references anywhere else are refused.
