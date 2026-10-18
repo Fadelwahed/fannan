@@ -1,5 +1,24 @@
 # R3 executed verification — 17 October 2026
 
+## R22 executed verification (Mi'mar's box, 18 October 2026, about 5:45 PM UTC+3)
+
+Panel round 22 (7 P2: R22-GPT-01 to R22-GPT-06, R22-MIMAR-01; P3 R22-MIMAR-02, R22-GPT-07, R22-GPT-08; GPT, cross-checked by Mi'mar; `reviews/panel-r22/`), with Fadel's R22 three-zone tiebreak for text over images. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 159 PASS, 0 FAIL (R21's 151 + 7 in `tests/panel-r22.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r22/node.log` |
+| same, without deps | 0 | 82 PASS, 0 FAIL, 77 SKIPPED | `test-results/r22/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r22/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 44 PASS / 39 PASS + 5 SKIPPED (`test_r22_sections` added) | `test-results/r22/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=48 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r22/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 153 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r22/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r22/local-fixture.log`). R22 full pre-handoff runs with the authored PASS `wcag-review` citing the screenshot: a white 28 px caption at 70% opacity over a dark photo and a white 48 px hero with a strong dark halo over a light image resolve axe's colour-contrast incomplete (zone a); white 12 px and 14 px text whose first thin letters ("ill fill lilt") sit on a #e6e6e6 patch stays blocked even with `worstRegion` named (zone b); #767676 12 px text over an image (about 4.54:1, zone c) stays blocked without `worstRegion` and resolves with it. The R19 scrim hero with an uncited review now resolves (zone a: clearly above AA needs no review).
+
+**Honest patterns and the real site:** `test-results/r22/R22-honest-patterns.log` (the R18 set and the R19-R22 repro pages, both renderings, plus the glyph measure on the R22 text-over-image and small-grey pages) and `test-results/r22/R22-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; width screen PASS in both languages; with a declared menu-open state too). Changes from R21 on R18-R21 pages: a nowrap nav cut at 320 is now `partly clipped` (links are controls) instead of `shown at 1440, lost at this width`, still failing; lost prints are typed.
+
+Per-finding before/after logs: `test-results/r22/R22-*-{before,after}.log` (before = R22 tests against the d9e1049 sources, documents included): Chrome 46 of 54 before (8 assertion failures: six R22 tests and the two R19 tests updated for the zones), 54 of 54 after; the R22-GPT-07 content-visibility and popover regressions pass at d9e1049 and fail against the 700297d width screen (`R22-GPT07-regressions-vs-700297d.log`); docs 15 of 16 / 16 of 16; package `test_r22_sections` and the archive test FAIL before, OK after; fixture exit 0 after.
+
 ## R21 executed verification (Mi'mar's box, 18 October 2026, about 4:15 PM UTC+3)
 
 Panel round 21 (5 P2: R21-MIMAR-01, R21-MIMAR-02, R21-GPT-02, R21-GPT-04, R21-GPT-05; P3 R21-GPT-03, R21-GPT-06, R21-GPT-07; GPT only, cross-checked by Mi'mar; `reviews/panel-r21/`), with Fadel's R21 tiebreaks. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
