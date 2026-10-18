@@ -1,6 +1,6 @@
 // pre-handoff-check.mjs: Fannan's Harden gate (project arg, protected external dependencies and executables). Local files only; all network requests blocked.
 // Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>
-// Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.2 AA tags with target-size ENABLED, 0 violations,
+// Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.0/2.1/2.2 A and AA tags (axe-tags.mjs) with target-size ENABLED, 0 violations,
 // (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,
 // focus visible on every tab stop, every declared desktop width + 320 px reflow screened, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
 import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';
@@ -16,8 +16,10 @@ import { copySignals } from './copy-signals.mjs';
 import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe, approvedSpacing } from './spacing-scale.mjs';
-import { designProbe } from './design-probe.mjs';
+import { designProbe, rawGlass } from './design-probe.mjs';
 import { screenWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
+import { axeOptions } from './axe-tags.mjs';
+import { isolatedPage } from './probe-world.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
 if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }
@@ -74,9 +76,11 @@ await ctx.routeWebSocket(/.*/, ws => ws.close());
 const blocked = [];
 const OUTPUT_BASE = '/workspace/design-output';
 const projectRoot = join(OUTPUT_BASE, project);
-const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
+const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
+const scanGlass = (path, contentType, body) => { if (/text\/(css|html)/.test(contentType) && rawGlass(body.toString('utf8'))) glassFiles.add(path); };
+const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
 await ctx.route('**/*', routeLocal);
-const p = await ctx.newPage();
+const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world
 const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });
 await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });
 ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };
@@ -107,7 +111,7 @@ Object.assign(design, copySignals(design.visibleText, design.headlines));
 delete design.visibleText; delete design.headlines;
 ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design.typeSizes.length <= q.typeSizes && design.accentRatio !== null && design.accentRatio <= q.accentAreaRatioFullPage && design.accentViewportRatio !== null && design.accentViewportRatio <= q.accentAreaRatioViewport)) && !design.heroGradient && design.glass <= q.stockGlass && design.iconRows <= q.centeredThreeIconRows && !design.purpleBlue && !design.filler && !design.ruleOfThree && (phase === 'wireframe' || !design.placeholders) && (phase === 'wireframe' || design.spacingOffScale.length <= q.spacingOffScale) && design.h1 === 1 };
 if (!ev.checks.design.pass) fail = true;
-const axe = await p.evaluate(async () => axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] }, rules: { 'target-size': { enabled: true } } }));
+const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
 ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
 if (!ev.checks.axe.pass) fail = true;
 // custom: tab through, check focus visible, not obscured by fixed/sticky elements, target size
@@ -154,7 +158,7 @@ if (phase === 'handoff' && handoff?.screens) {
       const frameBytes = await p.screenshot({ fullPage: true });
       const renderedSha256 = digest(frameBytes);
       await p.addScriptTag({ content: axeSrc });
-      const a = await p.evaluate(async () => axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] }, rules: { 'target-size': { enabled: true } } }));
+      const a = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1
       const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
       Object.assign(d, copySignals(d.visibleText, d.headlines));
       delete d.visibleText; delete d.headlines;
@@ -178,7 +182,7 @@ if (phase === 'handoff' && handoff?.screens) {
       const rmState = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
       await rmState.routeWebSocket(/.*/, ws => ws.close());
       await rmState.route('**/*', routeLocal);
-      const rp = await rmState.newPage();
+      const rp = await isolatedPage(await rmState.newPage());
       await rp.goto(pathToFileURL(resolve(st.page)).href);
       await rp.waitForTimeout(300);
       const motion1 = await rp.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r=e.getBoundingClientRect(), c=getComputedStyle(e); return `${Math.round(r.x)}|${Math.round(r.y)}|${c.transform}|${c.opacity}`; }));
@@ -201,12 +205,12 @@ const rm = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedM
 await rm.routeWebSocket(/.*/, ws => ws.close());
 await rm.addInitScript(() => { window.__raf = 0; const o = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = (cb) => { window.__raf++; return o(cb); }; });
 await rm.route('**/*', routeLocal);
-const p2 = await rm.newPage();
+const p2main = await rm.newPage(); const p2 = await isolatedPage(p2main); // the rAF counter is read in the main world on purpose
 await p2.goto(pathToFileURL(resolve(page)).href); await p2.waitForTimeout(300);
 const snap = () => p2.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height), c.transform, c.opacity].join('|'); }));
-const s1 = await snap(); const raf1 = await p2.evaluate(() => window.__raf);
+const s1 = await snap(); const raf1 = await p2main.evaluate(() => window.__raf);
 await p2.waitForTimeout(700);
-const s2 = await snap(); const raf2 = await p2.evaluate(() => window.__raf);
+const s2 = await snap(); const raf2 = await p2main.evaluate(() => window.__raf);
 const waapi = await p2.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
 const moved = s1.reduce((n, v, k) => n + (v !== s2[k] ? 1 : 0), 0);
 const rafLoop = raf2 - raf1 > 10;
@@ -216,6 +220,9 @@ await b.close();
 ev.externalRequestsBlocked = blocked;
 ev.checks.resourceBoundary = { pass: blocked.length === 0, blockedRequests: blocked.length };
 if (blocked.length) fail = true;
+for (const file of [page, ...(handoff?.screens || []).flatMap(sc => (sc.states || []).map(st => st.page))].filter(Boolean)) { try { scanGlass(resolve(file), 'text/html', readFileSync(resolve(file))); } catch {} }
+ev.checks.glassSource = { files: [...glassFiles], pass: glassFiles.size === 0 };
+if (!ev.checks.glassSource.pass) fail = true;
 // 4 impeccable detect: findings are advisory, but it MUST run and return parseable output
 {
   let out = '', status = 0;
