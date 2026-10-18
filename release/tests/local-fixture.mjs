@@ -445,6 +445,22 @@ const r23Want = {
   clampControl: r23.clampControl.widths[0] === false && r23.clampControl.states.includes('expanded') && r23.clampControl.clipCuts.some(c => c.width === 1440 && c.rule === 'partly clipped' && c.truncation && c.controls.includes('button:Download')),
 };
 if (Object.values(r23Want).some(v => !v)) throw Error('R23 full-run expectations failed: ' + JSON.stringify(r23Want));
+// R25-GPT-03 (Mi'mar's tiebreak, Fadel's tightening), at full-gate level: a nav collapsed at 320 by max-height:0 and
+// overflow hidden fails alone and passes with a declared menu-open state, exactly as display:none does; a partial cut fails
+const nav25 = (how, isOpen) => `<style>.r25nav{margin:0;padding:0;list-style:none}@media (max-width:600px){.r25nav{${isOpen ? '' : how}}}@media (min-width:601px){.r25menu{display:none}}</style><nav aria-label="Sections"><button class="r25menu" aria-expanded="${isOpen}">Menu</button><ul class="r25nav"><li><a href="#about">About us</a></li><li><a href="#team">Our team</a></li></ul></nav>`;
+const r25 = {};
+r25.navAlone = r19Run('nav-collapsed-alone', nav25('max-height:0;overflow:hidden', false));
+r25.navMenuOpen = r19Run('nav-collapsed-menu-open', nav25('max-height:0;overflow:hidden', false), '', '', authored, [['menu-open', at20(nav25('max-height:0;overflow:hidden', true))]]);
+r25.navPartial = r19Run('nav-partial-menu-open', nav25('max-height:1.2em;overflow:hidden', false), '', '', authored, [['menu-open', at20(nav25('max-height:1.2em;overflow:hidden', true))]]);
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R25 fixture runs: ' + JSON.stringify(r25));
+const r25Want = {
+  navAlone: r25.navAlone.widths[0] === false && r25.navAlone.reveals > 0,
+  navMenuOpen: r25.navMenuOpen.widths.every(w => w === true) && r25.navMenuOpen.reveals === 0,
+  navPartial: r25.navPartial.widths[0] === false,
+};
+if (Object.values(r25Want).some(v => !v)) throw Error('R25 full-run expectations failed: ' + JSON.stringify(r25Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
