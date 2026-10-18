@@ -26,6 +26,6 @@ test_policy_is_documented (__main__.WhitespacePolicyTests.test_policy_is_documen
 test_source_only_range_check_passes (__main__.WhitespacePolicyTests.test_source_only_range_check_passes) ... skipped 'needs a git checkout of the repository'
 
 ----------------------------------------------------------------------
-Ran 26 tests in 0.053s
+Ran 26 tests in 0.069s
 
 OK (skipped=4)
