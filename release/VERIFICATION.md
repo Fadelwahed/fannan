@@ -1,5 +1,27 @@
 # R3 executed verification — 17 October 2026
 
+## R18 executed verification (Mi'mar's box, 18 October 2026, about 10:15 AM UTC+3)
+
+Panel round 18 (8 P2: R18-GPT-01, 03 to 07, R18-MIMAR-01/02; P3 R18-GPT-02; GPT only, cross-checked by Mi'mar; `reviews/panel-r18/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 125 PASS, 0 FAIL, 0 skipped (R17's 119 + 5 in `tests/panel-r18.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r18/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 74 PASS, 0 FAIL, 51 SKIPPED (need deps or Chrome) | `test-results/r18/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r18/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r18/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 40 PASS / 35 PASS + 5 SKIPPED | `test-results/r18/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r18/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=44 sh=4 py=4 plus the launcher, 0 failures | `test-results/r18/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r18/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 119 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R17 (it needs Node 22); not a gate | `test-results/r18/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r18/local-fixture.log`). R17 full runs unchanged in outcome. R18 full pre-handoff runs: a display:contents reveal and a partly clipped three-line reveal removed by script are `textUnreadable/js-off` mismatches on the page and its state; a 3% white layer, inactive carousel slides with a collapsed accordion (`textHidden` 3 in both renderings) and light weights (Lato 300 and 100, Inter 200, in #767676) are integrity PASS; an accordion only script opens is a `textHidden/js-off` mismatch; the copy deck accepts an approved `ariaLabel` and an identical value and name, and still reports an accessible name with no approved `ariaLabel`. Backstop time per rendering on the fixture page: about 0.4 s (0.6-0.9 s with JavaScript-off losses, 1.2 s with a scroll reveal); per checker run about 7-8 s.
+
+**Honest patterns and the real site:** `test-results/r18/R18-honest-patterns.log` (the round's 21 repro pages plus four GPT repros, both renderings: only the fixed cookie banner, a true positive, and the two misses report problems) and `test-results/r18/R18-real-site.log` (a built bilingual site, English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; 6.3-11.1 s per rendering, 8-12 steps).
+
+Per-finding before/after logs: `test-results/r18/R18-*-before.log` / `-after.log` (before = R18 tests against the e0362e6 sources, documents included, `copy-deck.mjs` removed; every before failure is an assertion failure, checked for load errors).
+
 ## R17 executed verification (Mi'mar's box, 18 October 2026, about 9:15 AM UTC+3)
 
 Panel round 17 (4 P2: R17-GPT-01 to 03, R17-MIMAR-01; P3 R17-MIMAR-02; GPT only, cross-checked by Mi'mar; `reviews/panel-r17/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
