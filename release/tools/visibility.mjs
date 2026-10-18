@@ -7,8 +7,10 @@
 //    selected option, measured in its content box) and every named element without painted text of its own (an
 //    accessible name only, such as an icon button: hit test only, it has no text pixels).
 //  - viewport bands: the page is scrolled in steps of half the viewport height; after each scroll the finite running
-//    animations are allowed to finish (up to VISIBILITY.animationWaitMs; infinite ones are ignored), so a normal
-//    entrance or scroll reveal is measured at rest. Each target is measured in the band where it sits most centrally
+//    animations are allowed to finish and then the painted state of every element (opacity, transform, filter,
+//    clip-path, colours, position) must be unchanged about 100 ms apart, so a normal CSS or script-driven entrance
+//    or scroll reveal is measured at rest (bounded by VISIBILITY.animationWaitMs; elements under infinite animations
+//    are left out; other continuous motion ends the wait at the bound and is counted in unsettledBands). Each target is measured in the band where it sits most centrally
 //    and wholly inside the viewport (a target taller than half the viewport where most of it is visible).
 //  - (a) hit test: at up to three points across each text line (elementsFromPoint in the document and in every shadow
 //    root on the way), the first element in the stack must be the target, its own subtree or its ancestor line.
@@ -19,28 +21,46 @@
 //    is the modal colour (5 bits per channel); ink pixels differ from it by more than VISIBILITY.inkDelta in a channel.
 //    Fewer than VISIBILITY.minInk ink pixels means no text was painted (ratio 1). Otherwise the WCAG contrast ratio of
 //    each ink pixel against the background is taken and the 90th percentile is the measured ratio (antialiased edges
-//    and single noisy pixels do not decide it). Below VISIBILITY.floor (3:1) the text is unreadable. This is a
+//    and single noisy pixels do not decide it). Below VISIBILITY.floor (3:1) the text is unreadable; a target with
+//    fewer than VISIBILITY.smallInk (30) ink pixels (a single thin glyph such as an arrow, which never reaches its full
+//    colour once antialiased) is unreadable below VISIBILITY.smallFloor (1.5:1). This is a
 //    readability floor for the backstop; AA (4.5:1, 3:1 for large text) stays with the CSS pass, axe and the manual
 //    WCAG review. Rendered text whose boxes are under VISIBILITY.minTextHeight px high is unreadable too.
 //  - unmeasured (INCOMPLETE, never PASS): a control with no box, text clipped to nothing by a clipping ancestor, text
 //    outside the document (off-screen), boxes with too few pixels, or a target never wholly inside one viewport.
+//  - text of a disabled control (`:disabled`, or inside aria-disabled="true") has no contrast requirement (WCAG 1.4.3):
+//    counted with the assistive-only text, not graded.
 //  - assistive-only text (inside a clipping box of at most 1 x 1 px, the visually-hidden pattern) is counted, not graded;
 //    a collapsed clipping box (height or width 0, larger in the other) clips its text to nothing (unmeasured).
 // compareIntegrity fails text obscured or unreadable in the scripted page and treats JavaScript-off text that is
 // worse (obscured, unreadable or unmeasured where the scripted page painted it) as an integrity mismatch.
 import { inflateSync } from 'node:zlib';
 
-export const VISIBILITY = { floor: 3, inkDelta: 24, minInk: 3, inkPercentile: 0.9, minTextHeight: 4, animationWaitMs: 2000, maxItems: 40 };
+export const VISIBILITY = { floor: 3, smallFloor: 1.5, smallInk: 30, inkDelta: 24, minInk: 3, inkPercentile: 0.9, minTextHeight: 4, animationWaitMs: 2000, maxBands: 60, maxItems: 40 };
 
-// Browser side (probe world): one viewport band at scroll position y.
-export async function visibilityBand({ y, waitMs, minTextHeight }) {
+// Browser side (probe world): scroll to y and let finite CSS and Web Animations finish (up to waitMs).
+export async function visibilitySettle({ y, waitMs }) {
   scrollTo(0, y);
   const frame = () => new Promise(r => requestAnimationFrame(() => r()));
   await frame(); await frame();
   const finite = () => document.getAnimations().filter(a => a.playState === 'running' && Number.isFinite(a.effect?.getComputedTiming?.().endTime));
   const started = performance.now();
   while (finite().length && performance.now() - started < waitMs) await frame(); // rAF: timers do not run with page scripts off
-  await frame(); await frame();
+  // script-driven tweens are not in getAnimations(): wait (within the same bound) until the painted state of every
+  // element (opacity, transform, filter, clip-path, colours, visibility and position) is the same about 100 ms apart.
+  // Elements under an infinite animation (a spinner) are left out; other continuous motion ends the wait at the bound.
+  const up = a => a.assignedSlot ?? a.parentElement ?? (a.getRootNode() instanceof ShadowRoot ? a.getRootNode().host : null);
+  const endless = new Set(document.getAnimations().filter(a => !Number.isFinite(a.effect?.getComputedTiming?.().endTime)).map(a => a.effect?.target).filter(Boolean));
+  const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
+  const moving = all.filter(e => { for (let a = e; a; a = up(a)) if (endless.has(a)) return true; return false; }), still = all.filter(e => !moving.includes(e));
+  const snap = () => still.map(e => { const c = getComputedStyle(e), r = e.getBoundingClientRect(); return [c.opacity, c.transform, c.filter, c.clipPath, c.color, c.webkitTextFillColor, c.backgroundColor, c.visibility, Math.round(r.x), Math.round(r.y)].join(','); }).join('|');
+  let settled = false;
+  for (let before = snap(); ;) { for (let i = 0; i < 6; i++) await frame(); const now = snap(); if (now === before) { settled = true; break; } before = now; if (performance.now() - started > waitMs) break; }
+  return { y: scrollY, vh: innerHeight, docH: document.documentElement.scrollHeight, settled };
+}
+
+// Browser side (probe world): the targets of the current viewport band, with their hit tests.
+export function visibilityBand({ minTextHeight }) {
   const vw = innerWidth, vh = innerHeight, sy = scrollY, docH = document.documentElement.scrollHeight;
   const up = a => a.assignedSlot ?? a.parentElement ?? (a.getRootNode() instanceof ShadowRoot ? a.getRootNode().host : null);
   const inside = (outer, e) => { for (let x = e; x; x = up(x)) if (x === outer) return true; return false; };
@@ -56,6 +76,13 @@ export async function visibilityBand({ y, waitMs, minTextHeight }) {
     if (el.tagName === 'INPUT' && BUTTONISH.includes(t)) return el.hasAttribute('value') ? !!el.value.trim() : t !== 'button';
     return !!(el.value.trim() || el.placeholder?.trim());
   };
+  // the conventions of width-screen.mjs: visually hidden (sr-only) content, and the off-screen skip-link pattern (a
+  // focusable absolute or fixed element wholly outside the page that appears on focus; the focus probe checks it)
+  const srOnly = (r, c) => (r.width <= 1 && r.height <= 1 && (['hidden', 'clip'].includes(c.overflowX) || ['hidden', 'clip'].includes(c.overflowY))) || /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(c.clip) || c.clipPath === 'inset(50%)';
+  const focusable = e => e.matches?.('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');
+  const assistiveOf = el => { for (let a = el; a && a !== document.documentElement; a = up(a)) { const r = a.getBoundingClientRect(), c = getComputedStyle(a); if (srOnly(r, c)) return true; if (focusable(a) && ['absolute', 'fixed'].includes(c.position) && (r.right <= 0 || r.bottom + scrollY <= 0 || r.left >= document.documentElement.scrollWidth)) return true; } return false; };
+  // text of an inactive (disabled) control has no contrast requirement (WCAG 1.4.3); it is counted, not graded
+  const inactive = el => { for (let a = el; a && a !== document.documentElement; a = up(a)) if (a.matches?.(':disabled') || a.getAttribute?.('aria-disabled') === 'true') return true; return false; };
   const named = el => (el.hasAttribute('aria-label') && el.getAttribute('aria-label').trim()) || el.hasAttribute('aria-labelledby');
   // clipping ancestors (overflow other than visible; html and body propagate to the viewport and are excluded)
   const clipOf = el => { let box = { left: -Infinity, top: -Infinity, right: Infinity, bottom: Infinity }, assistive = false; for (let a = el; a && a !== document.body && a !== document.documentElement; a = up(a)) { const s = getComputedStyle(a); if (s.overflowX === 'visible' && s.overflowY === 'visible' && s.overflow !== 'clip') continue; const r = a.getBoundingClientRect(); if (r.width <= 1 && r.height <= 1) assistive = true; box = cut(box, r) || { left: 0, top: 0, right: 0, bottom: 0 }; } return { box, assistive }; };
@@ -75,7 +102,9 @@ export async function visibilityBand({ y, waitMs, minTextHeight }) {
   const ids = [], targets = [];
   const visit = (root, path) => [...root.children].forEach((el, i) => {
     const id = `${path}/${el.tagName}:${i}`;
-    if (!/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OPTION|OPTGROUP|HEAD|TITLE)$/.test(el.tagName)) {
+    // not rendered at all (display:none on it or an ancestor, a closed details or another content-visibility:hidden
+    // subtree): not displayed, so not a target
+    if (!/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OPTION|OPTGROUP|HEAD|TITLE)$/.test(el.tagName) && el.checkVisibility() && el.getClientRects().length) {
       const s = getComputedStyle(el);
       let kind = null, rects = [];
       if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) { if (controlShows(el) && s.visibility === 'visible' && s.display !== 'none') kind = 'control'; }
@@ -89,16 +118,18 @@ export async function visibilityBand({ y, waitMs, minTextHeight }) {
           else rects = r.width > 0 && r.height > 0 ? [r] : [];
         }
         const rec = { id, kind, tag: el.tagName.toLowerCase(), text: (kind === 'control' ? (el.value || el.placeholder || el.selectedOptions?.[0]?.text || '') : kind === 'name' ? el.getAttribute('aria-label') || '' : el.textContent).replace(/\s+/g, ' ').trim().slice(0, 60) };
-        const { box, assistive } = clipOf(kind === 'text' ? el : up(el) || el);
+        const { box, assistive: tiny } = clipOf(kind === 'text' ? el : up(el) || el), assistive = tiny || assistiveOf(el);
         const shown = rects.map(b => cut(b, box)).filter(Boolean);
-        if (!rects.length) targets.push({ ...rec, status: 'unmeasured', reason: 'no box' });
+        if (inactive(el)) targets.push({ ...rec, status: 'inactive' });
+        else if (!rects.length) targets.push({ ...rec, status: 'unmeasured', reason: 'no box' });
         else if (assistive) targets.push({ ...rec, status: 'assistive' });
         else if (!shown.length) targets.push({ ...rec, status: 'unmeasured', reason: 'clipped to nothing' });
         else if (shown.every(b => b.right <= 0 || b.left >= vw || b.bottom + sy <= 0 || b.top + sy >= docH)) targets.push({ ...rec, status: 'unmeasured', reason: 'off-screen' });
         else if (kind !== 'name' && Math.max(...shown.map(b => b.bottom - b.top)) < minTextHeight) targets.push({ ...rec, status: 'unreadable', reason: `rendered text under ${minTextHeight} px high` });
         else {
           const view = { left: 0, top: 0, right: vw, bottom: vh }, seen = shown.map(b => cut(b, view)).filter(Boolean), fraction = area(seen) / area(shown), top = Math.min(...shown.map(b => b.top)), bottom = Math.max(...shown.map(b => b.bottom));
-          if (seen.length && (fraction >= 0.999 || (bottom - top > vh / 2 && fraction >= 0.5))) {
+          const seenHeight = seen.length ? Math.max(...seen.map(b => b.bottom)) - Math.min(...seen.map(b => b.top)) : 0;
+          if (seen.length && (fraction >= 0.999 || (bottom - top > vh / 2 && (fraction >= 0.5 || seenHeight >= vh / 2)))) {
             const lines = seen.length <= 6 ? seen : [0, 1, 2, 3, 4, 5].map(k => seen[Math.round(k * (seen.length - 1) / 5)]);
             const points = lines.flatMap(b => [0.2, 0.5, 0.8].map(f => [b.left + (b.right - b.left) * f, (b.top + b.bottom) / 2])).filter(([x, yy]) => x >= 0 && x < vw && yy >= 0 && yy < vh);
             const covered = points.filter(([x, yy]) => coveredAt(el, x, yy)).length;
@@ -158,14 +189,14 @@ export function pixelContrast(img, rects, scale = 1, opts = VISIBILITY) {
 // that enter the integrity vector and the problem items as evidence.
 export async function visibilityScan(pg, opts = VISIBILITY) {
   const started = Date.now();
-  const { vh, docH } = await pg.evaluate(() => ({ vh: innerHeight, docH: document.documentElement.scrollHeight }));
-  const max = Math.max(0, docH - vh), ys = [];
-  for (let y = 0; y < max; y += Math.max(1, Math.floor(vh / 2))) ys.push(y);
-  ys.push(max);
   const best = new Map(), fixed = new Map(), all = new Set();
-  for (const y of [...new Set(ys)]) {
-    const band = await pg.evaluate(visibilityBand, { y, waitMs: opts.animationWaitMs, minTextHeight: opts.minTextHeight });
+  let y = 0, bands = 0, unsettled = 0;
+  for (const done = new Set(); ;) {
+    const at = await pg.evaluate(visibilitySettle, { y, waitMs: opts.animationWaitMs });
+    if (!at.settled) unsettled++;
+    const band = await pg.evaluate(visibilityBand, { minTextHeight: opts.minTextHeight }); // read-only: paints nothing
     const img = decodePng(await pg.screenshot({ type: 'png' })), scale = img.width / band.vw;
+    bands++; done.add(at.y);
     for (const id of band.ids) all.add(id);
     for (const t of band.targets) {
       if (t.status !== 'measured') { if (!fixed.has(t.id)) fixed.set(t.id, t); continue; }
@@ -173,6 +204,11 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
       if (t.kind !== 'name') t.pixel = pixelContrast(img, t.rects, scale, opts);
       t.band = band.y; delete t.rects; best.set(t.id, t);
     }
+    // the document height is read again in every band (content loaded or revealed while scrolling extends it)
+    const max = Math.max(0, band.docH - band.vh);
+    if (at.y >= max || bands >= opts.maxBands) break;
+    y = Math.min(max, at.y + Math.max(1, Math.floor(band.vh / 2)));
+    if (done.has(y)) break;
   }
   await pg.evaluate(() => scrollTo(0, 0));
   const items = [];
@@ -182,11 +218,11 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
     if (m) {
       if (m.obscured) { obscured++; items.push({ id, kind: m.kind, text: m.text, problem: 'obscured', covered: `${m.covered}/${m.points}`, band: m.band }); }
       else if (m.pixel && m.pixel.ratio === null) { unmeasured++; items.push({ id, kind: m.kind, text: m.text, problem: 'unmeasured', reason: m.pixel.reason }); }
-      else if (m.pixel && m.pixel.ratio < opts.floor) { unreadable++; items.push({ id, kind: m.kind, text: m.text, problem: 'unreadable', ratio: m.pixel.ratio, ink: m.pixel.ink, background: m.pixel.background, band: m.band }); }
+      else if (m.pixel && m.pixel.ratio < (m.pixel.ink < opts.smallInk ? opts.smallFloor : opts.floor)) { unreadable++; items.push({ id, kind: m.kind, text: m.text, problem: 'unreadable', ratio: m.pixel.ratio, ink: m.pixel.ink, background: m.pixel.background, band: m.band }); }
       else measured++;
     } else if (f?.status === 'unreadable') { unreadable++; items.push({ id, kind: f.kind, text: f.text, problem: 'unreadable', reason: f.reason }); }
-    else if (f?.status === 'assistive') assistive++;
+    else if (f?.status === 'assistive' || f?.status === 'inactive') assistive++;
     else { unmeasured++; items.push({ id, kind: f?.kind, text: f?.text, problem: 'unmeasured', reason: f?.reason || 'never wholly inside one viewport' }); }
   }
-  return { textMeasured: measured, textObscured: obscured, textUnreadable: unreadable, textUnmeasured: unmeasured, textAssistive: assistive, bands: new Set(ys).size, ms: Date.now() - started, items: items.slice(0, opts.maxItems), itemsTotal: items.length, method: 'hit test at up to 3 points per text line; 90th-percentile ink-pixel contrast against the modal background colour; floor ' + opts.floor + ':1' };
+  return { textMeasured: measured, textObscured: obscured, textUnreadable: unreadable, textUnmeasured: unmeasured, textAssistive: assistive, bands, unsettledBands: unsettled, ms: Date.now() - started, items: items.slice(0, opts.maxItems), itemsTotal: items.length, method: 'hit test at up to 3 points per text line; 90th-percentile ink-pixel contrast against the modal background colour; floor ' + opts.floor + ':1' };
 }
