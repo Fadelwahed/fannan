@@ -17,10 +17,11 @@ import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';
 import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';
-import { screenWidths, resolveReflowCandidates } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
+import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
 import { axeOptions } from './axe-tags.mjs';
 import { isolatedPage } from './probe-world.mjs';
-import { nativeCheck, compareIntegrity } from './integrity.mjs';
+import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom } from './integrity.mjs';
+import { scopeOf, resolveScoped } from './exceptions.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
 if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }
@@ -82,7 +83,7 @@ const OUTPUT_BASE = '/workspace/design-output';
 const projectRoot = join(OUTPUT_BASE, project);
 const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
 // R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)
-const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'))) glassFiles.add(path); };
+const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG
 const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
 await ctx.route('**/*', routeLocal);
 const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world
@@ -118,6 +119,13 @@ ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping b
 if (!ev.checks.design.pass) fail = true;
 ev.checks.accent = await accentFor(p, design);
 if (!ev.checks.accent.pass) fail = true;
+// R12 M03: probes and axe run in the main frame only, so any frame (readable or not) blocks the final handoff.
+const framesCheck = d => ({ frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, unscanned: d.glassScopes.unscannedFrames, status: phase === 'wireframe' ? 'DEFERRED' : d.glassScopes.frames + d.glassScopes.unscannedFrames.length ? 'FAIL' : 'PASS', note: 'axe and the probes do not run inside frames', pass: phase === 'wireframe' || d.glassScopes.frames + d.glassScopes.unscannedFrames.length === 0 });
+ev.checks.frames = framesCheck(design);
+if (!ev.checks.frames.pass) fail = true;
+// R12 M07/M09/M20: the positional page is scoped by its declared state (screen, state, lang).
+const declaredStates = (handoff?.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
+const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
 const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
 ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
 if (!ev.checks.axe.pass) fail = true;
@@ -152,6 +160,30 @@ evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
 // R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
 ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null);
 if (!ev.checks.widths.pass) fail = true;
+// R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
+// measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
+const integrityFor = async (pagePath, scope) => {
+  const contexts = [];
+  try {
+    const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
+    const widthsFor = validWidths(handoff?.settings?.desktopWidths) ? handoff.settings.desktopWidths : [1440];
+    const measure = async pg => { try {
+      const d = await pg.evaluate(designProbe), sp = await pg.evaluate(spacingProbe, approvedScale.values), ct = await pg.evaluate(contrastProbe);
+      const rs = (await screenWidths(pg, widthsFor, null)).results, sum = k => rs.reduce((n, r) => n + (r[k]?.length ?? 0), 0), r320 = rs.find(r => r.width === 320);
+      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: rs.some(r => r.horizontalOverflow), clipped: sum('clipped'), offscreenLeft: sum('offscreenLeft'), unreachable: sum('unreachable'), scrolledText: sum('scrolledText'), unmeasured: sum('unmeasured'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures }, content: await pg.evaluate(contentProbe) };
+    } catch (e) { return { vector: null, content: null, error: e.message }; } };
+    const href = pathToFileURL(resolve(pagePath)).href;
+    const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);
+    await icProbe.goto(href); await ready(icProbe);
+    const probe = await measure(icProbe), pageWorld = await measure(icMain);
+    let tamperSigns = null; try { tamperSigns = await icMain.evaluate(nativeCheck); } catch {}
+    const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
+    await jsOffPage.goto(href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
+    const jsOff = await measure(jsOffPage);
+    return compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope });
+  } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
+  finally { for (const c of contexts) await c.close().catch(() => {}); }
+};
 ev.checks.states = [];
 if (phase === 'handoff' && handoff?.screens) {
   const declared = handoff.screens.flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
@@ -187,6 +219,8 @@ if (phase === 'handoff' && handoff?.screens) {
         focus.push(f);
       }
       const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
+      const frames = framesCheck(d); // R12 M03
+      const integrity = await integrityFor(st.page, scopeOf(st)); // R12 M07: every declared state
       const rmState = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
       await rmState.routeWebSocket(/.*/, ws => ws.close());
       await rmState.route('**/*', routeLocal);
@@ -199,8 +233,8 @@ if (phase === 'handoff' && handoff?.screens) {
       const running = await rp.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
       await rmState.close();
       const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // ARGON-R5-01: Math.max(null) is 0
-      const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion: { running, changed: motion1.some((x,i) => x !== motion2[i]) }, language: doc.lang, direction: doc.dir };
-      stateResult.pass = renderedSha256 === st.frame?.sha256 && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && a.incomplete.length === 0 && d.centered <= q.centeredSectionsPerPage && d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && !d.placeholders && d.spacingOffScale.length <= q.spacingOffScale && d.h1 === 1 && accent.pass && stateResult.focusFailures.length === 0 && widths.pass && running === 0 && !stateResult.reducedMotion.changed && doc.lang === st.lang && doc.dir === st.dir;
+      const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion: { running, changed: motion1.some((x,i) => x !== motion2[i]) }, language: doc.lang, direction: doc.dir };
+      stateResult.pass = renderedSha256 === st.frame?.sha256 && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && a.incomplete.length === 0 && d.centered <= q.centeredSectionsPerPage && d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && !d.placeholders && d.spacingOffScale.length <= q.spacingOffScale && d.h1 === 1 && accent.pass && frames.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.pass && running === 0 && !stateResult.reducedMotion.changed && doc.lang === st.lang && doc.dir === st.dir;
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
       if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
       evidenceWrite(filename, frameBytes);
@@ -210,11 +244,16 @@ if (phase === 'handoff' && handoff?.screens) {
   }
 }
 // R11 panel D1 (decisions B, T2): every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
-ev.checks.reflowCandidates = resolveReflowCandidates([ev.checks.widths, ...ev.checks.states.map(st => st.widths)].flatMap(w => w?.results || []).flatMap(r => r.reflowCandidates || []), handoff, phase);
+ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // R12 M09: scoped
 if (!ev.checks.reflowCandidates.pass) fail = true;
+// R12 M20: every documented spacing exception needs a scoped handoff `spacingExceptions` entry naming the approver.
+const spacingItems = [{ scope: pageScope, list: design.spacingExceptions }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), list: st.spacingExceptions }))].flatMap(({ scope, list }) => (list || []).map(x => ({ ...scopeOf(scope), ...x })));
+const spacingResolved = resolveScoped({ items: spacingItems, entries: handoff?.spacingExceptions, roles: [handoff?.settings?.roles?.approver], phase, what: 'spacingExceptions' });
+ev.checks.spacingExceptions = { exceptions: spacingResolved.items, unresolved: spacingResolved.unresolved, status: spacingResolved.status, pass: spacingResolved.pass };
+if (!ev.checks.spacingExceptions.pass) fail = true;
 const rm = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
 await rm.routeWebSocket(/.*/, ws => ws.close());
-await rm.addInitScript(() => { window.__raf = 0; const o = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = (cb) => { window.__raf++; return o(cb); }; });
+await rm.addInitScript(rafCounterInit); // R12 M13: private, non-writable counter; the wrapper cannot be replaced
 await rm.route('**/*', routeLocal);
 const p2main = await rm.newPage(); const p2 = await isolatedPage(p2main); // the rAF counter is read in the main world on purpose
 await p2.goto(pathToFileURL(resolve(page)).href); await p2.waitForTimeout(300);
@@ -224,23 +263,11 @@ await p2.waitForTimeout(700);
 const s2 = await snap(); const raf2 = await p2main.evaluate(() => window.__raf);
 const waapi = await p2.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
 const moved = s1.reduce((n, v, k) => n + (v !== s2[k] ? 1 : 0), 0);
-const rafLoop = raf2 - raf1 > 10;
-ev.checks.reducedMotion = { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: raf2 - raf1, pass: waapi === 0 && moved === 0 && !rafLoop };
+const rafLoop = rafLoopFrom(raf1, raf2); // R12 M13: a non-finite or decreasing reading counts as a loop
+ev.checks.reducedMotion = { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: Number.isFinite(raf2 - raf1) ? raf2 - raf1 : null, pass: waapi === 0 && moved === 0 && !rafLoop };
 if (!ev.checks.reducedMotion.pass) fail = true;
-// R11 panel D1 (decisions C, T4): integrity cross-checks on the positional page (integrity.mjs): page world vs probe
-// world, native probe functions, and a JavaScript-off pass. Unexplained differences fail as an integrity mismatch.
-try {
-  const measure = async pg => { const glass = (await pg.evaluate(designProbe)).glass; const r = (await screenWidths(pg, [1440], null)).results.find(x => x.width === 320); return { glass, reflowPass: !!r?.pass, scrolledText: r?.scrolledText?.length ?? -1 }; };
-  const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
-  const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);
-  await icProbe.goto(pathToFileURL(resolve(page)).href); await ready(icProbe);
-  const probe = await measure(icProbe), pageWorld = await measure(icMain), tamperSigns = await icMain.evaluate(nativeCheck);
-  const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
-  await jsOffPage.goto(pathToFileURL(resolve(page)).href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
-  const jsOff = await measure(jsOffPage);
-  await ic.close(); await jc.close();
-  ev.checks.integrity = compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff });
-} catch (e) { ev.checks.integrity = { status: 'integrity mismatch', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
+// R11 panel D1 (decisions C, T4), R12 M06-M08: integrity cross-checks on the positional page (and, above, every state).
+ev.checks.integrity = await integrityFor(page, pageScope);
 if (!ev.checks.integrity.pass) fail = true;
 await b.close();
 ev.externalRequestsBlocked = blocked;

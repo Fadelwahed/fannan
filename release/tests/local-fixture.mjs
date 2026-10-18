@@ -104,6 +104,11 @@ const { status: status2, result: second } = runChecker(evidence2);
 status = status2;
 if (status !== 1 || !second.checks.contract.pass || second.checks.states.length !== 1 || !second.checks.states[0].pass || second.checks.impeccable.pass) throw Error('expected valid contract and all applicable state browser checks, with pinned binary blocking');
 if (!second.checks.widths?.pass || second.checks.states[0].widths?.results.map(r => r.width).join() !== '1440,320' || !second.checks.states[0].widths.pass) throw Error('R8: declared desktop width 1440 and 320 px reflow must be screened on the page and the state');
+// R12 M18: the claims VERIFICATION.md makes about this run are asserted here, not inferred.
+const claims = { integrity: second.checks.integrity?.status, stateIntegrity: second.checks.states[0].integrity?.status, glassSource: second.checks.glassSource?.pass, accent: second.checks.accent?.status, stateAccent: second.checks.states[0].accent?.status, frames: second.checks.frames?.status, spacingExceptions: second.checks.spacingExceptions?.status, reflowCandidates: second.checks.reflowCandidates?.status };
+console.log('R12 fixture claims: ' + JSON.stringify(claims));
+if (!second.checks.integrity?.pass || !second.checks.states[0].integrity?.pass || second.checks.glassSource?.pass !== true || !second.checks.accent?.pass || second.checks.accent.status !== 'PASS' || !second.checks.states[0].accent?.pass || second.checks.states[0].accent.status !== 'PASS' || !second.checks.frames?.pass || !second.checks.spacingExceptions?.pass) throw Error('R12 M18: integrity (page and state), glassSource, accent (page and state), frames and spacingExceptions must PASS on the valid fixture: ' + JSON.stringify(claims));
+if (process.env.FANNAN_FIXTURE_EVIDENCE_COPY) cpSync(join(evidence2, 'evidence.json'), process.env.FANNAN_FIXTURE_EVIDENCE_COPY);
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
 const { result: mutated } = runChecker(evidence3, true);
