@@ -244,7 +244,9 @@ REQUIRED_SECTIONS = {
                                              # R26: loss accounting by element identity
                                              'R26 replaces name counting with element identity',
                                              # R28: two-step loss accounting (R27's stable key retired)
-                                             'R28 loss accounting has two steps'],
+                                             'R28 loss accounting has two steps',
+                                             # R29: reveals are declared (opener + reveals) and verified, never inferred
+                                             'R29 declared reveals replace (B)'],
     'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows', '## Cross-screen component comparison'],
 }
 # R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
@@ -377,6 +379,7 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r26')  # R26 before/after evidence (panel round 26)
         paths += files(ROOT / 'test-results/r27')  # R27 before/after evidence, real-site and honest-set old/new logs (panel round 27)
         paths += files(ROOT / 'test-results/r28')  # R28 before/after evidence, real-site and honest-set old/new logs (panel round 28)
+        paths += files(ROOT / 'test-results/r29')  # R29 before/after evidence, real-site handoff and old/new logs (panel round 29)
         paths += files(ROOT / 'test-results/r25')  # R25 before/after evidence and the clean R24 before-rerun (panel round 25)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)

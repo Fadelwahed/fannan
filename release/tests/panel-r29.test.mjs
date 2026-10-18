@@ -95,6 +95,8 @@ const scopesOf = async (open, list, dir = 'ltr') => {
   const scopes = []; for (const x of list) scopes.push({ scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(x.html)).main, [1440], null, 900, probes), declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals } : null });
   const r = ws.resolveReveals(scopes); return { pass: r.pass && scopes.every(s => s.widths.pass), scopes };
 };
+// R29: the gate verdict plus each declaration's validity and reason at 320 (reported by the gate)
+const verdictOf = async (open, list) => { const r = await scopesOf(open, list); const d = r.scopes[0].widths.results.find(x => x.width === 320).declarations || []; return { pass: r.pass, declarations: d.map(x => [x.state, x.valid, x.valid ? '' : x.why.join('; ')]) }; };
 const navPage = (opened, { closeLabel = false, footer = true } = {}) => W(`<style>.nav{margin:0;padding:0;list-style:none}@media (max-width:600px){.nav{${opened ? '' : 'display:none'}}}@media (min-width:601px){.menu{display:none}}</style><header><nav aria-label="Main"><button class="menu" aria-expanded="${opened}">${opened && closeLabel ? 'Close' : 'Menu'}</button><ul class="nav"><li><a href="/about">About</a></li><li><a href="/work">Work</a></li></ul></nav></header><p>Body copy.</p>${footer ? '<footer><a href="/about">About</a> <a href="/work">Work</a></footer>' : ''}`);
 
 test('R29-GPT-01: real Chrome: the full checker\'s shape (positional default, declared default, declared menu-open) passes; the default twice alone still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -121,12 +123,16 @@ test('R29-GPT-04: real Chrome: a still-visible Remove covers nothing: a declared
   const gate = gateOf(open);
   const list = (opened) => W(`<style>@media (max-width:600px){.second{display:none}}</style><button class="more" aria-expanded="${opened}">More</button><ul class="items"><li>Cart item one <button>Remove</button></li><li class="second">Cart item two <button>Remove</button></li></ul>`);
   assert.equal((await gate({ default: list(false), 'all-open': D(list(true), '.more', '.items') })).pass, false);
+  assert.deepEqual(await verdictOf(open, [{ state: 'default', html: list(false) }, { state: 'all-open', html: list(true), opener: '.more', reveals: '.items' }]),
+    { pass: false, declarations: [['all-open', false, 'region already visible in the losing state']] });
 }));
 
 test('R29-GPT-05: real Chrome: nested regions never count twice: one Remove in the open state covers one lost Remove, not two (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const page = opened => W(`<style>@media (max-width:600px){.desk{display:none}}@media (min-width:601px){.mob{display:none}}</style><div class="desk"><p>Item A <button>Remove</button></p><p>Item B <button>Remove</button></p></div><div class="mob"><button class="opener" aria-expanded="${opened}">Items</button><div class="outer"${opened ? '' : ' hidden'}><p>Item A</p><details${opened ? ' open' : ''}><summary>Item B</summary><p>Item B <button>Remove</button></p></details></div></div>`);
   assert.equal((await gate({ default: page(false), 'all-open': D(page(true), '.opener', '.outer') })).pass, false);
+  assert.deepEqual(await verdictOf(open, [{ state: 'default', html: page(false) }, { state: 'all-open', html: page(true), opener: '.opener', reveals: '.outer' }]),
+    { pass: false, declarations: [['all-open', true, '']] }, 'the declaration is valid; the second Remove stays lost (one to one)');
 }));
 
 test('R29-GPT-06: real Chrome: opener names are never compared: Menu becoming Close in the open state passes; two menus both named Menu each pass with their own declaration (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -161,6 +167,9 @@ test('R29-GPT-08: real Chrome: unlabelled carousels with declared slide controls
 test('R29-MIMAR-01: real Chrome: a sloppy menu-open that never opens fails even when it declares the menu and the page has footer copies (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   assert.equal((await gate({ default: navPage(false), 'menu-open': D(navPage(false), '.menu', '.nav') })).pass, false);
+  const v = await verdictOf(open, [{ state: 'default', html: navPage(false) }, { state: 'menu-open', html: navPage(false), opener: '.menu', reveals: '.nav' }]);
+  assert.deepEqual([v.pass, v.declarations.map(d => d[1])], [false, [false]]);
+  assert.match(v.declarations[0][2], /region not visible in the declared state|does not show it is open/);
 }));
 
 test('R29 invalid declarations: a wrong opener, a region not actually opened and a region visible in the losing state rescue nothing, with the reason reported (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
