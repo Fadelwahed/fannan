@@ -14,7 +14,7 @@ export const REFLOW_WIDTH = 320;
 // candidate unless it sits inside a marked data-fannan-2d region. No count caps.
 export const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
 
-export function inspectLayout({ reflow = false } = {}) {
+export function inspectLayout({ reflow = false, tag = false } = {}) {
   const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
   const MEDIA = 'img, svg, video, audio, canvas, iframe, frame, object, embed, fencedframe, portal, input, select, textarea, button';
   // R22-GPT-03 (Fadel's tiebreak): fallback content inside video, audio, object and canvas is not rendered, so it is not
@@ -115,17 +115,12 @@ export function inspectLayout({ reflow = false } = {}) {
   };
   const printOf = d => { const k = kindOf(d); if (k === 'control') { const c = controlOf(d); return `${roleOf(c)}:${nameOf(c)}`.slice(0, 200); } const t = k === 'frame' ? norm(d.getAttribute('title') || d.getAttribute('src') || d.tagName) : norm([...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return `${k}:${t || d.tagName.toLowerCase()}`.slice(0, 200); };
   const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = parentOf(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
-  // R27-GPT-01 (Mi'mar's tiebreak, Fadel): a STABLE identity key, not a position: the id when present; otherwise the nearest
-  // landmark, the role family (R27-GPT-03: button, link and the menuitem roles are one action family, so a node whose role
-  // changes within it keeps its identity), the accessible name (or text), the link target and the order among same-key
-  // elements in that landmark. A footer copy has another landmark, so it is never the nav item.
-  const LANDMARK = 'header, nav, main, footer, aside, search, form[aria-label], form[aria-labelledby], section[aria-label], section[aria-labelledby], [role="banner"], [role="navigation"], [role="main"], [role="contentinfo"], [role="complementary"], [role="search"], [role="region"], [role="form"], [role="tabpanel"]'; // a tab panel scopes its own content (it differs per tab state)
-  const ACTIONS = ['button', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio'];
-  const landmarkOf = el => { for (let a = parentOf(el); a; a = parentOf(a)) if (a.nodeType === 1 && a.matches(LANDMARK)) return `${a.getAttribute('role') || a.tagName.toLowerCase()}:${a.id || norm(a.getAttribute('aria-label') || '')}`; return 'document'; };
-  const baseKey = el => { const r = isControl(el) ? roleOf(el) : el.getAttribute('role') === 'tabpanel' ? 'tabpanel' : el.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') ? 'heading' : 'text'; const fam = ACTIONS.includes(r) ? 'action' : r; const name = isControl(el) || r === 'tabpanel' || r === 'heading' ? nameOf(el) : norm([...el.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return `${landmarkOf(el)}|${fam}|${name}|${el.getAttribute('href') || ''}`; };
-  const keyMemo = new Map(), orderSeen = new Map();
-  for (const el of all) { if (el.id || !(isContent(el) || el.getAttribute('role') === 'tabpanel' || el.matches('h1, h2, h3, h4, h5, h6, [role="heading"]'))) continue; const b = baseKey(el), n = orderSeen.get(b) || 0; orderSeen.set(b, n + 1); keyMemo.set(el, `${b}|${n}`); }
-  const keyOf = el => el.id ? `#${el.id}` : keyMemo.get(el) || `${baseKey(el)}|?`;
+  // R28 (Mi'mar's decision A): within one state identity is the DOM node itself. The first screen of a loaded page (1440)
+  // tags every element with a session index (data-fannan-ws, never an author id); at the other widths of the same page an
+  // item is its tag, and a node created after 1440 is new. Identities are never compared across state pages.
+  const TAG = 'data-fannan-ws';
+  if (tag) { let n = 0; for (const el of all) el.setAttribute(TAG, String(n++)); }
+  const idOf = el => el.hasAttribute(TAG) ? `n${el.getAttribute(TAG)}` : `new:${pathOf(el)}`;
   const contentEls = all.filter(d => isContent(d) && shown(d));
   const cutOf = (e, r) => {
     const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;
@@ -137,11 +132,12 @@ export function inspectLayout({ reflow = false } = {}) {
       if (kindOf(d) === 'media') continue; // R21-MIMAR-01: a media crop is not a content cut
       const rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
       if (!rects.length || rects.every(inside)) continue;
-      const item = { path: pathOf(d), owner: kindOf(d) === 'control' ? pathOf(controlOf(d) || d) : null, key: keyOf(kindOf(d) === 'control' ? controlOf(d) || d : d), tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
+      const item = { path: pathOf(d), owner: kindOf(d) === 'control' ? pathOf(controlOf(d) || d) : null, id: idOf(kindOf(d) === 'control' ? controlOf(d) || d : d), tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
       (rects.every(outside) ? whole : partial).push(item);
     }
     return { whole, partial };
   };
+  const boxSig = e => [e.tagName, e.getAttribute('role') || '', norm(e.getAttribute('aria-label') || ''), e.getAttribute('aria-roledescription') || '', e.getAttribute('data-copy-slot') || ''].join('|');
   const cutPaths = new Set(), offPaths = new Set(), mediaCrops = []; // offPaths: off-screen or unreachable content is not shown
   // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
   for (const e of all) {
@@ -155,7 +151,7 @@ export function inspectLayout({ reflow = false } = {}) {
     // R21-MIMAR-01: a box whose cut set is empty, or holds only media and decoration, cuts no content and is not a clip.
     // Read-more tiebreak: an intentional truncation (text-overflow: ellipsis on the cut edge, or line-clamp) is marked so
     // it passes only when a declared state shows the full text.
-    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), collapsed: e.clientWidth === 0 || e.clientHeight === 0, whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
+    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, sig: boxSig(e), slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), collapsed: e.clientWidth === 0 || e.clientHeight === 0, whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
     const s = scrollerOf(e);
     // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the
     // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on
@@ -254,23 +250,45 @@ export function inspectLayout({ reflow = false } = {}) {
   // R25-GPT-04: the accessible names of shown headings (h1-h6, role=heading), for tabs adapted into headed sections
   const headings = all.filter(h => h.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && shownEls.some(d => d === h || within(h, d))).map(h => nameOf(h));
   const disclosures = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => nameOf(c));
-  // R26 (Fadel's root-cause fix): the identity ledger. Every shown control (once, by its owning control element) and every
-  // shown text element, keyed by element identity: its composed DOM path, the same node across widths and across the
-  // declared states of a screen (each state is the same document in another state). Names are kept only for the closed
-  // swap list. Tab panels are tied to their tablist (aria-controls / aria-labelledby, else a shared parent).
+  // R28: the ledger of this rendering: every shown control (once, by its owning control element) and every shown text
+  // element, by node identity (idOf), with its print. Tab panels are tied to their tablist (aria-controls / aria-labelledby).
+  const FAM = ['button', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio'];
+  const HEAD = 'h1, h2, h3, h4, h5, h6, [role="heading"]';
   const panelEls = all.filter(e => e.getAttribute('role') === 'tabpanel');
   const tablistOfPanel = pnl => { const ids = [pnl.id, ...(pnl.getAttribute('aria-labelledby') || '').split(/\s+/)].filter(Boolean); for (const t of all.filter(e => roleOf(e) === 'tablist')) { if ([...t.querySelectorAll('[role="tab"]')].some(tab => (pnl.id && (tab.getAttribute('aria-controls') || '').split(/\s+/).includes(pnl.id)) || (tab.id && ids.includes(tab.id)))) return t; } return all.find(e => roleOf(e) === 'tablist' && pnl.parentElement && within(pnl.parentElement, e)) || null; };
   const panelTablist = new Map(panelEls.map(pnl => [pnl, tablistOfPanel(pnl)]));
   const panelOf = el => { for (let a = el; a; a = parentOf(a)) if (a.nodeType === 1 && panelTablist.has(a)) return a; return null; };
-  const ref = el => el ? keyOf(el) : null;
-  const ledgerItems = [];
-  { const seen = new Set(); for (const d of shownEls) { const c = kindOf(d) === 'control' ? controlOf(d) : null, el = c || d; if (seen.has(el)) continue; seen.add(el); const pnl = panelOf(el); ledgerItems.push({ id: keyOf(el), kind: c ? 'control' : 'text', role: c ? roleOf(c) : null, name: c ? nameOf(c) : null, print: printOf(d), panel: ref(pnl), panelTablist: pnl ? ref(panelTablist.get(pnl)) : null, region: el.closest('footer, [role="contentinfo"]') ? 'footer' : el.closest('nav, [role="navigation"]') ? 'nav' : null }); } }
-  const headingItems = all.filter(h => h.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && shownEls.some(d => d === h || within(h, d))).map(h => { const pnl = panelOf(h); const sec = (() => { const box = h.closest('section, article'); if (box && [...box.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]')][0] === h) return [box]; const out = []; for (let n = h.nextElementSibling; n && !n.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && !n.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]'); n = n.nextElementSibling) out.push(n); return out; })();
-    const sectionActions = [...seenControl].filter(c => ACTIONS.includes(roleOf(c)) && sec.some(b => b === c || within(b, c))).map(c => nameOf(c));
-    return { id: keyOf(h), sectionActions, name: nameOf(h), panel: ref(pnl), panelTablist: pnl ? ref(panelTablist.get(pnl)) : null }; });
-  const disclosureItems = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => ({ id: keyOf(c), name: nameOf(c) }));
-  const compositeItems = [...groups].map(([g, items]) => ({ id: keyOf(g), role: roleOf(g), name: nameOf(g), items: [...seenControl].filter(i => ITEM[roleOf(i)] && items.includes(`${roleOf(i)}:${nameOf(i)}`) && within(g, i)).map(i => ({ id: keyOf(i), role: roleOf(i), name: nameOf(i), selected: i.getAttribute('aria-selected') === 'true' })) }));
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, headings, ledgerItems, headingItems, disclosureItems, compositeItems, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
+  const ledgerItems = [], itemOfEl = new Map();
+  for (const d of shownEls) { const c = kindOf(d) === 'control' ? controlOf(d) : null, el = c || d; if (itemOfEl.has(el)) continue; const pnl = panelOf(el), tl = pnl && panelTablist.get(pnl); const it = { id: idOf(el), kind: c ? 'control' : 'text', role: c ? roleOf(c) : null, name: c ? nameOf(c) : null, print: printOf(d), panelTablist: tl ? idOf(tl) : null }; itemOfEl.set(el, it); ledgerItems.push(it); }
+  const insideItems = region => [...itemOfEl].filter(([el]) => region.some(g => g === el || within(g, el))).map(([, it]) => it);
+  // headings, with their section: what follows up to the next heading of the same or higher rank (R28-GPT-04), and
+  // inside the section or article the heading opens
+  const levelOf = h => /^H[1-6]$/.test(h.tagName) ? Number(h.tagName[1]) : Number(h.getAttribute('aria-level')) || 2;
+  const headingItems = [];
+  all.forEach((h, k) => { if (!h.matches(HEAD) || !shownEls.some(d => d === h || within(h, d))) return; const L = levelOf(h), members = [], box = h.closest('section, article'), bound = box && box.querySelector(HEAD) === h ? box : null; for (let j = k + 1; j < all.length && !(all[j].matches(HEAD) && levelOf(all[j]) <= L); j++) if (itemOfEl.has(all[j]) && (!bound || within(bound, all[j]))) members.push(itemOfEl.get(all[j]).id); const pnl = panelOf(h), tl = pnl && panelTablist.get(pnl); headingItems.push({ id: idOf(h), name: nameOf(h), level: L, members, panelTablist: tl ? idOf(tl) : null }); });
+  const disclosureItems = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => ({ id: idOf(c), name: nameOf(c) }));
+  const compositeItems = [...groups].map(([g, items]) => ({ id: idOf(g), role: roleOf(g), name: nameOf(g), items: [...seenControl].filter(i => ITEM[roleOf(i)] && items.includes(`${roleOf(i)}:${nameOf(i)}`) && within(g, i)).map(i => ({ id: idOf(i), role: roleOf(i), name: nameOf(i), selected: i.getAttribute('aria-selected') === 'true' })) }));
+  // R28 (decision B): openers and the regions they reveal. A summary reveals its details; a button or tab with
+  // aria-controls reveals the controlled elements (all must resolve); a button with aria-expanded and no aria-controls
+  // reveals its parent when that parent holds no other aria-expanded control, else its next sibling (the disclosure
+  // pattern) when that holds none. Anything else is ambiguous (fails closed).
+  const openers = [];
+  for (const c of all) {
+    const role = roleOf(c), ids = (c.getAttribute('aria-controls') || '').split(/\s+/).filter(Boolean);
+    let region = null, kind = null;
+    if (c.matches('summary') && c.parentElement?.matches('details')) { kind = 'summary'; region = [c.parentElement]; }
+    else if ((role === 'button' || role === 'tab') && ids.length) { kind = role; const rn = c.getRootNode(), els = ids.map(i => rn.getElementById?.(i) || null); region = els.every(Boolean) ? els : 'ambiguous'; }
+    else if (role === 'button' && c.hasAttribute('aria-expanded')) { kind = 'button'; const p = c.parentElement, n = c.nextElementSibling; region = p && p.querySelectorAll('[aria-expanded]').length === 1 ? [p] : n && !n.matches('[aria-expanded]') && !n.querySelector('[aria-expanded]') ? [n] : 'ambiguous'; }
+    if (!kind) continue;
+    const sig = `${kind}|${FAM.includes(role) ? 'action' : role}|${nameOf(c)}`, shown = seenControl.has(c);
+    if (region === 'ambiguous') { openers.push({ sig, shown, ambiguous: true, members: [], items: [] }); continue; }
+    const inRegion = all.filter(e => e !== c && region.some(g => g === e || within(g, e)));
+    const content = [...new Set(inRegion.filter(e => isContent(e) && kindOf(e) !== 'media').map(e => (kindOf(e) === 'control' && controlOf(e)) || e))].filter(e => e !== c).map(e => isControl(e) ? { kind: 'control', role: roleOf(e), name: nameOf(e), print: printOf(e) } : { kind: 'text', print: printOf(e) });
+    openers.push({ sig, shown, members: inRegion.filter(e => e.hasAttribute(TAG)).map(idOf), content, items: insideItems(region).filter(it => it.id !== idOf(c)) });
+  }
+  // clipping boxes (overflow hidden or clip, holding shown content) with what they show uncut: the regions of reveals
+  const boxes = all.filter(e => holds.has(e) && clipBox(e) && [getComputedStyle(e).overflowX, getComputedStyle(e).overflowY].some(o => ['hidden', 'clip'].includes(o))).map(e => ({ sig: boxSig(e), items: insideItems([e]) }));
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, headings, ledgerItems, headingItems, disclosureItems, compositeItems, openers, boxes, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 // R23-GPT-02, R23-MIMAR-01 (Fadel's tiebreak): prefix and abbreviation matching is retired. A control at a width matches
@@ -326,95 +344,89 @@ export function coverByEquivalents(lost, from, at) {
   return covered;
 }
 
-// R26 (Fadel's root-cause fix for R23-R26): loss accounting by element identity, one ledger per screen and language.
-// The ledger is every control and text item shown at 1440, keyed by element identity (composed DOM path plus print: the
-// same node across widths and across the declared states, each state being the same document in another state). At each
-// narrow width an item is covered if
-//   (1) the same element is shown at that width in the source state, the default state or a declared state; or
-//   (2) only through the closed swap list, a DISTINCT shown element with the same accessible name: the action family
-//       (button, link, menuitem, menuitemcheckbox, menuitemradio), tabs to an accordion, tabs to headed sections, a
-//       menubar to a menu. A distinct element counts only if it is not itself a ledger item (a footer copy shown at
-//       1440 covers only itself, never a nav item).
-// Each covering element covers at most one lost item across the whole screen and all states. Tabs to headed sections:
-// every tab's panel must be a declared state (the tab selected at 1440), the narrow width must show each action as many
-// times as those panels show it in total, and a heading inside the tablist's own panels is never subtracted.
-// Two calls beyond the swap list, recorded in UNTESTED: a distinct element of the SAME role and name (a mobile-only copy
-// of a slider) and a distinct text element with the same text count too, under the same not-a-ledger-item and
-// one-cover-one rules (tab panel text moving into an accordion or a section needs this).
-const ACTION_ROLES = ACTION;
+// R28 (Mi'mar's decision): loss accounting in two steps, one group per screen and language.
+// (A) Within one state, identity is the DOM node (tagged at 1440 in the same session). An item shown at 1440 is shown at a
+//     narrow width only if the same node shows the same print there; a reworded or renamed node is lost. Inside the same
+//     state a lost item may be covered by a distinct node not shown at 1440 (one cover each): the same role family and
+//     name, or the same text; tabs adapted into an accordion (disclosures named like every tab) or into headed sections
+//     (headings named like every tab, every tab's panel declared as a state). When tabs become headed sections, a lost
+//     panel item is covered only inside that tablist's own sections (a section ends at the next heading of the same or
+//     higher rank), one to one per tablist; nothing else covers it.
+// (B) Another declared state R covers a lost item of state S at width W only through a reveal: in S at W the item sits in
+//     the region of exactly one visible opener (summary, a button or tab with aria-controls, an aria-expanded button),
+//     whose signature (kind, role family, name) is unique in S and in R, and R at W shows that region with an item of the
+//     same role family and name (or text) inside it, one to one per region. No ids are compared across states; nothing
+//     outside the revealed region (a footer, a sticky button) can cover.
+const EMPTY_LEDGER = { items: [], headings: [], disclosures: [], composites: [], openers: [], boxes: [] };
+const fam = role => ACTION.has(role) ? 'action' : role;
+const sameItem = (x, e) => x.kind === 'text' ? e.kind === 'text' && e.print === x.print : e.kind === 'control' && !!x.name && e.name === x.name && fam(e.role) === fam(x.role);
+const ledgerOf = (g, width) => ({ ...EMPTY_LEDGER, ...(g.widths?.ledgerByWidth?.[width] || {}) });
+// the one region of S at width W for a lost item, through a visible, unambiguous opener: the region holding the node
+// itself (innermost when nested), else the one region holding a hidden copy of it (a mobile menu repeating the desktop
+// nav links). Two candidate regions for a copy fail closed.
+const regionOf = (openers, x) => {
+  const ok = o => !o.ambiguous && o.shown && openers.filter(p => p.sig === o.sig).length === 1;
+  const own = openers.filter(o => o.members.includes(x.id)).sort((a, b) => a.members.length - b.members.length)[0];
+  if (own) return ok(own) ? own : null;
+  const copies = openers.filter(o => (o.content || []).some(e => sameItem(x, e)));
+  return copies.length === 1 && ok(copies[0]) ? copies[0] : null;
+};
+const regionIn = (openers, sig) => { const m = openers.filter(o => o.sig === sig); return m.length === 1 && !m[0].ambiguous ? m[0] : null; };
 export function accountLosses(group, phase = 'handoff') {
   const unresolved = [];
-  const key = i => i.id; // R27: the stable key alone (it already holds the role family and name)
-  const L = (g, width) => g.widths?.ledgerByWidth?.[width] || { items: [], headings: [], disclosures: [], composites: [] };
-  const ledgerAll = new Set(group.flatMap(g => L(g, 1440).items.map(key)));
-  const ledgerIds = new Set(group.flatMap(g => [...L(g, 1440).items.map(i => i.id), ...L(g, 1440).headings.map(h => h.id), ...L(g, 1440).disclosures.map(d => d.id), ...L(g, 1440).composites.map(c => c.id)]));
-  const used = new Map(); // `${width}|${covering id}` -> lost item key
-  const free = (width, id, lost) => !used.has(`${width}|${id}`) || used.get(`${width}|${id}`) === lost;
-  const take = (width, id, lost) => used.set(`${width}|${id}`, lost);
   const stateOf = g => g.scope?.state ?? 'default';
+  const regionUse = new Map(); // `${S}|${R}|${width}|${opener}` -> ids of R's region items already used
   for (const S of group) {
+    const at1440 = ledgerOf(S, 1440), ledger = new Set(at1440.items.map(i => i.id));
     for (const r of S.widths?.results || []) {
-      if (r.width === 1440) { r.lost = []; continue; }
-      const W = r.width, lostItems = r.lostItems || [], covered = new Map(); // key -> state
-      // (1) the same element, shown at this width in any state of the screen
-      for (const x of lostItems) { const T = group.find(g => g !== S && L(g, W).items.some(i => key(i) === key(x))); if (T) covered.set(key(x), stateOf(T)); }
-      const lostKeys = new Set(lostItems.filter(x => !covered.has(key(x))).map(key));
-      const comps1440 = L(S, 1440).composites;
-      // (2a) tablists: to an accordion, or to headed sections
-      for (const tl of comps1440.filter(c => c.role === 'tablist' && lostItems.some(x => x.id === c.id && lostKeys.has(key(x))))) {
-        const tabs = tl.items, names = tabs.map(t => t.name);
-        if (!tabs.length) continue;
-        const tlItem = lostItems.find(x => x.id === tl.id), tabItems = tabs.map(t => lostItems.find(x => x.id === t.id)).filter(Boolean);
-        const tryMatch = (pool, T) => { const picked = [], seen = new Set(); for (const n of names) { const e = pool.find(e => e.name === n && !seen.has(e.id) && free(W, e.id, `${tl.id}|${n}`)); if (!e) return null; seen.add(e.id); picked.push([e, n]); } return picked; };
-        let done = null;
-        for (const T of group) {
-          const disc = L(T, W).disclosures.filter(d => !ledgerIds.has(d.id));
-          const m = tryMatch(disc, T); if (m) { done = { T, m, how: 'accordion' }; break; }
+      if (r.width === 1440) { r.lost = []; r.equivalent = []; continue; }
+      const W = r.width, here = ledgerOf(S, W), lostItems = r.lostItems || [], covered = new Map(), used = new Set();
+      const fresh = e => !ledger.has(e.id) && !used.has(e.id);
+      const sectionTablists = new Set();
+      // (A) tabs to an accordion or to headed sections, inside this state
+      for (const tl of at1440.composites.filter(c => c.role === 'tablist' && c.items.length)) {
+        const lostTabs = [tl, ...tl.items].map(t => lostItems.find(x => x.id === t.id)).filter(Boolean); // the tablist and its tabs
+        if (!lostTabs.length) continue;
+        const pick = (pool, ok) => { const out = []; for (const t of tl.items) { const e = pool.find(e => e.name === t.name && ok(e) && !out.includes(e)); if (!e) return null; out.push(e); } return out; };
+        let m = pick(here.disclosures, fresh), how = 'accordion';
+        if (!m) {
+          const declared = tl.items.every(t => group.some(g => ledgerOf(g, 1440).composites.some(c => c.role === 'tablist' && c.name === tl.name && c.items.some(i => i.name === t.name && i.selected))));
+          m = declared ? pick(here.headings, e => !used.has(e.id) && (!ledger.has(e.id) || e.panelTablist === tl.id)) : null; how = 'headed sections';
         }
-        if (!done) {
-          // headed sections: each tab's panel declared (the tab selected at 1440 in some state of the screen)
-          const panelStates = names.map(n => group.find(g => L(g, 1440).composites.some(c => c.id === tl.id && c.items.some(t => t.name === n && t.selected))));
-          if (panelStates.every(Boolean)) {
-            const total = new Map();
-            for (const g of new Set(panelStates)) for (const i of L(g, 1440).items) if (i.kind === 'control' && ACTION_ROLES.has(i.role) && i.panelTablist === tl.id) total.set(i.name, (total.get(i.name) || 0) + 1);
-            for (const T of group) {
-              const heads = L(T, W).headings.filter(h => !ledgerIds.has(h.id) || h.panelTablist === tl.id); // a panel's own heading is never subtracted
-              const m = tryMatch(heads, T); if (!m) continue;
-              // R27-GPT-02 (Mi'mar's tiebreak): at least the panels' total of each action, counted only inside the sections
-              // matched to this tablist's tabs; same-name actions elsewhere neither help nor hurt
-              const shownActs = new Map(); for (const [e] of m) for (const n of e.sectionActions || []) shownActs.set(n, (shownActs.get(n) || 0) + 1);
-              if ([...total].every(([n, c]) => (shownActs.get(n) || 0) >= c)) { done = { T, m, how: 'headed sections' }; break; }
-            }
-          }
-        }
-        if (!done) continue;
-        for (const [e, n] of done.m) take(W, e.id, `${tl.id}|${n}`);
-        for (const x of [tlItem, ...tabItems].filter(Boolean)) { covered.set(key(x), stateOf(done.T)); lostKeys.delete(key(x)); }
-        if (done.how === 'headed sections') for (const x of lostItems) if (x.kind === 'text' && x.panelTablist === tl.id && names.includes(String(x.print).slice(5)) && lostKeys.has(key(x))) { covered.set(key(x), stateOf(done.T)); lostKeys.delete(key(x)); }
-      }
-      // (2b) a menubar to a menu (in a declared state): every menubar item matched by name in one shown menu
-      for (const mb of comps1440.filter(c => c.role === 'menubar' && lostItems.some(x => x.id === mb_id(c) && lostKeys.has(key(x))))) {
-        const T = group.find(g => L(g, W).composites.some(m => m.role === 'menu' && !ledgerIds.has(m.id) && (() => { const left = m.items.map(i => i.name); return mb.items.every(it => { const k = left.indexOf(it.name); if (k < 0) return false; left.splice(k, 1); return true; }); })()));
-        if (T) { const x = lostItems.find(x => x.id === mb.id); covered.set(key(x), stateOf(T)); lostKeys.delete(key(x)); }
-      }
-      // (2c) single items: the action family (plus same role), and text, by a distinct non-ledger element, one cover each
-      for (const x of lostItems.filter(x => lostKeys.has(key(x)))) {
-        if (x.kind === 'control' && !x.name) continue;
-        for (const T of group) {
-          const e = L(T, W).items.find(e => !ledgerIds.has(e.id) && !ledgerAll.has(key(e)) && free(W, e.id, key(x)) && (x.kind === 'text' ? e.kind === 'text' && e.print === x.print : e.kind === 'control' && e.name === x.name && (e.role === x.role || (ACTION_ROLES.has(e.role) && ACTION_ROLES.has(x.role)))));
-          if (e) { take(W, e.id, key(x)); covered.set(key(x), stateOf(T)); lostKeys.delete(key(x)); break; }
+        if (!m) continue;
+        m.forEach(e => used.add(e.id)); lostTabs.forEach(x => covered.set(x.id, stateOf(S)));
+        if (how === 'headed sections') {
+          sectionTablists.add(tl.id);
+          // the shown panel is the selected tab's: its items are covered only inside that tab's section
+          const sel = tl.items.findIndex(t => t.selected), secs = sel >= 0 ? [m[sel]] : m;
+          const pool = [...new Set(secs.flatMap(h => h.members))].map(id => here.items.find(i => i.id === id)).filter(Boolean);
+          for (const x of lostItems.filter(x => x.panelTablist === tl.id && !covered.has(x.id))) { const e = pool.find(e => fresh(e) && sameItem(x, e)); if (e) { used.add(e.id); covered.set(x.id, stateOf(S)); } else if (x.kind === 'text' && tl.items.some(t => x.print === `text:${t.name}`)) covered.set(x.id, stateOf(S)); }
         }
       }
-      // covered within the source rendering itself (a swap at this width): recorded as equivalent, not lost
-      const selfCovered = x => covered.has(key(x)) && covered.get(key(x)) === stateOf(S) && !lostItems.some(() => false);
-      r.equivalent = lostItems.filter(selfCovered).map(x => x.print);
-      r.lost = lostItems.filter(x => !selfCovered(x)).map(x => ({ print: x.print, id: x.id, reachableIn: covered.get(key(x)) ?? null }));
+      // (A) single items: a distinct node not shown at 1440, same role family and name, or same text, one cover each
+      for (const x of lostItems.filter(x => !covered.has(x.id) && !(x.panelTablist && sectionTablists.has(x.panelTablist)))) {
+        const e = here.items.find(e => fresh(e) && sameItem(x, e)); if (e) { used.add(e.id); covered.set(x.id, stateOf(S)); }
+      }
+      // (B) another declared state, only through the region a visible opener reveals
+      for (const x of lostItems.filter(x => !covered.has(x.id))) {
+        const o = regionOf(here.openers, x); if (!o) continue;
+        for (const R of group) {
+          if (R === S) continue;
+          const ro = regionIn(ledgerOf(R, W).openers, o.sig); if (!ro) continue;
+          const k = `${stateOf(S)}|${stateOf(R)}|${W}|${o.sig}`; if (!regionUse.has(k)) regionUse.set(k, new Set()); const u = regionUse.get(k);
+          const e = ro.items.find(e => !u.has(e.id) && sameItem(x, e)); if (e) { u.add(e.id); covered.set(x.id, stateOf(R)); break; }
+        }
+      }
+      // a lost composite (tablist, menubar, menu) is covered when every one of its items is (R24-GPT-03: menubar to menu)
+      for (const c of at1440.composites) { const x = lostItems.find(x => x.id === c.id); if (!x || covered.has(x.id) || !c.items.length || !c.items.every(i => !lostItems.some(l => l.id === i.id) || covered.has(i.id))) continue; const by = c.items.map(i => covered.get(i.id)).find(st => st && st !== stateOf(S)); covered.set(x.id, by || stateOf(S)); }
+      const self = x => covered.get(x.id) === stateOf(S);
+      r.equivalent = lostItems.filter(self).map(x => x.print);
+      r.lost = lostItems.filter(x => !self(x)).map(x => ({ print: x.print, id: x.id, reachableIn: covered.get(x.id) ?? null }));
       if (S.scope) for (const l of r.lost.filter(l => !l.reachableIn)) { l.deferred = phase === 'wireframe'; unresolved.push({ ...S.scope, width: W, rule: 'shown at 1440, not shown at this width', paths: [l.id], text: [l.print.slice(0, 60)], deferred: l.deferred }); }
     }
   }
   return unresolved;
 }
-const mb_id = c => c.id;
 
 // R26-MIMAR-01: pause, then finish, every running finite animation or transition of the document (open shadow roots
 // included by getAnimations({ subtree: true })); infinite ones are untouched. Returns what was moving.
@@ -456,7 +468,9 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   if (!validWidths(widths)) return { results: [], pass: false, error: 'settings.desktopWidths invalid; no width screened' };
   const results = [];
   try {
-    for (const width of [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])]) {
+    const order = [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])];
+    // R28 (decision A): 1440 first, so it tags the nodes the other widths of this page are compared by
+    for (const width of [1440, ...order.filter(x => x !== 1440)]) {
       await page.setViewportSize({ width, height });
       await page.evaluate(() => { scrollTo(0, 0); return new Promise(done => { setTimeout(done, 250); requestAnimationFrame(() => requestAnimationFrame(done)); }); }); // settle resize handlers (bounded)
       // R14-GPT-03: closed shadow roots are counted at each width, after the resize, so a root that exists only at
@@ -467,12 +481,13 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
       // between): every running finite animation and transition is paused and finished; infinite animations are left
       // alone (the marquee rule grades them). Anything that was moving is recorded as 'motion at capture'.
       // a real function (Playwright pages and the isolated probe world both evaluate fn.toString() with its argument)
-      const result = await page.evaluate(SETTLE_AND_INSPECT, { reflow: width === REFLOW_WIDTH });
+      const result = await page.evaluate(SETTLE_AND_INSPECT, { reflow: width === REFLOW_WIDTH, tag: width === 1440 });
       result.unscannedScopes.push(...closedScopes);
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
       results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', rest: !result.horizontalOverflow && result.offscreenLeft.length === 0 && result.unreachable.length === 0 && result.scrolledText.length === 0 && result.unmeasured.length === 0 && result.unscannedScopes.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
       results.at(-1).pass = results.at(-1).rest && result.clipped.length === 0; // refined below (lost content, reveals)
     }
+    results.sort((a, b) => order.indexOf(a.width) - order.indexOf(b.width));
   } finally {
     await page.setViewportSize({ width: 1440, height });
   }
@@ -488,13 +503,13 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   const shown1440 = new Set(shownAt1440), shownByWidth = {}, groupsByWidth = {};
   const groups1440 = results.find(r => r.width === 1440) || {};
   const g1440 = { composites: groups1440.composites || [], disclosures: groups1440.disclosures || [], headings: groups1440.headings || [] };
-  // R26: identity of a cut item: its owning control, else the element itself (path), with its print
-  const idOf = p => p.key;
+  // R28: identity of a cut item: its owning control, else the element itself (the tagged node)
+  const idOf = p => p.id;
   const ledger1440 = results.find(r => r.width === 1440)?.ledgerItems || [];
   const ids1440 = new Set(ledger1440.map(i => i.id));
   const ledgerByWidth = {};
   for (const r of results) {
-    ledgerByWidth[r.width] = { items: r.ledgerItems || [], headings: r.headingItems || [], disclosures: r.disclosureItems || [], composites: r.compositeItems || [] };
+    ledgerByWidth[r.width] = { items: r.ledgerItems || [], headings: r.headingItems || [], disclosures: r.disclosureItems || [], composites: r.compositeItems || [], openers: r.openers || [], boxes: r.boxes || [] };
     shownByWidth[r.width] = r.shownPrints; groupsByWidth[r.width] = { composites: r.composites || [], disclosures: r.disclosures || [], headings: r.headings || [] };
     // R22-GPT-06: a control is never excused by a truncation
     // R23-GPT-05: a clamp may only hide text: a clamp or ellipsis box whose cut set (whole or partial) holds a control fails
@@ -505,10 +520,11 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
     for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => ids1440.has(idOf(p))) ? (c.collapsed ? 'collapsed' : 'shown at 1440, lost at this width') : 'reveal';
     r.collapsedBoxes = r.clipped.filter(c => c.rule === 'collapsed'); r.clipped = r.clipped.filter(c => c.rule !== 'collapsed');
     const cutIds = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(idOf))); // reported once, by its clip rule
-    const here = new Set((r.ledgerItems || []).map(i => i.id));
-    r.lostItems = r.width === 1440 ? [] : ledger1440.filter(i => !here.has(i.id) && !cutIds.has(i.id));
+    // the same node with the same print (R28-GPT-01); a role change within the action family keeps it (R27-GPT-03)
+    const here = new Set((r.ledgerItems || []).map(i => `${i.id}|${printKey(i.print)}`));
+    r.lostItems = r.width === 1440 ? [] : ledger1440.filter(i => !here.has(`${i.id}|${printKey(i.print)}`) && !cutIds.has(i.id));
     r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated', 'collapsed'].includes(c.rule));
-    delete r.shownPrints; delete r.rest; delete r.composites; delete r.disclosures; delete r.headings; delete r.ledgerItems; delete r.headingItems; delete r.disclosureItems; delete r.compositeItems;
+    delete r.shownPrints; delete r.rest; delete r.composites; delete r.disclosures; delete r.headings; delete r.ledgerItems; delete r.headingItems; delete r.disclosureItems; delete r.compositeItems; delete r.openers; delete r.boxes;
   }
   const w = { results, shownAt1440, shownByWidth, ledgerByWidth, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
   // provisional, this rendering alone (resolveReveals redoes it across the declared states of the screen)
@@ -542,6 +558,7 @@ export function resolveReveals(scopes, phase = 'handoff') {
       const usedBy = new Map(others.map(o => [o, new Map()]));
       const usedAt = (o, width) => { const m = usedBy.get(o); if (!m.has(width)) m.set(width, new Map()); return m.get(width); };
       const done = new Map(); // owning control path -> state that showed it
+      const regionUsed = new Map(); // R28: region key -> ids of that region's items already used
       for (const c of r.clipped.filter(resolvable)) {
         // each cut element needs a declared state that shows it (a carousel's slides are shown by different slide states);
         // a reveal is shown at 1440, a truncation's full text and a collapsed box's content at the same width
@@ -551,22 +568,31 @@ export function resolveReveals(scopes, phase = 'handoff') {
         // consumes one shown control of the same name (action family) in that state; text keeps any-copy matching
         const raw = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
         const seenOwner = new Set(), items = raw.filter(p => { if (p.kind !== 'control' || !p.owner) return true; if (seenOwner.has(p.owner)) return false; seenOwner.add(p.owner); return true; });
-        // R27-GPT-04 (Mi'mar's tiebreak): what the source state already shows at that width (a footer Shop now) is set aside
-        // before name matching and can never cover a hidden item
-        const ownShown = new Set((w.ledgerByWidth?.[width]?.items || []).map(i => i.id));
-        const pool = o => o.widths?.ledgerByWidth ? (o.widths.ledgerByWidth[width]?.items || []).filter(i => !ownShown.has(i.id)).map(i => i.print) : at(o, width);
+        const pool = o => at(o, width);
         const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(pool(o), p); const k = printKey(p), n = (counts(pool(o)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
         const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
-        // R26-GPT-04 (Fadel): carousel slides are identified by element: the same element (path and print) shown by a
-        // state at that width resolves it without touching the name pool, so repeated names never collide
-        const ident = p => p.key;
-        const sameIn = (o, p) => (o.widths?.ledgerByWidth?.[width]?.items || []).some(i => i.id === ident(p));
-        // identity matches go first and take their own element out of that state's name pool
-        const byIdentity = c.rule === 'truncated' ? [] : items.map(p => { const o = others.find(o => sameIn(o, p)); if (o && isControlPrint(p.print)) { const u = usedAt(o, width); u.set(printKey(p.print), (u.get(printKey(p.print)) || 0) + 1); } if (o && p.kind === 'control' && p.owner) done.set(`${width}|${p.owner}`, o); return o || null; });
-        const pick = (o, p) => { const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; if (key && done.has(key)) return done.get(key) === o; if (!assign(o, usedAt(o, width), p.print)) return false; if (key) done.set(key, o); return true; };
+        // R28 (decision B): a reveal is covered by another state only inside the same region: the region of the item's one
+        // visible opener (matched by its signature), else this clipping box (matched by its signature, unique in both
+        // states), one to one per region. Nothing outside it (a footer Shop now) covers.
+        const mine = w.ledgerByWidth?.[width] || {};
+        const regionFor = (o, p) => {
+          const theirs = o.widths?.ledgerByWidth?.[width] || {};
+          const op = regionOf(mine.openers || [], { ...asItem(p), id: p.id });
+          if (op) { const ro = regionIn(theirs.openers || [], op.sig); return ro && { key: `${o.scope.state}|o:${op.sig}`, items: ro.items }; }
+          const a = (mine.boxes || []).filter(b => b.sig === c.sig), b = (theirs.boxes || []).filter(b => b.sig === c.sig);
+          return a.length <= 1 && b.length === 1 ? { key: `${o.scope.state}|b:${c.sig}`, items: b[0].items } : null;
+        };
+        const asItem = p => { const k = String(p.print).indexOf(':'); return p.kind === 'control' ? { kind: 'control', role: p.print.slice(0, k), name: p.print.slice(k + 1), print: p.print } : { kind: 'text', print: p.print }; };
+        const pick = (o, p) => {
+          const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; if (key && done.has(key)) return done.get(key) === o;
+          const reg = regionFor(o, p); if (!reg) return false;
+          if (!regionUsed.has(reg.key)) regionUsed.set(reg.key, new Set()); const u = regionUsed.get(reg.key);
+          const e = reg.items.find(e => !u.has(e.id) && sameItem(asItem(p), e)); if (!e) return false;
+          u.add(e.id); if (key) done.set(key, o); return true;
+        };
         let full = null;
         if (c.rule === 'truncated') for (const o of others) { const trial = new Map(usedAt(o, width)); if (items.every(p => { const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; return (key && done.get(key) === o) || assign(o, trial, p.print); })) { usedBy.get(o).set(width, trial); items.forEach(p => p.kind === 'control' && p.owner && done.set(`${width}|${p.owner}`, o)); full = o.scope.state; break; } }
-        const states = c.rule === 'truncated' ? items.map(() => full) : items.map((p, i) => (byIdentity[i] || others.find(o => pick(o, p)))?.scope.state);
+        const states = c.rule === 'truncated' ? items.map(() => full) : items.map(p => others.find(o => pick(o, p))?.scope.state);
         const by = states.every(Boolean);
         c.revealedBy = by ? [...new Set(states)] : null;
         if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: c.rule, paths: items.filter((p, i) => !states[i]).map(p => p.path), text: items.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
