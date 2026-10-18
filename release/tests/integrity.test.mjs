@@ -96,7 +96,7 @@ test('R12 M13: a non-finite or decreasing rAF reading counts as a loop', () => {
 
 test('R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state', () => {
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
-  assert.match(source, /import \{ nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom \} from '\.\/integrity\.mjs';/);
+  assert.match(source, /import \{ nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges \} from '\.\/integrity\.mjs';/);
   assert.match(source, /serviceWorkers: 'block', javaScriptEnabled \}\);/);
   assert.match(source, /await contextFor\(false\)/);
   assert.match(source, /await jsOffPage\.waitForLoadState\('load'\);/);
@@ -114,6 +114,8 @@ test('R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on 
   assert.match(source, /const reducedMotion = await motionFor\(st\.page\);/);
   assert.match(source, /&& widths\.pass && reducedMotion\.pass && doc\.lang/);
   assert.doesNotMatch(source, /rmState/, 'the weaker per-state routine is gone');
+  assert.match(source, /const snap = \(\) => pg\.evaluate\(motionSnapshot\);/, 'R14-GPT-05: the composed-tree snapshot');
+  assert.match(source, /const moved = motionChanges\(s1, s2\);/);
 });
 
 test('R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)', { skip: !haveChrome && 'test-only deps or local Chrome absent' }, async () => {

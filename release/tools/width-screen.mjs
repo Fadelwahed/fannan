@@ -124,6 +124,18 @@ export function inspectLayout({ reflow = false } = {}) {
       }
     }
   }
+  // R14-GPT-04: the viewport takes html's overflow (or body's, when html's is visible). A viewport that cannot scroll
+  // vertically (hidden/clip) loses every shown text or media box below its bottom edge unless a real inner scroller
+  // (not html, and not a propagated body) holds it. html's own fixed-height hidden box is the same case.
+  const viewportY = rootStyle.overflowY !== 'visible' ? rootStyle.overflowY : bodyPropagates && document.body ? getComputedStyle(document.body).overflowY : 'visible';
+  if (['hidden', 'clip'].includes(viewportY)) {
+    const innerScroller = el => { for (let a = parentOf(el); a && a !== document.documentElement; a = parentOf(a)) if (clipBox(a) && ['auto', 'scroll'].includes(getComputedStyle(a).overflowY)) return true; return false; };
+    for (const e of all) {
+      if (!isContent(e) || !shown(e) || innerScroller(e) || getComputedStyle(e).position === 'fixed') continue;
+      const below = contentRects(e).filter(b => b.bottom > innerHeight + 1);
+      if (below.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x: false, y: true, viewport: true, top: Math.round(Math.min(...below.map(b => b.top))) });
+    }
+  }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
   return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
@@ -150,12 +162,14 @@ export async function closedShadowRoots(page) {
 export async function screenWidths(page, widths, expected = null, height = 900) {
   if (!validWidths(widths)) return { results: [], pass: false, error: 'settings.desktopWidths invalid; no width screened' };
   const results = [];
-  const closed = await closedShadowRoots(page);
-  const closedScopes = closed === null ? [{ tag: 'DOCUMENT', src: 'closed shadow roots could not be counted' }] : closed.map(host => ({ tag: host.toUpperCase(), src: 'closed shadow root' }));
   try {
     for (const width of [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])]) {
       await page.setViewportSize({ width, height });
-      await page.evaluate(() => scrollTo(0, 0));
+      await page.evaluate(() => { scrollTo(0, 0); return new Promise(done => { setTimeout(done, 250); requestAnimationFrame(() => requestAnimationFrame(done)); }); }); // settle resize handlers (bounded)
+      // R14-GPT-03: closed shadow roots are counted at each width, after the resize, so a root that exists only at
+      // one width is still an unscanned scope there.
+      const closed = await closedShadowRoots(page);
+      const closedScopes = closed === null ? [{ tag: 'DOCUMENT', src: 'closed shadow roots could not be counted' }] : closed.map(host => ({ tag: host.toUpperCase(), src: 'closed shadow root' }));
       const result = await page.evaluate(inspectLayout, { reflow: width === REFLOW_WIDTH });
       result.unscannedScopes.push(...closedScopes);
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);

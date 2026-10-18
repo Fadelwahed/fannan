@@ -134,6 +134,20 @@ const loadingState = stateOnly.checks.states.find(x => x.state === 'loading'), d
 negative.stateIntegrity = { positional: stateOnly.checks.integrity?.status, defaultState: defaultState?.integrity?.status, loadingState: loadingState?.integrity?.status, loadingMismatch: loadingState?.integrity?.mismatches?.map(m => m.check), loadingPass: loadingState?.pass };
 if (stateOnly.checks.integrity?.status !== 'PASS' || defaultState?.integrity?.status !== 'PASS' || loadingState?.integrity?.status !== 'integrity mismatch' || loadingState.pass !== false || stateOnly.pass) throw Error('R13 N06: an integrity mismatch on a non-positional state must fail that state while the positional page passes: ' + JSON.stringify(negative.stateIntegrity));
 console.log('R13 fixture negative runs: ' + JSON.stringify(negative));
+// R14-GPT-05: timer-driven motion inside an open shadow root fails reduced motion, on the positional page and on a
+// declared state (executed checker runs; the host box does not move, there is no rAF and no Web Animation).
+const shadowMotion = '<div id="motion"></div><script>const mr = document.getElementById("motion").attachShadow({ mode: "open" }); mr.innerHTML = \'<span style="display:inline-block;width:12px;height:12px;background:#000"></span>\'; let mx = 0; setInterval(() => { mx += 4; mr.firstChild.style.transform = "translateX(" + mx + "px)"; }, 50);</script>';
+writeFileSync(handoff, JSON.stringify(authored));
+writeFileSync(html, original.replace('</main>', shadowMotion + '</main>'));
+const { result: movingPage } = runChecker(join(output, 'evidence-shadow-motion-page'), true);
+writeFileSync(html, original);
+writeFileSync(statePage, original.replace('</main>', shadowMotion + '</main>'));
+writeFileSync(handoff, JSON.stringify(twoStates));
+const { result: movingState } = runChecker(join(output, 'evidence-shadow-motion-state'), true);
+const movingLoading = movingState.checks.states.find(x => x.state === 'loading'), movingDefault = movingState.checks.states.find(x => x.state === 'default');
+const motionRuns = { page: { pass: movingPage.checks.reducedMotion?.pass, changed: movingPage.checks.reducedMotion?.elementsChangedOver700ms, raf: movingPage.checks.reducedMotion?.rafCallsOver700ms }, state: { positional: movingState.checks.reducedMotion?.pass, defaultState: movingDefault?.reducedMotion?.pass, loading: movingLoading?.reducedMotion?.pass, loadingChanged: movingLoading?.reducedMotion?.elementsChangedOver700ms, loadingStatePass: movingLoading?.pass } };
+console.log('R14 fixture shadow-motion runs: ' + JSON.stringify(motionRuns));
+if (movingPage.checks.reducedMotion?.pass !== false || !(movingPage.checks.reducedMotion.elementsChangedOver700ms > 0) || movingPage.pass || movingState.checks.reducedMotion?.pass !== true || movingDefault?.reducedMotion?.pass !== true || movingLoading?.reducedMotion?.pass !== false || movingLoading.pass !== false) throw Error('R14-GPT-05: shadow-root timer motion must fail reduced motion on the page and on the state that has it: ' + JSON.stringify(motionRuns));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');

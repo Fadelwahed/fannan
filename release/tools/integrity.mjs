@@ -51,12 +51,17 @@ export function contrastProbe() {
   const over = (top, under) => top.slice(0, 3).map((c, i) => c * top[3] + under[i] * (1 - top[3])).concat(1);
   const lum = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
   let failures = 0, unknown = 0, checked = 0;
-  for (const el of document.querySelectorAll('body *')) {
+  // R14-GPT-02: the composed tree (open shadow roots); backgrounds resolve through slots and shadow hosts; text is
+  // rendered when its own text ranges have area (display:contents and zero-size boxes included).
+  const up = a => a.assignedSlot ?? a.parentElement ?? (a.getRootNode() instanceof ShadowRoot ? a.getRootNode().host : null);
+  const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
+  const textArea = el => [...el.childNodes].some(n => { if (n.nodeType !== 3 || !n.nodeValue.trim()) return false; const range = document.createRange(); range.selectNodeContents(n); return [...range.getClientRects()].some(b => b.width > 0 && b.height > 0); });
+  for (const el of all) {
     if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
-    const c = getComputedStyle(el), r = el.getBoundingClientRect();
-    if (!r.width || !r.height || c.visibility === 'hidden' || c.display === 'none') continue;
+    const c = getComputedStyle(el);
+    if (c.visibility !== 'visible' || c.display === 'none' || !textArea(el)) continue;
     const layers = []; let known = true;
-    for (let a = el; a; a = a.parentElement) { const s = getComputedStyle(a); if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg) { known = false; break; } if (bg[3] > 0) layers.push(bg); if (bg[3] >= 1) break; }
+    for (let a = el; a; a = up(a)) { const s = getComputedStyle(a); if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg) { known = false; break; } if (bg[3] > 0) layers.push(bg); if (bg[3] >= 1) break; }
     const fg = parse(c.color);
     if (!known || !fg) { unknown++; continue; }
     const bg = layers.reverse().reduce((under, top) => over(top, under), [255, 255, 255, 1]);
@@ -70,12 +75,16 @@ export function contrastProbe() {
 // Browser side: what makes two renderings equivalent content. R13 N13: each visible copy slot with its normalised
 // visible text, every visible heading with its level and text (open shadow roots included), the h1 count, lang and
 // dir; a JavaScript-off skeleton with empty fixed-size slots is therefore not equivalent.
+// R14-GPT-01: an element is rendered when its computed style shows it and it has a box with area or rendered text
+// ranges, so a display:contents or zero-size slot is compared by its text too (empty without JavaScript = differs).
 export function contentProbe() {
-  const shown = e => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; };
+  const rangeArea = e => { const range = document.createRange(); range.selectNodeContents(e); return [...range.getClientRects()].some(b => b.width > 0 && b.height > 0); };
+  const shown = e => { const c = getComputedStyle(e); if (c.visibility !== 'visible' || c.display === 'none') return false; const r = e.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || rangeArea(e); };
   const norm = x => (x || '').replace(/\s+/g, ' ').trim();
+  const text = e => norm(e.innerText) || (getComputedStyle(e).display === 'contents' ? norm([...e.childNodes].map(n => n.nodeType === 3 ? n.nodeValue : n.innerText || '').join(' ')) : '');
   const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
-  const slots = all.filter(e => e.hasAttribute('data-copy-slot') && shown(e)).map(e => [e.getAttribute('data-copy-slot'), norm(e.innerText)]).sort((a, b) => (a[0] + '\u0000' + a[1]).localeCompare(b[0] + '\u0000' + b[1]));
-  const headings = all.filter(e => /^H[1-6]$/.test(e.tagName) && shown(e)).map(e => [Number(e.tagName[1]), norm(e.innerText)]);
+  const slots = all.filter(e => e.hasAttribute('data-copy-slot') && shown(e)).map(e => [e.getAttribute('data-copy-slot'), text(e)]).sort((a, b) => (a[0] + '\u0000' + a[1]).localeCompare(b[0] + '\u0000' + b[1]));
+  const headings = all.filter(e => /^H[1-6]$/.test(e.tagName) && shown(e)).map(e => [Number(e.tagName[1]), text(e)]);
   return { slots, headings, h1: all.filter(e => e.tagName === 'H1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
 }
 
@@ -92,6 +101,18 @@ export function rafCounterInit() {
   const callNative = Function.prototype.call.bind(window.requestAnimationFrame);
   lock(window, 'requestAnimationFrame', { value: function requestAnimationFrame(cb) { try { tick(); } catch {} return callNative(window, cb); }, writable: false });
 }
+
+// R14-GPT-05: browser side, the reduced-motion snapshot. Every element of the composed tree (open shadow roots
+// included), keyed by its composed path (tag:index at each level, '#shadow' into a shadow root), with its rounded box,
+// transform and opacity, so two snapshots compare the same elements.
+export function motionSnapshot() {
+  const out = [];
+  const walk = (root, path) => { [...root.children].forEach((e, i) => { const id = `${path}/${e.tagName}:${i}`; const r = e.getBoundingClientRect(), c = getComputedStyle(e); out.push(id + '=' + [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height), c.transform, c.opacity].join('|')); if (e.shadowRoot) walk(e.shadowRoot, id + '#shadow'); walk(e, id); }); };
+  if (document.body) walk(document.body, 'body');
+  return out;
+}
+// R14-GPT-05: elements whose entry changed between two snapshots, plus elements that disappeared.
+export const motionChanges = (s1, s2) => { const before = new Set(s1); return s2.filter(v => !before.has(v)).length + Math.max(0, s1.length - s2.length); };
 
 // R12 M13: a rAF reading that is not a finite non-negative number (tampering or a missing counter) counts as a loop.
 export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Number.isFinite(after) && after >= before) || after - before > 10;

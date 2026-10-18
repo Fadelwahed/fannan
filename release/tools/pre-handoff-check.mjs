@@ -20,7 +20,7 @@ import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.m
 import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
 import { axeOptions } from './axe-tags.mjs';
 import { isolatedPage } from './probe-world.mjs';
-import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom } from './integrity.mjs';
+import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
 import { scopeOf, resolveScoped } from './exceptions.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
@@ -210,12 +210,12 @@ const motionFor = async pagePath => {
     await c.route('**/*', routeLocal);
     const main = await c.newPage(), pg = await isolatedPage(main);
     await pg.goto(pathToFileURL(resolve(pagePath)).href); await pg.waitForTimeout(300);
-    const snap = () => pg.evaluate(() => [...document.querySelectorAll('body *')].map(e => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e); return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height), c.transform, c.opacity].join('|'); }));
+    const snap = () => pg.evaluate(motionSnapshot); // R14-GPT-05: composed tree, stable composed-path keys (integrity.mjs)
     const s1 = await snap(); const raf1 = await main.evaluate(() => window.__raf);
     await pg.waitForTimeout(700);
     const s2 = await snap(); const raf2 = await main.evaluate(() => window.__raf);
     const waapi = await pg.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
-    const moved = s1.reduce((n, v, k) => n + (v !== s2[k] ? 1 : 0), 0) + Math.abs(s1.length - s2.length);
+    const moved = motionChanges(s1, s2);
     const rafLoop = rafLoopFrom(raf1, raf2); // a non-finite or decreasing reading counts as a loop
     return { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: Number.isFinite(raf2 - raf1) ? raf2 - raf1 : null, rafLoop, pass: waapi === 0 && moved === 0 && !rafLoop };
   } catch (e) { return { pass: false, error: `reduced-motion check could not run: ${e.message}` }; }
