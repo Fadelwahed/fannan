@@ -23,6 +23,13 @@ def sha(path):
 
 
 NON_PACKAGE = {'__pycache__', 'node_modules', '.git'}  # R8 PORT-04, ported from codex/fannan-r3-review 2733317
+# R11 (Asad panel C4): secret-bearing and junk names are never packaged or hashed (environment files, OS junk, private
+# keys and certificates, credential dotfiles, editor swap and backup files).
+JUNK_OR_SECRET = re.compile(r'(?:\.env(?:\..*)?|\.DS_Store|Thumbs\.db|desktop\.ini|\.npmrc|\.netrc|\.pypirc|id_(?:rsa|dsa|ecdsa|ed25519)(?:\.pub)?|.*\.(?:pem|key|p12|pfx|swp|swo)|.*~)')
+
+
+def junk_or_secret(name):
+    return any(JUNK_OR_SECRET.fullmatch(part) for part in Path(name).parts)
 
 
 def files(root):
@@ -32,6 +39,9 @@ def files(root):
     bad = [p for p in paths if NON_PACKAGE & set(p.relative_to(root).parts) or p.suffix == '.pyc']
     if bad:
         raise ValueError('cache, dependency or git entry in package input: ' + bad[0].relative_to(root).as_posix())
+    secret = [p for p in paths if junk_or_secret(p.relative_to(root).as_posix())]
+    if secret:
+        raise ValueError('secret-bearing or junk file in package input: ' + secret[0].relative_to(root).as_posix())
     return [p for p in paths if p.is_file()]
 
 
@@ -152,6 +162,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r9')  # R9 before/after evidence (Codex round 4)
     if (ROOT / 'test-results/r10').is_dir():
         paths += files(ROOT / 'test-results/r10')  # R10 before/after evidence (Argon round 5)
+    if (ROOT / 'test-results/r11').is_dir():
+        paths += files(ROOT / 'test-results/r11')  # R11 before/after evidence (Asad panel round 5)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 
@@ -182,6 +194,9 @@ def build(start):
     # ARGON-R5-04: every path the registry will hash must already be a regular file reached without a symlink, except
     # the outputs this build writes; a deleted or symlinked changed path fails here, not after five outputs were replaced.
     written = set(GENERATED) | {ARCHIVE, REPORT, REGISTRY}
+    junk = [name for name in names if junk_or_secret(name)]  # R11 C4: never hash an environment, key or junk file
+    if junk:
+        raise ValueError('secret-bearing or junk file among the changed paths: ' + junk[0])
     unhashable = [name for name in names if name not in written and not regular_in_root(name)]
     if unhashable:
         raise ValueError('changed path missing, symlinked or not a regular file (registry input): ' + unhashable[0])

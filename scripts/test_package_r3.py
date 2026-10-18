@@ -125,6 +125,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r9/') for n in names), 'R9 evidence is archived like R4-R8')
         if (ROOT / 'test-results/r10').is_dir():
             self.assertTrue(any(n.startswith('test-results/r10/') for n in names), 'R10 evidence is archived like R4-R9')
+        if (ROOT / 'test-results/r11').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r11/') for n in names), 'R11 evidence is archived like R4-R10')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -265,6 +267,41 @@ class RegistryInputTests(unittest.TestCase):
         body = src[src.index('def build(start):'):src.index('def verify_release_archive')]
         self.assertEqual(body.count('coverage(start)'), 1, 'one coverage list, reused for the registry')
         self.assertLess(body.index('coverage(start)'), body.index('write_bytes('))
+
+
+class JunkAndSecretTests(unittest.TestCase):
+    """R11 (Asad panel C4): secret-bearing or junk files are never packaged or hashed: .env, .env.*, .DS_Store,
+    Thumbs.db, keys and editor swap files are refused in package input and among the changed (registry) paths."""
+    BAD = ['.env', '.env.local', '.env.example', '.DS_Store', 'Thumbs.db', 'desktop.ini', 'id_rsa', 'id_ed25519.pub', 'server.pem', 'tls.key', 'cert.p12', 'x.pfx', '.npmrc', '.netrc', '.pypirc', 'notes.md.swp', 'draft.md~']
+
+    def test_files_refuses_junk_and_secret_names(self):
+        for name in self.BAD:
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                (root / 'sub').mkdir()
+                (root / 'ok.md').write_text('ok')
+                (root / 'sub' / name).write_text('x')
+                with self.assertRaises(ValueError, msg=name) as caught:
+                    package.files(root)
+                self.assertIn(name, str(caught.exception))
+
+    def test_ordinary_names_still_pass(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            for name in ['environment.md', 'keys-and-tokens.md', 'env.json', 'pem-notes.txt']:
+                (root / name).write_text('x')
+            self.assertEqual(len(package.files(root)), 4)
+
+    def test_build_refuses_a_junk_changed_path_before_any_write(self):
+        def damage(root):
+            (root / 'docs').mkdir(); (root / 'docs/.DS_Store').write_bytes(b'x')
+        message = RegistryInputTests('run_build').run_build(['docs/.DS_Store'], damage)
+        self.assertIn('docs/.DS_Store', message)
+
+    def test_live_changed_paths_are_clean(self):
+        if not (ROOT / '.git').exists():
+            self.skipTest('needs a git checkout')
+        self.assertEqual([n for n in package.changed('9ee1ca6aaa4a257cb84fb7381056005f48554bf3') if package.junk_or_secret(n)], [])
 
 if __name__ == '__main__':
     unittest.main()
