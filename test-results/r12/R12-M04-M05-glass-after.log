@@ -1,0 +1,48 @@
+# R12 after: R12 sources
+TAP version 13
+# Subtest: R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only)
+ok 1 - R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only)
+  ---
+  duration_ms: 1478.549722
+  type: 'test'
+  ...
+# Subtest: R11 panel D: glass inside open shadow roots, same-origin frames and constructed stylesheets is counted, also from the isolated probe world (real Chrome, test-only)
+ok 2 - R11 panel D: glass inside open shadow roots, same-origin frames and constructed stylesheets is counted, also from the isolated probe world (real Chrome, test-only)
+  ---
+  duration_ms: 1828.68368
+  type: 'test'
+  ...
+# Subtest: R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops
+ok 3 - R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops
+  ---
+  duration_ms: 1.122285
+  type: 'test'
+  ...
+# Subtest: R12 M04/M05: served HTML/JS/SVG script forms and CSS-escaped property names count as glass; only an explicit none does not
+ok 4 - R12 M04/M05: served HTML/JS/SVG script forms and CSS-escaped property names count as glass; only an explicit none does not
+  ---
+  duration_ms: 1.087284
+  type: 'test'
+  ...
+# Subtest: R12 M05: real Chrome: an escaped root-element glass rule in a stylesheet is counted through the CSSOM (test-only)
+ok 5 - R12 M05: real Chrome: an escaped root-element glass rule in a stylesheet is counted through the CSSOM (test-only)
+  ---
+  duration_ms: 352.972852
+  type: 'test'
+  ...
+1..0
+# Subtest: release/tests/probe-world.test.mjs
+ok 2 - release/tests/probe-world.test.mjs
+  ---
+  duration_ms: 46.285912
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3725.265257

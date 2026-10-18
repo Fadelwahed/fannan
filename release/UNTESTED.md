@@ -1,5 +1,18 @@
 # R3 checks not established
 
+## R12 additions (Mi'mar, 18 October 2026, panel round 12)
+
+All browser checks below ran in Chrome 155 headless only.
+
+- **Accent area and stray colours (M19, closed):** the accent check binds the declared variable to the approved token only. Accent area and coverage are approximate (a DOM background-area proxy) and are decided by screenshots and the manual `accent-area` and `palette` reviews (panel A). A page that paints large areas in another, unapproved colour is NOT failed automatically. UNTESTED by design.
+- **Frames (M03):** any frame (same-origin, `data:`, sandboxed or cross-origin) fails the final handoff and is recorded as DEFERRED in wireframes, because axe and the probes run in the main frame only. The R11 line below that called such frames "blocked" was wrong: they were recorded, not gated. Frame content is still not inspected (a frame is a stop, not a scan).
+- **Raw glass (M04/M05):** served HTML, JavaScript and SVG count any `backdrop-filter`/`-webkit-backdrop-filter` mention not followed by `: none`, and the identifiers `backdropFilter`/`webkitBackdropFilter`; CSS escapes are resolved first; ordinary CSSOM sheets are read in the page. UNTESTED: glass built from strings at run time (`'backdrop' + 'Filter'`), and sheets whose rules the page cannot read (left to the served-file scan).
+- **Integrity (M06-M08, M17):** the full hard-fail vector (glass, h1, placeholders, centred, type sizes, hero gradient, purple-blue, icon rows, accent, spacing off-scale, overflow, clipped, offscreen-left, unreachable, scrolled text, unmeasured, reflow, contrast) is compared page world vs probe world and with JavaScript off, on the positional page and on every declared state. Contrast is a custom diagnostic (text vs resolved solid background, 4.5:1 / 3:1), not axe: axe cannot run with JavaScript off. JavaScript-off content (visible copy slots, h1 count, lang, dir) must match or the cross-check is INCOMPLETE. UNTESTED: text over images or gradients in the contrast diagnostic (counted as unknown, not failed); the native-function check stays a heuristic.
+- **320 px reflow (M01, M02, M09-M11, M14):** scrollers are measured with their own text, open shadow roots and same-origin frames; content outside a scroller's reachable range is `unreachable` at every width; keyboard use means an explicit `tabindex >= 0` scroller or usable targets that step across the whole extent; candidates and their exceptions are scoped to screen/state/lang. UNTESTED: closed shadow roots, `overflow: overlay`, scroll snapping, and whether a resolved candidate genuinely needs 2D layout (the reviewer's decision).
+- **Reduced motion (M13):** the rAF counter is private and the wrapper non-writable; a non-finite or decreasing reading counts as a loop. UNTESTED: animation driven by timers or CSS that a page starts after the 700 ms window.
+- **Spacing (M15, M20):** `html` and `body` margins are screened; every `data-fannan-spacing-exception` needs a scoped handoff `spacingExceptions` entry naming the approver. UNTESTED: exceptions on pseudo-elements.
+- **Package (M12):** environment files (`.env*`), editor locks (`.#*`), credential folders (`.ssh`, `.gnupg`, `.aws`) and credential names (`credentials`, `secrets`, `service-account`, `token`, `.npmrc`, `.netrc`, `.pypirc`, `.git-credentials`) are refused with any suffix. Plural `tokens` stays allowed because design-token files are named `tokens.json`. UNTESTED: secrets inside ordinarily named files (names only; the secret grep is manual).
+
 ## R11 additions (Mi'mar, 18 October 2026, Asad panel round 5 and panel D1 decisions)
 
 All browser checks below ran in Chrome 155 headless only.

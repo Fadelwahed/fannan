@@ -1,5 +1,27 @@
 # R3 executed verification — 17 October 2026
 
+## R12 executed verification (Mi'mar's box, 18 October 2026, about 5:10 AM UTC+3)
+
+Panel round 12 (M01-M18 agreed, M20 and M21 fixed, M19 closed; `reviews/panel-r12/`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0. Test-only deps: the existing locked tree, no new installs.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 88 PASS, 0 FAIL, 0 skipped | `test-results/r12/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 60 PASS, 0 FAIL, 28 SKIPPED (need deps or Chrome) | `test-results/r12/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r12/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r12/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 27 PASS / 23 PASS + 4 SKIPPED | `test-results/r12/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r12/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=35 (R11's 34 + `tools/exceptions.mjs`) sh=4 py=4 plus the launcher, 0 failures | `test-results/r12/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r12/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 82 PASS, 6 FAIL: the same six Style Dictionary tests that fail on Node 20 in R11 (it needs Node 22); not a gate | `test-results/r12/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r12/local-fixture.log`). From R12 the fixture ASSERTS, and prints in its log, what this file claims: integrity PASS on the page and on the declared state (full vector, page world = probe world = JavaScript off, same content), `glassSource` pass, accent PASS on the page and on the state, frames PASS, `spacingExceptions` PASS. The evidence JSON is kept as `test-results/r12/R12-fixture-evidence-valid.json`. The R11 entry below stated accent, integrity and `glassSource` as passing on the fixture without the fixture asserting them (M18); those values were true in that run's evidence but were not checked, so they were an unasserted claim.
+
+Per-finding before/after logs: `test-results/r12/R12-*-before.log` / `-after.log` (before = R12 tests against the R11 sources, d8408d4). Chrome reproduction of the browser items: `test-results/r12/R12-chrome-repro-before.log` / `-after.log` (script `repro.mjs.txt`). Harnesses: `before-after-harness.sh.txt`, `suites-harness.sh.txt`.
+
 ## R11 executed verification (Mi'mar's box, 18 October 2026, about 4:20 AM UTC+3)
 
 Asad panel round 5 (C1, S2/C6, S3, C3, C4, C5, S7 and the R9 syntax count), built to the panel D1 decisions (A-D, T1-T4; `reviews/panel-d1/`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Run on a clean tree (everything committed), so every counted file is tracked.
