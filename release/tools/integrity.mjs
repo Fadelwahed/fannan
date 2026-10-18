@@ -182,18 +182,31 @@ export function contentProbe() {
 }
 // R20-GPT-05: a valid requiresScript state is compared with the default state's JavaScript-off rendering. Content the
 // scripted state shows that the baseline lacks is removed only when it belongs to an approved copy slot placed in this
-// state (slot text, and headings and controls owned by such a slot); anything else still makes the content differ.
+// state (slot text, and headings and controls owned by such a slot) that the baseline does not show at all; anything
+// else still makes the content differ. R21-GPT-05 (Fadel's tiebreak, N14 kept): a default slot the scripted state no
+// longer shows is removed from the baseline only when the copy deck does NOT place it in this state (the state replaces
+// it with an approved slot of its own); a default slot placed in this state, and any change to copy both renderings
+// show, still differ (INCOMPLETE).
 export function stateOnlyContent(probe, baseline, allowed = []) {
   const allow = new Set(allowed), key = x => JSON.stringify(x);
   const left = list => { const m = new Map(); for (const x of list || []) m.set(key(x), (m.get(key(x)) || 0) + 1); return m; };
   const take = (m, x) => { const n = m.get(key(x)) || 0; if (n > 0) { m.set(key(x), n - 1); return true; } return false; };
-  const removed = [], bs = left(baseline.slots), bh = left(baseline.headings), bc = left(baseline.controls);
-  const slots = probe.slots.filter(x => take(bs, x) || !allow.has(x[0]) || (removed.push({ slot: x[0], text: x[1] }), false));
+  const baseIds = new Set((baseline.slots || []).map(x => x[0])), probeIds = new Set((probe.slots || []).map(x => x[0]));
+  const added = id => allow.has(id) && !baseIds.has(id), gone = id => !!id && baseIds.has(id) && !probeIds.has(id) && !allow.has(id);
+  const removed = [], replaced = [], bs = left(baseline.slots), bh = left(baseline.headings), bc = left(baseline.controls);
+  const slots = probe.slots.filter(x => take(bs, x) || !added(x[0]) || (removed.push({ slot: x[0], text: x[1] }), false));
   const ho = probe.owners?.headings || [], co = probe.owners?.controls || [];
   let h1 = probe.h1;
-  const headings = probe.headings.filter((x, i) => take(bh, x) || !allow.has(ho[i]) || (removed.push({ slot: ho[i], heading: x[1] }), x[0] === 1 && h1--, false));
-  const controls = (probe.controls || []).filter((x, i) => take(bc, x) || !allow.has(co[i]) || (removed.push({ slot: co[i], control: x[1] }), false));
-  return { content: { slots, headings, controls, h1, lang: probe.lang, dir: probe.dir }, removed };
+  const headings = probe.headings.filter((x, i) => take(bh, x) || !added(ho[i]) || (removed.push({ slot: ho[i], heading: x[1] }), x[0] === 1 && h1--, false));
+  const controls = (probe.controls || []).filter((x, i) => take(bc, x) || !added(co[i]) || (removed.push({ slot: co[i], control: x[1] }), false));
+  const bho = baseline.owners?.headings || [], bco = baseline.owners?.controls || [];
+  let bh1 = baseline.h1;
+  const base = {
+    slots: (baseline.slots || []).filter(x => !gone(x[0]) || (replaced.push({ slot: x[0], text: x[1] }), false)),
+    headings: (baseline.headings || []).filter((x, i) => !gone(bho[i]) || (replaced.push({ slot: bho[i], heading: x[1] }), x[0] === 1 && bh1--, false)),
+    controls: (baseline.controls || []).filter((x, i) => !gone(bco[i]) || (replaced.push({ slot: bco[i], control: x[1] }), false)),
+  };
+  return { content: { slots, headings, controls, h1, lang: probe.lang, dir: probe.dir }, baseline: { ...base, h1: bh1, lang: baseline.lang, dir: baseline.dir }, removed, replaced };
 }
 
 // R12 M13: the reduced-motion rAF counter, installed by addInitScript in every frame. The counter is private (a
@@ -271,8 +284,8 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   // R20-GPT-05: baseline = { page, allowedSlots } when jsOff is the default state's JavaScript-off rendering
   const strip = c => ({ slots: c.slots, headings: c.headings, controls: c.controls || [], h1: c.h1, lang: c.lang, dir: c.dir });
   const reduced = baseline ? stateOnlyContent(probe.content, jsOff.content, baseline.allowedSlots) : null;
-  if (reduced) base.stateOnlyContent = reduced.removed;
-  const sameContent = baseline ? canon(strip(jsOff.content)) === canon(strip(reduced.content)) : canon(jsOff.content) === canon(probe.content);
+  if (reduced) { base.stateOnlyContent = reduced.removed; base.replacedDefaultContent = reduced.replaced; }
+  const sameContent = baseline ? canon(strip(reduced.baseline)) === canon(strip(reduced.content)) : canon(jsOff.content) === canon(probe.content);
   if (!sameContent) differences.push({ check: 'content', detail: `with JavaScript off the content differs (slots ${jsOff.content.slots.length} vs ${probe.content.slots.length}, headings ${jsOff.content.headings.length} vs ${probe.content.headings.length}, controls ${(jsOff.content.controls || []).length} vs ${(probe.content.controls || []).length}, h1 ${jsOff.content.h1} vs ${probe.content.h1}, ${jsOff.content.lang}/${jsOff.content.dir} vs ${probe.content.lang}/${probe.content.dir}; text compared per slot and heading)` });
   for (const k of Object.keys(VECTOR)) {
     if (worseOff(k, probe.vector, jsOff.vector)) differences.push({ check: k, detail: `with JavaScript off ${k} is ${canon(jsOff.vector[k])} vs ${canon(probe.vector[k])}` });

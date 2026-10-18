@@ -516,15 +516,17 @@ export async function glyphContrast(pg, paths, opts = GLYPH) {
 }
 // R19b: is a `requiresScript` claim true? The state renders with JavaScript off when every text the scripted rendering
 // shows is shown by the JavaScript-off rendering as well; a claim on such a state is false and fails as an integrity
-// mismatch. Without both scans the claim cannot be checked (not valid). R20-GPT-04: texts are compared by fingerprint
-// (the normalized text of each shown text run, counted), not by composed path, so a script that only moves or wraps
+// mismatch. Without both scans the claim cannot be checked (not valid). R20-GPT-04, R21-GPT-06: texts are compared as
+// counted word tokens of every shown text run, not by composed path or run boundaries, so a script that only moves or wraps
 // the same content (shifting element indices) cannot make a static state look script-only.
 export function requiresScriptCheck({ declaration = null, integrity = null } = {}) {
   const claimed = declaration?.requiresScript === true;
   if (!claimed) return { claimed: false, valid: false, rendersWithoutScript: null };
   const on = integrity?.probeWorld?.visibility?.byElement, off = integrity?.jsOff?.visibility?.byElement;
   if (!on || !off) return { claimed, valid: false, rendersWithoutScript: null, reason: 'visibility scans missing' };
-  const prints = by => Object.entries(by).flatMap(([k, e]) => (Array.isArray(e.texts) && e.texts.length ? e.texts : [`path:${k}`]).map(t => String(t).replace(/\s+/g, ' ').trim()).filter(Boolean));
+  // R21-GPT-06: the shown texts are compared as one counted stream of normalised word tokens, so a script that splits a
+  // text run into inline elements (Static <span>state</span> text) still shows the same tokens
+  const prints = by => Object.entries(by).flatMap(([k, e]) => (Array.isArray(e.texts) && e.texts.length ? e.texts : [`path:${k}`]).flatMap(t => String(t).normalize('NFC').toLowerCase().split(/[\s\p{P}]+/u)).filter(Boolean));
   const offCount = new Map(); for (const t of prints(off)) offCount.set(t, (offCount.get(t) || 0) + 1);
   const shown = prints(on), only = shown.filter(t => { const n = offCount.get(t) || 0; if (n > 0) { offCount.set(t, n - 1); return false; } return true; });
   const rendersWithoutScript = shown.length > 0 && only.length === 0;

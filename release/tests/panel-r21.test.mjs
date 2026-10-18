@@ -200,3 +200,33 @@ test('R21-GPT-02: real Chrome: the contrast resolver grades every glyph against 
   }
   assert.deepEqual(out, { oneWordC8: { pass: false, faintBelowAA: true }, oneWordE8: { pass: false, faintBelowAA: true }, noPatch: { pass: true, faintBelowAA: false }, scrimHero: { pass: true, faintBelowAA: false }, smallGrey: { pass: true, faintBelowAA: false } });
 }));
+
+test('R21-GPT-05: real Chrome: a script-only state may replace a default slot with an approved slot when the copy deck places the new slot in that state and not the old one; a replaced slot still placed there, changed shared copy and an unslotted replacement heading stay INCOMPLETE (N14 kept) (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const def = '<p data-copy-slot="description">Default description of the search page.</p><button data-copy-slot="start">Start</button>';
+  const offDefault = await measure((await open(W(def), false)).probe, { topLayer: false });
+  const run = async (script, allowedSlots) => {
+    const on = await measure((await open(W(def, script))).probe, { topLayer: true });
+    const r = compareIntegrity({ probe: on, page: on, jsOff: offDefault, tamperSigns: [], scope: { screen: 'home', state: 'results', lang: 'en' }, baseline: { page: 'default.html', state: 'default', allowedSlots } });
+    return { status: r.status, content: r.mismatches.some(m => m.check === 'content') };
+  };
+  const replace = 'const d = document.querySelector("[data-copy-slot=description]"); const n = document.createElement("p"); n.setAttribute("data-copy-slot", "results-note"); n.textContent = "Twelve results match your search."; d.replaceWith(n);';
+  assert.deepEqual({
+    replaced: await run(replace, ['start', 'results-note']),
+    oldStillPlaced: await run(replace, ['start', 'results-note', 'description']),
+    newNotPlaced: await run(replace, ['start']),
+    sharedChanged: await run(replace + 'document.querySelector("[data-copy-slot=start]").textContent = "Begin";', ['start', 'results-note']),
+    unslotted: await run('const d = document.querySelector("[data-copy-slot=description]"); const n = document.createElement("h2"); n.textContent = "Twelve results match your search."; d.replaceWith(n);', ['start', 'results-note']),
+  }, { replaced: { status: 'PASS', content: false }, oldStillPlaced: { status: 'INCOMPLETE', content: true }, newNotPlaced: { status: 'INCOMPLETE', content: true }, sharedChanged: { status: 'INCOMPLETE', content: true }, unslotted: { status: 'INCOMPLETE', content: true } });
+}));
+
+test('R21-GPT-06 (P3): real Chrome: the requiresScript claim compares counted word tokens, so a script that splits a text run into inline elements cannot make a static state look script-only (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const check = async html => {
+    const on = await measure((await open(html)).probe, { topLayer: true }), off = await measure((await open(html, false)).probe, { topLayer: true });
+    const c = visibility.requiresScriptCheck({ declaration: { state: 'dialog-open', requiresScript: true, trigger: 'opens on click' }, integrity: { probeWorld: on.vector, jsOff: off.vector } });
+    return { valid: c.valid, rendersWithoutScript: c.rendersWithoutScript };
+  };
+  assert.deepEqual({
+    split: await check(W('<p id="st">Static state text</p>', 'document.querySelector("#st").innerHTML = "Static <span>state</span> text"')),
+    scripted: await check(W('<p>Static state text</p><dialog id="d"><p>State confirmed</p></dialog>', 'd.showModal()')),
+  }, { split: { valid: false, rendersWithoutScript: true }, scripted: { valid: true, rendersWithoutScript: false } });
+}));
