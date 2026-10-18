@@ -1,5 +1,22 @@
 # R3 executed verification — 17 October 2026
 
+## R26 executed verification (Mi'mar's box, 18 October 2026, about 9:45 PM UTC+3)
+
+Panel round 26 (4 P2: R26-GPT-01 to R26-GPT-04; P3 R26-MIMAR-01; `reviews/panel-r26/`). Fadel's root-cause instruction applied: loss accounting by element identity in `width-screen.mjs` (one ledger per screen; the closed swap list; one cover per element; collapsed boxes as display:none; carousel slides by element), plus settled motion. Serial runs; the shared box spiked to load 93 during the first suite run (other processes).
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps), after the probe-world fix | 1 | 179 PASS, 1 FAIL of 180: the R18 autoplay integrity test (121 s, hidden 1 vs 2), the known timing failure; it passes in isolation (`node-r18-rerun.log`). The earlier run of the same code minus the probe-world fix and the doc test: 179/179 | `test-results/r26/node.log` |
+| R26 Chrome before (R26 tests against 49169df sources) | 1 | 65 PASS, 6 FAIL: the five R26 tests at their assertions (5 ERR_ASSERTION) plus R25-GPT-04 (its expectation changed in R26), which hit a `page.goto` timeout in this run | `test-results/r26/R26-chrome-before.log` |
+| without deps; Python guard; `revisions/r2`; package tests (git / no-git); self-test; syntax | 0 | 87 PASS, 0 FAIL without deps; the rest pass | `test-results/r26/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 174 PASS, 6 FAIL: the same six Style Dictionary tests | `test-results/r26/node20.log` |
+
+**Found and fixed during the round:** the first push (7eca59a) evaluated settle-and-measure as a string, which the isolated probe world (the gate's) cannot run; the Node suite did not catch it. f6ff685 makes it a real function, and the R26 motion test now measures through the probe world (it fails on the 7eca59a code).
+
+**Fixture, expected stop:** exit 0 on the fixed code (`test-results/r26/local-fixture.log`): every R19-R25 full-run expectation holds through the gate's probe world.
+
+**Not completed in this round's 45 minutes:** the real site after the probe-world fix (`R26-real-site.log` records the 7eca59a failure: the survey threw in the probe world), the honest sets R18-R26, and a separate Chrome after-log (the Node suite runs those tests).
+
 ## R25 executed verification (Mi'mar's box, 18 October 2026, about 8:50 PM UTC+3)
 
 Panel round 25 (4 P2: R25-GPT-01 to R25-GPT-04; P3 R25-GPT-05, R25-GPT-06; GPT, cross-checked by Mi'mar; `reviews/panel-r25/`), with Mi'mar's R25 tiebreaks confirmed by Fadel (tightening: only zero visible area is rescued). Linux x86_64, Node v22.23.3, Chrome 155 headless. All runs serial on a quiet box (load average 2-10).
