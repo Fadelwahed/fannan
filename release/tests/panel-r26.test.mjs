@@ -137,5 +137,5 @@ test('R26-MIMAR-01 (P3): real Chrome: motion is settled before each width is mea
   const w = await ws26.screenWidths(main, [1440], null);
   const r1440 = w.results.find(r => r.width === 1440);
   const infinite = await main.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
-  assert.deepEqual({ motion: r1440.motionAtCapture.map(m => m.kind), partly: w.results.flatMap(r => r.clipped.map(c => c.rule)).filter(x => x === 'partly clipped').length, infiniteRunning: infinite >= 1 }, { motion: ['transition'], partly: 0, infiniteRunning: true });
+  assert.deepEqual({ motion: (r1440.motionAtCapture || []).map(m => m.kind), partly: w.results.flatMap(r => r.clipped.map(c => c.rule)).filter(x => x === 'partly clipped').length, infiniteRunning: infinite >= 1 }, { motion: ['transition'], partly: 0, infiniteRunning: true });
 }));
