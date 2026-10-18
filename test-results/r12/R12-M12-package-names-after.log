@@ -1,0 +1,11 @@
+# R12 after: R12 sources
+test_build_refuses_a_junk_changed_path_before_any_write (test_package_r3.JunkAndSecretTests.test_build_refuses_a_junk_changed_path_before_any_write) ... ok
+test_files_refuses_junk_and_secret_names (test_package_r3.JunkAndSecretTests.test_files_refuses_junk_and_secret_names) ... ok
+test_live_changed_paths_are_clean (test_package_r3.JunkAndSecretTests.test_live_changed_paths_are_clean) ... skipped 'needs a git checkout'
+test_ordinary_names_still_pass (test_package_r3.JunkAndSecretTests.test_ordinary_names_still_pass) ... ok
+test_r12_secret_names_with_allowed_suffixes_are_refused_as_input_and_changed_paths (test_package_r3.JunkAndSecretTests.test_r12_secret_names_with_allowed_suffixes_are_refused_as_input_and_changed_paths) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.026s
+
+OK (skipped=1)

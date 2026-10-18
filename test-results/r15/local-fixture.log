@@ -1,0 +1,11 @@
+TEST-ONLY fixture evidence: /tmp/fannan-browser-fixture-XXXX
+designmd-to-sd: wrote /tmp/fannan-browser-fixture-XXXX/design-output/test/tokens.json (colors, rounded, spacing, breakpoints, typography, components)
+CSS variables written: /tmp/fannan-browser-fixture-XXXX/design-output/test/variables.css
+{"pass":false,"lint":true,"axe":[],"custom22":true,"reducedMotion":true,"impeccable":{"ran":false,"exit":3,"pass":false,"note":"detect did not run or gave no parseable output"}}
+impeccable (Fannan launcher): pinned binary missing; no download fallback
+{"pass":false,"lint":true,"axe":[],"custom22":true,"reducedMotion":true,"impeccable":{"ran":false,"exit":3,"pass":false,"note":"detect did not run or gave no parseable output"}}
+impeccable (Fannan launcher): pinned binary missing; no download fallback
+R12/R13 fixture claims: {"integrity":"PASS","stateIntegrity":"PASS","glassSource":true,"accent":"PASS","stateAccent":"PASS","frames":"PASS","spacingExceptions":"PASS","reflowCandidates":"PASS","stylesheets":true,"stateStylesheets":true,"reducedMotion":true,"stateReducedMotion":true,"stateRafCounted":true}
+R13 fixture negative runs: {"frames":{"handoff":"FAIL","statePass":false,"wireframe":"DEFERRED"},"spacingExceptions":{"withoutEntry":"FAIL","withEntry":"PASS","contractWithEntry":true},"stateIntegrity":{"positional":"PASS","defaultState":"PASS","loadingState":"integrity mismatch","loadingMismatch":["horizontalOverflow","reflowFail"],"loadingPass":false}}
+R14 fixture shadow-motion runs: {"page":{"pass":false,"changed":1,"raf":0},"state":{"positional":true,"defaultState":true,"loading":false,"loadingChanged":1,"loadingStatePass":false}}
+LOCAL FIXTURE: browser, contract and applicable state checks passed; full gate correctly blocked by absent pinned Impeccable binary (launcher exit 3: impeccable (Fannan launcher): pinned binary missing; no download fallback)

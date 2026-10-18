@@ -1,0 +1,478 @@
+removed new release/tools/visibility.mjs
+# R17 before: R17 tests against 86e2a31 sources
+TAP version 13
+# Subtest: R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+not ok 1 - R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+  ---
+  duration_ms: 2505.824388
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:51:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        clipPath: {
+    +     offLost: false,
+    +     onClean: false,
+    +     pass: true,
+    +     status: 'PASS',
+    +     visibilityLoss: false
+    -     offLost: true,
+    -     onClean: true,
+    -     pass: false,
+    -     status: 'integrity mismatch',
+    -     visibilityLoss: true
+        },
+        gradientFade: {
+    +     offLost: false,
+    +     onClean: false,
+    +     pass: true,
+    +     status: 'PASS',
+    +     visibilityLoss: false
+    -     offLost: true,
+    -     onClean: true,
+    -     pass: false,
+    -     status: 'integrity mismatch',
+    -     visibilityLoss: true
+        },
+        placeholderOpacity: {
+    +     offLost: false,
+    +     onClean: false,
+    +     pass: true,
+    +     status: 'PASS',
+    +     visibilityLoss: false
+    -     offLost: true,
+    -     onClean: true,
+    -     pass: false,
+    -     status: 'integrity mismatch',
+    -     visibilityLoss: true
+        },
+        scale: {
+    +     offLost: false,
+    +     onClean: false,
+    +     pass: true,
+    +     status: 'PASS',
+    +     visibilityLoss: false
+    -     offLost: true,
+    -     onClean: true,
+    -     pass: false,
+    -     status: 'integrity mismatch',
+    -     visibilityLoss: true
+        },
+        textFillColor: {
+    +     offLost: false,
+    +     onClean: false,
+    +     pass: true,
+    +     status: 'PASS',
+    +     visibilityLoss: false
+    -     offLost: true,
+    -     onClean: true,
+    -     pass: false,
+    -     status: 'integrity mismatch',
+    -     visibilityLoss: true
+        },
+        whitePreloader: {
+    +     offLost: false,
+    +     onClean: false,
+    +     pass: true,
+    +     status: 'PASS',
+    +     visibilityLoss: false
+    -     offLost: true,
+    -     onClean: true,
+    -     pass: false,
+    -     status: 'integrity mismatch',
+    -     visibilityLoss: true
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    clipPath:
+      onClean: true
+      offLost: true
+      status: 'integrity mismatch'
+      pass: false
+      visibilityLoss: true
+    scale: <Circular>
+    whitePreloader: <Circular>
+    placeholderOpacity: <Circular>
+    textFillColor: <Circular>
+    gradientFade: <Circular>
+  actual:
+    clipPath:
+      onClean: false
+      offLost: false
+      status: 'PASS'
+      pass: true
+      visibilityLoss: false
+    scale:
+      onClean: false
+      offLost: false
+      status: 'PASS'
+      pass: true
+      visibilityLoss: false
+    whitePreloader:
+      onClean: false
+      offLost: false
+      status: 'PASS'
+      pass: true
+      visibilityLoss: false
+    placeholderOpacity:
+      onClean: false
+      offLost: false
+      status: 'PASS'
+      pass: true
+      visibilityLoss: false
+    textFillColor:
+      onClean: false
+      offLost: false
+      status: 'PASS'
+      pass: true
+      visibilityLoss: false
+    gradientFade:
+      onClean: false
+      offLost: false
+      status: 'PASS'
+      pass: true
+      visibilityLoss: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:67:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails, and text it cannot measure is INCOMPLETE (test-only)
+not ok 2 - R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails, and text it cannot measure is INCOMPLETE (test-only)
+  ---
+  duration_ms: 1139.324949
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:70:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        clipped: [
+    +     'PASS',
+    +     true,
+    -     'INCOMPLETE',
+          false,
+    -     true
+        ],
+        faint: [
+    +     'PASS',
+    +     true,
+    -     'integrity mismatch',
+          false,
+    -     true
+        ],
+        permanent: [
+    +     'PASS',
+    +     true,
+    -     'integrity mismatch',
+          false,
+    -     true
+        ]
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    permanent:
+      0: 'integrity mismatch'
+      1: false
+      2: true
+    faint:
+      0: 'integrity mismatch'
+      1: false
+      2: true
+    clipped:
+      0: 'INCOMPLETE'
+      1: false
+      2: true
+  actual:
+    permanent:
+      0: 'PASS'
+      1: true
+      2: false
+    faint:
+      0: 'PASS'
+      1: true
+      2: false
+    clipped:
+      0: 'PASS'
+      1: true
+      2: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:75:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+not ok 3 - R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+  ---
+  duration_ms: 1180.766244
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:79:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        animated: {
+    +     measured: false,
+    -     measured: true,
+          problems: [],
+          status: 'PASS'
+        },
+        healthy: {
+    +     measured: false,
+    -     measured: true,
+          problems: [],
+          status: 'PASS'
+        },
+        real: {
+    +     measured: false,
+    -     measured: true,
+          problems: [],
+          status: 'PASS'
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    healthy:
+      measured: true
+      problems:
+      status: 'PASS'
+    animated:
+      measured: true
+      problems:
+      status: 'PASS'
+    real:
+      measured: true
+      problems:
+      status: 'PASS'
+  actual:
+    healthy:
+      measured: false
+      problems:
+      status: 'PASS'
+    animated:
+      measured: false
+      problems:
+      status: 'PASS'
+    real:
+      measured: false
+      problems:
+      status: 'PASS'
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:93:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+not ok 4 - R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+  ---
+  duration_ms: 666.397283
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:96:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   fill: 0,
+    +   ph: 0,
+    -   fill: 1,
+    -   ph: 1,
+        plain: 0
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    ph: 1
+    fill: 1
+    plain: 0
+  actual:
+    ph: 0
+    fill: 0
+    plain: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:100:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+not ok 5 - R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+  ---
+  duration_ms: 537.011788
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:103:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+    +   contentLoss: false,
+    -   contentLoss: true,
+        off: [
+          'input:submit',
+          'Start now',
+          ''
+        ],
+    ...
+          'Start now',
+    +     ''
+    -     'Start now'
+        ],
+    +   pass: true
+    -   pass: false
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    on:
+      0: 'input:submit'
+      1: 'Start now'
+      2: 'Start now'
+    off:
+      0: 'input:submit'
+      1: 'Start now'
+      2: ''
+    contentLoss: true
+    pass: false
+  actual:
+    on:
+      0: 'input:submit'
+      1: 'Start now'
+      2: ''
+    off:
+      0: 'input:submit'
+      1: 'Start now'
+      2: ''
+    contentLoss: false
+    pass: true
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:106:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+not ok 6 - R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+  ---
+  duration_ms: 1155.304064
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:110:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        clean: {
+          filler: false,
+          placeholders: false
+        },
+        lorem: {
+          filler: false,
+    +     placeholders: false
+    -     placeholders: true
+        },
+        name: {
+    +     filler: false,
+    -     filler: true,
+          placeholders: false
+        },
+        option: {
+          filler: false,
+          placeholders: true
+    ...
+          filler: false,
+    +     placeholders: false
+    -     placeholders: true
+        },
+        value: {
+    +     filler: false,
+    -     filler: true,
+          placeholders: false
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    placeholder:
+      placeholders: true
+      filler: false
+    lorem:
+      placeholders: true
+      filler: false
+    option:
+      placeholders: true
+      filler: false
+    value:
+      placeholders: false
+      filler: true
+    name:
+      placeholders: false
+      filler: true
+    clean:
+      placeholders: false
+      filler: false
+  actual:
+    placeholder:
+      placeholders: false
+      filler: false
+    lorem:
+      placeholders: false
+      filler: false
+    option:
+      placeholders: true
+      filler: false
+    value:
+      placeholders: false
+      filler: false
+    name:
+      placeholders: false
+      filler: false
+    clean:
+      placeholders: false
+      filler: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:112:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 0
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7253.474537

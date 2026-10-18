@@ -1,0 +1,23 @@
+.........F..........................F..
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r18/testpkgb/scripts/test_package_r3.py", line 142, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r17/') for n in names), 'R17 evidence is archived like R4-R16')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R17 evidence is archived like R4-R16
+
+======================================================================
+FAIL: test_r17_sections (__main__.RequiredSectionTests.test_r17_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r18/testpkgb/scripts/test_package_r3.py", line 339, in test_r17_sections
+    self.assertIn('Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.' not found in ['The feedback-log artifact records each item', '`grid-per-width`']
+
+----------------------------------------------------------------------
+Ran 39 tests in 2.772s
+
+FAILED (failures=2)

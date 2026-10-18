@@ -1,0 +1,62 @@
+fatal: path 'release/tools/axe-tags.mjs' exists on disk, but not in '607b2e4'
+fatal: path 'release/tools/probe-world.mjs' exists on disk, but not in '607b2e4'
+# R11 before: R11 tests against 607b2e4 sources
+TAP version 13
+# Subtest: R11 C5: no client, company or country name anywhere in release/ (tests excluded)
+not ok 1 - R11 C5: no client, company or country name anywhere in release/ (tests excluded)
+  ---
+  duration_ms: 7.389482
+  type: 'test'
+  location: '<scratch>/release/tests/generic-instructions.test.mjs:13:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+    + [
+    +   'CHANGELOG.md:14',
+    +   'FANNAN-PLAN.md:129',
+    +   'UNTESTED.md:14',
+    +   'VERIFICATION.md:3',
+    +   'VERIFICATION.md:29',
+    +   'VERIFICATION.md:55',
+    +   'VERIFICATION.md:76',
+    +   'VERIFICATION.md:96',
+    +   'references/example-project-check.md:1',
+    +   'references/example-project-check.md:3',
+    +   'references/example-project-check.md:15'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'CHANGELOG.md:14'
+    1: 'FANNAN-PLAN.md:129'
+    2: 'UNTESTED.md:14'
+    3: 'VERIFICATION.md:3'
+    4: 'VERIFICATION.md:29'
+    5: 'VERIFICATION.md:55'
+    6: 'VERIFICATION.md:76'
+    7: 'VERIFICATION.md:96'
+    8: 'references/example-project-check.md:1'
+    9: 'references/example-project-check.md:3'
+    10: 'references/example-project-check.md:15'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/generic-instructions.test.mjs:16:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 56.65779

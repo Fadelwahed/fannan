@@ -1,0 +1,32 @@
+TAP version 13
+# Subtest: ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+not ok 1 - ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+  ---
+  duration_ms: 706.979869
+  type: 'test'
+  location: '<scratch>/release/tests/width-screen.test.mjs:80:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    html and body hidden: a 1400px layout at 1280 must fail
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/width-screen.test.mjs:91:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 772.045781

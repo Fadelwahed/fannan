@@ -1,0 +1,13 @@
+# R19 after: R19 sources
+test_r14_build_checks_sections_before_any_output (test_package_r3.RequiredSectionTests.test_r14_build_checks_sections_before_any_output) ... ok
+test_r14_release_carries_every_designer_process_section (test_package_r3.RequiredSectionTests.test_r14_release_carries_every_designer_process_section) ... ok
+test_r15_sections_and_retired_wording (test_package_r3.RequiredSectionTests.test_r15_sections_and_retired_wording) ... ok
+test_r16_sections (test_package_r3.RequiredSectionTests.test_r16_sections) ... ok
+test_r17_sections (test_package_r3.RequiredSectionTests.test_r17_sections) ... ok
+test_r18_sections (test_package_r3.RequiredSectionTests.test_r18_sections) ... ok
+test_r19_sections (test_package_r3.RequiredSectionTests.test_r19_sections) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.020s
+
+OK

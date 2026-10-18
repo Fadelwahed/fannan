@@ -1,0 +1,95 @@
+# R16 before: R16 tests against 5fe9101 sources
+TAP version 13
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+not ok 1 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 65.382317
+  type: 'test'
+  location: '<scratch>/release/tests/handoff-contract.test.mjs:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   comparisonMissesScreen: [],
+    +   componentInventory: false,
+    +   differentSpecOnTwoScreens: [],
+    +   missingConsistencyCheck: false,
+    +   missingInventory: false,
+    +   missingPage: false,
+    -   comparisonMissesScreen: [
+    -     'critic final round needs a passing, evidenced componentComparison covering every screen'
+    -   ],
+    -   componentInventory: true,
+    -   differentSpecOnTwoScreens: [
+    -     'screen about: component heading specifies tokens differently from its shared definition',
+    -     'screen about: component heading specifies behaviour differently from its shared definition'
+    -   ],
+    -   missingConsistencyCheck: true,
+    -   missingInventory: true,
+    -   missingPage: true,
+        sameSpecOnTwoScreens: [],
+    +   secondLocaleManual: false,
+    +   secondLocaleRendering: false,
+    +   secondScreenRendering: false,
+    +   undeclaredVariant: [],
+    +   unknownComponent: false
+    -   secondLocaleManual: true,
+    -   secondLocaleRendering: true,
+    -   secondScreenRendering: true,
+    -   undeclaredVariant: [
+    -     'screen about: component heading uses variant hero-title, not in its shared definition'
+    -   ],
+    -   unknownComponent: true
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    missingPage: true
+    secondScreenRendering: true
+    secondLocaleRendering: true
+    secondLocaleManual: true
+    componentInventory: true
+    missingInventory: true
+    sameSpecOnTwoScreens:
+    differentSpecOnTwoScreens:
+      0: 'screen about: component heading specifies tokens differently from its shared definition'
+      1: 'screen about: component heading specifies behaviour differently from its shared definition'
+    undeclaredVariant:
+      0: 'screen about: component heading uses variant hero-title, not in its shared definition'
+    unknownComponent: true
+    comparisonMissesScreen:
+      0: 'critic final round needs a passing, evidenced componentComparison covering every screen'
+    missingConsistencyCheck: true
+  actual:
+    missingPage: false
+    secondScreenRendering: false
+    secondLocaleRendering: false
+    secondLocaleManual: false
+    componentInventory: false
+    missingInventory: false
+    sameSpecOnTwoScreens:
+    differentSpecOnTwoScreens:
+    undeclaredVariant:
+    unknownComponent: false
+    comparisonMissesScreen:
+    missingConsistencyCheck: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/handoff-contract.test.mjs:184:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 123.086485

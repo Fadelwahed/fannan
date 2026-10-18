@@ -1,0 +1,125 @@
+# R18 after: R18 sources
+TAP version 13
+# Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+ok 1 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+  ---
+  duration_ms: 3.89668
+  type: 'test'
+  ...
+# Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+ok 2 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+  ---
+  duration_ms: 9.992679
+  type: 'test'
+  ...
+# Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+ok 3 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+  ---
+  duration_ms: 1.890276
+  type: 'test'
+  ...
+# Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+ok 4 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+  ---
+  duration_ms: 1.032215
+  type: 'test'
+  ...
+# Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
+ok 5 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
+  ---
+  duration_ms: 0.186671
+  type: 'test'
+  ...
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+ok 6 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 1.140741
+  type: 'test'
+  ...
+# Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+ok 7 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+  ---
+  duration_ms: 1123.834051
+  type: 'test'
+  ...
+# Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+ok 8 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+  ---
+  duration_ms: 1191.108793
+  type: 'test'
+  ...
+# Subtest: R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+ok 9 - R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+  ---
+  duration_ms: 8805.079541
+  type: 'test'
+  ...
+# Subtest: R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails; R18: text clipped to nothing in both renderings is not displayed (test-only)
+ok 10 - R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails; R18: text clipped to nothing in both renderings is not displayed (test-only)
+  ---
+  duration_ms: 4493.516647
+  type: 'test'
+  ...
+# Subtest: R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+ok 11 - R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+  ---
+  duration_ms: 10178.16989
+  type: 'test'
+  ...
+# Subtest: R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+ok 12 - R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+  ---
+  duration_ms: 933.62826
+  type: 'test'
+  ...
+# Subtest: R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+ok 13 - R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+  ---
+  duration_ms: 1455.245116
+  type: 'test'
+  ...
+# Subtest: R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+ok 14 - R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+  ---
+  duration_ms: 1355.438436
+  type: 'test'
+  ...
+# Subtest: R18-GPT-03/07: real Chrome: a display:contents reveal and a partly clipped multi-line reveal lost with JavaScript off are integrity mismatches (lines measured from text ranges) (test-only)
+ok 15 - R18-GPT-03/07: real Chrome: a display:contents reveal and a partly clipped multi-line reveal lost with JavaScript off are integrity mismatches (lines measured from text ranges) (test-only)
+  ---
+  duration_ms: 3846.498511
+  type: 'test'
+  ...
+# Subtest: R18-GPT-04, R18-MIMAR-02: real Chrome: a faint translucent layer and light or thin weights that pass AA by colour are not failed by pixels; unresolved colours are still graded by pixels (test-only)
+ok 16 - R18-GPT-04, R18-MIMAR-02: real Chrome: a faint translucent layer and light or thin weights that pass AA by colour are not failed by pixels; unresolved colours are still graded by pixels (test-only)
+  ---
+  duration_ms: 4428.807256
+  type: 'test'
+  ...
+# Subtest: R18-GPT-05, R18-MIMAR-01: real Chrome: inner scroll panels are scrolled to their text; text clipped the same way in both renderings (carousel slides, collapsed accordions) is not displayed; the round's honest patterns pass (test-only)
+ok 17 - R18-GPT-05, R18-MIMAR-01: real Chrome: inner scroll panels are scrolled to their text; text clipped the same way in both renderings (carousel slides, collapsed accordions) is not displayed; the round's honest patterns pass (test-only)
+  ---
+  duration_ms: 31437.138196
+  type: 'test'
+  ...
+# Subtest: R18-GPT-06: real Chrome: text far down a long page and content added on scroll are reached; a scan that cannot finish is INCOMPLETE, never PASS (test-only)
+ok 18 - R18-GPT-06: real Chrome: text far down a long page and content added on scroll are reached; a scan that cannot finish is INCOMPLETE, never PASS (test-only)
+  ---
+  duration_ms: 5207.928377
+  type: 'test'
+  ...
+# Subtest: R18-GPT-01, R18-GPT-02: real Chrome: the copy deck approves displayed text and the accessible name separately, identical value and name count once; an option shows its label (test-only)
+ok 19 - R18-GPT-01, R18-GPT-02: real Chrome: the copy deck approves displayed text and the accessible name separately, identical value and name count once; an option shows its label (test-only)
+  ---
+  duration_ms: 1742.74545
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 46743.308355

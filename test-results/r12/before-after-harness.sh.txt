@@ -1,0 +1,18 @@
+#!/bin/bash
+# R12 before/after logs. before: final R12 tests against the R11 head (d8408d4) sources (every non-test file changed in
+# R12 restored from d8408d4, the new release/tools/exceptions.mjs removed; tests stay at their R12 version). after: R12 sources.
+set -u
+MODE=$1
+W=/workspace/fannan-mimar-wt; O=$W/test-results/r12
+clean(){ sed 's#/tmp/r5s#<scratch>#g; s#fannan-browser-fixture-[A-Za-z0-9]\{6\}#fannan-browser-fixture-XXXX#g'; }
+if [ "$MODE" = before ]; then prep='for f in $(git -C '$W' diff --name-only d8408d4 -- release scripts | grep -v "^release/tests/\|^scripts/test_"); do git -C '$W' show d8408d4:$f > $f; done; rm -f release/tools/exceptions.mjs; echo "# R12 before: R12 tests against d8408d4 sources"'; else prep='echo "# R12 after: R12 sources"'; fi
+run(){ name=$1; shift; /workspace/r5run.sh bash -c "export PATH=/home/box/.local/node-v22.23.3/bin:\$PATH; $prep; $*" 2>&1 | clean > $O/$name-$MODE.log; echo "$name exit=${PIPESTATUS[0]}"; }
+run R12-M01-M02-M09-M10-M11-M14-width "node --test --test-name-pattern='R12|R11|ARGON-R5-05|R8 PORT-02' release/tests/width-screen.test.mjs"
+run R12-M03-frames "node --test --test-name-pattern='R12 M03' release/tests/design-probe.test.mjs"
+run R12-M04-M05-glass "node --test --test-name-pattern='R12 M04|R12 M05|R11 S2|panel D' release/tests/design-probe.test.mjs release/tests/probe-world.test.mjs"
+run R12-M06-M08-M13-M17-M21-integrity 'node --test release/tests/integrity.test.mjs'
+run R12-M09-M20-M21-contract 'node --test release/tests/handoff-contract.test.mjs'
+run R12-M12-package-names 'cd scripts && python3 -B -m unittest -v test_package_r3.JunkAndSecretTests'
+run R12-M15-M16-M20-spacing "node --test --test-name-pattern='R12|R11' release/tests/spacing-scale.test.mjs"
+run R12-M18-fixture 'rm runtime-deps && cp -a /workspace/fannan-mimar-wt/runtime-deps runtime-deps && node release/tests/local-fixture.mjs'
+run R12-zip-evidence 'cd scripts && python3 -B -m unittest -v test_package_r3.FinalRecordTests'

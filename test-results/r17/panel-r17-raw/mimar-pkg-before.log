@@ -1,0 +1,23 @@
+.........F.........................F..
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r17/testpkgb/scripts/test_package_r3.py", line 140, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r16/') for n in names), 'R16 evidence is archived like R4-R15')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R16 evidence is archived like R4-R15
+
+======================================================================
+FAIL: test_r16_sections (__main__.RequiredSectionTests.test_r16_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r17/testpkgb/scripts/test_package_r3.py", line 327, in test_r16_sections
+    self.assertIn('A wireframe PASS covers every declared desktop screen and locale.', required.get('release/FANNAN-PLAN.md', []))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'A wireframe PASS covers every declared desktop screen and locale.' not found in ['Maintain a discovery ledger for audience needs', 'Navigation model and findability:', 'neutral scenario, realistic starting point and observable completion criterion', "## Folding in the approver's feedback", 'intended emphasis order', 'named roles in the token JSON', 'For each width in `settings.desktopWidths`', '## Threat model for the pre-handoff gate', '## Review convergence rule', 'after the task and navigation-findability tests and necessary retests, run the complete wireframe quality gate; require PASS before structure approval and Step 6', 'Column counts are positive unitless integers recorded beside the grid spec, not spacing tokens.']
+
+----------------------------------------------------------------------
+Ran 38 tests in 2.522s
+
+FAILED (failures=2)

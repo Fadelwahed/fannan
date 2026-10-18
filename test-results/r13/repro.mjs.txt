@@ -1,0 +1,40 @@
+// R13 Chrome 155 reproduction of the panel round 13 browser items (run against the current checkout sources).
+import { createRequire } from 'node:module';
+const W = process.env.W || '/workspace/fannan-mimar-wt';
+const { chromium } = createRequire('/workspace/fannan-testdeps/node_modules/')('playwright-core');
+const { screenWidths } = await import(W + '/release/tools/width-screen.mjs');
+const { designProbe, rawGlass } = await import(W + '/release/tools/design-probe.mjs');
+const { spacingProbe } = await import(W + '/release/tools/spacing-scale.mjs');
+const integ = await import(W + '/release/tools/integrity.mjs');
+const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--headless=new'] });
+const sum = r => JSON.stringify({ pass: r.pass, off: r.offscreenLeft.length, cl: r.clipped.length, un: r.unreachable.length, st: r.scrolledText.length, um: r.unmeasured.length, us: (r.unscannedScopes || []).length, hz: r.horizontalOverflow, c: r.reflowCandidates.map(c => [c.element, c.keyboard]) });
+try {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const at = async (html, width, body = 'margin:0') => { await page.setContent(`<html lang="en"><body style="${body}"><main><h1>Page</h1>${html}</main></body></html>`); await page.waitForTimeout(50); return (await screenWidths(page, [1440], { lang: 'en', dir: 'ltr' })).results.find(r => r.width === width); };
+  for (const w of [1440, 320]) {
+    console.log(`N01 body overflow-x:hidden, negative margin @${w}`, sum(await at('<p style="margin-left:-400px">Pushed left text</p>', w, 'margin:0;overflow-x:hidden')));
+    console.log(`N01 body overflow-x:hidden, translate @${w}`, sum(await at('<p style="transform:translateX(-400px)">Translated text</p>', w, 'margin:0;overflow-x:hidden')));
+  }
+  console.log('N02 display:contents nowrap in scroller', sum(await at(`<div style="overflow-x:auto"><span style="display:contents;white-space:nowrap">${'contents text '.repeat(60)}</span></div>`, 320)));
+  console.log('N02 0x0 inline-block nowrap in scroller', sum(await at(`<div style="overflow-x:auto"><span style="display:inline-block;width:0;height:0;white-space:nowrap">${'zero box text '.repeat(60)}</span></div>`, 320)));
+  console.log('N02 height:0 heading pushed left @1440', sum(await at('<h2 style="height:0;margin:0 0 0 -400px">Zero height heading</h2>', 1440)));
+  console.log('N03 shadow text past hidden host left edge @1440', sum(await at(`<div id="h" style="overflow:hidden;width:300px;margin-left:100px"></div><script>document.getElementById('h').attachShadow({mode:'open'}).innerHTML='<p style="margin-left:-200px;white-space:nowrap">Shadow text cut off at the left</p>';</script>`, 1440)));
+  await page.setContent('<main><h1>x</h1><object type="text/html" data="data:text/html,<p>x</p>" width="200" height="100"></object><embed src="data:text/html,<p>y</p>" width="200" height="100"></main>'); await page.waitForTimeout(200);
+  console.log('N04 object/embed in glassScopes', JSON.stringify((await page.evaluate(designProbe)).glassScopes));
+  console.log('N04 object/embed in width screen', sum(await at('<object type="text/html" data="data:text/html,<p>x</p>" width="200" height="100"></object>', 320)));
+  await page.setContent(`<link rel="stylesheet" href="data:text/css;base64,${Buffer.from('html{-webkit-backdrop-filter:blur(8px)}').toString('base64')}"><main><h1>x</h1></main>`); await page.waitForTimeout(100);
+  const d7 = await page.evaluate(designProbe);
+  console.log('N07 data: base64 stylesheet glass', d7.glass, 'sheets reported:', JSON.stringify(d7.stylesheets ?? null));
+  for (const t of ["el.style.setProperty('-webkit-backdrop\\x2dfilter','blur(4px)')", "el.style.webkitBackdrop\\u0046ilter='blur(4px)'", "el.style.setProperty('backdrop\\u{2d}filter','blur(4px)')", 'const a="/*"; el.style.webkitBackdropFilter="blur(4px)"; const b="*/";']) console.log('N08/N09 rawGlass script', JSON.stringify(t), rawGlass(t, 'script'));
+  console.log('N15 340px table, one first-cell link', sum(await at('<div style="overflow-x:auto;width:320px"><table id="t" style="width:340px;border-collapse:collapse"><tr><td style="padding:0"><a href="#a" style="display:inline-block;width:40px">link</a></td><td style="padding:0;text-align:right">far</td></tr></table></div>', 320)));
+  console.log('N16 closed shadow scroller', sum(await at(`<div id="c"></div><script>document.getElementById('c').attachShadow({mode:'closed'}).innerHTML='<div style="overflow-x:auto"><p style="width:900px">${'closed text '.repeat(20)}</p></div>';</script>`, 320)));
+  // N17: capture native rAF through a patched Function.prototype.call, restore, then loop
+  const ctx = await browser.newContext(); await ctx.addInitScript(integ.rafCounterInit); const rp = await ctx.newPage();
+  await rp.setContent(`<main><h1>x</h1></main><script>let nat; const oc = Function.prototype.call; Function.prototype.call = function (...a) { nat = this; return oc.apply(this, a); }; requestAnimationFrame(() => {}); Function.prototype.call = oc; window.__cbs = 0; const loop = () => { window.__cbs++; nat.apply(window, [loop]); }; window.__captured = typeof nat === 'function'; if (nat) loop();</script>`);
+  const r1 = await rp.evaluate(() => window.__raf); await rp.waitForTimeout(700); const r2 = await rp.evaluate(() => window.__raf);
+  console.log('N17 call-capture rAF loop: native captured', await rp.evaluate(() => window.__captured), 'callbacks', await rp.evaluate(() => window.__cbs), 'counter', r1, '->', r2, 'rafLoopFrom', integ.rafLoopFrom(r1, r2), 'nativeCheck', JSON.stringify(await rp.evaluate(integ.nativeCheck)));
+  await page.setContent(`<main><h1>x</h1><p style="margin-left:13px">t</p></main><div id="s"></div><script>document.getElementById('s').attachShadow({mode:'open'}).innerHTML='<p style="padding-left:17px">lorem ipsum shadow</p><h1>Second</h1>';</script>`);
+  const sp = await page.evaluate(spacingProbe, ['8px', '24px']), dp = await page.evaluate(designProbe);
+  console.log('N20 open shadow (17px only in shadow): spacing off-scale', JSON.stringify(sp.spacingOffScale.map(v => v.property + '=' + v.value)), 'placeholders', dp.placeholders, 'h1', dp.h1);
+  console.log('N19 compareIntegrity without tamperSigns', (() => { try { const v = Object.fromEntries(Object.entries(integ.VECTOR).map(([k, t]) => [k, t === 'count' || t === 'coverage' || t === 'ratio' ? 0 : t === 'flag' ? false : t === 'widths' ? { 1440: 0 } : null])); const run = { vector: v, content: { slots: [], headings: [], h1: 1, lang: 'en', dir: 'ltr' } }; return [integ.compareIntegrity({ probe: run, page: run, jsOff: run }).status, integ.compareIntegrity({ probe: run, page: run, jsOff: run, tamperSigns: [] }).status].join(' / with []: '); } catch (e) { return 'error ' + e.message; } })());
+} finally { await browser.close(); }

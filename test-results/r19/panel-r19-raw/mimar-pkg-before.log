@@ -1,0 +1,23 @@
+.........F...........................F..
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r19/testpkgb/scripts/test_package_r3.py", line 144, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r18/') for n in names), 'R18 evidence is archived like R4-R17')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R18 evidence is archived like R4-R17
+
+======================================================================
+FAIL: test_r18_sections (__main__.RequiredSectionTests.test_r18_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r19/testpkgb/scripts/test_package_r3.py", line 350, in test_r18_sections
+    self.assertIn('Pixels decide visibility, not AA:', required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Pixels decide visibility, not AA:' not found in ['The feedback-log artifact records each item', '`grid-per-width`', 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:']
+
+----------------------------------------------------------------------
+Ran 40 tests in 2.983s
+
+FAILED (failures=2)

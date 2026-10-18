@@ -1,0 +1,5 @@
+# R18 real built site (bilingual company site, static build served on 127.0.0.1, external requests blocked), Chrome 155 headless 1440x900, 10:07 AM UTC+3
+http://127.0.0.1:8917/en/                        on  {"m":88,"o":0,"u":0,"un":0,"a":1,"h":0,"steps":12,"passes":1,"unsettled":0,"ms":11058}
+http://127.0.0.1:8917/en/                        off {"m":88,"o":0,"u":0,"un":0,"a":1,"h":0,"steps":12,"passes":1,"unsettled":0,"ms":6900}
+http://127.0.0.1:8917/ar/                        on  {"m":75,"o":0,"u":0,"un":0,"a":0,"h":0,"steps":8,"passes":1,"unsettled":0,"ms":6308}
+http://127.0.0.1:8917/ar/                        off {"m":75,"o":0,"u":0,"un":0,"a":0,"h":0,"steps":8,"passes":1,"unsettled":0,"ms":6329}

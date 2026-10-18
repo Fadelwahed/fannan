@@ -1,0 +1,31 @@
+test_bad_start_preserves_outputs (__main__.BuildOrderTests.test_bad_start_preserves_outputs) ... ok
+test_build_lists_archive_paths_once (__main__.BuildOrderTests.test_build_lists_archive_paths_once) ... ok
+test_cache_in_input_preserves_outputs (__main__.BuildOrderTests.test_cache_in_input_preserves_outputs) ... ok
+test_missing_archive_input_preserves_outputs (__main__.BuildOrderTests.test_missing_archive_input_preserves_outputs) ... ok
+test_symlink_in_release_preserves_outputs (__main__.BuildOrderTests.test_symlink_in_release_preserves_outputs) ... ok
+test_build_hashes_everything_but_the_registry (__main__.FinalRecordTests.test_build_hashes_everything_but_the_registry) ... ok
+test_doc_lists_the_exclusions (__main__.FinalRecordTests.test_doc_lists_the_exclusions) ... ok
+test_records_are_not_in_the_zip (__main__.FinalRecordTests.test_records_are_not_in_the_zip) ... ok
+test_verify_excludes_only_one_latest_record_written_after_the_freeze (__main__.FinalRecordTests.test_verify_excludes_only_one_latest_record_written_after_the_freeze) ... ok
+test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records) ... ok
+test_build_refuses_a_junk_changed_path_before_any_write (__main__.JunkAndSecretTests.test_build_refuses_a_junk_changed_path_before_any_write) ... ok
+test_files_refuses_junk_and_secret_names (__main__.JunkAndSecretTests.test_files_refuses_junk_and_secret_names) ... ok
+test_live_changed_paths_are_clean (__main__.JunkAndSecretTests.test_live_changed_paths_are_clean) ... skipped 'needs a git checkout'
+test_ordinary_names_still_pass (__main__.JunkAndSecretTests.test_ordinary_names_still_pass) ... ok
+test_files_refuses_cache_dependency_and_git_entries (__main__.PackageInputTests.test_files_refuses_cache_dependency_and_git_entries) ... ok
+test_release_tree_is_clean_now (__main__.PackageInputTests.test_release_tree_is_clean_now) ... ok
+test_build_computes_registry_names_once_before_writing (__main__.RegistryInputTests.test_build_computes_registry_names_once_before_writing) ... ok
+test_changed_path_under_a_symlinked_folder_fails_before_any_write (__main__.RegistryInputTests.test_changed_path_under_a_symlinked_folder_fails_before_any_write) ... ok
+test_missing_changed_path_fails_before_any_write (__main__.RegistryInputTests.test_missing_changed_path_fails_before_any_write) ... ok
+test_symlinked_changed_path_fails_before_any_write (__main__.RegistryInputTests.test_symlinked_changed_path_fails_before_any_write) ... ok
+test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first (__main__.RegistryPinTests.test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first) ... skipped 'needs a git checkout of the repository'
+test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed (__main__.RegistryPinTests.test_cli_verify_refuses_without_registry_pin_unless_explicitly_allowed) ... skipped 'needs a git checkout of the repository'
+test_packaging_doc_names_both_read_only_files_and_the_pin_option (__main__.RegistryPinTests.test_packaging_doc_names_both_read_only_files_and_the_pin_option) ... ok
+test_registry_pin_must_match_an_external_value (__main__.RegistryPinTests.test_registry_pin_must_match_an_external_value) ... ok
+test_policy_is_documented (__main__.WhitespacePolicyTests.test_policy_is_documented) ... ok
+test_source_only_range_check_passes (__main__.WhitespacePolicyTests.test_source_only_range_check_passes) ... skipped 'needs a git checkout of the repository'
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.069s
+
+OK (skipped=4)

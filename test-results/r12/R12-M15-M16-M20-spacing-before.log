@@ -1,0 +1,127 @@
+# R12 before: R12 tests against d8408d4 sources
+TAP version 13
+# Subtest: R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
+not ok 1 - R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
+  ---
+  duration_ms: 1022.153846
+  type: 'test'
+  location: '<scratch>/release/tests/spacing-scale.test.mjs:159:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a documented exception is recorded, not silently skipped
+    + actual - expected
+    
+      [
+        {
+          element: 'p',
+    -     id: null,
+          reason: 'optical alignment of the logo mark',
+          values: [
+            '3px'
+          ]
+        }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0:
+      element: 'p'
+      id: ~
+      reason: 'optical alignment of the logo mark'
+      values:
+        0: '3px'
+  actual:
+    0:
+      element: 'p'
+      reason: 'optical alignment of the logo mark'
+      values:
+        0: '3px'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/spacing-scale.test.mjs:174:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R12 M15: margins on html and body are screened too (real Chrome, test-only)
+not ok 2 - R12 M15: margins on html and body are screened too (real Chrome, test-only)
+  ---
+  duration_ms: 330.254249
+  type: 'test'
+  location: '<scratch>/release/tests/spacing-scale.test.mjs:178:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+    + []
+    - [
+    -   'body:marginLeft=13px'
+    - ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'body:marginLeft=13px'
+  actual:
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/spacing-scale.test.mjs:184:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches
+not ok 3 - R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches
+  ---
+  duration_ms: 1.240379
+  type: 'test'
+  location: '<scratch>/release/tests/spacing-scale.test.mjs:190:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot find module '<scratch>/release/tools/exceptions.mjs' imported from <scratch>/release/tests/spacing-scale.test.mjs"
+  code: 'ERR_MODULE_NOT_FOUND'
+  stack: |-
+    finalizeResolution (node:internal/modules/esm/resolve:275:11)
+    moduleResolve (node:internal/modules/esm/resolve:865:10)
+    defaultResolve (node:internal/modules/esm/resolve:989:11)
+    #cachedDefaultResolve (node:internal/modules/esm/loader:747:20)
+    ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)
+    ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)
+    onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:680:36)
+    TracingChannel.tracePromise (node:diagnostics_channel:350:14)
+    ModuleLoader.import (node:internal/modules/esm/loader:679:21)
+    defaultImportModuleDynamicallyForModule (node:internal/modules/esm/utils:222:31)
+  ...
+# Subtest: R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)
+not ok 4 - R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)
+  ---
+  duration_ms: 0.665137
+  type: 'test'
+  location: '<scratch>/release/tests/spacing-scale.test.mjs:209:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /Horizontal margins are not counted/. Input:
+    
+    'At handoff every visible padding, vertical margin and row/column gap must resolve to a value on the built --spacing-* scale (0 always allowed). Horizontal margins are not counted because auto margins resolve to pixels. Wireframes are not gated. A screen, not proof of good rhythm.'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'At handoff every visible padding, vertical margin and row/column gap must resolve to a value on the built --spacing-* scale (0 always allowed). Horizontal margins are not counted because auto margins resolve to pixels. Wireframes are not gated. A screen, not proof of good rhythm.'
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/spacing-scale.test.mjs:211:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 0
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1420.680654

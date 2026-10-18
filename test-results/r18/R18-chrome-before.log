@@ -1,0 +1,740 @@
+removed new release/tools/copy-deck.mjs
+# R18 before: R17 tests against e0362e6 sources
+TAP version 13
+# Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+ok 1 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+  ---
+  duration_ms: 4.008842
+  type: 'test'
+  ...
+# Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+ok 2 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+  ---
+  duration_ms: 9.073819
+  type: 'test'
+  ...
+# Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+ok 3 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+  ---
+  duration_ms: 2.026175
+  type: 'test'
+  ...
+# Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+ok 4 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+  ---
+  duration_ms: 1.147831
+  type: 'test'
+  ...
+# Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
+ok 5 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
+  ---
+  duration_ms: 0.212464
+  type: 'test'
+  ...
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+ok 6 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 1.231895
+  type: 'test'
+  ...
+# Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+ok 7 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+  ---
+  duration_ms: 897.917184
+  type: 'test'
+  ...
+# Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+ok 8 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+  ---
+  duration_ms: 1029.801647
+  type: 'test'
+  ...
+# Subtest: R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+ok 9 - R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+  ---
+  duration_ms: 4870.604794
+  type: 'test'
+  ...
+# Subtest: R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails; R18: text clipped to nothing in both renderings is not displayed (test-only)
+not ok 10 - R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails; R18: text clipped to nothing in both renderings is not displayed (test-only)
+  ---
+  duration_ms: 2375.208519
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r17.test.mjs:72:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        clipped: [
+    +     'INCOMPLETE',
+    +     false,
+    +     false
+    -     'PASS',
+    -     true,
+    -     true
+        ],
+        faint: [
+          'integrity mismatch',
+          false,
+          true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    permanent:
+      0: 'integrity mismatch'
+      1: false
+      2: true
+    faint:
+      0: 'integrity mismatch'
+      1: false
+      2: true
+    clipped:
+      0: 'PASS'
+      1: true
+      2: true
+  actual:
+    permanent:
+      0: 'integrity mismatch'
+      1: false
+      2: true
+    faint:
+      0: 'integrity mismatch'
+      1: false
+      2: true
+    clipped:
+      0: 'INCOMPLETE'
+      1: false
+      2: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r17.test.mjs:77:10
+    async withBrowser (file://<scratch>/release/tests/panel-r17.test.mjs:32:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+ok 11 - R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+  ---
+  duration_ms: 12988.714526
+  type: 'test'
+  ...
+# Subtest: R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+ok 12 - R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+  ---
+  duration_ms: 812.281338
+  type: 'test'
+  ...
+# Subtest: R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+ok 13 - R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+  ---
+  duration_ms: 960.046863
+  type: 'test'
+  ...
+# Subtest: R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+ok 14 - R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+  ---
+  duration_ms: 1449.945113
+  type: 'test'
+  ...
+# Subtest: R18-GPT-03/07: real Chrome: a display:contents reveal and a partly clipped multi-line reveal lost with JavaScript off are integrity mismatches (lines measured from text ranges) (test-only)
+not ok 15 - R18-GPT-03/07: real Chrome: a display:contents reveal and a partly clipped multi-line reveal lost with JavaScript off are integrity mismatches (lines measured from text ranges) (test-only)
+  ---
+  duration_ms: 2182.203475
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r18.test.mjs:65:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        displayContents: {
+    +     loss: false,
+    +     offUnreadable: 0,
+    -     loss: true,
+    -     offUnreadable: 1,
+          onClean: true,
+    +     status: 'PASS'
+    -     status: 'integrity mismatch'
+        },
+        partialClip: {
+    +     loss: false,
+    +     offUnreadable: 0,
+    -     loss: true,
+    -     offUnreadable: 2,
+          onClean: true,
+    +     status: 'PASS'
+    -     status: 'integrity mismatch'
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    displayContents:
+      onClean: true
+      offUnreadable: 1
+      status: 'integrity mismatch'
+      loss: true
+    partialClip:
+      onClean: true
+      offUnreadable: 2
+      status: 'integrity mismatch'
+      loss: true
+  actual:
+    displayContents:
+      onClean: true
+      offUnreadable: 0
+      status: 'PASS'
+      loss: false
+    partialClip:
+      onClean: true
+      offUnreadable: 0
+      status: 'PASS'
+      loss: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r18.test.mjs:72:10
+    async withBrowser (file://<scratch>/release/tests/panel-r18.test.mjs:43:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R18-GPT-04, R18-MIMAR-02: real Chrome: a faint translucent layer and light or thin weights that pass AA by colour are not failed by pixels; unresolved colours are still graded by pixels (test-only)
+not ok 16 - R18-GPT-04, R18-MIMAR-02: real Chrome: a faint translucent layer and light or thin weights that pass AA by colour are not failed by pixels; unresolved colours are still graded by pixels (test-only)
+  ---
+  duration_ms: 2709.693252
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r18.test.mjs:75:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        layer: {
+    +     problems: [
+    +       'obscured: Card text under a faint layer',
+    +       'obscured: Card text under a faint layer'
+    +     ],
+    +     status: 'integrity mismatch'
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        thin: {
+    +     problems: [
+    +       'unreadable: Light weight sample 1 that passes AA by colour',
+    +       'unreadable: Light weight sample 2 that passes AA by colour',
+    +       'unreadable: Light weight sample 3 that passes AA by colour',
+    +       'unreadable: Light weight sample 4 that passes AA by colour',
+    +       'unreadable: Light weight sample 5 that passes AA by colour',
+    +       'unreadable: Light weight sample 6 that passes AA by colour',
+    +       'unreadable: Light weight sample 7 that passes AA by colour',
+    +       'unreadable: Light weight sample 9 that passes AA by colour',
+    +       'unreadable: Light weight sample 1 that passes AA by colour',
+    +       'unreadable: Light weight sample 2 that passes AA by colour',
+    +       'unreadable: Light weight sample 3 that passes AA by colour',
+    +       'unreadable: Light weight sample 4 that passes AA by colour',
+    +       'unreadable: Light weight sample 5 that passes AA by colour',
+    +       'unreadable: Light weight sample 6 that passes AA by colour',
+    +       'unreadable: Light weight sample 7 that passes AA by colour',
+    +       'unreadable: Light weight sample 9 that passes AA by colour'
+    +     ],
+    +     status: 'integrity mismatch'
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        unknown: [
+          'integrity mismatch',
+          1,
+          true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    layer:
+      status: 'PASS'
+      problems:
+    thin:
+      status: 'PASS'
+      problems:
+    unknown:
+      0: 'integrity mismatch'
+      1: 1
+      2: true
+  actual:
+    layer:
+      status: 'integrity mismatch'
+      problems:
+        0: 'obscured: Card text under a faint layer'
+        1: 'obscured: Card text under a faint layer'
+    thin:
+      status: 'integrity mismatch'
+      problems:
+        0: 'unreadable: Light weight sample 1 that passes AA by colour'
+        1: 'unreadable: Light weight sample 2 that passes AA by colour'
+        2: 'unreadable: Light weight sample 3 that passes AA by colour'
+        3: 'unreadable: Light weight sample 4 that passes AA by colour'
+        4: 'unreadable: Light weight sample 5 that passes AA by colour'
+        5: 'unreadable: Light weight sample 6 that passes AA by colour'
+        6: 'unreadable: Light weight sample 7 that passes AA by colour'
+        7: 'unreadable: Light weight sample 9 that passes AA by colour'
+        8: 'unreadable: Light weight sample 1 that passes AA by colour'
+        9: 'unreadable: Light weight sample 2 that passes AA by colour'
+        10: 'unreadable: Light weight sample 3 that passes AA by colour'
+        11: 'unreadable: Light weight sample 4 that passes AA by colour'
+        12: 'unreadable: Light weight sample 5 that passes AA by colour'
+        13: 'unreadable: Light weight sample 6 that passes AA by colour'
+        14: 'unreadable: Light weight sample 7 that passes AA by colour'
+        15: 'unreadable: Light weight sample 9 that passes AA by colour'
+    unknown:
+      0: 'integrity mismatch'
+      1: 1
+      2: true
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r18.test.mjs:80:10
+    async withBrowser (file://<scratch>/release/tests/panel-r18.test.mjs:43:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R18-GPT-05, R18-MIMAR-01: real Chrome: inner scroll panels are scrolled to their text; text clipped the same way in both renderings (carousel slides, collapsed accordions) is not displayed; the round's honest patterns pass (test-only)
+not ok 17 - R18-GPT-05, R18-MIMAR-01: real Chrome: inner scroll panels are scrolled to their text; text clipped the same way in both renderings (carousel slides, collapsed accordions) is not displayed; the round's honest patterns pass (test-only)
+  ---
+  duration_ms: 19548.422701
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r18.test.mjs:84:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        accordion: {
+    +     hidden: 0,
+    +     problems: [
+    +       'unmeasured: Answer text inside a collapsed accordion panel. clipped to nothing',
+    +       'unmeasured: Answer text inside a collapsed accordion panel. clipped to nothing'
+    +     ],
+    +     status: 'INCOMPLETE'
+    -     hidden: 1,
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        arabic: {
+          hidden: 0,
+          problems: [],
+          status: 'PASS'
+        },
+        autoplay: {
+    +     hidden: 0,
+    +     problems: [
+    +       'unmeasured: Slide two clipped to nothing',
+    +       'unmeasured: Slide three clipped to nothing',
+    +       'unmeasured: Slide two clipped to nothing',
+    +       'unmeasured: Slide three clipped to nothing'
+    +     ],
+    +     status: 'INCOMPLETE'
+    -     hidden: 2,
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        badge: {
+          hidden: 0,
+          problems: [],
+          status: 'PASS'
+    ...
+        carousel: {
+    +     hidden: 0,
+    +     problems: [
+    +       'unmeasured: Slide two caption clipped to nothing',
+    +       'unmeasured: Slide three caption clipped to nothing',
+    +       'unmeasured: Slide two caption clipped to nothing',
+    +       'unmeasured: Slide three caption clipped to nothing'
+    +     ],
+    +     status: 'INCOMPLETE'
+    -     hidden: 2,
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        fixed: {
+          hidden: 0,
+          problems: [],
+          status: 'PASS'
+    ...
+          hidden: 0,
+    +     problems: [
+    +       'unmeasured: Paragraph 22 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 23 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 24 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 25 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 26 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 27 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 28 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 29 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 30 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 22 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 23 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 24 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 25 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 26 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 27 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 28 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 29 of ordinary body copy that explains the service clipped to nothing',
+    +       'unmeasured: Paragraph 30 of ordinary body copy that explains the service clipped to nothing'
+    +     ],
+    +     status: 'INCOMPLETE'
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        sticky: {
+          hidden: 0,
+          problems: [],
+          status: 'PASS'
+    ...
+          hidden: 0,
+    +     problems: [
+    +       'unmeasured: Category 7 clipped to nothing',
+    +       'unmeasured: Category 8 clipped to nothing',
+    +       'unmeasured: Category 9 clipped to nothing',
+    +       'unmeasured: Category 10 clipped to nothing',
+    +       'unmeasured: Category 11 clipped to nothing',
+    +       'unmeasured: Category 12 clipped to nothing',
+    +       'unmeasured: Category 13 clipped to nothing',
+    +       'unmeasured: Category 14 clipped to nothing',
+    +       'unmeasured: Category 7 clipped to nothing',
+    +       'unmeasured: Category 8 clipped to nothing',
+    +       'unmeasured: Category 9 clipped to nothing',
+    +       'unmeasured: Category 10 clipped to nothing',
+    +       'unmeasured: Category 11 clipped to nothing',
+    +       'unmeasured: Category 12 clipped to nothing',
+    +       'unmeasured: Category 13 clipped to nothing',
+    +       'unmeasured: Category 14 clipped to nothing'
+    +     ],
+    +     status: 'INCOMPLETE'
+    -     problems: [],
+    -     status: 'PASS'
+        },
+        tooltip: {
+          hidden: 0,
+          problems: [],
+          status: 'PASS'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    shell:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    tabs:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    carousel:
+      status: 'PASS'
+      problems:
+      hidden: 2
+    autoplay:
+      status: 'PASS'
+      problems:
+      hidden: 2
+    accordion:
+      status: 'PASS'
+      problems:
+      hidden: 1
+    sticky:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    fixed:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    photoScrim:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    imgScrim:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    arabic:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    bigHeading:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    icons:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    badge:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    tooltip:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    marquee:
+      status: 'PASS'
+      problems:
+      hidden: 0
+  actual:
+    shell:
+      status: 'INCOMPLETE'
+      problems:
+        0: 'unmeasured: Paragraph 22 of ordinary body copy that explains the service clipped to nothing'
+        1: 'unmeasured: Paragraph 23 of ordinary body copy that explains the service clipped to nothing'
+        2: 'unmeasured: Paragraph 24 of ordinary body copy that explains the service clipped to nothing'
+        3: 'unmeasured: Paragraph 25 of ordinary body copy that explains the service clipped to nothing'
+        4: 'unmeasured: Paragraph 26 of ordinary body copy that explains the service clipped to nothing'
+        5: 'unmeasured: Paragraph 27 of ordinary body copy that explains the service clipped to nothing'
+        6: 'unmeasured: Paragraph 28 of ordinary body copy that explains the service clipped to nothing'
+        7: 'unmeasured: Paragraph 29 of ordinary body copy that explains the service clipped to nothing'
+        8: 'unmeasured: Paragraph 30 of ordinary body copy that explains the service clipped to nothing'
+        9: 'unmeasured: Paragraph 22 of ordinary body copy that explains the service clipped to nothing'
+        10: 'unmeasured: Paragraph 23 of ordinary body copy that explains the service clipped to nothing'
+        11: 'unmeasured: Paragraph 24 of ordinary body copy that explains the service clipped to nothing'
+        12: 'unmeasured: Paragraph 25 of ordinary body copy that explains the service clipped to nothing'
+        13: 'unmeasured: Paragraph 26 of ordinary body copy that explains the service clipped to nothing'
+        14: 'unmeasured: Paragraph 27 of ordinary body copy that explains the service clipped to nothing'
+        15: 'unmeasured: Paragraph 28 of ordinary body copy that explains the service clipped to nothing'
+        16: 'unmeasured: Paragraph 29 of ordinary body copy that explains the service clipped to nothing'
+        17: 'unmeasured: Paragraph 30 of ordinary body copy that explains the service clipped to nothing'
+      hidden: 0
+    tabs:
+      status: 'INCOMPLETE'
+      problems:
+        0: 'unmeasured: Category 7 clipped to nothing'
+        1: 'unmeasured: Category 8 clipped to nothing'
+        2: 'unmeasured: Category 9 clipped to nothing'
+        3: 'unmeasured: Category 10 clipped to nothing'
+        4: 'unmeasured: Category 11 clipped to nothing'
+        5: 'unmeasured: Category 12 clipped to nothing'
+        6: 'unmeasured: Category 13 clipped to nothing'
+        7: 'unmeasured: Category 14 clipped to nothing'
+        8: 'unmeasured: Category 7 clipped to nothing'
+        9: 'unmeasured: Category 8 clipped to nothing'
+        10: 'unmeasured: Category 9 clipped to nothing'
+        11: 'unmeasured: Category 10 clipped to nothing'
+        12: 'unmeasured: Category 11 clipped to nothing'
+        13: 'unmeasured: Category 12 clipped to nothing'
+        14: 'unmeasured: Category 13 clipped to nothing'
+        15: 'unmeasured: Category 14 clipped to nothing'
+      hidden: 0
+    carousel:
+      status: 'INCOMPLETE'
+      problems:
+        0: 'unmeasured: Slide two caption clipped to nothing'
+        1: 'unmeasured: Slide three caption clipped to nothing'
+        2: 'unmeasured: Slide two caption clipped to nothing'
+        3: 'unmeasured: Slide three caption clipped to nothing'
+      hidden: 0
+    autoplay:
+      status: 'INCOMPLETE'
+      problems:
+        0: 'unmeasured: Slide two clipped to nothing'
+        1: 'unmeasured: Slide three clipped to nothing'
+        2: 'unmeasured: Slide two clipped to nothing'
+        3: 'unmeasured: Slide three clipped to nothing'
+      hidden: 0
+    accordion:
+      status: 'INCOMPLETE'
+      problems:
+        0: 'unmeasured: Answer text inside a collapsed accordion panel. clipped to nothing'
+        1: 'unmeasured: Answer text inside a collapsed accordion panel. clipped to nothing'
+      hidden: 0
+    sticky:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    fixed:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    photoScrim:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    imgScrim:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    arabic:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    bigHeading:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    icons:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    badge:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    tooltip:
+      status: 'PASS'
+      problems:
+      hidden: 0
+    marquee:
+      status: 'PASS'
+      problems:
+      hidden: 0
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r18.test.mjs:105:10
+    async withBrowser (file://<scratch>/release/tests/panel-r18.test.mjs:43:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R18-GPT-06: real Chrome: text far down a long page and content added on scroll are reached; a scan that cannot finish is INCOMPLETE, never PASS (test-only)
+not ok 18 - R18-GPT-06: real Chrome: text far down a long page and content added on scroll are reached; a scan that cannot finish is INCOMPLETE, never PASS (test-only)
+  ---
+  duration_ms: 35240.241225
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r18.test.mjs:114:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        endless: [
+          true,
+    +     false
+    -     true
+        ],
+        lazy: {
+    +     measured: 1,
+    -     measured: 2,
+          problems: []
+        },
+        longStatic: {
+    +     measured: 1,
+    +     problems: [
+    +       'unmeasured:  never wholly inside one viewport',
+    +       'unmeasured:  never wholly inside one viewport'
+    +     ],
+    +     status: 'INCOMPLETE'
+    -     measured: 2,
+    -     problems: [],
+    -     status: 'PASS'
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    longStatic:
+      status: 'PASS'
+      problems:
+      measured: 2
+    lazy:
+      problems:
+      measured: 2
+    endless:
+      0: true
+      1: true
+  actual:
+    longStatic:
+      status: 'INCOMPLETE'
+      problems:
+        0: 'unmeasured:  never wholly inside one viewport'
+        1: 'unmeasured:  never wholly inside one viewport'
+      measured: 1
+    lazy:
+      problems:
+      measured: 1
+    endless:
+      0: true
+      1: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r18.test.mjs:120:10
+    async withBrowser (file://<scratch>/release/tests/panel-r18.test.mjs:43:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R18-GPT-01, R18-GPT-02: real Chrome: the copy deck approves displayed text and the accessible name separately, identical value and name count once; an option shows its label (test-only)
+not ok 19 - R18-GPT-01, R18-GPT-02: real Chrome: the copy deck approves displayed text and the accessible name separately, identical value and name count once; an option shows its label (test-only)
+  ---
+  duration_ms: 527.530929
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r18.test.mjs:127:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   approvedName: null,
+    +   approvedVariantName: null,
+    +   iconOnly: null,
+    +   module: 'undefined',
+    +   optionLabel: false,
+    +   sameValueAndName: null,
+    +   unapprovedName: null,
+    +   wrongName: null
+    -   approvedName: [],
+    -   approvedVariantName: [],
+    -   iconOnly: [],
+    -   module: 'function',
+    -   optionLabel: true,
+    -   sameValueAndName: [],
+    -   unapprovedName: [
+    -     'accessible name in slot button differs from deck (no ariaLabel approved): Start the service'
+    -   ],
+    -   wrongName: [
+    -     'accessible name in slot button differs from deck: Begin now'
+    -   ]
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    module: 'function'
+    sameValueAndName:
+    approvedName:
+    approvedVariantName:
+    iconOnly:
+    unapprovedName:
+      0: 'accessible name in slot button differs from deck (no ariaLabel approved): Start the service'
+    wrongName:
+      0: 'accessible name in slot button differs from deck: Begin now'
+    optionLabel: true
+  actual:
+    module: 'undefined'
+    sameValueAndName: ~
+    approvedName: ~
+    approvedVariantName: ~
+    iconOnly: ~
+    unapprovedName: ~
+    wrongName: ~
+    optionLabel: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r18.test.mjs:141:10
+    async withBrowser (file://<scratch>/release/tests/panel-r18.test.mjs:43:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 13
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 60281.24305
