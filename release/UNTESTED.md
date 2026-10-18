@@ -1,5 +1,16 @@
 # R3 checks not established
 
+## R20 additions (Mi'mar, 18 October 2026, panel round 20)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar.
+
+- **Clipping rule (R20-GPT-01, R20-MIMAR-01; Mi'mar's tiebreak):** each hidden/clip box reports the content elements it cuts wholly or partly (composed paths); content shown at 1440 and cut at another width fails, partial cuts fail, and wholly cut content passes only when another declared state of the same screen and language shows it at 1440 (DEFERRED in wireframes). Executed: bare-text and partly cut accordions, middle-slide carousels (LTR and RTL), a card with its last paragraph below the edge, a table and a nav cut at 320 (LTR and RTL). UNTESTED: content revealed only at a width other than 1440, vertical writing modes, content cut by `clip-path` or masks (not a clip box), reveal states declared for one language only, very large pages (the classification walks every content element per clip box). Known and unchanged: images cropped by an `overflow:hidden` frame count as partly clipped content (the built Arabic page has one, flagged by the R19 code as well).
+- **Faintest-text measure (R20-GPT-03):** two clipped screenshots per element (painted, and text made transparent); glyph clusters of at least 25 pixels; the 10th percentile of cluster best-pixel contrast against the pixel underneath. UNTESTED: text with `background-clip:text`, text under `mix-blend-mode`, animated backgrounds that change between the two shots, text smaller than about 10 px (clusters below 25 pixels make it INCOMPLETE), elements taller than the viewport (only the part in view is measured), shadow-root text with its own colour rules (the transparent override does not pierce shadow roots).
+- **Script-only baseline (R20-GPT-05):** for a valid `requiresScript` claim the JavaScript-off baseline is the default state's JavaScript-off rendering, and added content is removed only for approved slots placed in the state. UNTESTED: a screen without a default rendering in that language (the state keeps its own comparison), slots nested in shadow roots, vector differences that only the dialog causes (counted against the default page).
+- **requiresScript fingerprints (R20-GPT-04, P3):** compared by normalized text (first 60 characters, counted). UNTESTED: a script-only state that repeats the default page's exact strings only.
+- **Truncation fade (R20-GPT-02, P3):** the label needs overflowing text and a fade at the cut edge that leaves the opposite edge uncovered. UNTESTED: inline-axis fades in vertical writing modes, fades drawn by a child element instead of a pseudo-element.
+- **Screen type (R20-GPT-06):** `screens[].type` is `marketing`, `landing` or `functional`; `generic-hero` is required for marketing and landing screens only. The type itself is the author's declaration and is not checked against the page.
+
 ## R19 additions (Mi'mar, 18 October 2026, panel round 19)
 
 All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and device scale one. Panel round 19 had one reviewer (GPT), cross-checked by Mi'mar. Scope follows the threat model in `FANNAN-PLAN.md`.

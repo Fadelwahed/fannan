@@ -1,5 +1,24 @@
 # R3 executed verification — 17 October 2026
 
+## R20 executed verification (Mi'mar's box, 18 October 2026, about 2:15 PM UTC+3)
+
+Panel round 20 (5 P2: R20-GPT-01, R20-MIMAR-01, R20-GPT-03, R20-GPT-05, R20-GPT-06; P3 R20-GPT-02, R20-GPT-04; GPT only, cross-checked by Mi'mar; `reviews/panel-r20/`), with Mi'mar's clipping tiebreak. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 141 PASS, 0 FAIL (R19b's 134 + 6 in `tests/panel-r20.test.mjs` + 1 in `tests/designer-process.test.mjs`; R20-GPT-06 assertions added to `tests/handoff-contract.test.mjs`) | `test-results/r20/node.log` |
+| same, without deps | 0 | 78 PASS, 0 FAIL, 63 SKIPPED | `test-results/r20/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r20/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 42 PASS / 37 PASS + 5 SKIPPED (`test_r20_sections` added) | `test-results/r20/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=46 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r20/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 135 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r20/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r20/local-fixture.log`). R20 full pre-handoff runs: a collapsed bare-text accordion plus a middle-slide carousel pass the width screen with declared reveal states (`faq-open`, `slide-1`, `slide-3`; 0 unresolved reveals) and fail without them; a fixed-height card whose last paragraph lies below its edge fails even with a second declared state; an `overflow:hidden` table cut at 320 fails; pale text over a light photo with a dark band inside the line box (1.35:1 at its faintest) stays blocked with the authored PASS `wcag-review`, while the honest scrim hero still resolves; a slotted script-only dialog (`requiresScript`) is whole-state PASS against the default state's JavaScript-off baseline (state-only content: the `dialog-note` slot), and the same dialog with its slot not placed in the state is `content/js-off`.
+
+**Honest patterns and the real site:** `test-results/r20/R20-honest-patterns.log` (the R18 set, the R19 and R20 repro pages, both renderings, backstop plus width screen with each clip's rule) and `test-results/r20/R20-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; 6.3-11.2 s per rendering).
+
+Per-finding before/after logs: `test-results/r20/R20-*-{before,after}.log` (before = R20 tests against the b4747e3 sources, documents included): Chrome 19 of 32 before (13 assertion failures, 0 load errors), 32 of 32 after; docs 13 of 14 / 14 of 14; package `test_r20_sections` and the archive test FAIL before, OK after; fixture fails before at the R20 expectation on the collapsed content (assertion), exit 0 after.
+
 ## R19b executed verification (Mi'mar's box, 18 October 2026, about 12:25 PM UTC+3)
 
 Mi'mar's tiebreak on script-only declared states (`requiresScript`). Same environment as R19.
