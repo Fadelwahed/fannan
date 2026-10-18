@@ -14,7 +14,7 @@ const chrome = process.env.FANNAN_TEST_CHROME || '/usr/bin/google-chrome';
 const haveChrome = existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome);
 
 const widths = (n = 0) => ({ 1440: 0, 320: n });
-const vector = { glass: 0, h1: 1, placeholders: false, centered: 0, typeSizes: 3, heroGradient: false, purpleBlue: false, iconRows: 0, accent: '#123456', accentRatio: 0.05, maxViewportAccent: 0.1, filler: false, ruleOfThree: false, frames: 0, stylesheetsUnscanned: 0, spacingOffScale: 0, horizontalOverflow: widths(), clipped: widths(), offscreenLeft: widths(), unreachable: widths(), scrolledText: widths(), unmeasured: widths(), unscannedScopes: widths(), reflowFail: false, contrastFailures: 0, contrastUnknown: 0, contrastChecked: 5, contrastEffects: 0, textMeasured: 5, textObscured: 0, textUnreadable: 0, textUnmeasured: 0 };
+const vector = { glass: 0, h1: 1, placeholders: false, centered: 0, typeSizes: 3, heroGradient: false, purpleBlue: false, iconRows: 0, accent: '#123456', accentRatio: 0.05, maxViewportAccent: 0.1, filler: false, ruleOfThree: false, frames: 0, stylesheetsUnscanned: 0, spacingOffScale: 0, horizontalOverflow: widths(), clipped: widths(), offscreenLeft: widths(), unreachable: widths(), scrolledText: widths(), unmeasured: widths(), unscannedScopes: widths(), reflowFail: false, contrastFailures: 0, contrastUnknown: 0, contrastChecked: 5, contrastEffects: 0, textMeasured: 5, textObscured: 0, textUnreadable: 0, textUnmeasured: 0, textHidden: 0 };
 const content = { slots: [['hero', 'Welcome home'], ['lede', 'Plans that fit']], headings: [[1, 'Welcome home']], h1: 1, lang: 'en', dir: 'ltr' };
 const run = (v = {}, c = {}) => ({ vector: { ...vector, ...v }, content: { ...content, ...c } });
 const clean = run();

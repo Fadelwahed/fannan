@@ -80,7 +80,7 @@ export function designProbe() {
   const nativeText = composed.filter(visible).flatMap(e => [
     e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type) ? e.value : '',
     /^(INPUT|TEXTAREA)$/.test(e.tagName) ? e.getAttribute('placeholder') || '' : '',
-    e.tagName === 'SELECT' ? [...e.options].map(o => o.text).join('\n') : '',
+    e.tagName === 'SELECT' ? [...new Set([...e.options].flatMap(o => [o.label, o.text]))].join('\n') : '', // R18-GPT-02: an option displays its label
     e.getAttribute('aria-label') || '', e.tagName === 'IMG' ? e.getAttribute('alt') || '' : '', e.getAttribute('title') || '',
   ]).concat(composed.filter(e => e.tagName === 'DATALIST').flatMap(d => [...d.options].map(o => o.value || o.text))).filter(x => x && x.trim());
   const text = [document.body.innerText, ...shadowText, ...nativeText].join('\n');

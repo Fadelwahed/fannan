@@ -192,7 +192,7 @@ const r17Run = (name, extraHtml, script, head = '') => {
   const { result } = runChecker(join(output, `evidence-r17-${name}`), true);
   const state = result.checks.states.find(x => x.state === 'default');
   const vis = [result.checks.integrity?.probeWorld?.visibility, result.checks.integrity?.jsOff?.visibility];
-  return { page: result.checks.integrity?.status, state: state?.integrity?.status, checks: [...new Set([...(result.checks.integrity?.mismatches || []), ...(state?.integrity?.mismatches || [])].map(m => `${m.check}/${m.source || 'world'}`))].sort(), copy: state?.copy?.errors || [], placeholders: result.checks.design?.placeholders, filler: result.checks.design?.filler, visibilityMs: vis.map(v => v?.ms ?? null), runMs: Date.now() - started, pass: result.pass };
+  return { page: result.checks.integrity?.status, state: state?.integrity?.status, checks: [...new Set([...(result.checks.integrity?.mismatches || []), ...(state?.integrity?.mismatches || [])].map(m => `${m.check}/${m.source || 'world'}`))].sort(), copy: state?.copy?.errors || [], placeholders: result.checks.design?.placeholders, filler: result.checks.design?.filler, visibilityMs: vis.map(v => v?.ms ?? null), hidden: vis.map(v => v?.textHidden ?? null), runMs: Date.now() - started, pass: result.pass };
 };
 r17.clipPath = r17Run('clip-path', '<p id="r17c" style="clip-path:inset(0 100% 0 0)">Revealed later</p>', 'document.getElementById("r17c").style.clipPath = "none";');
 r17.scale = r17Run('scale', '<p id="r17s" style="transform:scale(.02)">Scaled in later</p>', 'document.getElementById("r17s").style.transform = "none";');
@@ -214,6 +214,37 @@ const r17Want = {
   healthyReveal: r17.healthyReveal.page === 'PASS' && r17.healthyReveal.state === 'PASS',
 };
 if (Object.values(r17Want).some(v => !v)) throw Error('R17 full-run expectations failed: ' + JSON.stringify(r17Want));
+// R18 (panel round 18): full pre-handoff runs for the revised backstop (R18-GPT-03/04/07, R18-MIMAR-01/02) and the
+// copy deck's separate accessible name (R18-GPT-01). Results are collected first so a checker without the fixes shows
+// every gap.
+const r18 = {};
+r18.displayContents = r17Run('r18-display-contents', '<section id="r18d" style="clip-path:inset(0 100% 0 0)"><span style="display:contents">Revealed later</span></section>', 'document.getElementById("r18d").style.clipPath = "none";');
+r18.partialClip = r17Run('r18-partial-clip', '<p id="r18p" style="clip-path:inset(0 0 66% 0)">First line<br>Second line<br>Third line</p>', 'document.getElementById("r18p").style.clipPath = "none";');
+r18.faintLayer = r17Run('r18-faint-layer', '<div style="position:relative"><p>Under a faint layer</p><div style="position:absolute;inset:0;background:rgba(255,255,255,.03)"></div></div>');
+r18.hiddenPanels = r17Run('r18-hidden-panels', '<div style="overflow:hidden;width:600px"><div style="display:flex;width:1800px"><p style="width:600px">Slide one</p><p style="width:600px">Slide two</p><p style="width:600px">Slide three</p></div></div><button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Collapsed answer</p></div>');
+r18.scriptOpened = r17Run('r18-script-opened', '<div id="r18o" style="max-height:0;overflow:hidden"><p>Opened by script</p></div>', 'document.getElementById("r18o").style.maxHeight = "none";');
+r18.thinWeights = r17Run('r18-thin-weights', '<p style="font:300 14px Lato;color:#767676">Light weight label</p><p style="font:100 12px Lato;color:#767676">Hairline caption</p><p style="font:200 16px Inter;color:#767676">Extra-light line</p>');
+const r18Copy = (name, markup, slot) => {
+  writeFileSync(handoff, JSON.stringify({ ...authored, copySlots: authored.copySlots.map(c => c.id === 'button' ? { ...c, ...slot } : c) }));
+  writeFileSync(html, original.replace('<button data-copy-slot="button">Start</button>', markup));
+  const { result } = runChecker(join(output, `evidence-r18-${name}`), true);
+  return { copy: result.checks.states.find(x => x.state === 'default')?.copy?.errors || [], contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
+};
+r18.copyApprovedName = r18Copy('copy-approved-name', '<button data-copy-slot="button" aria-label="Start the service">Start</button>', { ariaLabel: 'Start the service' });
+r18.copySameValueName = r18Copy('copy-same-value-name', '<input type="submit" data-copy-slot="button" value="Start" aria-label="Start">', {});
+r18.copyUnapprovedName = r18Copy('copy-unapproved-name', '<button data-copy-slot="button" aria-label="Start the service">Start</button>', {});
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R18 fixture runs: ' + JSON.stringify(r18));
+const lost18 = (r, check) => r.page === 'integrity mismatch' && r.state === 'integrity mismatch' && r.checks.includes(check) && r.pass === false;
+const clean18 = r => r.page === 'PASS' && r.state === 'PASS';
+const r18Want = {
+  displayContents: lost18(r18.displayContents, 'textUnreadable/js-off'), partialClip: lost18(r18.partialClip, 'textUnreadable/js-off'),
+  faintLayer: clean18(r18.faintLayer), hiddenPanels: clean18(r18.hiddenPanels) && r18.hiddenPanels.hidden.every(n => n === 3), scriptOpened: lost18(r18.scriptOpened, 'textHidden/js-off'), thinWeights: clean18(r18.thinWeights),
+  copyApprovedName: r18.copyApprovedName.copy.length === 0 && r18.copyApprovedName.contract.length === 0, copySameValueName: r18.copySameValueName.copy.length === 0,
+  copyUnapprovedName: r18.copyUnapprovedName.copy.some(e => /accessible name in slot button differs from deck \(no ariaLabel approved\): Start the service/.test(e)),
+};
+if (Object.values(r18Want).some(v => !v)) throw Error('R18 full-run expectations failed: ' + JSON.stringify(r18Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');

@@ -22,6 +22,7 @@ import { axeOptions } from './axe-tags.mjs';
 import { isolatedPage } from './probe-world.mjs';
 import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
 import { visibilityScan } from './visibility.mjs'; // R17: the rendered-visibility backstop
+import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own
 import { scopeOf, resolveScoped } from './exceptions.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
@@ -93,47 +94,7 @@ const ready = page => page.evaluate(async () => { await document.fonts.ready; co
 await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });
 ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };
 if (!ev.checks.assets.pass) fail = true;
-const copyProbe = (page, st) => page.evaluate(({ slots, lang, dir }) => {
-  const norm = x => (x || '').replace(/\s+/g, ' ').trim();
-  const wanted = new Map(slots.map(c => [c.id, norm(c.variants?.find(v => v.lang === lang && v.dir === dir)?.text || c.text)]));
-  const errors = [], used = new Set();
-  // R13 N20: the composed tree (open shadow roots included); slots are found through composed ancestors.
-  const texts = [], elements = [];
-  const walk = root => { const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT); while (w.nextNode()) { const n = w.currentNode; if (n.nodeType === 3) texts.push(n); else { elements.push(n); if (n.shadowRoot) walk(n.shadowRoot); } } };
-  walk(document.body);
-  const parentOf = el => el.assignedSlot ?? el.parentElement ?? (el.getRootNode() instanceof ShadowRoot ? el.getRootNode().host : null);
-  const slotOf = el => { for (let a = el; a; a = parentOf(a)) if (a.hasAttribute?.('data-copy-slot')) return a; return null; };
-  for (const n of texts) {
-    const value = norm(n.nodeValue);
-    if (!value || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(n.parentElement?.tagName)) continue;
-    const style = getComputedStyle(n.parentElement), range = document.createRange(); range.selectNodeContents(n);
-    if (style.display === 'none' || style.visibility === 'hidden' || range.getClientRects().length === 0) continue;
-    const el = slotOf(n.parentElement), id = el?.getAttribute('data-copy-slot');
-    if (!id || !wanted.has(id)) { errors.push(`unlisted visible copy: ${value.slice(0, 60)}`); continue; }
-    used.add(id);
-  }
-  // R17-GPT-03: authored native strings are displayed or announced copy as well: a button-type input's value, a
-  // placeholder, every option label of a select and an aria-label. Each must sit in a copy slot whose approved text
-  // contains it; typed or fixture values of text fields are user data and are not matched.
-  const native = e => [e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type) ? e.value : '', /^(INPUT|TEXTAREA)$/.test(e.tagName) ? e.getAttribute('placeholder') : '', ...(e.tagName === 'SELECT' ? [...e.options].map(o => o.text) : []), e.getAttribute('aria-label')].map(norm).filter(Boolean);
-  for (const e of elements) {
-    const style = getComputedStyle(e), box = e.getBoundingClientRect();
-    if (style.display === 'none' || style.visibility === 'hidden' || !(box.width > 0 && box.height > 0)) continue;
-    for (const value of native(e)) {
-      const el = slotOf(e), id = el?.getAttribute('data-copy-slot');
-      if (!id || !wanted.has(id)) { errors.push(`unlisted native copy: ${value.slice(0, 60)}`); continue; }
-      if (!wanted.get(id).includes(value)) { errors.push(`native copy in slot ${id} differs from deck: ${value.slice(0, 60)}`); continue; }
-      used.add(id);
-    }
-  }
-  const slotText = e => norm(e.textContent) || native(e).join(' ');
-  for (const [id, text] of wanted) {
-    const matches = elements.filter(e => e.getAttribute('data-copy-slot') === id);
-    if (matches.length !== 1 || slotText(matches[0]) !== text) errors.push(`copy slot ${id} differs from deck`);
-    if (!used.has(id)) errors.push(`copy slot ${id} not visible`);
-  }
-  return { errors, pass: errors.length === 0 };
-}, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });
+const copyProbe = (page, st) => page.evaluate(copyDeckProbe, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });
 const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
 Object.assign(design, copySignals(design.visibleText, design.headlines));
 delete design.visibleText; delete design.headlines;
@@ -204,7 +165,7 @@ const integrityFor = async (pagePath, scope) => {
       for (let y = 0; y < doc; y += 900) { await pg.evaluate(y => scrollTo(0, y), y); ratios.push((await pg.evaluate(designProbe)).accentViewportRatio); }
       await pg.evaluate(() => scrollTo(0, 0));
       const rs = (await screenWidths(pg, widthsFor, null)).results, per = k => Object.fromEntries(rs.map(r => [r.width, k === 'horizontalOverflow' ? Number(r.horizontalOverflow) : r[k]?.length ?? 0])), r320 = rs.find(r => r.width === 320);
-      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked, contrastEffects: ct.contrastEffects, textMeasured: vis?.textMeasured, textObscured: vis?.textObscured, textUnreadable: vis?.textUnreadable, textUnmeasured: vis?.textUnmeasured }, content: await pg.evaluate(contentProbe), visibility: vis ? { ...vis } : null };
+      return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked, contrastEffects: ct.contrastEffects, textMeasured: vis?.textMeasured, textObscured: vis?.textObscured, textUnreadable: vis?.textUnreadable, textUnmeasured: vis?.textUnmeasured, textHidden: vis?.textHidden }, content: await pg.evaluate(contentProbe), visibility: vis ? { ...vis } : null };
     } catch (e) { return { vector: null, content: null, error: e.message }; } };
     const href = pathToFileURL(resolve(pagePath)).href;
     const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);

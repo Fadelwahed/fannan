@@ -54,7 +54,11 @@ export function nativeCheck() {
 // R17-GPT-02: a shown placeholder is measured with its own computed opacity composited onto its colour and with its
 // own font size and weight. R17-MIMAR-02: the text colour is the computed -webkit-text-fill-color (it computes to
 // the color value unless set). Anything this CSS pass misses is caught by the pixel backstop (visibility.mjs).
-export function contrastProbe() {
+// R18: contrastProbe({ record: true }) also keeps its verdict per element ({ known, ratio, large }) in a WeakMap on the
+// world's global (globalThis.__fannanContrast) for the rendered-visibility backstop, which grades by pixels only the
+// text this pass could not resolve. Called without arguments it records nothing.
+export function contrastProbe(opts) {
+  const record = opts?.record ? (globalThis.__fannanContrast = new WeakMap()) : null;
   const parse = v => { const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(v || ''); return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null; };
   const lum = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
   let failures = 0, unknown = 0, checked = 0, effects = 0;
@@ -114,12 +118,12 @@ export function contrastProbe() {
     // R15 A3: CSS opacity on the element and its composed ancestors is composited (premultiplied groups). The walk
     // over backgrounds stops at an opaque one only when no node from there up is translucent.
     const chain = []; for (let a = el; a; a = up(a)) { const s = getComputedStyle(a), [mult, ok] = effect(s); chain.push([s, Number(s.opacity) * mult, ok]); }
-    if (chain.some(([, , ok]) => !ok)) { effects++; unknown++; continue; } // R16-GPT-01: never a silent pass
+    if (chain.some(([, , ok]) => !ok)) { effects++; unknown++; record?.set(el, { known: false }); continue; } // R16-GPT-01: never a silent pass
     const opaqueFrom = []; for (let i = chain.length - 1, all = true; i >= 0; i--) { all = all && chain[i][1] >= 1; opaqueFrom[i] = all ? 1 : 0; }
     const levels = []; let known = true;
     for (let i = 0; i < chain.length; i++) { const [s, op] = chain[i]; if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg || !(op >= 0 && op <= 1)) { known = false; break; } levels.push([bg, op]); if (bg[3] >= 1 && opaqueFrom[i] === 1) break; }
     const parsed = parse(colour), fg = parsed && own >= 0 && own <= 1 ? [parsed[0], parsed[1], parsed[2], parsed[3] * own] : null;
-    if (!known || !fg) { unknown++; continue; }
+    if (!known || !fg) { unknown++; record?.set(el, { known: false }); continue; }
     const pm = ([r, g, b, a]) => [r * a, g * a, b * a, a], fade = (x, o) => x.map(v => v * o), on = (top, under) => top.map((v, i) => v + under[i] * (1 - top[3]));
     let tx = on(pm(fg), pm(levels[0][0])), bx = pm(levels[0][0]);
     for (let i = 1; i < levels.length; i++) { const own = pm(levels[i][0]), o = levels[i - 1][1]; tx = on(fade(tx, o), own); bx = on(fade(bx, o), own); }
@@ -127,6 +131,7 @@ export function contrastProbe() {
     const text = flat(tx), bg = flat(bx), [l1, l2] = [lum(text), lum(bg)].sort((x, y) => y - x), ratio = (l1 + 0.05) / (l2 + 0.05);
     const size = parseFloat(typo.fontSize), large = size >= 24 || (size >= 18.66 && Number(typo.fontWeight) >= 700);
     checked++; if (ratio < (large ? 3 : 4.5)) failures++;
+    record?.set(el, { known: true, ratio: Math.round(ratio * 100) / 100, large });
   }
   return { contrastFailures: failures, contrastUnknown: unknown, contrastChecked: checked, contrastEffects: effects };
 }
@@ -205,11 +210,13 @@ export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Numbe
 // (string or null), ratio (finite non-negative number or null; null means the gate could not measure it), widths
 // (per-width counts keyed by CSS width, so {1440:1, 320:0} and {1440:0, 320:1} differ) and coverage (a count that
 // must match between worlds but is never "worse"; zero JavaScript-off contrast coverage makes the run INCOMPLETE).
-export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count', textMeasured: 'coverage', textObscured: 'count', textUnreadable: 'count', textUnmeasured: 'count' };
+export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count', textMeasured: 'coverage', textObscured: 'count', textUnreadable: 'count', textUnmeasured: 'count', textHidden: 'count' };
 // R17: the rendered-visibility backstop (visibility.mjs) supplies textMeasured, textObscured, textUnreadable and
-// textUnmeasured for each rendering.
+// textUnmeasured for each rendering; R18 adds textHidden (text clipped to nothing by an ancestor that cannot be scrolled,
+// such as an inactive carousel slide or a collapsed accordion: not displayed, graded through the declared states; more of
+// it with JavaScript off than on is a js-off mismatch).
 export { visibilityScan, VISIBILITY } from './visibility.mjs';
-export const VISIBILITY_FIELDS = ['textMeasured', 'textObscured', 'textUnreadable', 'textUnmeasured'];
+export const VISIBILITY_FIELDS = ['textMeasured', 'textObscured', 'textUnreadable', 'textUnmeasured', 'textHidden'];
 export const INTEGRITY_CHECKS = [...Object.keys(VECTOR), 'content'];
 const isCount = x => Number.isInteger(x) && x >= 0;
 const validField = (t, x) => t === 'count' || t === 'coverage' ? isCount(x) : t === 'flag' ? typeof x === 'boolean' : t === 'text' ? typeof x === 'string' || x === null : t === 'ratio' ? x === null || (typeof x === 'number' && Number.isFinite(x) && x >= 0) : !!x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length > 0 && Object.entries(x).every(([w, n]) => /^\d+$/.test(w) && isCount(n));
@@ -258,9 +265,9 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   // unmeasurable where the scripted page painted it) is an integrity mismatch through the vector comparison above,
   // and a reviewed jsOffDifferences entry for it keeps the evidence but never makes it PASS (INCOMPLETE). Text that
   // cannot be measured in either rendering is INCOMPLETE.
-  for (const k of ['textObscured', 'textUnreadable']) if (probe.vector[k] > 0) mismatches.push({ check: k, source: 'rendered', detail: `the scripted page paints ${probe.vector[k]} text element(s) ${k === 'textObscured' ? 'covered by another painted layer' : 'below the pixel readability floor'}` });
-  for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.textUnmeasured > 0) notes.push(`${where}: ${run.vector.textUnmeasured} text element(s) the visibility backstop cannot measure (no box, clipped to nothing, off-screen or too few pixels)`);
-  for (const d of differences) { const e = explain(d.check); if (e) { expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); if (['textObscured', 'textUnreadable', 'textUnmeasured'].includes(d.check)) notes.push(`JavaScript-off ${d.check} differs (reviewed waiver recorded); text visible only with JavaScript is never PASS`); } else mismatches.push({ ...d, source: 'js-off' }); }
+  for (const k of ['textObscured', 'textUnreadable']) if (probe.vector[k] > 0) mismatches.push({ check: k, source: 'rendered', detail: `the scripted page paints ${probe.vector[k]} text element(s) ${k === 'textObscured' ? 'covered by an opaque layer' : 'not painted, or below the pixel readability floor where the CSS pass could not resolve the colours'}` });
+  for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.textUnmeasured > 0) notes.push(`${where}: ${run.vector.textUnmeasured} text element(s) the visibility backstop cannot measure (no box, outside the document, too few pixels, not reachable by scrolling, or not reached before the scan bound)`);
+  for (const d of differences) { const e = explain(d.check); if (e) { expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); if (['textObscured', 'textUnreadable', 'textUnmeasured', 'textHidden'].includes(d.check)) notes.push(`JavaScript-off ${d.check} differs (reviewed waiver recorded); text visible only with JavaScript is never PASS`); } else mismatches.push({ ...d, source: 'js-off' }); }
   // R12 M08, R13 N14: non-equivalent JavaScript-off content is never PASS. An unexplained difference is a mismatch;
   // a reviewed `content` entry is kept as evidence, but the JavaScript-off metrics stay unverified (INCOMPLETE).
   if (!sameContent) notes.push(explain('content') ? 'JavaScript-off content differs (reviewed waiver recorded); its metrics are unverified' : 'JavaScript-off content is not equivalent; its metrics prove nothing');

@@ -34,7 +34,7 @@ const withBrowser = async fn => {
 const widths = { 1440: 0, 320: 0 };
 const base = Object.fromEntries(Object.entries(VECTOR).map(([k, t]) => [k, t === 'flag' ? false : t === 'text' ? '#123456' : t === 'widths' ? widths : t === 'coverage' ? 5 : 0]));
 const scope = { screen: 'home', state: 'default', lang: 'en' };
-const FIELDS = ['textMeasured', 'textObscured', 'textUnreadable', 'textUnmeasured'];
+const FIELDS = ['textMeasured', 'textObscured', 'textUnreadable', 'textUnmeasured', 'textHidden'];
 // one rendering measured as pre-handoff-check measures it: the CSS contrast pass plus the visibility backstop
 const measure = async pg => {
   const v = { ...base, ...await pg.evaluate(contrastProbe) };
@@ -67,13 +67,15 @@ test('R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means wit
   assert.deepEqual(results, Object.fromEntries(Object.keys(cases).map(k => [k, want])));
 }));
 
-test('R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails, and text it cannot measure is INCOMPLETE (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+// R18-MIMAR-01 changed the third case: text clipped to nothing by a box that cannot be scrolled, the same with JavaScript
+// on and off, is not displayed (textHidden, graded through the declared states) instead of INCOMPLETE.
+test('R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails; R18: text clipped to nothing in both renderings is not displayed (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const permanent = await both(open, page('<div style="position:relative"><p style="color:#000;margin:0">Covered by a fade<br>second line<br>third line</p><div style="position:absolute;inset:0;background:linear-gradient(transparent,#fff 60%)"></div></div>'));
   const faint = await both(open, page('<p style="color:#000;-webkit-text-fill-color:rgba(0,0,0,.08)">Faint text-fill colour</p>'));
   const clipped = await both(open, page('<div style="height:0;overflow:hidden"><p style="color:#000">Clipped to nothing</p></div>'));
   const pick = r => [r.integrity.status, r.integrity.pass, r.integrity.mismatches.some(m => m.source === 'rendered')];
-  assert.deepEqual({ permanent: pick(permanent), faint: pick(faint), clipped: [clipped.integrity.status, clipped.integrity.pass, clipped.on.vector.textUnmeasured >= 1] },
-    { permanent: ['integrity mismatch', false, true], faint: ['integrity mismatch', false, true], clipped: ['INCOMPLETE', false, true] });
+  assert.deepEqual({ permanent: pick(permanent), faint: pick(faint), clipped: [clipped.integrity.status, clipped.integrity.pass, clipped.on.vector.textHidden >= 1 && clipped.on.vector.textUnmeasured === 0] },
+    { permanent: ['integrity mismatch', false, true], faint: ['integrity mismatch', false, true], clipped: ['PASS', true, true] });
 }));
 
 test('R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)', { skip }, async () => withBrowser(async ({ open }) => {

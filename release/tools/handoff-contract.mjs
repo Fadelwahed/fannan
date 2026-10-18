@@ -95,6 +95,8 @@ export function checkHandoff(h, phase = 'handoff') {
     need(['claim', 'interface'].includes(c.kind) && (c.kind !== 'claim' || c.claimRefs?.length > 0), `${prefix} claim copy needs confirmed fact refs`);
     if (file(c.source?.path) && nonempty(c.text) && !(phase === 'wireframe' && /\[placeholder\]/i.test(c.text))) need(readFileSync(resolve(c.source.path), 'utf8').includes(c.text), `${prefix} text absent from cited source`);
     need(['ltr', 'rtl'].includes(c.dir) && nonempty(c.lang), `${prefix} language and direction required`);
+    // R18-GPT-01: an approved accessible name, when declared (on the slot or a variant), is real copy too
+    for (const n of [c.ariaLabel, ...(c.variants || []).map(v => v?.ariaLabel)].filter(x => x !== undefined)) need(nonempty(n) && !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(n) && !filler.test(n), `${prefix} ariaLabel must be real approved copy`);
     if (phase === 'handoff') need(file(c.placementScreenshot), `${prefix} placement screenshot required`);
     if (phase === 'handoff') {
       const targets = (h.screens || []).filter(s => s.id === c.screen).flatMap(s => (s.states || []).filter(st => st.applicable !== false));
