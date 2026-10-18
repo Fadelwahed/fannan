@@ -60,6 +60,32 @@ test('R9 (sibling of CODEX-R4-02): page CSS cannot change the accent colour the 
     assert.ok(clean.accentRatio > 0);
     assert.equal(hostile.accentRatio, clean.accentRatio, 'a span override does not hide the accent area');
     await page.setContent(`<style>:root{--colors-accent:not-a-colour}</style>${body}`);
-    assert.equal((await page.evaluate(designProbe)).accentRatio, 0, 'an invalid accent matches nothing');
+    assert.equal((await page.evaluate(designProbe)).accentRatio, null, 'ARGON-R5-01: an invalid accent fails closed (null), it is not a zero-area pass');
   } finally { await browser.close(); }
+});
+
+test('ARGON-R5-01: a declared but invalid accent fails closed; it never shadows a valid one into a pass (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const run = async css => { const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }); await page.setContent(`<style>${css} b{display:block;width:400px;height:400px;background:var(--colors-accent)}</style><main><h1>x</h1><b></b></main>`); const r = await page.evaluate(designProbe); await page.close(); return r; };
+    const shadowed = await run(':root{--accent:not-a-colour;--colors-accent:rgb(11,61,145)}');
+    assert.deepEqual(shadowed.accentInvalid, ['--accent']);
+    assert.equal(shadowed.accentVar, '--colors-accent', 'the first VALID candidate is the one measured');
+    assert.equal(shadowed.accentRatio, null, 'an invalid declared accent fails closed');
+    assert.equal(shadowed.accentViewportRatio, null);
+    const invalidOnly = await run(':root{--colors-accent:nope}');
+    assert.equal(invalidOnly.accentVar, null); assert.equal(invalidOnly.accentRatio, null); assert.equal(invalidOnly.accentViewportRatio, null);
+    const valid = await run(':root{--colors-accent:rgb(11,61,145)}');
+    assert.deepEqual(valid.accentInvalid, []); assert.ok(valid.accentRatio > 0); assert.ok(valid.accentViewportRatio > 0);
+    const missing = await run('');
+    assert.equal(missing.accentRatio, null, 'no accent declared: null, which the handoff gate fails');
+  } finally { await browser.close(); }
+});
+
+test('ARGON-R5-01: the gate treats a null accent as a FAIL on the page and on every state, including the scrolled viewport maximum', () => {
+  const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
+  assert.match(source, /design\.accentRatio !== null && design\.accentRatio <= q\.accentAreaRatioFullPage && design\.accentViewportRatio !== null/);
+  assert.match(source, /const maxViewportAccent = viewportRatios\.length && !viewportRatios\.includes\(null\) \? Math\.max\(\.\.\.viewportRatios\) : null;/, 'Math.max(null) is 0, so a null ratio must not reach it');
+  assert.match(source, /d\.accentRatio !== null && d\.accentRatio <= q\.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q\.accentAreaRatioViewport/);
 });
