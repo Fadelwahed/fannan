@@ -16,7 +16,12 @@ export const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fan
 
 export function inspectLayout({ reflow = false } = {}) {
   const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
-  const MEDIA = 'img, svg, video, canvas, iframe, frame, object, embed, fencedframe, portal, input, select, textarea, button';
+  const MEDIA = 'img, svg, video, audio, canvas, iframe, frame, object, embed, fencedframe, portal, input, select, textarea, button';
+  // R22-GPT-03 (Fadel's tiebreak): fallback content inside video, audio, object and canvas is not rendered, so it is not
+  // text on screen (the element itself is media, or a nested document for object)
+  const FALLBACK = 'video, audio, object, canvas';
+  // R22-GPT-04: links and named semantic controls are content in their own right, by their box and accessible name
+  const CONTROLS = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [role="switch"], [role="combobox"], [role="textbox"]';
   const NESTED = 'iframe, frame, object, embed, fencedframe, portal';
   const clipped = [], offscreenLeft = [], unreachable = [], scrolledText = [], reflowCandidates = [], unmeasured = [], unscannedScopes = [];
   // ARGON-R5-05: visually hidden (sr-only) content is not a clip: clip: rect(0...) / clip-path inset(50%), or a box of at
@@ -32,10 +37,12 @@ export function inspectLayout({ reflow = false } = {}) {
   const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } };
   if (document.body) { all.push(document.body); walk(document.body); }
   const within = (s, d) => { for (let a = d; a; a = parentOf(a)) if (a === s) return true; return false; };
-  const ownText = el => [...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim());
+  const inFallback = el => { for (let a = el.parentElement; a; a = a.parentElement) if (a.matches(FALLBACK)) return true; return false; };
+  const ownText = el => !inFallback(el) && [...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim());
+  const isControl = el => !inFallback(el) && el.matches(CONTROLS);
   // the content itself is measured (text-node ranges, or the media box), so text overflowing its own box counts too
   const textRects = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim()).map(n => { const range = document.createRange(); range.selectNodeContents(n); return range.getBoundingClientRect(); }).filter(b => b.width > 0 && b.height > 0);
-  const contentRects = el => el.matches(MEDIA) ? [el.getBoundingClientRect()] : textRects(el);
+  const contentRects = el => el.matches(MEDIA) || (isControl(el) && el.getBoundingClientRect().width > 0) ? [el.getBoundingClientRect()] : textRects(el);
   // R12 M14, R13 N02: hidden, undisplayed or sr-only content (on the element or a composed ancestor) is never
   // measured. Visibility comes from computed style plus geometry: an element box, or (display:contents, zero-size
   // boxes) its rendered text ranges.
@@ -47,7 +54,7 @@ export function inspectLayout({ reflow = false } = {}) {
   // a display:contents box has no box of its own (checkVisibility is false); its nearest boxed ancestor decides
   const rendered = el => { let a = el; while (a && getComputedStyle(a).display === 'contents') a = parentOf(a); return !a || typeof a.checkVisibility !== 'function' || a.checkVisibility(); };
   const shown = el => { const c = getComputedStyle(el); if (c.display === 'none' || c.visibility !== 'visible' || inSrOnly(el) || !rendered(el)) return false; const r = el.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || textRects(el).length > 0; };
-  const isContent = el => el.matches(MEDIA) || ownText(el);
+  const isContent = el => (el.matches(MEDIA) && !inFallback(el)) || ownText(el) || isControl(el);
   // R13 N03: composed content detection: an element holds content when it or any composed descendant (open shadow
   // trees included) is shown text or media, so a shadow-only host is screened too.
   const holds = new Set();
@@ -80,11 +87,23 @@ export function inspectLayout({ reflow = false } = {}) {
   // control inside a cropped media wrapper is still checked. Nested documents (iframe, object, embed) stay content.
   // R21-GPT-03/04: content is matched across widths and states by its print (normalised text, or a control's
   // accessible name), never by position.
-  const CONTROL = 'input, select, textarea, button';
-  const kindOf = d => d.matches(CONTROL) ? 'control' : d.matches(NESTED) ? 'frame' : ownText(d) ? 'text' : d.matches(MEDIA) ? 'media' : 'text';
+  // R22-GPT-05: prints are typed: `text:<normalised text>` for text, `<role>:<accessible name>` for a control (aria-labelledby,
+  // aria-label, labels, rendered content with image alt text, title, placeholder, value), `frame:<title>` for a nested
+  // document. Text matches only text, so a heading cannot stand in for a lost button. Text inside a control is part of
+  // the control (its print is the control's), so a control's shortened label is graded by its name (R22-MIMAR-02).
+  const controlOf = d => { for (let a = d; a; a = parentOf(a)) if (isControl(a)) return a; return null; };
+  // an image or other media inside a link is still media (a pure image crop inside an available link stays exempt)
+  const kindOf = d => d.matches(FALLBACK) && !d.matches(NESTED) ? 'media' : isControl(d) ? 'control' : d.matches(NESTED) ? 'frame' : ownText(d) ? (controlOf(d) ? 'control' : 'text') : d.matches(MEDIA) ? 'media' : 'text';
   const norm = t => String(t || '').replace(/\s+/g, ' ').trim();
-  const nameOf = d => norm(d.getAttribute('aria-label') || (d.labels && d.labels[0] ? d.labels[0].textContent : '') || (d.matches('button') ? d.textContent : '') || d.getAttribute('placeholder') || d.getAttribute('title') || (d.matches('input') && ['submit', 'button', 'reset'].includes(d.type) ? d.value : '') || '');
-  const printOf = d => { const k = kindOf(d); const t = k === 'control' ? nameOf(d) : k === 'frame' ? norm(d.getAttribute('title') || d.getAttribute('src') || d.tagName) : norm([...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return (t || `${k}:${d.tagName.toLowerCase()}`).slice(0, 200); };
+  const roleOf = d => { const r = (d.getAttribute('role') || '').trim().split(/\s+/)[0]; if (r) return r; const t = d.tagName.toLowerCase(), type = (d.getAttribute('type') || '').toLowerCase(); return t === 'a' ? 'link' : t === 'button' || t === 'summary' ? 'button' : t === 'select' ? 'combobox' : t === 'textarea' ? 'textbox' : t === 'input' ? (['checkbox', 'radio'].includes(type) ? type : ['submit', 'button', 'reset', 'image'].includes(type) ? 'button' : type === 'range' ? 'slider' : 'textbox') : t; };
+  // rendered content (display:none, hidden and aria-hidden parts excluded), with image alt and inner aria-label text
+  const contentName = el => [...el.childNodes].map(n => { if (n.nodeType === 3) return n.nodeValue; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || !rendered(n) || getComputedStyle(n).display === 'none') return ''; if (n.getAttribute('aria-label')) return ' ' + n.getAttribute('aria-label') + ' '; if (n.matches('img, area, input[type="image"]')) return ' ' + (n.getAttribute('alt') || '') + ' '; if (n.matches('svg')) return ' ' + (n.querySelector('title')?.textContent || '') + ' '; return ' ' + contentName(n) + ' '; }).join('');
+  const nameOf = d => {
+    const by = (d.getAttribute('aria-labelledby') || '').trim().split(/\s+/).filter(Boolean).map(id => d.getRootNode().getElementById?.(id) || document.getElementById(id)).filter(Boolean).map(e => e.textContent).join(' ');
+    const byContent = !d.matches('input, select, textarea') ? contentName(d) : '';
+    return norm(by || d.getAttribute('aria-label') || (d.labels && d.labels[0] ? [...d.labels].map(l => l.textContent).join(' ') : '') || byContent || d.getAttribute('title') || d.getAttribute('placeholder') || (d.matches('input') && ['submit', 'button', 'reset'].includes(d.type) ? d.value : '') || (d.matches('input[type="image"]') ? d.getAttribute('alt') : '') || '');
+  };
+  const printOf = d => { const k = kindOf(d); if (k === 'control') { const c = controlOf(d); return `${roleOf(c)}:${nameOf(c)}`.slice(0, 200); } const t = k === 'frame' ? norm(d.getAttribute('title') || d.getAttribute('src') || d.tagName) : norm([...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return `${k}:${t || d.tagName.toLowerCase()}`.slice(0, 200); };
   const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = parentOf(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
   const contentEls = all.filter(d => isContent(d) && shown(d));
   const cutOf = (e, r) => {
@@ -202,6 +221,24 @@ export function inspectLayout({ reflow = false } = {}) {
   return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
+// R22-MIMAR-02 (P3): a control print is matched by the same role and either the same name, or a shown name whose words
+// are prefixes, in order, of the words of the 1440 name ("Demo" for "Request a demo", "Pricing" for "Pricing and
+// plans"). Text prints match only the same text (R22-GPT-05). An empty name never matches.
+const words = n => String(n || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
+export function printShown(list, print) {
+  const have = list instanceof Set ? list : new Set(list || []);
+  if (have.has(print)) return true;
+  const i = print.indexOf(':'), role = print.slice(0, i), long = words(print.slice(i + 1));
+  if (i < 1 || role === 'text' || role === 'frame' || !long.length) return false;
+  for (const q of have) {
+    if (!q.startsWith(role + ':')) continue;
+    const short = words(q.slice(role.length + 1)); if (!short.length || short.length > long.length) continue;
+    let k = 0; for (const w of long) if (k < short.length && w.startsWith(short[k])) k++;
+    if (k === short.length) return true;
+  }
+  return false;
+}
+
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
 
 // R13 N16: closed shadow roots cannot be reached from page script, so they are counted through the DevTools protocol
@@ -253,9 +290,10 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   for (const r of results) {
     shownByWidth[r.width] = r.shownPrints;
     const here = new Set(r.shownPrints);
-    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
+    // R22-GPT-06: a control is never excused by a truncation
+    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.partial.length ? (c.truncation && ![...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
     const lostByClip = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(p => p.print))); // reported once, by its clip rule
-    r.lost = r.width === 1440 ? [] : shownAt1440.filter(p => !here.has(p) && !lostByClip.has(p)).map(print => ({ print }));
+    r.lost = r.width === 1440 ? [] : shownAt1440.filter(p => !printShown(here, p) && !lostByClip.has(p)).map(print => ({ print }));
     r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated'].includes(c.rule));
     r.pass = r.passExceptReveal && r.clipped.length === 0 && r.lost.length === 0;
     delete r.shownPrints; delete r.rest;
@@ -279,14 +317,17 @@ export function resolveReveals(scopes, phase = 'handoff') {
       for (const c of r.clipped.filter(c => ['reveal', 'truncated'].includes(c.rule))) {
         // each cut element needs a declared state that shows it (a carousel's slides are shown by different slide states);
         // a reveal is shown at 1440, a truncation's full text at the same width
-        const items = c.rule === 'reveal' ? c.whole : c.partial, width = c.rule === 'reveal' ? 1440 : r.width;
-        const states = items.map(p => others.find(o => at(o, width).includes(p.print))?.scope.state);
+        // R22-GPT-06: a truncation's expanded state must show ALL the clamped content (every whole and partial item) at
+        // that width, in one declared state
+        const items = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
+        const full = c.rule === 'truncated' ? others.find(o => items.every(p => printShown(at(o, width), p.print)))?.scope.state : null;
+        const states = c.rule === 'truncated' ? items.map(() => full) : items.map(p => others.find(o => printShown(at(o, width), p.print))?.scope.state);
         const by = states.every(Boolean);
         c.revealedBy = by ? [...new Set(states)] : null;
         if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: c.rule, paths: items.filter((p, i) => !states[i]).map(p => p.path), text: items.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
       }
       for (const l of r.lost || []) {
-        l.reachableIn = others.find(o => at(o, r.width).includes(l.print))?.scope.state || null;
+        l.reachableIn = others.find(o => printShown(at(o, r.width), l.print))?.scope.state || null;
         if (!l.reachableIn) { l.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: 'shown at 1440, not shown at this width', paths: [], text: [l.print.slice(0, 60)], deferred: l.deferred }); }
       }
       r.pass = r.passExceptReveal && r.clipped.every(c => !['reveal', 'truncated'].includes(c.rule) || c.revealedBy || c.deferred) && (r.lost || []).every(l => l.reachableIn || l.deferred);

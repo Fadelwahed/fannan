@@ -130,7 +130,7 @@ test('R22-GPT-02: glyphRatio: punctuation size is relative to the font: a thin l
   assert.deepEqual([visibility.zoneOf(2.5, 4.5), visibility.zoneOf(3.6, 4.5), visibility.zoneOf(4.54, 4.5), visibility.zoneOf(7.9, 4.5), visibility.zoneOf(3.4, 3), visibility.zoneOf(null, 4.5)], ['fail', 'incomplete', 'incomplete', 'pass', 'pass', 'incomplete']);
 });
 
-test('R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video, canvas or object with fallback text passes; a real caption cut by the same crop still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+test('R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass; a real caption cut by the same crop still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const crop = inner => W(`<div style="overflow:hidden;height:200px;max-width:900px;position:relative">${inner}</div><p>Body copy.</p>`);
   assert.deepEqual({
