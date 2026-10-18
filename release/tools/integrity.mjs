@@ -46,27 +46,75 @@ export function nativeCheck() {
 
 // Browser side (probe world): text whose colour against its resolved solid background falls below 4.5:1 (3:1 for
 // large text). Backgrounds with images or non-sRGB colours are counted as unknown, not as passes.
+// R16-GPT-01: compositing effects anywhere on the composed ancestor chain (above an opaque background too) are read:
+// filter opacity() is composited like opacity; any other non-identity filter, a blend mode, a backdrop filter or a
+// mask cannot be resolved, so the text is unknown and counted in contrastEffects (integrity is then INCOMPLETE).
+// R16-GPT-02: native control text (input and textarea values or placeholders, button-type input labels, the
+// selected option of a select) is measured too, with the placeholder colour where the placeholder shows.
 export function contrastProbe() {
   const parse = v => { const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(v || ''); return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null; };
   const lum = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
-  let failures = 0, unknown = 0, checked = 0;
+  let failures = 0, unknown = 0, checked = 0, effects = 0;
   // R14-GPT-02: the composed tree (open shadow roots); backgrounds resolve through slots and shadow hosts; text is
   // rendered when its own text ranges have area (display:contents and zero-size boxes included).
   const up = a => a.assignedSlot ?? a.parentElement ?? (a.getRootNode() instanceof ShadowRoot ? a.getRootNode().host : null);
   const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
   const textArea = el => [...el.childNodes].some(n => { if (n.nodeType !== 3 || !n.nodeValue.trim()) return false; const range = document.createRange(); range.selectNodeContents(n); return [...range.getClientRects()].some(b => b.width > 0 && b.height > 0); });
+  const num = a => { const t = a.trim(); return t === '' ? 1 : t.endsWith('%') ? parseFloat(t) / 100 : parseFloat(t); };
+  const IDENTITY = { brightness: 1, contrast: 1, saturate: 1, grayscale: 0, invert: 0, sepia: 0 };
+  // [opacity multiplier from filter opacity(), resolvable?] for one computed style
+  const effect = s => {
+    let mult = 1, ok = true;
+    const filter = s.filter || 'none';
+    if (filter !== 'none') {
+      const fn = /([a-z-]+)\(([^()]*)\)/g;
+      if (filter.replace(fn, '').trim()) ok = false; // nested functions (drop-shadow colours, url()) are not resolved
+      for (const [, name, arg] of filter.matchAll(fn)) {
+        const v = num(arg);
+        if (name === 'opacity' && v >= 0) mult *= Math.min(1, v);
+        else if (name in IDENTITY && v === IDENTITY[name]) continue;
+        else if ((name === 'blur' || name === 'hue-rotate') && parseFloat(arg) === 0) continue;
+        else ok = false;
+      }
+    }
+    for (const k of ['mixBlendMode']) if (s[k] && s[k] !== 'normal') ok = false;
+    for (const k of ['backdropFilter', 'webkitBackdropFilter', 'maskImage', 'webkitMaskImage']) if (s[k] && s[k] !== 'none') ok = false;
+    return [mult, ok];
+  };
+  const BUTTONISH = ['submit', 'reset', 'button'], NO_TEXT = ['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image'];
+  // displayed native-control text: { text, placeholder } or null
+  const controlText = el => {
+    if (el.tagName === 'INPUT') {
+      const t = (el.type || 'text').toLowerCase();
+      if (NO_TEXT.includes(t)) return null;
+      if (BUTTONISH.includes(t)) return el.hasAttribute('value') ? (el.value.trim() ? { text: el.value } : null) : t === 'button' ? null : { text: t };
+      return el.value.trim() ? { text: el.value } : el.placeholder.trim() ? { text: el.placeholder, placeholder: true } : null;
+    }
+    if (el.tagName === 'TEXTAREA') return el.value.trim() ? { text: el.value } : el.placeholder.trim() ? { text: el.placeholder, placeholder: true } : null;
+    if (el.tagName === 'SELECT') { const o = el.selectedOptions?.[0]; return o && o.text.trim() ? { text: o.text } : null; }
+    return null;
+  };
+  const boxed = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   for (const el of all) {
-    if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
     const c = getComputedStyle(el);
-    if (c.visibility !== 'visible' || c.display === 'none' || !textArea(el)) continue;
-    // R15 A3 (R15-GPT-03): CSS opacity on the element and its composed ancestors is composited (premultiplied
-    // groups), so a fade or scroll reveal that starts near-transparent is measured as rendered. The walk stops at an
-    // opaque background only when no node from there up is translucent; a blend mode on the chain is unknown.
-    const chain = []; for (let a = el; a; a = up(a)) chain.push([a, getComputedStyle(a)]);
-    const opaqueFrom = []; for (let i = chain.length - 1, all = true; i >= 0; i--) { all = all && Number(chain[i][1].opacity) >= 1; opaqueFrom[i] = all ? 1 : 0; }
+    let colour;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) {
+      const t = controlText(el);
+      if (!t || c.visibility !== 'visible' || c.display === 'none' || !boxed(el)) continue;
+      colour = t.placeholder ? getComputedStyle(el, '::placeholder').color : c.color;
+    } else {
+      if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
+      if (c.visibility !== 'visible' || c.display === 'none' || !textArea(el)) continue;
+      colour = c.color;
+    }
+    // R15 A3: CSS opacity on the element and its composed ancestors is composited (premultiplied groups). The walk
+    // over backgrounds stops at an opaque one only when no node from there up is translucent.
+    const chain = []; for (let a = el; a; a = up(a)) { const s = getComputedStyle(a), [mult, ok] = effect(s); chain.push([s, Number(s.opacity) * mult, ok]); }
+    if (chain.some(([, , ok]) => !ok)) { effects++; unknown++; continue; } // R16-GPT-01: never a silent pass
+    const opaqueFrom = []; for (let i = chain.length - 1, all = true; i >= 0; i--) { all = all && chain[i][1] >= 1; opaqueFrom[i] = all ? 1 : 0; }
     const levels = []; let known = true;
-    for (let i = 0; i < chain.length; i++) { const s = chain[i][1]; if (s.backgroundImage !== 'none' || (s.mixBlendMode && s.mixBlendMode !== 'normal')) { known = false; break; } const bg = parse(s.backgroundColor), op = Number(s.opacity); if (!bg || !(op >= 0 && op <= 1)) { known = false; break; } levels.push([bg, op]); if (bg[3] >= 1 && opaqueFrom[i] === 1) break; }
-    const fg = parse(c.color);
+    for (let i = 0; i < chain.length; i++) { const [s, op] = chain[i]; if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg || !(op >= 0 && op <= 1)) { known = false; break; } levels.push([bg, op]); if (bg[3] >= 1 && opaqueFrom[i] === 1) break; }
+    const fg = parse(colour);
     if (!known || !fg) { unknown++; continue; }
     const pm = ([r, g, b, a]) => [r * a, g * a, b * a, a], fade = (x, o) => x.map(v => v * o), on = (top, under) => top.map((v, i) => v + under[i] * (1 - top[3]));
     let tx = on(pm(fg), pm(levels[0][0])), bx = pm(levels[0][0]);
@@ -76,7 +124,7 @@ export function contrastProbe() {
     const size = parseFloat(c.fontSize), large = size >= 24 || (size >= 18.66 && Number(c.fontWeight) >= 700);
     checked++; if (ratio < (large ? 3 : 4.5)) failures++;
   }
-  return { contrastFailures: failures, contrastUnknown: unknown, contrastChecked: checked };
+  return { contrastFailures: failures, contrastUnknown: unknown, contrastChecked: checked, contrastEffects: effects };
 }
 
 // Browser side: what makes two renderings equivalent content. R13 N13: each visible copy slot with its normalised
@@ -92,7 +140,25 @@ export function contentProbe() {
   const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
   const slots = all.filter(e => e.hasAttribute('data-copy-slot') && shown(e)).map(e => [e.getAttribute('data-copy-slot'), text(e)]).sort((a, b) => (a[0] + '\u0000' + a[1]).localeCompare(b[0] + '\u0000' + b[1]));
   const headings = all.filter(e => /^H[1-6]$/.test(e.tagName) && shown(e)).map(e => [Number(e.tagName[1]), text(e)]);
-  return { slots, headings, h1: all.filter(e => e.tagName === 'H1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
+  // R16-GPT-02: controls and named elements without text of their own: each shown form control, button, link,
+  // image or element with an ARIA role or label is recorded with its accessible name (aria-labelledby, aria-label,
+  // label elements, button value, alt, own text, title, placeholder) and its displayed value, placeholder or
+  // selected option, so a label or value that only script fills makes the JavaScript-off content differ.
+  const byId = (e, id) => (e.getRootNode().getElementById?.(id)) || document.getElementById(id);
+  const nameOf = e => {
+    const by = (e.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean).map(id => byId(e, id)).filter(Boolean).map(x => norm(x.textContent)).join(' ').trim();
+    if (by) return by;
+    const label = norm(e.getAttribute('aria-label')); if (label) return label;
+    if (e.labels?.length) { const t = norm([...e.labels].map(l => l.textContent).join(' ')); if (t) return t; }
+    if (e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type)) { const v = norm(e.value); if (v) return v; }
+    if (e.tagName === 'IMG') { const alt = norm(e.getAttribute('alt')); if (alt) return alt; }
+    if (!/^(INPUT|TEXTAREA|SELECT|IMG)$/.test(e.tagName)) { const t = text(e); if (t) return t; }
+    return norm(e.getAttribute('title')) || norm(e.getAttribute('placeholder'));
+  };
+  const shownValue = e => e.tagName === 'SELECT' ? norm(e.selectedOptions?.[0]?.text) : /^(INPUT|TEXTAREA)$/.test(e.tagName) && !['hidden', 'checkbox', 'radio', 'range', 'color', 'file', 'image', 'submit', 'reset', 'button'].includes(e.type) ? norm(e.value) || norm(e.placeholder) : '';
+  const named = e => /^(INPUT|TEXTAREA|SELECT|BUTTON|IMG)$/.test(e.tagName) || (e.tagName === 'A' && e.hasAttribute('href')) || e.hasAttribute('role') || e.hasAttribute('aria-label') || e.hasAttribute('aria-labelledby');
+  const controls = all.filter(e => named(e) && !(e.tagName === 'INPUT' && e.type === 'hidden') && shown(e)).map(e => [e.tagName.toLowerCase() + (e.tagName === 'INPUT' ? ':' + e.type : '') + (e.getAttribute('role') ? '[' + e.getAttribute('role') + ']' : ''), nameOf(e), shownValue(e)]);
+  return { slots, headings, controls, h1: all.filter(e => e.tagName === 'H1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
 }
 
 // R12 M13: the reduced-motion rAF counter, installed by addInitScript in every frame. The counter is private (a
@@ -128,12 +194,12 @@ export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Numbe
 // (string or null), ratio (finite non-negative number or null; null means the gate could not measure it), widths
 // (per-width counts keyed by CSS width, so {1440:1, 320:0} and {1440:0, 320:1} differ) and coverage (a count that
 // must match between worlds but is never "worse"; zero JavaScript-off contrast coverage makes the run INCOMPLETE).
-export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage' };
+export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count' };
 export const INTEGRITY_CHECKS = [...Object.keys(VECTOR), 'content'];
 const isCount = x => Number.isInteger(x) && x >= 0;
 const validField = (t, x) => t === 'count' || t === 'coverage' ? isCount(x) : t === 'flag' ? typeof x === 'boolean' : t === 'text' ? typeof x === 'string' || x === null : t === 'ratio' ? x === null || (typeof x === 'number' && Number.isFinite(x) && x >= 0) : !!x && typeof x === 'object' && !Array.isArray(x) && Object.keys(x).length > 0 && Object.entries(x).every(([w, n]) => /^\d+$/.test(w) && isCount(n));
 const validVector = v => !!v && typeof v === 'object' && Object.entries(VECTOR).every(([k, t]) => validField(t, v[k]));
-const validContent = c => !!c && Array.isArray(c.slots) && c.slots.every(x => Array.isArray(x) && x.length === 2 && x.every(y => typeof y === 'string')) && Array.isArray(c.headings) && c.headings.every(x => Array.isArray(x) && x.length === 2 && Number.isInteger(x[0]) && typeof x[1] === 'string') && isCount(c.h1) && typeof c.lang === 'string' && typeof c.dir === 'string';
+const validContent = c => !!c && Array.isArray(c.slots) && c.slots.every(x => Array.isArray(x) && x.length === 2 && x.every(y => typeof y === 'string')) && Array.isArray(c.headings) && c.headings.every(x => Array.isArray(x) && x.length === 2 && Number.isInteger(x[0]) && typeof x[1] === 'string') && isCount(c.h1) && typeof c.lang === 'string' && typeof c.dir === 'string' && (c.controls === undefined || (Array.isArray(c.controls) && c.controls.every(x => Array.isArray(x) && x.length === 3 && x.every(y => typeof y === 'string'))));
 const canon = x => JSON.stringify(x && typeof x === 'object' && !Array.isArray(x) ? Object.keys(x).sort((a, b) => a - b).map(k => [k, x[k]]) : x);
 const worseOff = (k, on, off) => {
   const t = VECTOR[k], a = on[k], b = off[k];
@@ -162,13 +228,16 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   const explain = check => (Array.isArray(handoff?.jsOffDifferences) ? handoff.jsOffDifferences : []).find(d => d?.check === check && d.screen === scope.screen && d.state === scope.state && d.lang === scope.lang && nonempty(d.reason) && roles.includes(d.reviewer));
   const differences = [];
   const sameContent = canon(jsOff.content) === canon(probe.content);
-  if (!sameContent) differences.push({ check: 'content', detail: `with JavaScript off the content differs (slots ${jsOff.content.slots.length} vs ${probe.content.slots.length}, headings ${jsOff.content.headings.length} vs ${probe.content.headings.length}, h1 ${jsOff.content.h1} vs ${probe.content.h1}, ${jsOff.content.lang}/${jsOff.content.dir} vs ${probe.content.lang}/${probe.content.dir}; text compared per slot and heading)` });
+  if (!sameContent) differences.push({ check: 'content', detail: `with JavaScript off the content differs (slots ${jsOff.content.slots.length} vs ${probe.content.slots.length}, headings ${jsOff.content.headings.length} vs ${probe.content.headings.length}, controls ${(jsOff.content.controls || []).length} vs ${(probe.content.controls || []).length}, h1 ${jsOff.content.h1} vs ${probe.content.h1}, ${jsOff.content.lang}/${jsOff.content.dir} vs ${probe.content.lang}/${probe.content.dir}; text compared per slot and heading)` });
   for (const k of Object.keys(VECTOR)) {
     if (worseOff(k, probe.vector, jsOff.vector)) differences.push({ check: k, detail: `with JavaScript off ${k} is ${canon(jsOff.vector[k])} vs ${canon(probe.vector[k])}` });
     else if (worseOff(k, jsOff.vector, probe.vector)) recorded.push({ check: k, detail: `the scripted page is worse than JavaScript off (${k}); failed by the main check` });
   }
   // R13 N12: JavaScript-off text that could not be contrast-checked at all, where the scripted page could, proves nothing.
   if (jsOff.vector.contrastChecked === 0 && probe.vector.contrastChecked > 0) notes.push('JavaScript-off contrast coverage is zero; its contrast diagnostic proves nothing');
+  // R16-GPT-01: text under a filter, blend mode, backdrop filter or mask that the probe cannot resolve, in either
+  // rendering, is never a silent pass; the cross-check is INCOMPLETE (the main gates still fail glass).
+  for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.contrastEffects > 0) notes.push(`${where}: ${run.vector.contrastEffects} text element(s) under compositing effects the contrast probe cannot resolve`);
   for (const d of differences) { const e = explain(d.check); if (e) expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); else mismatches.push({ ...d, source: 'js-off' }); }
   // R12 M08, R13 N14: non-equivalent JavaScript-off content is never PASS. An unexplained difference is a mismatch;
   // a reviewed `content` entry is kept as evidence, but the JavaScript-off metrics stay unverified (INCOMPLETE).
