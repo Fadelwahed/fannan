@@ -320,7 +320,7 @@ r20.cardBelow = r19Run('card-below', card20, '', '', authored, [['hover', at20(c
 r20.table320 = r19Run('table-320', '<div style="overflow:hidden;width:100%"><table style="width:900px"><tr><th>Plan</th><th>Price</th><th>Seats</th><th>Support</th><th>Storage</th></tr></table></div>');
 // R20-GPT-03: pale text over a light photo with one dark band (1.35:1 where it is faintest) stays blocked through the
 // full gate even though the authored wcag-review PASS cites the screenshot; the honest scrim hero (heroReviewed) resolves
-writeFileSync(join(output, 'r20-band.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="600" width="40" height="200" fill="#111"/></svg>');
+writeFileSync(join(output, 'r20-band.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="200" width="40" height="200" fill="#111"/></svg>');
 r20.photoBand = r19Run('photo-band', `<div style="position:relative;width:800px;height:200px;background:url('r20-band.svg')"><p style="position:absolute;top:80px;left:20px;margin:0;width:760px;font-size:24px;color:#d0d0d0">Pale caption over a light photo</p></div>`);
 // R20-GPT-05: a slotted script-only dialog state (requiresScript, trigger recorded) is compared with the default
 // state's JavaScript-off rendering; its dialog copy is an approved slot placed in that state, so the whole state PASSES

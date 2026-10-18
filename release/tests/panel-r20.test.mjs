@@ -100,7 +100,7 @@ test('R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and wid
 }));
 
 test('R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
-  const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="600" width="40" height="200" fill="#111"/></svg>');
+  const svg = encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="200" width="40" height="200" fill="#111"/></svg>');
   const block = (bg, colour, size = 24) => W(`<div style="position:relative;width:800px;height:200px;${bg}"><p id="t" style="position:absolute;top:80px;left:20px;margin:0;width:760px;font-size:${size}px;color:${colour}">Caption text over an image with some detail</p></div>`);
   const cases = {
     paleOverLightPhoto: block(`background:url("data:image/svg+xml,${svg}")`, '#d0d0d0'),

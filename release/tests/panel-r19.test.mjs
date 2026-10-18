@@ -64,6 +64,8 @@ const filler = n => Array.from({ length: n }, (_, i) => `<p>Paragraph ${i + 1} o
 const problems = r => [r.on.vector.visibility.items, r.off.vector.visibility.items];
 const clean = r => ({ status: r.integrity.status, problems: problems(r).flat().map(i => `${i.problem}: ${i.text}`) });
 const loss = r => ({ status: r.integrity.status, checks: [...new Set(r.integrity.mismatches.map(m => `${m.check}/${m.source}`))].sort() });
+// R20-GPT-03: the faintest-glyph measure (absent before R20: then nothing is measured)
+const glyphOf = async (pg, paths) => (typeof visibility.glyphContrast === 'function' ? visibility.glyphContrast(pg, paths) : null);
 const W = (body, script = '') => page(body, script).replace('font:16px/1.5 sans-serif', 'font:16px/1.5 sans-serif;color:#1a1a1a');
 
 test('R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -148,7 +150,7 @@ test('R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result 
     await main.addScriptTag({ content: axeSrc }); const a = await main.evaluate(async o => axe.run(document, o), axeOptions());
     const incomplete = [...a.incomplete, ...extra], paths = await visibility.contrastPaths(probe, incomplete);
     // R20-GPT-03: AA is graded on the faintest glyphs, measured per rendering as pre-handoff-check measures them
-    const glyph = { scripted: await visibility.glyphContrast(probe, paths.map(x => x.path)), jsOff: await visibility.glyphContrast((await open(html, false)).probe, paths.map(x => x.path)) };
+    const glyph = { scripted: await glyphOf(probe, paths.map(x => x.path)), jsOff: await glyphOf((await open(html, false)).probe, paths.map(x => x.path)) };
     const out = visibility.resolveContrastIncomplete({ incomplete, paths, integrity: { probeWorld: r.on.vector, jsOff: r.off.vector, glyph }, review: rev, shots: [shot] });
     return { incomplete: incomplete.map(v => v.id), unresolved: out.unresolved, reasons: [...new Set(out.contrastNodes.map(n => n.reason))] };
   };
@@ -196,7 +198,7 @@ test('R19b: real Chrome: a declared non-default state reachable only by script (
     const on = await measure((await open(html)).probe, { topLayer: declaration.state !== 'default' }), off = await measure((await open(html, false)).probe, { topLayer: declaration.state !== 'default' });
     const integrityR = { probeWorld: on.vector, jsOff: off.vector }, claim = visibility.requiresScriptCheck({ declaration, integrity: integrityR });
     const onProbe = (await open(html)).probe, paths = await visibility.contrastPaths(onProbe, incomplete(sel));
-    integrityR.glyph = { scripted: await visibility.glyphContrast(onProbe, paths.map(x => x.path)), jsOff: await visibility.glyphContrast((await open(html, false)).probe, paths.map(x => x.path)) }; // R20-GPT-03
+    integrityR.glyph = { scripted: await glyphOf(onProbe, paths.map(x => x.path)), jsOff: await glyphOf((await open(html, false)).probe, paths.map(x => x.path)) }; // R20-GPT-03
     const r = visibility.resolveContrastIncomplete({ incomplete: incomplete(sel), paths, integrity: integrityR, review: rev, shots: [shot], scriptOnly: claim.valid });
     return { valid: claim.valid, rendersWithoutScript: claim.rendersWithoutScript, unresolved: r.unresolved, reason: r.contrastNodes[0]?.reason?.replace(/(\d\.\d)\d:/, '$1:') ?? null };
   };
