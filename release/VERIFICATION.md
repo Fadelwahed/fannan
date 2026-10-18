@@ -1,6 +1,6 @@
 # R3 executed verification — 17 October 2026
 
-## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM Gaza)
+## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM UTC+3)
 
 Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
 
@@ -26,7 +26,7 @@ Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux
 
 Per-finding before/after logs: `test-results/r10/ARGON-R5-0{1,2,3,4,5}-before.log` / `-after.log` (03 passes before and after: not reproduced) and `R10-zip-evidence-before.log` / `-after.log`.
 
-## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM Gaza)
+## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM UTC+3)
 
 Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accent colour measured through a page element). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
 
@@ -52,7 +52,7 @@ Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accen
 
 Per-finding before/after logs: `test-results/r9/CODEX-R4-0{1,2,3,4}-before.log` / `-after.log` and `R9-accent-sibling-before.log` / `-after.log`.
 
-## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM Gaza)
+## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM UTC+3)
 
 Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network.
 
@@ -73,7 +73,7 @@ Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_
 
 Per-port before/after logs are `test-results/r8/PORT-0*-before.log` / `-after.log`. Package build and the anchored verify are in the latest `reviews/MIMAR-R8-changes-*.md`.
 
-## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM Gaza)
+## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM UTC+3)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
 
@@ -93,7 +93,7 @@ Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-onl
 
 Per-finding before/after logs are in `test-results/r7/`. Package build and the anchored verify (trust files at 0444) are in the latest `reviews/MIMAR-R7-changes-*.md`.
 
-## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM Gaza)
+## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM UTC+3)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`), copied in after the box restore; no install, no network.
 

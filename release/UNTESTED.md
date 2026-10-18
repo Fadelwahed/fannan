@@ -1,5 +1,14 @@
 # R3 checks not established
 
+## R11 additions (Mi'mar, 18 October 2026, Asad panel round 5)
+
+- **axe tags (C1):** `wcag21a` and `wcag22a` added; a test checks the set against the pinned axe-core 4.14.0 rule tags. axe's experimental A/AA rules (`css-orientation-lock`, `p-as-heading`, `table-fake-caption`, `td-has-header`) stay off and remain manual. UNTESTED: other axe versions (the pin is 4.14.0).
+- **Glass (S2/C6):** computed on `html`, `body`, visible elements and rendered pseudo-elements, plus raw-text scans of served CSS/HTML, style attributes and `<style>`. Checked in Chrome 155 headless only. UNTESTED: glass inside shadow roots, cross-origin stylesheets (blocked by the checker), constructed stylesheets (`adoptedStyleSheets`) and CSS injected after load; any raw `backdrop-filter` other than `none` fails even when the rule never applies (fail closed).
+- **320 px scroller (S3):** only 2D content is excused. Chrome 155 headless only. UNTESTED: scrollers created with `overflow: overlay` or in shadow roots, and whether an excused table is genuinely two-dimensional (recorded in `twoDimensional`, manual).
+- **Probe world (C3):** probes and axe run in a CDP isolated world; a hostile page that patches `getComputedStyle`, `Document.prototype.querySelectorAll` and pins a fake `axe` is tested in Chrome 155. UNTESTED: a run with page JavaScript disabled (not implemented: it would change what renders); page scripts that change the DOM or CSS during the check (measured as rendered); iframes (the world is created for the main frame only); browsers other than Chromium. The motion counter deliberately reads the page world.
+- **Package junk and secrets (C4):** `.env*`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, credential dotfiles, private keys and certificates, and editor swap/backup files are refused in the package input and among changed paths. Checked with temporary trees. UNTESTED: secrets inside ordinarily named files (only names are screened; the separate secret grep is manual).
+- **Horizontal margins (S7):** spacing scale now checks left and right margins; `auto` (read from `computedStyleMap`) is ignored. Chrome 155 only.
+
 ## R10 additions (Mi'mar, 18 October 2026, Argon round 5)
 
 - **Accent fails closed (ARGON-R5-01):** an invalid declared accent, or none, gives null ratios and a handoff FAIL (also the scrolled viewport maximum). Checked in Chrome 155 headless only. In the wireframe phase the accent area stays deferred to Step 6 (unchanged), so an invalid accent is recorded in `accentInvalid` but does not fail a wireframe run.
@@ -11,7 +20,7 @@
 - **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.
 - **Accent colour (R9 sibling):** normalised by a detached canvas. Chrome 155 only; colour spaces beyond sRGB (oklch outside sRGB) may round differently from computed backgrounds. UNTESTED.
 - **Package build (CODEX-R4-01):** atomic replace was tested on the box's local filesystem only; a crash between the four output renames can still leave a mix of old and new outputs (each file is whole). `verify` detects that mix.
-- **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM Gaza).
+- **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM UTC+3).
 
 ## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
 
