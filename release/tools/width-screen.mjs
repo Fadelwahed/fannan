@@ -115,6 +115,17 @@ export function inspectLayout({ reflow = false } = {}) {
   };
   const printOf = d => { const k = kindOf(d); if (k === 'control') { const c = controlOf(d); return `${roleOf(c)}:${nameOf(c)}`.slice(0, 200); } const t = k === 'frame' ? norm(d.getAttribute('title') || d.getAttribute('src') || d.tagName) : norm([...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return `${k}:${t || d.tagName.toLowerCase()}`.slice(0, 200); };
   const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = parentOf(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
+  // R27-GPT-01 (Mi'mar's tiebreak, Fadel): a STABLE identity key, not a position: the id when present; otherwise the nearest
+  // landmark, the role family (R27-GPT-03: button, link and the menuitem roles are one action family, so a node whose role
+  // changes within it keeps its identity), the accessible name (or text), the link target and the order among same-key
+  // elements in that landmark. A footer copy has another landmark, so it is never the nav item.
+  const LANDMARK = 'header, nav, main, footer, aside, search, form[aria-label], form[aria-labelledby], section[aria-label], section[aria-labelledby], [role="banner"], [role="navigation"], [role="main"], [role="contentinfo"], [role="complementary"], [role="search"], [role="region"], [role="form"], [role="tabpanel"]'; // a tab panel scopes its own content (it differs per tab state)
+  const ACTIONS = ['button', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio'];
+  const landmarkOf = el => { for (let a = parentOf(el); a; a = parentOf(a)) if (a.nodeType === 1 && a.matches(LANDMARK)) return `${a.getAttribute('role') || a.tagName.toLowerCase()}:${a.id || norm(a.getAttribute('aria-label') || '')}`; return 'document'; };
+  const baseKey = el => { const r = isControl(el) ? roleOf(el) : el.getAttribute('role') === 'tabpanel' ? 'tabpanel' : el.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') ? 'heading' : 'text'; const fam = ACTIONS.includes(r) ? 'action' : r; const name = isControl(el) || r === 'tabpanel' || r === 'heading' ? nameOf(el) : norm([...el.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')); return `${landmarkOf(el)}|${fam}|${name}|${el.getAttribute('href') || ''}`; };
+  const keyMemo = new Map(), orderSeen = new Map();
+  for (const el of all) { if (el.id || !(isContent(el) || el.getAttribute('role') === 'tabpanel' || el.matches('h1, h2, h3, h4, h5, h6, [role="heading"]'))) continue; const b = baseKey(el), n = orderSeen.get(b) || 0; orderSeen.set(b, n + 1); keyMemo.set(el, `${b}|${n}`); }
+  const keyOf = el => el.id ? `#${el.id}` : keyMemo.get(el) || `${baseKey(el)}|?`;
   const contentEls = all.filter(d => isContent(d) && shown(d));
   const cutOf = (e, r) => {
     const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;
@@ -126,7 +137,7 @@ export function inspectLayout({ reflow = false } = {}) {
       if (kindOf(d) === 'media') continue; // R21-MIMAR-01: a media crop is not a content cut
       const rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
       if (!rects.length || rects.every(inside)) continue;
-      const item = { path: pathOf(d), owner: kindOf(d) === 'control' ? pathOf(controlOf(d) || d) : null, tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
+      const item = { path: pathOf(d), owner: kindOf(d) === 'control' ? pathOf(controlOf(d) || d) : null, key: keyOf(kindOf(d) === 'control' ? controlOf(d) || d : d), tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
       (rects.every(outside) ? whole : partial).push(item);
     }
     return { whole, partial };
@@ -251,12 +262,14 @@ export function inspectLayout({ reflow = false } = {}) {
   const tablistOfPanel = pnl => { const ids = [pnl.id, ...(pnl.getAttribute('aria-labelledby') || '').split(/\s+/)].filter(Boolean); for (const t of all.filter(e => roleOf(e) === 'tablist')) { if ([...t.querySelectorAll('[role="tab"]')].some(tab => (pnl.id && (tab.getAttribute('aria-controls') || '').split(/\s+/).includes(pnl.id)) || (tab.id && ids.includes(tab.id)))) return t; } return all.find(e => roleOf(e) === 'tablist' && pnl.parentElement && within(pnl.parentElement, e)) || null; };
   const panelTablist = new Map(panelEls.map(pnl => [pnl, tablistOfPanel(pnl)]));
   const panelOf = el => { for (let a = el; a; a = parentOf(a)) if (a.nodeType === 1 && panelTablist.has(a)) return a; return null; };
-  const ref = el => el ? pathOf(el) : null;
+  const ref = el => el ? keyOf(el) : null;
   const ledgerItems = [];
-  { const seen = new Set(); for (const d of shownEls) { const c = kindOf(d) === 'control' ? controlOf(d) : null, el = c || d; if (seen.has(el)) continue; seen.add(el); const pnl = panelOf(el); ledgerItems.push({ id: pathOf(el), kind: c ? 'control' : 'text', role: c ? roleOf(c) : null, name: c ? nameOf(c) : null, print: printOf(d), panel: ref(pnl), panelTablist: pnl ? ref(panelTablist.get(pnl)) : null, region: el.closest('footer, [role="contentinfo"]') ? 'footer' : el.closest('nav, [role="navigation"]') ? 'nav' : null }); } }
-  const headingItems = all.filter(h => h.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && shownEls.some(d => d === h || within(h, d))).map(h => { const pnl = panelOf(h); return { id: pathOf(h), name: nameOf(h), panel: ref(pnl), panelTablist: pnl ? ref(panelTablist.get(pnl)) : null }; });
-  const disclosureItems = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => ({ id: pathOf(c), name: nameOf(c) }));
-  const compositeItems = [...groups].map(([g, items]) => ({ id: pathOf(g), role: roleOf(g), name: nameOf(g), items: [...seenControl].filter(i => ITEM[roleOf(i)] && items.includes(`${roleOf(i)}:${nameOf(i)}`) && within(g, i)).map(i => ({ id: pathOf(i), role: roleOf(i), name: nameOf(i), selected: i.getAttribute('aria-selected') === 'true' })) }));
+  { const seen = new Set(); for (const d of shownEls) { const c = kindOf(d) === 'control' ? controlOf(d) : null, el = c || d; if (seen.has(el)) continue; seen.add(el); const pnl = panelOf(el); ledgerItems.push({ id: keyOf(el), kind: c ? 'control' : 'text', role: c ? roleOf(c) : null, name: c ? nameOf(c) : null, print: printOf(d), panel: ref(pnl), panelTablist: pnl ? ref(panelTablist.get(pnl)) : null, region: el.closest('footer, [role="contentinfo"]') ? 'footer' : el.closest('nav, [role="navigation"]') ? 'nav' : null }); } }
+  const headingItems = all.filter(h => h.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && shownEls.some(d => d === h || within(h, d))).map(h => { const pnl = panelOf(h); const sec = (() => { const box = h.closest('section, article'); if (box && [...box.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]')][0] === h) return [box]; const out = []; for (let n = h.nextElementSibling; n && !n.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && !n.querySelector('h1, h2, h3, h4, h5, h6, [role="heading"]'); n = n.nextElementSibling) out.push(n); return out; })();
+    const sectionActions = [...seenControl].filter(c => ACTIONS.includes(roleOf(c)) && sec.some(b => b === c || within(b, c))).map(c => nameOf(c));
+    return { id: keyOf(h), sectionActions, name: nameOf(h), panel: ref(pnl), panelTablist: pnl ? ref(panelTablist.get(pnl)) : null }; });
+  const disclosureItems = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => ({ id: keyOf(c), name: nameOf(c) }));
+  const compositeItems = [...groups].map(([g, items]) => ({ id: keyOf(g), role: roleOf(g), name: nameOf(g), items: [...seenControl].filter(i => ITEM[roleOf(i)] && items.includes(`${roleOf(i)}:${nameOf(i)}`) && within(g, i)).map(i => ({ id: keyOf(i), role: roleOf(i), name: nameOf(i), selected: i.getAttribute('aria-selected') === 'true' })) }));
   return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, headings, ledgerItems, headingItems, disclosureItems, compositeItems, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
@@ -331,7 +344,7 @@ export function coverByEquivalents(lost, from, at) {
 const ACTION_ROLES = ACTION;
 export function accountLosses(group, phase = 'handoff') {
   const unresolved = [];
-  const key = i => `${i.id}|${i.print}`;
+  const key = i => i.id; // R27: the stable key alone (it already holds the role family and name)
   const L = (g, width) => g.widths?.ledgerByWidth?.[width] || { items: [], headings: [], disclosures: [], composites: [] };
   const ledgerAll = new Set(group.flatMap(g => L(g, 1440).items.map(key)));
   const ledgerIds = new Set(group.flatMap(g => [...L(g, 1440).items.map(i => i.id), ...L(g, 1440).headings.map(h => h.id), ...L(g, 1440).disclosures.map(d => d.id), ...L(g, 1440).composites.map(c => c.id)]));
@@ -367,8 +380,10 @@ export function accountLosses(group, phase = 'handoff') {
             for (const T of group) {
               const heads = L(T, W).headings.filter(h => !ledgerIds.has(h.id) || h.panelTablist === tl.id); // a panel's own heading is never subtracted
               const m = tryMatch(heads, T); if (!m) continue;
-              const shownActs = new Map(); for (const i of L(T, W).items) if (i.kind === 'control' && ACTION_ROLES.has(i.role) && (!ledgerAll.has(key(i)) || i.panelTablist === tl.id)) shownActs.set(i.name, (shownActs.get(i.name) || 0) + 1);
-              if ([...total].every(([n, c]) => (shownActs.get(n) || 0) === c)) { done = { T, m, how: 'headed sections' }; break; }
+              // R27-GPT-02 (Mi'mar's tiebreak): at least the panels' total of each action, counted only inside the sections
+              // matched to this tablist's tabs; same-name actions elsewhere neither help nor hurt
+              const shownActs = new Map(); for (const [e] of m) for (const n of e.sectionActions || []) shownActs.set(n, (shownActs.get(n) || 0) + 1);
+              if ([...total].every(([n, c]) => (shownActs.get(n) || 0) >= c)) { done = { T, m, how: 'headed sections' }; break; }
             }
           }
         }
@@ -474,9 +489,9 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   const groups1440 = results.find(r => r.width === 1440) || {};
   const g1440 = { composites: groups1440.composites || [], disclosures: groups1440.disclosures || [], headings: groups1440.headings || [] };
   // R26: identity of a cut item: its owning control, else the element itself (path), with its print
-  const idOf = p => `${p.kind === 'control' && p.owner ? p.owner : p.path}|${p.print}`;
+  const idOf = p => p.key;
   const ledger1440 = results.find(r => r.width === 1440)?.ledgerItems || [];
-  const ids1440 = new Set(ledger1440.map(i => `${i.id}|${i.print}`));
+  const ids1440 = new Set(ledger1440.map(i => i.id));
   const ledgerByWidth = {};
   for (const r of results) {
     ledgerByWidth[r.width] = { items: r.ledgerItems || [], headings: r.headingItems || [], disclosures: r.disclosureItems || [], composites: r.compositeItems || [] };
@@ -490,8 +505,8 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
     for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => ids1440.has(idOf(p))) ? (c.collapsed ? 'collapsed' : 'shown at 1440, lost at this width') : 'reveal';
     r.collapsedBoxes = r.clipped.filter(c => c.rule === 'collapsed'); r.clipped = r.clipped.filter(c => c.rule !== 'collapsed');
     const cutIds = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(idOf))); // reported once, by its clip rule
-    const here = new Set((r.ledgerItems || []).map(i => `${i.id}|${i.print}`));
-    r.lostItems = r.width === 1440 ? [] : ledger1440.filter(i => !here.has(`${i.id}|${i.print}`) && !cutIds.has(`${i.id}|${i.print}`));
+    const here = new Set((r.ledgerItems || []).map(i => i.id));
+    r.lostItems = r.width === 1440 ? [] : ledger1440.filter(i => !here.has(i.id) && !cutIds.has(i.id));
     r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated', 'collapsed'].includes(c.rule));
     delete r.shownPrints; delete r.rest; delete r.composites; delete r.disclosures; delete r.headings; delete r.ledgerItems; delete r.headingItems; delete r.disclosureItems; delete r.compositeItems;
   }
@@ -536,12 +551,16 @@ export function resolveReveals(scopes, phase = 'handoff') {
         // consumes one shown control of the same name (action family) in that state; text keeps any-copy matching
         const raw = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
         const seenOwner = new Set(), items = raw.filter(p => { if (p.kind !== 'control' || !p.owner) return true; if (seenOwner.has(p.owner)) return false; seenOwner.add(p.owner); return true; });
-        const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(at(o, width), p); const k = printKey(p), n = (counts(at(o, width)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
+        // R27-GPT-04 (Mi'mar's tiebreak): what the source state already shows at that width (a footer Shop now) is set aside
+        // before name matching and can never cover a hidden item
+        const ownShown = new Set((w.ledgerByWidth?.[width]?.items || []).map(i => i.id));
+        const pool = o => o.widths?.ledgerByWidth ? (o.widths.ledgerByWidth[width]?.items || []).filter(i => !ownShown.has(i.id)).map(i => i.print) : at(o, width);
+        const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(pool(o), p); const k = printKey(p), n = (counts(pool(o)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
         const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
         // R26-GPT-04 (Fadel): carousel slides are identified by element: the same element (path and print) shown by a
         // state at that width resolves it without touching the name pool, so repeated names never collide
-        const ident = p => `${p.kind === 'control' && p.owner ? p.owner : p.path}|${p.print}`;
-        const sameIn = (o, p) => (o.widths?.ledgerByWidth?.[width]?.items || []).some(i => `${i.id}|${i.print}` === ident(p));
+        const ident = p => p.key;
+        const sameIn = (o, p) => (o.widths?.ledgerByWidth?.[width]?.items || []).some(i => i.id === ident(p));
         // identity matches go first and take their own element out of that state's name pool
         const byIdentity = c.rule === 'truncated' ? [] : items.map(p => { const o = others.find(o => sameIn(o, p)); if (o && isControlPrint(p.print)) { const u = usedAt(o, width); u.set(printKey(p.print), (u.get(printKey(p.print)) || 0) + 1); } if (o && p.kind === 'control' && p.owner) done.set(`${width}|${p.owner}`, o); return o || null; });
         const pick = (o, p) => { const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; if (key && done.has(key)) return done.get(key) === o; if (!assign(o, usedAt(o, width), p.print)) return false; if (key) done.set(key, o); return true; };
