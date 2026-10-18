@@ -963,7 +963,7 @@ Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
 
-## R19b executed verification (Mi'mar's box, 18 October 2026, about 12:50 PM UTC+3)
+## R19b executed verification (Mi'mar's box, 18 October 2026, about 12:25 PM UTC+3)
 
 Mi'mar's tiebreak on script-only declared states (`requiresScript`). Same environment as R19.
 
