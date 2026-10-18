@@ -100,10 +100,11 @@ test('R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on 
   assert.match(source, /serviceWorkers: 'block', javaScriptEnabled \}\);/);
   assert.match(source, /await contextFor\(false\)/);
   assert.match(source, /await jsOffPage\.waitForLoadState\('load'\);/);
-  assert.match(source, /return compareIntegrity\(\{ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope \}\);/);
+  assert.match(source, /return \{ \.\.\.compareIntegrity\(\{ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope, baseline \}\), glyph \};/); // R20-GPT-03 glyph, R20-GPT-05 baseline
   assert.match(source, /catch \(e\) \{ return \{ scope, status: 'INCOMPLETE', pass: false/);
-  assert.match(source, /ev\.checks\.integrity = await integrityFor\(page, pageScope\);/);
-  assert.match(source, /const integrity = await integrityFor\(st\.page, scopeOf\(st\)\);/);
+  assert.match(source, /ev\.checks\.integrity = await integrityFor\(page, pageScope, pagePaths\.map\(x => x\.path\)\);/);
+  assert.match(source, /let integrity = await integrityFor\(st\.page, scopeOf\(st\), paths\.map\(x => x\.path\)\);/);
+  assert.match(source, /if \(scriptClaim\.valid\) integrity = await scriptStateIntegrity\(st, paths, integrity\);/); // R20-GPT-05
   assert.match(source, /&& frames\.pass && stylesheets\.pass && integrity\.pass && stateResult\.focusFailures/);
   assert.match(source, /if \(!ev\.checks\.integrity\.pass\) fail = true;/);
   for (const k of Object.keys(VECTOR)) assert.match(source, new RegExp(`\\b${k}: `), `the measured vector carries ${k}`);
@@ -112,7 +113,7 @@ test('R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on 
   // R13 N18: the positional page and every declared state use the same hardened reduced-motion routine.
   assert.match(source, /ev\.checks\.reducedMotion = await motionFor\(page\);/);
   assert.match(source, /const reducedMotion = await motionFor\(st\.page\);/);
-  assert.match(source, /&& widths\.pass && reducedMotion\.pass && doc\.lang/);
+  assert.match(source, /&& widths\.passExceptReveal && reducedMotion\.pass && doc\.lang/);
   assert.doesNotMatch(source, /rmState/, 'the weaker per-state routine is gone');
   assert.match(source, /const snap = \(\) => pg\.evaluate\(motionSnapshot\);/, 'R14-GPT-05: the composed-tree snapshot');
   assert.match(source, /const moved = motionChanges\(s1, s2\);/);

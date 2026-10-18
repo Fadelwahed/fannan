@@ -154,7 +154,7 @@ ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null)
 if (!ev.checks.widths.passExceptReveal) fail = true; // R20: reveal clips are resolved across the declared states below
 // R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
 // measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
-const integrityFor = async (pagePath, scope, glyphPaths = []) => {
+const integrityFor = async (pagePath, scope, glyphPaths = [], baseline = null) => {
   const contexts = [];
   try {
     const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
@@ -178,13 +178,24 @@ const integrityFor = async (pagePath, scope, glyphPaths = []) => {
     const vis = await scan(icProbe), probe = await measure(icProbe, vis), pageWorld = await measure(icMain, vis);
     let tamperSigns = null; try { tamperSigns = await icMain.evaluate(nativeCheck); } catch {}
     const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
-    await jsOffPage.goto(href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
+    // R20-GPT-05: a valid requiresScript state's JavaScript-off baseline is the default state's JavaScript-off rendering
+    await jsOffPage.goto(baseline ? pathToFileURL(resolve(baseline.page)).href : href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
     const jsOff = await measure(jsOffPage, await scan(jsOffPage));
     // R20-GPT-03: the faintest-glyph contrast of each axe colour-contrast incomplete element, per rendering
     const glyph = glyphPaths.length ? { scripted: await glyphContrast(icProbe, glyphPaths), jsOff: await glyphContrast(jsOffPage, glyphPaths) } : null;
-    return { ...compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope }), glyph };
+    return { ...compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope, baseline }), glyph };
   } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
   finally { for (const c of contexts) await c.close().catch(() => {}); }
+};
+// R20-GPT-05: a valid requiresScript state has no JavaScript-off rendering of its own; its JavaScript-off baseline is the
+// default state's JavaScript-off rendering (same screen and language), and content only the scripted state shows passes
+// only as approved copy slots placed in this state. Without a default rendering the state stays as measured.
+const scriptStateIntegrity = async (st, paths, own) => {
+  const def = declaredStates.find(x => x.screen === st.screen && x.lang === st.lang && x.state === 'default' && x.page && existsSync(resolve(x.page)));
+  if (!def) return { ...own, jsOffBaselineError: 'no default state rendering for this screen and language' };
+  const allowedSlots = (handoff?.copySlots || []).filter(c => c.screen === st.screen && (c.placements || []).some(p => p.state === st.state && p.lang === st.lang)).map(c => c.id);
+  const r = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path), { page: def.page, state: 'default', allowedSlots });
+  return { ...r, ownJsOff: own.jsOff };
 };
 // R12 M13, R13 N18: one hardened reduced-motion routine for the positional page and every declared state: running Web
 // Animations, moved elements, and the private rAF counter (rafCounterInit, read in the main world on purpose).
@@ -249,9 +260,10 @@ if (handoff?.screens) {
       }
       const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
       const frames = framesCheck(d); // R12 M03
-      const integrity = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path)); // R12 M07: every declared state; R20-GPT-03 glyph targets
+      let integrity = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path)); // R12 M07: every declared state; R20-GPT-03 glyph targets
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
       const scriptClaim = requiresScriptCheck({ declaration: st, integrity }); // R19b
+      if (scriptClaim.valid) integrity = await scriptStateIntegrity(st, paths, integrity);
       if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { integrity.mismatches = [...(integrity.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; integrity.status = 'integrity mismatch'; integrity.pass = false; }
       const contrastResolution = resolveContrastIncomplete({ incomplete: a.incomplete, paths, integrity, review: reviewFor(scopeOf(st)), shots: [st.frame?.path, filename], scriptOnly: scriptClaim.valid }); // R19-MIMAR-01
       const stylesheets = sheetsCheck(d); // R13 N07

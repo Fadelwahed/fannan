@@ -271,7 +271,7 @@ const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored,
   const st = result.checks.states.find(x => x.state === (extraState || 'default'));
   const mm = i => [...new Set((i?.mismatches || []).map(m => `${m.check}/${m.source || 'world'}`))].sort();
   return { page: result.checks.integrity?.status, state: st?.integrity?.status, pageChecks: mm(result.checks.integrity), stateChecks: mm(st?.integrity), widths: [result.checks.widths?.pass, st?.widths?.pass],
-    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], requiresScript: st?.requiresScript ?? null, reveals: result.checks.reveals?.unresolved?.length ?? null, revealedBy: [...new Set([result.checks.widths, ...result.checks.states.map(x => x.widths)].flatMap(w => (w?.results || []).flatMap(r => r.clipped.flatMap(c => c.revealedBy || []))))].sort(), contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
+    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], requiresScript: st?.requiresScript ?? null, statePass: st?.pass ?? null, rendered: st?.renderedSha256 ?? null, stateOnly: st?.integrity?.stateOnlyContent ?? null, reveals: result.checks.reveals?.unresolved?.length ?? null, revealedBy: [...new Set([result.checks.widths, ...result.checks.states.map(x => x.widths)].flatMap(w => (w?.results || []).flatMap(r => r.clipped.flatMap(c => c.revealedBy || []))))].sort(), contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
 };
 r19.hiddenWidths = r19Run('hidden-widths', '<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two</p><p style="flex:1 0 0">Slide three</p></div></div><button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Collapsed answer</p></div>');
 r19.pseudoVeil = r19Run('pseudo-veil', '<div id="r19v" class="r19load"><p>Card under a loading veil</p></div>', 'document.getElementById("r19v").classList.remove("r19load");', '<style>.r19load{position:relative}.r19load::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.8)}</style>');
@@ -322,6 +322,18 @@ r20.table320 = r19Run('table-320', '<div style="overflow:hidden;width:100%"><tab
 // full gate even though the authored wcag-review PASS cites the screenshot; the honest scrim hero (heroReviewed) resolves
 writeFileSync(join(output, 'r20-band.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="600" width="40" height="200" fill="#111"/></svg>');
 r20.photoBand = r19Run('photo-band', `<div style="position:relative;width:800px;height:200px;background:url('r20-band.svg')"><p style="position:absolute;top:80px;left:20px;margin:0;width:760px;font-size:24px;color:#d0d0d0">Pale caption over a light photo</p></div>`);
+// R20-GPT-05: a slotted script-only dialog state (requiresScript, trigger recorded) is compared with the default
+// state's JavaScript-off rendering; its dialog copy is an approved slot placed in that state, so the whole state PASSES
+// (second run with the state's own approved frame). Without the slot placed in the state the content differs.
+const slot20 = { id: 'dialog-note', screen: 'home', kind: 'interface', purpose: 'confirm start', text: 'Start the service', minChars: 5, maxChars: 40, tone: 'direct', placementScreenshot: shot, placements: [{ lang: 'en', state: 'dialog-open', screenshot: shot }], source: { kind: 'brief', path: brief, ref: 'brief.md:5' }, lang: 'en', dir: 'ltr', variants: [{ lang: 'en', dir: 'ltr', text: 'Start the service', source: { path: brief, ref: 'brief.md:5' } }] };
+const slotted20 = { ...authored, copySlots: [...authored.copySlots, slot20] };
+const modal20 = original.replace('</main>', '<dialog id="r20d"><p data-copy-slot="dialog-note">Start the service</p></dialog></main><script>document.getElementById("r20d").showModal();</script>');
+const claim20 = { requiresScript: true, trigger: 'Start opens the dialog (showModal)' };
+const first20 = r19Run('slotted-dialog', '', '', '', slotted20, modal20, original, claim20);
+const frame20 = join(output, 'r20-dialog-open-1440.png');
+if (existsSync(join(output, 'evidence-r19-slotted-dialog', 'home-en-dialog-open-1440.png'))) writeFileSync(frame20, readFileSync(join(output, 'evidence-r19-slotted-dialog', 'home-en-dialog-open-1440.png')));
+r20.slottedDialog = r19Run('slotted-dialog-2', '', '', '', slotted20, modal20, original, { ...claim20, frame: { path: frame20, width: 1440, version: 'v1', sha256: first20.rendered } });
+r20.unplacedDialog = r19Run('unplaced-dialog', '', '', '', { ...slotted20, copySlots: [...authored.copySlots, { ...slot20, placements: [{ lang: 'en', state: 'default', screenshot: shot }] }] }, modal20, original, claim20);
 writeFileSync(html, original);
 writeFileSync(handoff, JSON.stringify(authored));
 console.log('R20 fixture runs: ' + JSON.stringify(r20));
@@ -331,6 +343,8 @@ const r20Want = {
   cardBelow: r20.cardBelow.widths.every(w => w === false) && r20.cardBelow.reveals > 0,
   table320: r20.table320.widths.every(w => w === false),
   photoBand: axeOpen(r20.photoBand) && r19.heroReviewed.axe[0] === true,
+  slottedDialog: r20.slottedDialog.state === 'PASS' && r20.slottedDialog.statePass === true && r20.slottedDialog.requiresScript?.valid === true && JSON.stringify(r20.slottedDialog.stateOnly) === JSON.stringify([{ slot: 'dialog-note', text: 'Start the service' }]),
+  unplacedDialog: r20.unplacedDialog.state !== 'PASS' && r20.unplacedDialog.stateChecks.includes('content/js-off') && r20.unplacedDialog.statePass === false,
 };
 if (Object.values(r20Want).some(v => !v)) throw Error('R20 full-run expectations failed: ' + JSON.stringify(r20Want));
 writeFileSync(handoff, JSON.stringify(authored));

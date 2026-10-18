@@ -134,3 +134,39 @@ test('R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast decides; n
   assert.equal(r.clusters, 10); assert.ok(r.ratio < 1.4 && r.max > 10, JSON.stringify(r));
   assert.equal(visibility.glyphRatio(off, off).ratio, null);
 });
+
+test('R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state\'s JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const def = '<p data-copy-slot="intro">Intro copy</p><button data-copy-slot="start">Start</button>';
+  const dialog = '<dialog id="d" data-copy-slot="dialog"><h2>Confirm the start</h2><p>Dialog body</p><button data-copy-slot="confirm">Confirm</button></dialog>';
+  const offDefault = await measure((await open(W(def), false)).probe, { topLayer: false });
+  const run = async (stateHtml, allowedSlots) => {
+    const on = await measure((await open(stateHtml)).probe, { topLayer: true });
+    const r = compareIntegrity({ probe: on, page: on, jsOff: offDefault, tamperSigns: [], scope: { screen: 'home', state: 'dialog-open', lang: 'en' }, baseline: { page: 'default.html', state: 'default', allowedSlots } });
+    return { status: r.status, content: r.mismatches.some(m => m.check === 'content') };
+  };
+  assert.deepEqual({
+    slotted: await run(W(def + dialog, 'd.showModal()'), ['dialog', 'confirm']),
+    slotNotPlaced: await run(W(def + dialog, 'd.showModal()'), ['dialog']),
+    unslottedExtra: await run(W(def + dialog, 'd.showModal(); const h = document.createElement("h2"); h.textContent = "Injected heading"; document.querySelector("main").prepend(h)'), ['dialog', 'confirm']),
+  }, { slotted: { status: 'PASS', content: false }, slotNotPlaced: { status: 'INCOMPLETE', content: true }, unslottedExtra: { status: 'INCOMPLETE', content: true } });
+}));
+
+test('R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const check = async html => {
+    const on = await measure((await open(html)).probe, { topLayer: true }), off = await measure((await open(html, false)).probe, { topLayer: true });
+    const c = visibility.requiresScriptCheck({ declaration: { state: 'dialog-open', requiresScript: true, trigger: 'opens on click' }, integrity: { probeWorld: on.vector, jsOff: off.vector } });
+    return { valid: c.valid, rendersWithoutScript: c.rendersWithoutScript };
+  };
+  assert.deepEqual({
+    shifted: await check(W('<p>Static state text</p>', 'document.querySelector("main").prepend(document.createElement("div"))')),
+    scripted: await check(W('<dialog id="d"><p>Dialog text</p></dialog>', 'd.showModal()')),
+  }, { shifted: { valid: false, rendersWithoutScript: true }, scripted: { valid: true, rendersWithoutScript: false } });
+}));
+
+test('R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const scan = async html => { const v = (await measure((await open(html)).probe)).vector; return { hidden: v.textHidden > 0, flagged: v.textUnreadable + v.textObscured > 0 }; };
+  assert.deepEqual({
+    veil: await scan(W('<style>.c::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.8),rgba(255,255,255,.9))}</style><div class="c" style="position:relative;overflow:hidden;padding:16px;width:400px"><p style="margin:0">Card text that fully fits inside the card.</p></div>')),
+    fade: await scan(W('<style>.clamp{position:relative;max-height:4.5em;overflow:hidden}.clamp::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3em;background:linear-gradient(transparent,#fff)}</style><div class="clamp" style="width:400px"><p style="margin:0">Line one of a long story that is truncated with a fade, line two continues, line three fades away, line four is cut, line five is cut too, and line six is never shown. The story goes on for several more lines that the clamp cuts: line seven, line eight, line nine and line ten are never shown.</p></div><button>Read more</button>')),
+  }, { veil: { hidden: false, flagged: true }, fade: { hidden: false, flagged: false } }); // the clamp's cut lines are neither hidden elements nor flagged
+}));

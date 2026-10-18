@@ -204,8 +204,8 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   // R19-GPT-02: covers the hit test cannot see. (1) An absolutely or fixed positioned ::before/::after with a
   // background on the text's element or an ancestor (a loading veil, a scrim); (2) a positioned pointer-events:none
   // layer that paints. Behind-the-text layers (negative z-index) are skipped. A line under such a layer is compositing
-  // the CSS pass cannot resolve, so its pixels grade it at 3:1. A gradient pseudo-element on a clipping ancestor is the
-  // fade of a truncated text block: the lines under it are cut text, not displayed (like a clipped line).
+  // the CSS pass cannot resolve, so its pixels grade it at 3:1. A gradient pseudo-element at the cut edge of a clipping
+  // ancestor whose text overflows is the fade of a truncated text block: the lines under it are cut text, not displayed.
   const px = v => /px$/.test(v || '') ? parseFloat(v) : null;
   const paints = s => { const bg = parse(s.backgroundColor); return (bg && bg[3] * Number(s.opacity) > 0.02) || s.backgroundImage !== 'none' || (s.backdropFilter && s.backdropFilter !== 'none'); };
   const behind = s => /^-\d/.test(s.zIndex);
@@ -221,7 +221,12 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
       const top = t !== null ? R0.top + t : b !== null && h !== null ? R0.bottom - b - h : R0.top, bottom = b !== null ? R0.bottom - b : t !== null && h !== null ? top + h : R0.bottom;
       const left = l !== null ? R0.left + l : r !== null && w !== null ? R0.right - r - w : R0.left, right = r !== null ? R0.right - r : l !== null && w !== null ? left + w : R0.right;
       const ac = getComputedStyle(a), clipsOwn = !(ac.overflowX === 'visible' && ac.overflowY === 'visible');
-      out.push({ rect: { left, top, right, bottom }, fade: clipsOwn && /gradient/.test(s.backgroundImage) });
+      // R20-GPT-02: the truncation-fade label needs text that actually overflows the owner and a fade that sits at the
+      // edge where it is cut (block end, or the inline end) and leaves the opposite edge uncovered; any other gradient
+      // pseudo-element is a cover graded by its pixels
+      const cutY = a.scrollHeight > a.clientHeight + 1, cutX = a.scrollWidth > a.clientWidth + 1, rtl = ac.direction === 'rtl';
+      const atEdge = (cutY && bottom >= R0.bottom - 2 && top > R0.top + 2) || (cutX && (rtl ? left <= R0.left + 2 && right < R0.right - 2 : right >= R0.right - 2 && left > R0.left + 2));
+      out.push({ rect: { left, top, right, bottom }, fade: clipsOwn && /gradient/.test(s.backgroundImage) && atEdge });
     }
     pseudoCache.set(a, out); return out;
   };
@@ -390,7 +395,8 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
   const byElement = {};
   for (const [, r] of T) {
     if (r.present !== seenAt || !r.path || r.status !== 'shown') continue;
-    const ls = r.lines.filter(Boolean), m = ls.map(l => l.best), e = byElement[r.path] || (byElement[r.path] = { min: Infinity, complete: true, large: !!r.large });
+    const ls = r.lines.filter(Boolean), m = ls.map(l => l.best), e = byElement[r.path] || (byElement[r.path] = { min: Infinity, complete: true, large: !!r.large, texts: [] });
+    if (r.text) e.texts.push(r.text); // R20-GPT-04: text fingerprints for the requiresScript check
     e.complete &&= ls.length > 0 && m.every(b => b && !b.obscured && b.pixel && b.pixel.ratio !== null);
     for (const b of m) if (b?.pixel?.ratio != null) e.min = Math.min(e.min, b.pixel.ratio);
   }
@@ -491,15 +497,20 @@ export async function glyphContrast(pg, paths, opts = GLYPH) {
   }
   return out;
 }
-// R19b: is a `requiresScript` claim true? The state renders with JavaScript off when every element the scripted
-// rendering shows (measured text, by composed path) is shown by the JavaScript-off rendering as well; a claim on such a
-// state is false and fails as an integrity mismatch. Without both scans the claim cannot be checked (not valid).
+// R19b: is a `requiresScript` claim true? The state renders with JavaScript off when every text the scripted rendering
+// shows is shown by the JavaScript-off rendering as well; a claim on such a state is false and fails as an integrity
+// mismatch. Without both scans the claim cannot be checked (not valid). R20-GPT-04: texts are compared by fingerprint
+// (the normalized text of each shown text run, counted), not by composed path, so a script that only moves or wraps
+// the same content (shifting element indices) cannot make a static state look script-only.
 export function requiresScriptCheck({ declaration = null, integrity = null } = {}) {
   const claimed = declaration?.requiresScript === true;
   if (!claimed) return { claimed: false, valid: false, rendersWithoutScript: null };
   const on = integrity?.probeWorld?.visibility?.byElement, off = integrity?.jsOff?.visibility?.byElement;
   if (!on || !off) return { claimed, valid: false, rendersWithoutScript: null, reason: 'visibility scans missing' };
-  const shown = Object.keys(on), rendersWithoutScript = shown.length > 0 && shown.every(k => k in off);
+  const prints = by => Object.entries(by).flatMap(([k, e]) => (Array.isArray(e.texts) && e.texts.length ? e.texts : [`path:${k}`]).map(t => String(t).replace(/\s+/g, ' ').trim()).filter(Boolean));
+  const offCount = new Map(); for (const t of prints(off)) offCount.set(t, (offCount.get(t) || 0) + 1);
+  const shown = prints(on), only = shown.filter(t => { const n = offCount.get(t) || 0; if (n > 0) { offCount.set(t, n - 1); return false; } return true; });
+  const rendersWithoutScript = shown.length > 0 && only.length === 0;
   const nonDefault = declaration.state !== 'default', trigger = typeof declaration.trigger === 'string' && declaration.trigger.trim().length > 0;
-  return { claimed, valid: nonDefault && trigger && !rendersWithoutScript, rendersWithoutScript, onlyScripted: shown.filter(k => !(k in off)).length, reason: !nonDefault ? 'the default state needs both renderings' : !trigger ? 'no trigger recorded' : rendersWithoutScript ? 'the state renders with JavaScript off' : null };
+  return { claimed, valid: nonDefault && trigger && !rendersWithoutScript, rendersWithoutScript, onlyScripted: only.length, reason: !nonDefault ? 'the default state needs both renderings' : !trigger ? 'no trigger recorded' : rendersWithoutScript ? 'the state renders with JavaScript off' : null };
 }
