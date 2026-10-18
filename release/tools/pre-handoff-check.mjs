@@ -17,11 +17,11 @@ import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';
 import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';
-import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
+import { screenWidths, resolveReflowCandidates, validWidths, resolveReveals } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
 import { axeOptions } from './axe-tags.mjs';
 import { isolatedPage } from './probe-world.mjs';
 import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
-import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck } from './visibility.mjs'; // R17: the rendered-visibility backstop
+import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck, glyphContrast } from './visibility.mjs'; // R17: the rendered-visibility backstop
 import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own
 import { scopeOf, resolveScoped } from './exceptions.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
@@ -151,10 +151,10 @@ if (!ev.checks.custom22.pass) fail = true;
 evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
 // R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
 ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null);
-if (!ev.checks.widths.pass) fail = true;
+if (!ev.checks.widths.passExceptReveal) fail = true; // R20: reveal clips are resolved across the declared states below
 // R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
 // measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
-const integrityFor = async (pagePath, scope) => {
+const integrityFor = async (pagePath, scope, glyphPaths = []) => {
   const contexts = [];
   try {
     const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
@@ -180,7 +180,9 @@ const integrityFor = async (pagePath, scope) => {
     const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
     await jsOffPage.goto(href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
     const jsOff = await measure(jsOffPage, await scan(jsOffPage));
-    return compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope });
+    // R20-GPT-03: the faintest-glyph contrast of each axe colour-contrast incomplete element, per rendering
+    const glyph = glyphPaths.length ? { scripted: await glyphContrast(icProbe, glyphPaths), jsOff: await glyphContrast(jsOffPage, glyphPaths) } : null;
+    return { ...compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope }), glyph };
   } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
   finally { for (const c of contexts) await c.close().catch(() => {}); }
 };
@@ -247,7 +249,7 @@ if (handoff?.screens) {
       }
       const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
       const frames = framesCheck(d); // R12 M03
-      const integrity = await integrityFor(st.page, scopeOf(st)); // R12 M07: every declared state
+      const integrity = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path)); // R12 M07: every declared state; R20-GPT-03 glyph targets
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
       const scriptClaim = requiresScriptCheck({ declaration: st, integrity }); // R19b
       if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { integrity.mismatches = [...(integrity.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; integrity.status = 'integrity mismatch'; integrity.pass = false; }
@@ -256,7 +258,7 @@ if (handoff?.screens) {
       const reducedMotion = await motionFor(st.page); // R13 N18: the same hardened routine as the page
       const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // ARGON-R5-01: Math.max(null) is 0
       const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), axeIncompleteUnresolved: contrastResolution.unresolved, requiresScript: scriptClaim, axeContrastNodes: contrastResolution.contrastNodes, assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion, stylesheets, language: doc.lang, direction: doc.dir };
-      stateResult.pass = (wireframe || renderedSha256 === st.frame?.sha256) && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && contrastResolution.pass && d.centered <= q.centeredSectionsPerPage && (wireframe || (d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport)) && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && (wireframe || !d.placeholders) && (wireframe || d.spacingOffScale.length <= q.spacingOffScale) && d.h1 === 1 && accent.pass && frames.pass && stylesheets.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.pass && reducedMotion.pass && doc.lang === st.lang && doc.dir === st.dir;
+      stateResult.pass = (wireframe || renderedSha256 === st.frame?.sha256) && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && contrastResolution.pass && d.centered <= q.centeredSectionsPerPage && (wireframe || (d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport)) && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && (wireframe || !d.placeholders) && (wireframe || d.spacingOffScale.length <= q.spacingOffScale) && d.h1 === 1 && accent.pass && frames.pass && stylesheets.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.passExceptReveal && reducedMotion.pass && doc.lang === st.lang && doc.dir === st.dir;
       if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
       evidenceWrite(filename, frameBytes);
       ev.checks.states.push(stateResult);
@@ -265,6 +267,10 @@ if (handoff?.screens) {
   }
 }
 // R11 panel D1 (decisions B, T2): every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
+// R20 (Mi'mar's clipping tiebreak): content cut wholly at 1440 in a state counts as not displayed only when another
+// declared state of the screen shows it; otherwise it fails that state (and the positional page).
+ev.checks.reveals = resolveReveals([{ scope: pageScope, widths: ev.checks.widths }, ...ev.checks.states.filter(st => st.widths).map(st => ({ scope: scopeOf(st), widths: st.widths }))], phase);
+for (const u of ev.checks.reveals.unresolved.filter(u => !u.deferred)) { fail = true; for (const st of ev.checks.states) if (st.screen === u.screen && st.lang === u.lang && st.state === u.state) st.pass = false; }
 ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // R12 M09: scoped
 if (!ev.checks.reflowCandidates.pass) fail = true;
 // R12 M20: every documented spacing exception needs a scoped handoff `spacingExceptions` entry naming the approver.
@@ -275,7 +281,7 @@ if (!ev.checks.spacingExceptions.pass) fail = true;
 ev.checks.reducedMotion = await motionFor(page); // R12 M13, R13 N18
 if (!ev.checks.reducedMotion.pass) fail = true;
 // R11 panel D1 (decisions C, T4), R12 M06-M08: integrity cross-checks on the positional page (and, above, every state).
-ev.checks.integrity = await integrityFor(page, pageScope);
+ev.checks.integrity = await integrityFor(page, pageScope, pagePaths.map(x => x.path));
 if (!ev.checks.integrity.pass) fail = true;
 { // R19-MIMAR-01: the positional page's automated incomplete results, resolved against the backstop and the review
   const st = declaredStates.find(x => x.page && resolve(x.page) === resolve(page));

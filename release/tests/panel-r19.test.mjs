@@ -66,8 +66,8 @@ const clean = r => ({ status: r.integrity.status, problems: problems(r).flat().m
 const loss = r => ({ status: r.integrity.status, checks: [...new Set(r.integrity.mismatches.map(m => `${m.check}/${m.source}`))].sort() });
 const W = (body, script = '') => page(body, script).replace('font:16px/1.5 sans-serif', 'font:16px/1.5 sans-serif;color:#1a1a1a');
 
-test('R19-GPT-01: real Chrome: the width screen does not count content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides); partly clipped text still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
-  const at = async html => { const r = await screenWidths((await open(html)).main, [1440], null); return { pass: r.pass, clipped: r.results.map(x => x.clipped.length) }; };
+test('R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const at = async html => { const r = await screenWidths((await open(html)).main, [1440], null); return { pass: r.pass, passExceptReveal: r.passExceptReveal, rules: r.results.map(x => x.clipped.map(c => c.rule).join()) }; };
   const out = {
     accordion: await at(W('<button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Answer one, collapsed.</p><p>Answer two, collapsed.</p></div><button aria-expanded="true">Open question</button><div><p>Open answer.</p></div>')),
     carousel: await at(W('<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two</p><p style="flex:1 0 0">Slide three</p></div></div>')),
@@ -76,7 +76,8 @@ test('R19-GPT-01: real Chrome: the width screen does not count content clipped t
     pushedPastStart: await at(W('<div style="overflow:hidden;width:300px"><p style="margin:0 0 0 -400px;white-space:nowrap">Pushed past the start</p></div>')),
     straddlingSlide: await at(W('<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:160%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two cut at the edge</p></div></div>')),
   };
-  assert.deepEqual(out, { accordion: { pass: true, clipped: [0, 0] }, carousel: { pass: true, clipped: [0, 0] }, rtlCarousel: { pass: true, clipped: [0, 0] }, pushedPastStart: { pass: false, clipped: [1, 1] }, partly: { pass: false, clipped: [1, 1] }, straddlingSlide: { pass: false, clipped: [1, 1] } });
+  const reveal = { pass: false, passExceptReveal: true, rules: ['reveal', 'reveal'] }, partlyCut = { pass: false, passExceptReveal: false, rules: ['partly clipped', 'partly clipped'] };
+  assert.deepEqual(out, { accordion: reveal, carousel: reveal, rtlCarousel: reveal, pushedPastStart: reveal, partly: partlyCut, straddlingSlide: partlyCut });
 }));
 
 test('R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block, a decorative SVG wave and the R19 honest patterns PASS (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -146,7 +147,9 @@ test('R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result 
     const r = await both(open, html), { main, probe } = await open(html);
     await main.addScriptTag({ content: axeSrc }); const a = await main.evaluate(async o => axe.run(document, o), axeOptions());
     const incomplete = [...a.incomplete, ...extra], paths = await visibility.contrastPaths(probe, incomplete);
-    const out = visibility.resolveContrastIncomplete({ incomplete, paths, integrity: { probeWorld: r.on.vector, jsOff: r.off.vector }, review: rev, shots: [shot] });
+    // R20-GPT-03: AA is graded on the faintest glyphs, measured per rendering as pre-handoff-check measures them
+    const glyph = { scripted: await visibility.glyphContrast(probe, paths.map(x => x.path)), jsOff: await visibility.glyphContrast((await open(html, false)).probe, paths.map(x => x.path)) };
+    const out = visibility.resolveContrastIncomplete({ incomplete, paths, integrity: { probeWorld: r.on.vector, jsOff: r.off.vector, glyph }, review: rev, shots: [shot] });
     return { incomplete: incomplete.map(v => v.id), unresolved: out.unresolved, reasons: [...new Set(out.contrastNodes.map(n => n.reason))] };
   };
   const ok = { incomplete: ['color-contrast'], unresolved: [], reasons: [null] };
@@ -164,7 +167,7 @@ test('R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result 
     noReview: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: ['no PASS wcag-review record citing the screenshot'] },
     otherArtifact: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: ['no PASS wcag-review record citing the screenshot'] },
     noteCites: ok,
-    darkText: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: out.darkText.reasons?.length && out.darkText.reasons.every?.(x => /^measured [\d.]+:1, below (4\.5|3):1$/.test(x)) ? out.darkText.reasons : ['below AA'] },
+    darkText: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: out.darkText.reasons?.length && out.darkText.reasons.every?.(x => /^faintest glyphs measured [\d.]+:1, below (4\.5|3):1$/.test(x)) ? out.darkText.reasons : ['below AA'] },
     scrimByScriptOnly: { incomplete: ['color-contrast'], unresolved: ['color-contrast'], reasons: out.scrimByScriptOnly.reasons?.some?.(x => /below/.test(x || '')) ? out.scrimByScriptOnly.reasons : ['below AA with JavaScript off'] },
     otherRule: { incomplete: ['color-contrast', 'aria-valid-attr-value'], unresolved: ['aria-valid-attr-value'], reasons: [null] },
   });
@@ -192,7 +195,8 @@ test('R19b: real Chrome: a declared non-default state reachable only by script (
   const run = async (html, declaration, sel, rev = review) => {
     const on = await measure((await open(html)).probe, { topLayer: declaration.state !== 'default' }), off = await measure((await open(html, false)).probe, { topLayer: declaration.state !== 'default' });
     const integrityR = { probeWorld: on.vector, jsOff: off.vector }, claim = visibility.requiresScriptCheck({ declaration, integrity: integrityR });
-    const paths = await visibility.contrastPaths((await open(html)).probe, incomplete(sel));
+    const onProbe = (await open(html)).probe, paths = await visibility.contrastPaths(onProbe, incomplete(sel));
+    integrityR.glyph = { scripted: await visibility.glyphContrast(onProbe, paths.map(x => x.path)), jsOff: await visibility.glyphContrast((await open(html, false)).probe, paths.map(x => x.path)) }; // R20-GPT-03
     const r = visibility.resolveContrastIncomplete({ incomplete: incomplete(sel), paths, integrity: integrityR, review: rev, shots: [shot], scriptOnly: claim.valid });
     return { valid: claim.valid, rendersWithoutScript: claim.rendersWithoutScript, unresolved: r.unresolved, reason: r.contrastNodes[0]?.reason?.replace(/(\d\.\d)\d:/, '$1:') ?? null };
   };
@@ -210,7 +214,7 @@ test('R19b: real Chrome: a declared non-default state reachable only by script (
     notDeclared: { valid: false, rendersWithoutScript: null, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
     noTrigger: { valid: false, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
     defaultState: { valid: false, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
-    belowAA: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'measured 2.8:1, below 4.5:1' },
+    belowAA: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'faintest glyphs measured 2.8:1, below 4.5:1' },
     noReview: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'no PASS wcag-review record citing the screenshot' },
     falseClaim: { valid: false, rendersWithoutScript: true, unresolved: [], reason: null },
   });

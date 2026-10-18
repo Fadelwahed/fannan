@@ -417,17 +417,79 @@ export async function contrastPaths(page, incomplete) {
 // caller has checked the claim (requiresScriptCheck) and the state is not `default`.
 export function resolveContrastIncomplete({ incomplete = [], paths = [], integrity = null, review = null, shots = [], scriptOnly = false } = {}) {
   const on = integrity?.probeWorld?.visibility?.byElement, off = scriptOnly ? on : integrity?.jsOff?.visibility?.byElement;
+  // R20-GPT-03: AA is graded on the faintest glyphs (glyphContrast), per rendering; the backstop still has to have
+  // measured every line of the element uncovered
+  const gOn = integrity?.glyph?.scripted || {}, gOff = scriptOnly ? gOn : integrity?.glyph?.jsOff || {};
   const base = s => String(s || '').split('/').pop();
   const cited = !!review && review.id === 'wcag-review' && review.decision === 'PASS' && shots.filter(Boolean).some(s => review.artifact === s || (base(s) && String(review.note || '').includes(base(s))));
   const nodes = paths.map(p => {
     const a = p.path && on?.[p.path], b = p.path && off?.[p.path], floor = p.large ? AA.large : AA.normal;
-    const why = !p.path ? 'element not found by its axe target' : !a || !b ? 'not measured by the visibility backstop in both renderings' : !a.complete || !b.complete ? 'not every line measured uncovered in both renderings' : a.min < floor || b.min < floor ? `measured ${Math.min(a.min, b.min)}:1, below ${floor}:1` : !cited ? 'no PASS wcag-review record citing the screenshot' : null;
-    return { target: p.target, path: p.path, large: !!p.large, scripted: a?.min ?? null, jsOff: scriptOnly ? null : b?.min ?? null, scriptOnly: !!scriptOnly, floor, resolved: !why, reason: why };
+    const ga = p.path ? gOn[p.path]?.ratio ?? null : null, gb = p.path ? gOff[p.path]?.ratio ?? null : null;
+    const why = !p.path ? 'element not found by its axe target' : !a || !b ? 'not measured by the visibility backstop in both renderings' : !a.complete || !b.complete ? 'not every line measured uncovered in both renderings' : ga === null || gb === null ? 'faintest-glyph contrast not measured in both renderings (INCOMPLETE)' : ga < floor || gb < floor ? `faintest glyphs measured ${Math.min(ga, gb)}:1, below ${floor}:1` : !cited ? 'no PASS wcag-review record citing the screenshot' : null;
+    return { target: p.target, path: p.path, large: !!p.large, scripted: ga, jsOff: scriptOnly ? null : gb, measure: 'faintest glyphs (p10 of glyph-cluster contrast against the local background)', scriptOnly: !!scriptOnly, floor, resolved: !why, reason: why };
   });
   const others = incomplete.filter(v => v.id !== 'color-contrast').map(v => v.id);
   const contrastOpen = incomplete.some(v => v.id === 'color-contrast') && (!nodes.length || nodes.some(n => !n.resolved));
   const unresolved = [...others, ...(contrastOpen ? ['color-contrast'] : [])];
   return { unresolved, contrastNodes: nodes, pass: unresolved.length === 0 };
+}
+// R20-GPT-03: the AA measure for an axe colour-contrast incomplete element is its FAINTEST text, not a high
+// percentile of all ink. The element is scrolled into view and its text box captured twice, once as painted and once
+// with the text made transparent (color and -webkit-text-fill-color transparent, no text-shadow or decoration), so
+// the second shot is the local background under every glyph pixel. Glyph pixels are those that change by more than
+// inkDelta in a channel; each is graded against the background pixel under it. Glyph pixels are grouped into
+// 8-connected clusters (at least minCluster = 25 pixels: a glyph or a run of touching glyphs; dots, commas and other
+// marks too small to reach full ink coverage are left out, so anti-aliasing does not lower honest small text); each cluster's contrast is
+// its best pixel (the glyph core, not its anti-aliased edge), and the element's ratio is the 10th percentile of the
+// cluster values, so text over the light part of a photo decides even when most glyphs sit on a dark band. An element
+// whose glyphs cannot be separated (not found, nothing changed, no cluster) is INCOMPLETE (ratio null).
+export const GLYPH = { inkDelta: 24, minCluster: 25, percentile: 0.1 };
+export function glyphRatio(on, off, opts = GLYPH) {
+  const { width: w, height: h } = on, glyph = new Uint8Array(w * h), ratio = new Float64Array(w * h);
+  if (off.width !== w || off.height !== h) return { ratio: null, reason: 'shots differ in size' };
+  for (let k = 0; k < w * h; k++) { const i = k * 3; if (Math.max(Math.abs(on.rgb[i] - off.rgb[i]), Math.abs(on.rgb[i + 1] - off.rgb[i + 1]), Math.abs(on.rgb[i + 2] - off.rgb[i + 2])) > opts.inkDelta) { glyph[k] = 1; ratio[k] = contrast(lum(on.rgb[i], on.rgb[i + 1], on.rgb[i + 2]), lum(off.rgb[i], off.rgb[i + 1], off.rgb[i + 2])); } }
+  const clusters = [], seen = new Uint8Array(w * h);
+  for (let k = 0; k < w * h; k++) {
+    if (!glyph[k] || seen[k]) continue;
+    let n = 0, best = 0; const stack = [k]; seen[k] = 1;
+    while (stack.length) { const c = stack.pop(), x = c % w, y = (c - x) / w; n++; if (ratio[c] > best) best = ratio[c];
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const q = yy * w + xx; if (glyph[q] && !seen[q]) { seen[q] = 1; stack.push(q); } } }
+    if (n >= opts.minCluster) clusters.push(best);
+  }
+  if (!clusters.length) return { ratio: null, reason: 'glyphs not separated from the background', clusters: 0 };
+  clusters.sort((a, b) => a - b);
+  const at = q => Math.round(clusters[Math.floor((clusters.length - 1) * q)] * 100) / 100;
+  return { ratio: at(opts.percentile), min: at(0), max: at(1), clusters: clusters.length };
+}
+export async function glyphContrast(pg, paths, opts = GLYPH) {
+  const out = {};
+  for (const path of [...new Set((paths || []).filter(Boolean))]) {
+    try {
+      const box = await pg.evaluate(path => {
+        let el = document.documentElement;
+        for (const part of path.split('/')) { const m = /^([a-z0-9-]+):(\d+)(#shadow)?$/.exec(part); const list = m && (m[3] ? el.shadowRoot?.children : el.children); el = list?.[Number(m?.[2])]; if (!el || el.tagName.toLowerCase() !== m[1]) return null; }
+        el.scrollIntoView({ block: 'center', inline: 'nearest' });
+        const range = document.createRange(); range.selectNodeContents(el);
+        const rs = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0);
+        if (!rs.length) return null;
+        const l = Math.max(0, Math.min(...rs.map(r => r.left))), t = Math.max(0, Math.min(...rs.map(r => r.top))), r = Math.min(innerWidth, Math.max(...rs.map(r => r.right))), b = Math.min(innerHeight, Math.max(...rs.map(r => r.bottom)));
+        if (r - l < 1 || b - t < 1) return null;
+        document.querySelectorAll('[data-fannan-glyph]').forEach(e => e.removeAttribute('data-fannan-glyph'));
+        el.setAttribute('data-fannan-glyph', '');
+        return { x: Math.floor(l), y: Math.floor(t), width: Math.ceil(r - l), height: Math.ceil(b - t) };
+      }, path);
+      if (!box) { out[path] = { ratio: null, reason: 'element or its text not found in the viewport' }; continue; }
+      const frames = () => pg.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+      await frames();
+      const on = decodePng(await pg.screenshot({ type: 'png', clip: box }));
+      await pg.evaluate(() => { const st = document.createElement('style'); st.id = 'fannan-glyph-style'; st.textContent = '[data-fannan-glyph],[data-fannan-glyph] *{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important;caret-color:transparent!important;transition:none!important}'; document.head.append(st); });
+      await frames();
+      const off = decodePng(await pg.screenshot({ type: 'png', clip: box }));
+      await pg.evaluate(() => { document.getElementById('fannan-glyph-style')?.remove(); document.querySelectorAll('[data-fannan-glyph]').forEach(e => e.removeAttribute('data-fannan-glyph')); });
+      out[path] = glyphRatio(on, off, opts);
+    } catch (e) { out[path] = { ratio: null, reason: `glyph measure failed: ${e.message}` }; }
+  }
+  return out;
 }
 // R19b: is a `requiresScript` claim true? The state renders with JavaScript off when every element the scripted
 // rendering shows (measured text, by composed path) is shown by the JavaScript-off rendering as well; a claim on such a

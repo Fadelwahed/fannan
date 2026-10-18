@@ -64,16 +64,28 @@ export function inspectLayout({ reflow = false } = {}) {
     return { left: left + min - cur, right: right + top - cur, inner: { left, right } };
   };
   const beyond = (e, r) => all.some(d => d !== e && holds.has(d) && within(e, d) && [...(shown(d) && d.getBoundingClientRect().width > 0 ? [d.getBoundingClientRect()] : []), ...contentRects(d)].some(b => b.right > r.right + 1 || b.left < r.left - 1)); // R13 N03: composed ancestry and content
-  const nothingShownCut = (e, r) => {
+  // R20 (Mi'mar's clipping tiebreak): no CSS-pattern exemptions. Each hidden/clip box reports the content it cuts, by
+  // composed path: `whole` (every rect of the element outside the box) and `partial` (a rect straddles the edge, or the
+  // element is cut while partly shown). The decision is made per state and width in screenWidths and across the
+  // declared states in resolveReveals: content shown at 1440 must stay shown (or reachable) at every width; content cut
+  // wholly at 1440 counts as not displayed only when another declared state shows it; partial cuts always fail.
+  const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = parentOf(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
+  const contentEls = all.filter(d => isContent(d) && shown(d));
+  const cutOf = (e, r) => {
     const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;
-    const rects = all.filter(d => d !== e && within(e, d) && isContent(d) && shown(d)).flatMap(contentRects).filter(b => b.width > 0 && b.height > 0);
-    const out = rects.filter(b => b.left < left - 1 || b.right > right + 1 || b.top < top - 1 || b.bottom > bottom + 1);
-    // a collapsed box (no inner width or height) shows nothing; otherwise only content beyond the inline-end or block-end
-    // edge (the next carousel slides, the rest of a panel) is inactive. Content pushed wholly past the start edge (left in
-    // LTR, right in RTL, above the top) is a layout loss and stays a clip (R12 M02, R13 N03).
-    const collapsed = e.clientWidth <= 1 || e.clientHeight <= 1, rtl = getComputedStyle(e).direction === 'rtl';
-    return out.length > 0 && out.every(b => collapsed ? b.right <= left || b.left >= right || b.bottom <= top || b.top >= bottom : (rtl ? b.right <= left : b.left >= right) || b.top >= bottom);
+    const outside = b => b.right <= left + 1 || b.left >= right - 1 || b.bottom <= top + 1 || b.top >= bottom - 1;
+    const inside = b => b.left >= left - 1 && b.right <= right + 1 && b.top >= top - 1 && b.bottom <= bottom + 1;
+    const whole = [], partial = [];
+    for (const d of contentEls) {
+      if (!(d === e || within(e, d))) continue;
+      const rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
+      if (!rects.length || rects.every(inside)) continue;
+      const item = { path: pathOf(d), tag: d.tagName, text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
+      (rects.every(outside) ? whole : partial).push(item);
+    }
+    return { whole, partial };
   };
+  const cutPaths = new Set();
   // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
   for (const e of all) {
     const c = getComputedStyle(e), r = e.getBoundingClientRect();
@@ -83,12 +95,7 @@ export function inspectLayout({ reflow = false } = {}) {
     const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (clipBox(e) && ['hidden', 'clip'].includes(c.overflowX) && beyond(e, r));
     const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);
     // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.
-    // R19-GPT-01: content clipped to nothing by a hidden/clip box that cannot scroll (a collapsed max-height:0
-    // accordion panel, the inactive slides of an overflow:hidden carousel track) is not displayed, which is the
-    // backstop's textHidden rule, so it is not a clip; the JavaScript-off comparison catches content that only a
-    // script reveals. Displayed content the box cuts partly (a rect that straddles the inner box) still fails.
-    if ((x || y) && nothingShownCut(e, r)) continue;
-    if ((x || y)) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });
+    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', whole: cut.whole, partial: cut.partial }); }
     const s = scrollerOf(e);
     // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the
     // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on
@@ -167,7 +174,8 @@ export function inspectLayout({ reflow = false } = {}) {
   }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
+  const shownPaths = [...new Set(contentEls.map(pathOf))].filter(p => !cutPaths.has(p));
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPaths, clipped, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
@@ -202,12 +210,48 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
       const result = await page.evaluate(inspectLayout, { reflow: width === REFLOW_WIDTH });
       result.unscannedScopes.push(...closedScopes);
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
-      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && result.unreachable.length === 0 && result.scrolledText.length === 0 && result.unmeasured.length === 0 && result.unscannedScopes.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
+      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', rest: !result.horizontalOverflow && result.offscreenLeft.length === 0 && result.unreachable.length === 0 && result.scrolledText.length === 0 && result.unmeasured.length === 0 && result.unscannedScopes.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
+      results.at(-1).pass = results.at(-1).rest && result.clipped.length === 0;
     }
   } finally {
     await page.setViewportSize({ width: 1440, height });
   }
-  return { results, pass: results.every(r => r.pass), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
+  // R20 (Mi'mar's tiebreak): (1) content shown at 1440 must be fully shown or reachable at every width (320 included);
+  // (3) content cut partly anywhere fails; (2) content cut wholly at 1440 (and not shown there) is a `reveal` clip: it
+  // fails here and resolveReveals passes it only when another declared state of the same screen and language shows it.
+  const shownAt1440 = results.find(r => r.width === 1440)?.shownPaths || [];
+  const shown1440 = new Set(shownAt1440);
+  for (const r of results) {
+    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.partial.length ? 'partly clipped' : r.width !== 1440 && c.whole.some(p => shown1440.has(p.path)) ? 'shown at 1440, lost at this width' : 'reveal';
+    r.passExceptReveal = r.rest && r.clipped.every(c => c.rule === 'reveal');
+    delete r.shownPaths; delete r.rest;
+  }
+  return { results, shownAt1440, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
+}
+
+// R20 (Mi'mar's clipping tiebreak, rule 2): a `reveal` clip (content cut wholly at 1440 in one state) is resolved only
+// when another declared, applicable state of the same screen and language shows every cut element at 1440 (an
+// accordion's expanded state, a carousel slide state); that state is graded normally. In the wireframe phase (only the
+// default state is rendered) an unresolved reveal is DEFERRED. Mutates each widths result: per-width pass, overall pass
+// and `reveals` (with `revealedBy`). scopes: [{ scope: { screen, state, lang }, widths }].
+export function resolveReveals(scopes, phase = 'handoff') {
+  const unresolved = [];
+  for (const { scope, widths: w } of scopes) {
+    if (!w?.results) continue;
+    for (const r of w.results) {
+      for (const c of r.clipped.filter(c => c.rule === 'reveal')) {
+        // each cut element needs a declared state that shows it (a carousel's slides are shown by different slide states)
+        const others = scopes.filter(o => o.scope && scope && o.scope.screen === scope.screen && o.scope.lang === scope.lang && o.scope.state !== scope.state);
+        const states = c.whole.map(p => others.find(o => (o.widths?.shownAt1440 || []).includes(p.path))?.scope.state);
+        const by = states.every(Boolean);
+        c.revealedBy = by ? [...new Set(states)] : null;
+        if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, paths: c.whole.filter((p, i) => !states[i]).map(p => p.path), text: c.whole.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
+      }
+      r.pass = r.passExceptReveal && r.clipped.every(c => c.rule !== 'reveal' || c.revealedBy || c.deferred);
+    }
+    w.pass = w.results.every(r => r.pass);
+  }
+  return { unresolved, pass: unresolved.every(u => u.deferred) };
 }
 
 // R11 panel D1 (decisions B, T2), R12 M09: a candidate is resolved only by a handoff `reflowExceptions` entry naming

@@ -263,13 +263,15 @@ const r19 = {};
 const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored, statePageHtml = null, pageBase = original, stateExtra = {}) => {
   writeFileSync(html, pageBase.replace('</head>', `${head}</head>`).replace('</main>', `${extraHtml}</main>${script ? `<script>${script}</script>` : ''}`));
   let extraState = null;
-  if (statePageHtml) { const sp = join(output, `r19-${name}.html`); writeFileSync(sp, statePageHtml); extraState = sp; const h = JSON.parse(JSON.stringify(handoffJson)); h.screens[0].states.push({ state: 'dialog-open', lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: 'dialog-open' }))]; handoffJson = h; }
+  // R20: statePageHtml may also be a list of [state, html] pairs (reveal states: an accordion's open state, each slide)
+  const extra = !statePageHtml ? [] : Array.isArray(statePageHtml) ? statePageHtml : [['dialog-open', statePageHtml]];
+  if (extra.length) { const h = JSON.parse(JSON.stringify(handoffJson)); for (const [stName, stHtml] of extra) { const sp = join(output, `r19-${name}-${stName}.html`); writeFileSync(sp, stHtml); extraState = stName; h.screens[0].states.push({ state: stName, lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: stName }))]; } handoffJson = h; }
   writeFileSync(handoff, JSON.stringify(handoffJson));
   const { result } = runChecker(join(output, `evidence-r19-${name}`), true);
-  const st = result.checks.states.find(x => x.state === (extraState ? 'dialog-open' : 'default'));
+  const st = result.checks.states.find(x => x.state === (extraState || 'default'));
   const mm = i => [...new Set((i?.mismatches || []).map(m => `${m.check}/${m.source || 'world'}`))].sort();
   return { page: result.checks.integrity?.status, state: st?.integrity?.status, pageChecks: mm(result.checks.integrity), stateChecks: mm(st?.integrity), widths: [result.checks.widths?.pass, st?.widths?.pass],
-    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], requiresScript: st?.requiresScript ?? null, contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
+    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], requiresScript: st?.requiresScript ?? null, reveals: result.checks.reveals?.unresolved?.length ?? null, revealedBy: [...new Set([result.checks.widths, ...result.checks.states.map(x => x.widths)].flatMap(w => (w?.results || []).flatMap(r => r.clipped.flatMap(c => c.revealedBy || []))))].sort(), contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
 };
 r19.hiddenWidths = r19Run('hidden-widths', '<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two</p><p style="flex:1 0 0">Slide three</p></div></div><button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Collapsed answer</p></div>');
 r19.pseudoVeil = r19Run('pseudo-veil', '<div id="r19v" class="r19load"><p>Card under a loading veil</p></div>', 'document.getElementById("r19v").classList.remove("r19load");', '<style>.r19load{position:relative}.r19load::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.8)}</style>');
@@ -293,7 +295,8 @@ console.log('R19 fixture runs: ' + JSON.stringify(r19));
 const lost19 = (r, check) => r.page === 'integrity mismatch' && r.state === 'integrity mismatch' && r.pageChecks.includes(check) && r.stateChecks.includes(check);
 const axeOpen = r => r.axe[0] === false && (r.axe[1] || []).includes('color-contrast') && (r.axe[2] || []).includes('color-contrast');
 const r19Want = {
-  hiddenWidths: r19.hiddenWidths.page === 'PASS' && r19.hiddenWidths.state === 'PASS' && r19.hiddenWidths.widths.every(w => w === true) && r19.hiddenWidths.hidden.every(n => n === 3),
+  // R20 (Mi'mar's clipping tiebreak): collapsed content without a declared reveal state now fails the width screen
+  hiddenWidths: r19.hiddenWidths.page === 'PASS' && r19.hiddenWidths.state === 'PASS' && r19.hiddenWidths.widths.every(w => w === false) && r19.hiddenWidths.reveals > 0 && r19.hiddenWidths.hidden.every(n => n === 3),
   pseudoVeil: lost19(r19.pseudoVeil, 'textUnreadable/js-off'), peVeil: lost19(r19.peVeil, 'textUnreadable/rendered'), innerLazy: lost19(r19.innerLazy, 'textUnreadable/rendered'),
   heroReviewed: r19.heroReviewed.page === 'PASS' && r19.heroReviewed.axe[0] === true && Array.isArray(r19.heroReviewed.axe[1]) && r19.heroReviewed.axe[1].length === 0 && Array.isArray(r19.heroReviewed.axe[2]) && r19.heroReviewed.axe[2].length === 0,
   heroDark: axeOpen(r19.heroDark), heroUncited: axeOpen(r19.heroUncited),
@@ -304,6 +307,32 @@ const r19Want = {
   copyNameUncited: r19.copyNameUncited.contract.includes('copy button: ariaLabel absent from cited source'),
 };
 if (Object.values(r19Want).some(v => !v)) throw Error('R19 full-run expectations failed: ' + JSON.stringify(r19Want));
+// R20 (Mi'mar's clipping tiebreak): full gate runs. Collapsed accordion and carousel pass with declared reveal states;
+// a card whose last paragraph lies below its fixed height, and a table cut at 320, fail.
+const r20 = {};
+const acc20 = open1 => `<button aria-expanded="${open1}">Questions</button><div style="${open1 ? '' : 'max-height:0;'}overflow:hidden">Bare collapsed answer</div>`;
+const car20 = n => `<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%;transform:translateX(-${n * 100 / 3}%)"><p style="flex:1 0 0;margin:0">Slide one</p><p style="flex:1 0 0;margin:0">Slide two</p><p style="flex:1 0 0;margin:0">Slide three</p></div></div>`;
+const at20 = body => original.replace('</main>', `${body}</main>`);
+r20.revealDeclared = r19Run('reveal-declared', acc20(false) + car20(1), '', '', authored, [['faq-open', at20(acc20(true) + car20(1))], ['slide-1', at20(acc20(false) + car20(0))], ['slide-3', at20(acc20(false) + car20(2))]]);
+r20.revealUndeclared = r19Run('reveal-undeclared', acc20(false) + car20(1));
+const card20 = '<div style="max-width:320px;height:90px;overflow:hidden;padding:8px;box-sizing:border-box"><h2 style="margin:0 0 8px;font-size:20px">Card title</h2><p style="margin:0 0 40px">Short line.</p><p style="margin:0">Last paragraph below the edge.</p></div>';
+r20.cardBelow = r19Run('card-below', card20, '', '', authored, [['hover', at20(card20)]]);
+r20.table320 = r19Run('table-320', '<div style="overflow:hidden;width:100%"><table style="width:900px"><tr><th>Plan</th><th>Price</th><th>Seats</th><th>Support</th><th>Storage</th></tr></table></div>');
+// R20-GPT-03: pale text over a light photo with one dark band (1.35:1 where it is faintest) stays blocked through the
+// full gate even though the authored wcag-review PASS cites the screenshot; the honest scrim hero (heroReviewed) resolves
+writeFileSync(join(output, 'r20-band.svg'), '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#f0f0f0"/><rect x="600" width="40" height="200" fill="#111"/></svg>');
+r20.photoBand = r19Run('photo-band', `<div style="position:relative;width:800px;height:200px;background:url('r20-band.svg')"><p style="position:absolute;top:80px;left:20px;margin:0;width:760px;font-size:24px;color:#d0d0d0">Pale caption over a light photo</p></div>`);
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R20 fixture runs: ' + JSON.stringify(r20));
+const r20Want = {
+  revealDeclared: r20.revealDeclared.widths.every(w => w === true) && r20.revealDeclared.reveals === 0 && JSON.stringify(r20.revealDeclared.revealedBy) === JSON.stringify(['default', 'faq-open', 'slide-1', 'slide-3']),
+  revealUndeclared: r20.revealUndeclared.widths.every(w => w === false) && r20.revealUndeclared.reveals > 0,
+  cardBelow: r20.cardBelow.widths.every(w => w === false) && r20.cardBelow.reveals > 0,
+  table320: r20.table320.widths.every(w => w === false),
+  photoBand: axeOpen(r20.photoBand) && r19.heroReviewed.axe[0] === true,
+};
+if (Object.values(r20Want).some(v => !v)) throw Error('R20 full-run expectations failed: ' + JSON.stringify(r20Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');

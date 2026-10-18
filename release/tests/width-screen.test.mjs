@@ -12,11 +12,12 @@ const chrome = process.platform === 'darwin' ? '/Applications/Google Chrome.app/
 
 test('R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state', () => {
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
-  assert.match(source, /import \{ screenWidths, resolveReflowCandidates, validWidths \} from '\.\/width-screen\.mjs';/); // R11 panel B adds the resolver, R12 the width list check
+  assert.match(source, /import \{ screenWidths, resolveReflowCandidates, validWidths, resolveReveals \} from '\.\/width-screen\.mjs';/); // R11 panel B adds the resolver, R12 the width list check, R20 the reveal resolver
   assert.equal(source.split('await screenWidths(p, handoff?.settings?.desktopWidths').length - 1, 2, 'page and every declared state');
-  assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null\);\nif \(!ev\.checks\.widths\.pass\) fail = true;/);
+  assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null\);\nif \(!ev\.checks\.widths\.passExceptReveal\) fail = true;/); // R20: reveal clips resolved across the declared states
+  assert.match(source, /ev\.checks\.reveals = resolveReveals\(\[\{ scope: pageScope, widths: ev\.checks\.widths \}/);
   assert.match(source, /const widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, \{ lang: st\.lang, dir: st\.dir \}\);/);
-  assert.match(source, /&& widths\.pass && reducedMotion\.pass && doc\.lang/, 'a failing width fails the state');
+  assert.match(source, /&& widths\.passExceptReveal && reducedMotion\.pass && doc\.lang/, 'a failing width fails the state');
   const focusEnd = source.indexOf("ev.checks.custom22 = {"), widthsAt = source.indexOf('ev.checks.widths = await screenWidths');
   assert.ok(focusEnd > 0 && widthsAt > focusEnd, 'runs after the page focus probe');
   assert.ok(widthsAt > source.indexOf("evidenceWrite('page-1440.png'"), 'after the 1440 screenshot, so the reference frame is unchanged');
@@ -124,7 +125,7 @@ test('ARGON-R5-05: content pushed past the left edge fails; visually hidden and 
 
 test('ARGON-R5-05: off-screen-left content fails the width screen', () => {
   const source = readFileSync(join(release, 'tools/width-screen.mjs'), 'utf8');
-  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.unreachable\.length === 0 && result\.scrolledText\.length === 0 && result\.unmeasured\.length === 0 && result\.unscannedScopes\.length === 0 && result\.reflowCandidates\.every\(c => c\.fits && c\.keyboard\) && language/); // R11 S3 + panel B + R12 M01/M02/M11
+  assert.match(source, /rest: !result\.horizontalOverflow && result\.offscreenLeft\.length === 0 && result\.unreachable\.length === 0 && result\.scrolledText\.length === 0 && result\.unmeasured\.length === 0 && result\.unscannedScopes\.length === 0 && result\.reflowCandidates\.every\(c => c\.fits && c\.keyboard\) && language \}\);\n      results\.at\(-1\)\.pass = results\.at\(-1\)\.rest && result\.clipped\.length === 0;/); // R11 S3 + panel B + R12 M01/M02/M11; R20 keeps the clip rule strict per width
 });
 
 test('R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
