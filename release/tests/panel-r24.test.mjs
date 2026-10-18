@@ -4,7 +4,9 @@
 // widths: two hidden Downloads need two shown (R24-GPT-02). The only role swaps are a tablist adapted into an accordion
 // (disclosures with the same names) and a menubar adapted into a menu in a declared state; a container is covered only
 // when every item is matched one to one by name; no other role swap (R24-GPT-03). Each test was first run against the
-// ec977f2 sources and failed there at its assertion (test-results/r24/R24-*-before.log).
+// ec977f2 sources. R25-GPT-06 correction: in the R24 before-log (test-results/r24/R24-chrome-before.log), R24-GPT-01 failed at
+// its assertion but R24-GPT-02 and R24-GPT-03 ended in page.goto timeouts on the overloaded box; the R25 rerun on a quiet
+// box (test-results/r25/R24-chrome-before-rerun-r25.log) shows all three failing at their assertions (3 ERR_ASSERTION, 0 timeouts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { deflateSync } from 'node:zlib';

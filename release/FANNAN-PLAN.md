@@ -155,3 +155,8 @@ Six type sizes, a strict ten-percent accent threshold and a 150-percent long-tex
 A **labelled example project** (the example fixture in the supplied review pack, `input/fannan-review-pack/example-project-*`) is used only as a dry-run of the workflow, in `references/example-project-check.md`. Its draft rules, absent authoritative brief/fact register and missing role/stack mappings are detected as blockers. Its project claims are not transplanted into this plan or promoted to confirmed facts.
 
 All local command results and negative-path checks are in the separate verification record. Anything not executed is in the untested list. Historical test claims stay historical. This candidate does not create Amin's review, live credentials, branch enforcement, provider access, a real approved design or a successful live handoff.
+
+## Backlog (P3, no gate yet)
+
+- **Honest chart encoding (R25-GPT-05, Mi'mar's tiebreak):** the design guidance does not yet ask for honest chart encoding (bars from zero, labelled axes, missing shown as missing rather than zero, a shared scale across compared charts). No gate or rubric claims to check it. Backlog: a paragraph in `references/design-quality.md` and a dashboard-tropes check.
+- **Collapsed pagination (R24-MIMAR-01):** a pager that collapses to 1, 2, …, 10 with Previous and Next at 320 fails; the designer lets the links wrap.

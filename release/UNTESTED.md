@@ -1,5 +1,16 @@
 # R3 checks not established
 
+## R25 additions (Mi'mar, 18 October 2026, panel round 25)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Mi'mar's R25 tiebreaks, confirmed by Fadel with one tightening (zero visible area).
+
+- **One name per owning control (R25-GPT-01, an R24 regression):** cut items carry their owning control; a control counts once however many text nodes it holds, also across overlapping clipping ancestors. Executed: button>span and a link with nested spans inside a collapsed accordion with an expanded state (pass); two real same-name buttons with one shown (fail). UNTESTED: controls inside shadow roots that are cut by a box outside the shadow root.
+- **Shared one-to-one pool (R25-GPT-02):** one pool per source screen, state and width across all clipping boxes; each target state has its own pool, so carousel slide states keep their own counts. Executed: two sibling panels with one or both Downloads shown; a carousel with distinct slide buttons. UNTESTED: carousels whose slides repeat one button name at 320 (their cut copies are already shown at 1440 and are not in a zero-area box, so they still fail).
+- **Zero-area collapse (R25-GPT-03):** a whole cut at a narrow width by a box with zero client width or height is resolved by a declared state like a display:none loss; a box that still shows any area fails. Executed: max-height:0 and height:0 navs with and without menu-open, display:none for comparison, a 1.5em partial cut (fail); full-gate fixture cases (`local-fixture.mjs`). UNTESTED: a collapsed box with padding or a border (nonzero visible area, so it still fails), transforms such as scaleY(0), clip-path collapse.
+- **Tabs to headed sections (R25-GPT-04):** the one added swap. Every tab must match one shown heading (h1-h6 or role=heading) with the same name at that width, one to one, less headings already shown at 1440; panel text and actions use the ordinary rules. Executed: h2 sections, role=heading, a missing heading, a renamed heading, a dropped panel action, plain paragraphs. UNTESTED: a 1440 tab panel that itself holds a heading with a tab's name (that heading is subtracted from the pool, so the swap then fails), sections reached only in a declared state.
+- **Backlog, P3 (R25-GPT-05, no code):** honest chart encoding (bars from zero, labelled axes, missing versus zero, a shared scale) is not asked for or checked; recorded in `FANNAN-PLAN.md` backlog.
+- **Record correction (R25-GPT-06):** the R24 record, VERIFICATION and the panel-r24 test comment now say that two of the three R24 before-tests timed out; the clean rerun is `test-results/r25/R24-chrome-before-rerun-r25.log`.
+
 ## R24 additions (Mi'mar, 18 October 2026, panel round 24)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Mi'mar's R24 tiebreaks.

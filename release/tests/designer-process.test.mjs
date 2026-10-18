@@ -247,3 +247,12 @@ test('R24: borderless control labels, one-to-one reveal matches, the closed list
   for (const m of ["A control's label text is always measured, whatever its border", 'two hidden Downloads need two shown', 'The only role swaps allowed are a tablist adapted into an accordion', 'No other role swap is accepted', 'let the page links wrap']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
   for (const m of ['Role swaps at narrow widths: the list is closed', 'Let pagination links wrap rather than collapse']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
 });
+
+// R25 (panel round 25, Mi'mar's tiebreaks confirmed by Fadel): tabs to headed sections, one name per owning control, a
+// shared one-to-one count, collapsed boxes rescued by declared states, and the chart-encoding backlog
+test('R25: tabs to headed sections, one name per control, the shared count, zero-area collapse and the chart backlog are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md')), plan = flat(read('FANNAN-PLAN.md'));
+  for (const m of ['content tabs becoming headed sections', 'one name per owning control', 'shared across all collapsed panels of one screen, state and width', 'exactly as it rescues display:none; a partial cut still fails']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  for (const m of ['Tabs may become an accordion or headed sections', 'rescued by its declared menu-open state just like a display:none menu']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
+  assert.ok(plan.includes('Honest chart encoding (R25-GPT-05'), 'FANNAN-PLAN.md: chart-encoding backlog');
+});
