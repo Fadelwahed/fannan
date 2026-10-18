@@ -151,7 +151,7 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
     // R21-MIMAR-01: a box whose cut set is empty, or holds only media and decoration, cuts no content and is not a clip.
     // Read-more tiebreak: an intentional truncation (text-overflow: ellipsis on the cut edge, or line-clamp) is marked so
     // it passes only when a declared state shows the full text.
-    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, sig: boxSig(e), slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), collapsed: e.clientWidth === 0 || e.clientHeight === 0, whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
+    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, sig: boxSig(e), boxPath: pathOf(e), slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), collapsed: e.clientWidth === 0 || e.clientHeight === 0, whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
     const s = scrollerOf(e);
     // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the
     // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on
@@ -291,7 +291,7 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
     return { state: pr.state, openerCount: openersFound.length, regionCount: regions.length, openerVisible, openerHit, openerOpen, regionVisible: items.length > 0, items };
   });
   // clipping boxes (overflow hidden or clip, holding shown content) with what they show uncut: the regions of reveals
-  const boxes = all.filter(e => holds.has(e) && clipBox(e) && [getComputedStyle(e).overflowX, getComputedStyle(e).overflowY].some(o => ['hidden', 'clip'].includes(o))).map(e => ({ sig: boxSig(e), items: insideItems([e]) }));
+  const boxes = all.filter(e => holds.has(e) && clipBox(e) && [getComputedStyle(e).overflowX, getComputedStyle(e).overflowY].some(o => ['hidden', 'clip'].includes(o))).map(e => ({ sig: boxSig(e), path: pathOf(e), items: insideItems([e]) }));
   return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, headings, ledgerItems, headingItems, disclosureItems, compositeItems, declared, boxes, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
@@ -389,7 +389,7 @@ export function accountLosses(all, phase = 'handoff') {
   const stateOf = g => g.scope?.state ?? 'default';
   const twins = new Map(), group = [];
   for (const g of all) { const k = `${stateOf(g)}|${renderingKey(g)}`; if (twins.has(k)) twins.get(k).push(g); else { twins.set(k, [g]); group.push(g); } }
-  const spent = new Map(); // R29: one global pool per screen and width: `${width}` -> `${state}|${item}` already used
+  const spent = new Map(); // R29: one pool per source state and width across every declared state and region: `${S}|${width}` -> `${state}|${item}` used
   for (const S of group) {
     const at1440 = ledgerOf(S, 1440), ledger = new Set(at1440.items.map(i => i.id));
     for (const r of S.widths?.results || []) {
@@ -425,7 +425,7 @@ export function accountLosses(all, phase = 'handoff') {
       // same role family and name (or text), one to one from one pool per screen and width (nested regions never
       // count twice). Nothing visible in S takes part (a valid declaration has S's region hidden). No declaration, no cover.
       r.declarations = [];
-      if (!spent.has(W)) spent.set(W, new Set()); const pool = spent.get(W);
+      const pk = `${stateOf(S)}|${W}`; if (!spent.has(pk)) spent.set(pk, new Set()); const pool = spent.get(pk);
       for (const R of group.filter(R => R !== S && R.declaration && stateOf(R) !== stateOf(S))) {
         const inR = probeOf(R, W, stateOf(R)), why = declarationProblems(probeOf(S, W, stateOf(R)), inR);
         r.declarations.push({ state: stateOf(R), opener: R.declaration.opener, reveals: R.declaration.reveals, valid: !why.length, why });
@@ -597,7 +597,10 @@ export function resolveReveals(scopes, phase = 'handoff') {
           if (o.declaration) { const inR = probeOf(o, width, o.scope.state); return declarationProblems(probeOf({ widths: w }, width, o.scope.state), inR).length ? null : { key: `${o.scope.state}|declared`, items: inR.items }; }
           const real = list => (list || []).filter(b => b.sig === c.sig && b.items.length);
           const a = real(mine.boxes), b = real(theirs.boxes);
-          return a.length <= 1 && b.length === 1 ? { key: `${o.scope.state}|b:${c.sig}`, items: b[0].items } : null;
+          if (a.length <= 1 && b.length === 1) return { key: `${o.scope.state}|b:${c.sig}`, items: b[0].items };
+          // several alike (two unlabelled carousels): the box at the same structural path, when exactly one (R29-GPT-08)
+          const at = b.filter(x => x.path === c.boxPath);
+          return at.length === 1 ? { key: `${o.scope.state}|b:${c.sig}|${c.boxPath}`, items: at[0].items } : null;
         };
         const asItem = p => { const k = String(p.print).indexOf(':'); return p.kind === 'control' ? { kind: 'control', role: p.print.slice(0, k), name: p.print.slice(k + 1), print: p.print } : { kind: 'text', print: p.print }; };
         const pick = (o, p) => {
