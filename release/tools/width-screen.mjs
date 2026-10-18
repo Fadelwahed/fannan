@@ -21,7 +21,13 @@ export function inspectLayout({ reflow = false } = {}) {
   // text on screen (the element itself is media, or a nested document for object)
   const FALLBACK = 'video, audio, object, canvas';
   // R22-GPT-04: links and named semantic controls are content in their own right, by their box and accessible name
-  const CONTROLS = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"], [role="switch"], [role="combobox"], [role="textbox"]';
+  // R23-GPT-04 (Fadel's tiebreak): every WAI-ARIA widget role (1.2: button, checkbox, gridcell, link, menuitem,
+  // menuitemcheckbox, menuitemradio, option, progressbar, radio, scrollbar, searchbox, separator when focusable, slider,
+  // spinbutton, switch, tab, textbox, treeitem; composite widgets combobox, grid, listbox, menu, menubar, radiogroup,
+  // tablist, tree, treegrid) and the native equivalents (links, buttons, inputs, select, textarea, summary, progress,
+  // meter). tabpanel is a content container, not a control: its text stays text.
+  const WIDGET_ROLES = ['button', 'checkbox', 'gridcell', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio', 'option', 'progressbar', 'radio', 'scrollbar', 'searchbox', 'slider', 'spinbutton', 'switch', 'tab', 'textbox', 'treeitem', 'combobox', 'grid', 'listbox', 'menu', 'menubar', 'radiogroup', 'tablist', 'tree', 'treegrid'];
+  const CONTROLS = ['a[href]', 'area[href]', 'button', 'input:not([type="hidden"])', 'select', 'textarea', 'summary', 'progress', 'meter', '[role="separator"][tabindex]', ...WIDGET_ROLES.map(r => `[role="${r}"]`)].join(', ');
   const NESTED = 'iframe, frame, object, embed, fencedframe, portal';
   const clipped = [], offscreenLeft = [], unreachable = [], scrolledText = [], reflowCandidates = [], unmeasured = [], unscannedScopes = [];
   // ARGON-R5-05: visually hidden (sr-only) content is not a clip: clip: rect(0...) / clip-path inset(50%), or a box of at
@@ -42,7 +48,9 @@ export function inspectLayout({ reflow = false } = {}) {
   const isControl = el => !inFallback(el) && el.matches(CONTROLS);
   // the content itself is measured (text-node ranges, or the media box), so text overflowing its own box counts too
   const textRects = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim()).map(n => { const range = document.createRange(); range.selectNodeContents(n); return range.getBoundingClientRect(); }).filter(b => b.width > 0 && b.height > 0);
-  const contentRects = el => el.matches(MEDIA) || (isControl(el) && el.getBoundingClientRect().width > 0) ? [el.getBoundingClientRect()] : textRects(el);
+  // R23-GPT-03: a control is measured by its box AND its own rendered text ranges, so a label cut by the control's box or
+  // a wrapper is a text cut, never a media crop
+  const contentRects = el => el.matches(MEDIA) ? [el.getBoundingClientRect()] : isControl(el) && el.getBoundingClientRect().width > 0 ? [el.getBoundingClientRect(), ...textRects(el)] : textRects(el);
   // R12 M14, R13 N02: hidden, undisplayed or sr-only content (on the element or a composed ancestor) is never
   // measured. Visibility comes from computed style plus geometry: an element box, or (display:contents, zero-size
   // boxes) its rendered text ranges.
@@ -95,7 +103,7 @@ export function inspectLayout({ reflow = false } = {}) {
   // an image or other media inside a link is still media (a pure image crop inside an available link stays exempt)
   const kindOf = d => d.matches(FALLBACK) && !d.matches(NESTED) ? 'media' : isControl(d) ? 'control' : d.matches(NESTED) ? 'frame' : ownText(d) ? (controlOf(d) ? 'control' : 'text') : d.matches(MEDIA) ? 'media' : 'text';
   const norm = t => String(t || '').replace(/\s+/g, ' ').trim();
-  const roleOf = d => { const r = (d.getAttribute('role') || '').trim().split(/\s+/)[0]; if (r) return r; const t = d.tagName.toLowerCase(), type = (d.getAttribute('type') || '').toLowerCase(); return t === 'a' ? 'link' : t === 'button' || t === 'summary' ? 'button' : t === 'select' ? 'combobox' : t === 'textarea' ? 'textbox' : t === 'input' ? (['checkbox', 'radio'].includes(type) ? type : ['submit', 'button', 'reset', 'image'].includes(type) ? 'button' : type === 'range' ? 'slider' : 'textbox') : t; };
+  const roleOf = d => { const r = (d.getAttribute('role') || '').trim().split(/\s+/)[0]; if (r) return r; const t = d.tagName.toLowerCase(), type = (d.getAttribute('type') || '').toLowerCase(); return t === 'a' || t === 'area' ? 'link' : t === 'button' || t === 'summary' ? 'button' : t === 'select' ? (d.multiple || d.size > 1 ? 'listbox' : 'combobox') : t === 'textarea' ? 'textbox' : t === 'progress' ? 'progressbar' : t === 'meter' ? 'meter' : t === 'input' ? (['checkbox', 'radio'].includes(type) ? type : ['submit', 'button', 'reset', 'image'].includes(type) ? 'button' : type === 'range' ? 'slider' : type === 'number' ? 'spinbutton' : type === 'search' ? 'searchbox' : 'textbox') : t; };
   // rendered content (display:none, hidden and aria-hidden parts excluded), with image alt and inner aria-label text
   const contentName = el => [...el.childNodes].map(n => { if (n.nodeType === 3) return n.nodeValue; if (n.nodeType !== 1 || n.getAttribute('aria-hidden') === 'true' || !rendered(n) || getComputedStyle(n).display === 'none') return ''; if (n.getAttribute('aria-label')) return ' ' + n.getAttribute('aria-label') + ' '; if (n.matches('img, area, input[type="image"]')) return ' ' + (n.getAttribute('alt') || '') + ' '; if (n.matches('svg')) return ' ' + (n.querySelector('title')?.textContent || '') + ' '; return ' ' + contentName(n) + ' '; }).join('');
   const nameOf = d => {
@@ -217,26 +225,37 @@ export function inspectLayout({ reflow = false } = {}) {
   }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
-  const shownPrints = [...new Set(contentEls.filter(d => kindOf(d) !== 'media' && !cutPaths.has(pathOf(d)) && !offPaths.has(pathOf(d))).map(printOf))];
+  // R23-GPT-02: a control's print is listed once per control element (one-to-one matching); a text print once
+  const shownEls = contentEls.filter(d => kindOf(d) !== 'media' && !cutPaths.has(pathOf(d)) && !offPaths.has(pathOf(d)));
+  const seenControl = new Set(), seenText = new Set(), shownPrints = [];
+  for (const d of shownEls) { const c = kindOf(d) === 'control' ? controlOf(d) : null, p = printOf(d); if (c) { if (!seenControl.has(c)) { seenControl.add(c); shownPrints.push(p); } } else if (!seenText.has(p)) { seenText.add(p); shownPrints.push(p); } }
   return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
-// R22-MIMAR-02 (P3): a control print is matched by the same role and either the same name, or a shown name whose words
-// are prefixes, in order, of the words of the 1440 name ("Demo" for "Request a demo", "Pricing" for "Pricing and
-// plans"). Text prints match only the same text (R22-GPT-05). An empty name never matches.
-const words = n => String(n || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter(Boolean);
-export function printShown(list, print) {
-  const have = list instanceof Set ? list : new Set(list || []);
-  if (have.has(print)) return true;
-  const i = print.indexOf(':'), role = print.slice(0, i), long = words(print.slice(i + 1));
-  if (i < 1 || role === 'text' || role === 'frame' || !long.length) return false;
-  for (const q of have) {
-    if (!q.startsWith(role + ':')) continue;
-    const short = words(q.slice(role.length + 1)); if (!short.length || short.length > long.length) continue;
-    let k = 0; for (const w of long) if (k < short.length && w.startsWith(short[k])) k++;
-    if (k === short.length) return true;
+// R23-GPT-02, R23-MIMAR-01 (Fadel's tiebreak): prefix and abbreviation matching is retired. A control at a width matches
+// a 1440 control only by the SAME accessible name, one to one (each lost control needs its own match: a second Remove
+// button hidden at 320 is lost). The roles of one action family (button, link, menuitem, menuitemcheckbox,
+// menuitemradio) are interchangeable, so an action moved into a declared More menu as a menuitem matches. A label that
+// shortens visually needs an aria-label keeping the full name. Text prints match only the same text (any one shown
+// copy counts); an empty control name never matches.
+const ACTION = new Set(['button', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio']);
+export const printKey = print => { const i = String(print).indexOf(':'), role = print.slice(0, i); return ACTION.has(role) ? `action:${print.slice(i + 1)}` : print; };
+const isControlPrint = print => { const i = String(print).indexOf(':'); return i > 0 && !['text', 'frame'].includes(print.slice(0, i)); };
+const counts = list => { const m = new Map(); for (const p of list || []) { const k = printKey(p); m.set(k, (m.get(k) || 0) + 1); } return m; };
+// how many of `print` the list shows (controls counted per element; text 1 or 0)
+export function printShown(list, print, need = 1) {
+  const k = printKey(print); if (isControlPrint(print) && !String(print).slice(print.indexOf(':') + 1)) return false;
+  const n = counts(list).get(k) || 0;
+  return isControlPrint(print) ? n >= need : n > 0;
+}
+// the prints lost from `from` in `to`: every text print not shown at all, and every control print shown fewer times
+export function lostPrints(from, to) {
+  const have = counts(to), want = counts(from), out = [], seen = new Map();
+  for (const p of from || []) {
+    const k = printKey(p), i = (seen.get(k) || 0) + 1; seen.set(k, i);
+    if (isControlPrint(p) ? (!p.slice(p.indexOf(':') + 1) || i > (have.get(k) || 0)) : i === 1 && !have.get(k)) out.push(p);
   }
-  return false;
+  return out;
 }
 
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
@@ -289,11 +308,11 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   const shown1440 = new Set(shownAt1440), shownByWidth = {};
   for (const r of results) {
     shownByWidth[r.width] = r.shownPrints;
-    const here = new Set(r.shownPrints);
     // R22-GPT-06: a control is never excused by a truncation
-    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.partial.length ? (c.truncation && ![...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
+    // R23-GPT-05: a clamp may only hide text: a clamp or ellipsis box whose cut set (whole or partial) holds a control fails
+    for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
     const lostByClip = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(p => p.print))); // reported once, by its clip rule
-    r.lost = r.width === 1440 ? [] : shownAt1440.filter(p => !printShown(here, p) && !lostByClip.has(p)).map(print => ({ print }));
+    r.lost = r.width === 1440 ? [] : lostPrints(shownAt1440, r.shownPrints).filter(p => !lostByClip.has(p)).map(print => ({ print }));
     r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated'].includes(c.rule));
     r.pass = r.passExceptReveal && r.clipped.length === 0 && r.lost.length === 0;
     delete r.shownPrints; delete r.rest;
@@ -327,7 +346,9 @@ export function resolveReveals(scopes, phase = 'handoff') {
         if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: c.rule, paths: items.filter((p, i) => !states[i]).map(p => p.path), text: items.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
       }
       for (const l of r.lost || []) {
-        l.reachableIn = others.find(o => printShown(at(o, r.width), l.print))?.scope.state || null;
+        // one to one: the declared state must show as many controls of that name (action family) as 1440 shows here
+        const need = (w.shownAt1440 || []).filter(p => printKey(p) === printKey(l.print)).length || 1;
+        l.reachableIn = others.find(o => printShown(at(o, r.width), l.print, need))?.scope.state || null;
         if (!l.reachableIn) { l.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: 'shown at 1440, not shown at this width', paths: [], text: [l.print.slice(0, 60)], deferred: l.deferred }); }
       }
       r.pass = r.passExceptReveal && r.clipped.every(c => !['reveal', 'truncated'].includes(c.rule) || c.revealedBy || c.deferred) && (r.lost || []).every(l => l.reachableIn || l.deferred);

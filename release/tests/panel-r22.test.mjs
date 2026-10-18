@@ -162,7 +162,7 @@ test('R22-GPT-04, R22-GPT-05: real Chrome: prints are typed: an icon-only link (
   });
 }));
 
-test('R22-MIMAR-02 (P3): real Chrome: a control is not lost when its shown label shortens at a width while its accessible name stays, or when its shown label is a prefix or abbreviation of its 1440 name; a wordmark link left with no name, a different label and a reworded heading still fail (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+test('R22-MIMAR-02 (P3, as narrowed by R23): real Chrome: a control is not lost when its shown label shortens at a width while its accessible name stays; a shown label that is only a prefix or abbreviation of its 1440 name is lost (R23 tiebreak); a wordmark link left with no name, a different label and a reworded heading still fail (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const P = x => W(LS + x);
   assert.deepEqual({
@@ -173,7 +173,8 @@ test('R22-MIMAR-02 (P3): real Chrome: a control is not lost when its shown label
     otherLabel: await gate({ default: P('<button><span class="l">Request a demo</span><span class="s">Contact</span></button>') }),
     rewordedHeading: await gate({ default: P('<h2><span class="l">Everything you need to run payroll</span><span class="s">Run payroll</span></h2>') }),
   }, {
-    shortLabel: { pass: true, rules: [] }, sameName: { pass: true, rules: [] }, abbreviation: { pass: true, rules: [] },
+    // R23 (Fadel's tiebreak): prefix and abbreviation matching is retired; a shortened label needs an aria-label keeping the name
+    shortLabel: { pass: false, rules: ['not shown at this width'] }, sameName: { pass: true, rules: [] }, abbreviation: { pass: false, rules: ['not shown at this width'] },
     wordmark: { pass: false, rules: ['not shown at this width'] }, otherLabel: { pass: false, rules: ['not shown at this width'] }, rewordedHeading: { pass: false, rules: ['not shown at this width'] },
   });
 }));

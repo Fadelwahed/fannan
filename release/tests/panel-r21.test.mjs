@@ -116,7 +116,10 @@ test('R21-MIMAR-02: real Chrome: the links of a closed <details> menu are not on
     rtlFooterLinks: await gate({ default: menuPage({ footer: true }) }, 'rtl'),
     rtlOpenCut: await gate({ default: menuPage({}), 'menu-open': menuPage({ open: true, panel: '-134px' }) }, 'rtl'),
   }, {
-    rtlClosedWithOpenState: { pass: true, rules: [] }, ltrClosedWithOpenState: { pass: true, rules: [] }, rtlFooterLinks: { pass: true, rules: [] },
+    rtlClosedWithOpenState: { pass: true, rules: [] }, ltrClosedWithOpenState: { pass: true, rules: [] },
+    // R23 (Fadel's one-to-one tiebreak): the footer's copies no longer stand in for the hidden desktop nav links; the
+    // closed menu needs its menu-open state declared
+    rtlFooterLinks: { pass: false, rules: ['not shown at this width'] },
     rtlOpenCut: { pass: false, rules: ['not shown at this width', 'offscreenLeft'] },
   });
 }));
