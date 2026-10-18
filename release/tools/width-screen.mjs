@@ -126,7 +126,7 @@ export function inspectLayout({ reflow = false } = {}) {
       if (kindOf(d) === 'media') continue; // R21-MIMAR-01: a media crop is not a content cut
       const rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
       if (!rects.length || rects.every(inside)) continue;
-      const item = { path: pathOf(d), tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
+      const item = { path: pathOf(d), owner: kindOf(d) === 'control' ? pathOf(controlOf(d) || d) : null, tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
       (rects.every(outside) ? whole : partial).push(item);
     }
     return { whole, partial };
@@ -144,7 +144,7 @@ export function inspectLayout({ reflow = false } = {}) {
     // R21-MIMAR-01: a box whose cut set is empty, or holds only media and decoration, cuts no content and is not a clip.
     // Read-more tiebreak: an intentional truncation (text-overflow: ellipsis on the cut edge, or line-clamp) is marked so
     // it passes only when a declared state shows the full text.
-    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
+    if ((x || y)) { const cut = cutOf(e, r); for (const it of [...cut.whole, ...cut.partial]) cutPaths.add(it.path); if (cut.whole.length || cut.partial.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis', truncation: (x && c.textOverflow === 'ellipsis') || (y && !!c.webkitLineClamp && c.webkitLineClamp !== 'none'), collapsed: e.clientWidth === 0 || e.clientHeight === 0, whole: cut.whole, partial: cut.partial }); else mediaCrops.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot') }); }
     const s = scrollerOf(e);
     // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the
     // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on
@@ -240,8 +240,10 @@ export function inspectLayout({ reflow = false } = {}) {
     if (!g) continue; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(`${roleOf(i)}:${nameOf(i)}`);
   }
   const composites = [...groups].map(([g, items]) => ({ print: `${roleOf(g)}:${nameOf(g)}`, role: roleOf(g), items }));
+  // R25-GPT-04: the accessible names of shown headings (h1-h6, role=heading), for tabs adapted into headed sections
+  const headings = all.filter(h => h.matches('h1, h2, h3, h4, h5, h6, [role="heading"]') && shownEls.some(d => d === h || within(h, d))).map(h => nameOf(h));
   const disclosures = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => nameOf(c));
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, headings, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 // R23-GPT-02, R23-MIMAR-01 (Fadel's tiebreak): prefix and abbreviation matching is retired. A control at a width matches
@@ -277,14 +279,17 @@ export function lostPrints(from, to) {
 // one by name (the menuitem family). No other role swaps.
 const nameOfPrint = p => String(p).slice(String(p).indexOf(':') + 1);
 export function coverByEquivalents(lost, from, at) {
-  const pool = new Map(); for (const n of at?.disclosures || []) pool.set(n, (pool.get(n) || 0) + 1);
-  for (const n of from?.disclosures || []) if (pool.get(n)) pool.set(n, pool.get(n) - 1); // disclosures shown at 1440 match themselves
-  const take = n => { if (!pool.get(n)) return false; pool.set(n, pool.get(n) - 1); return true; };
+  // a pool of names shown at the width, less those shown at 1440 (they match themselves); taken atomically per tablist
+  const poolOf = key => { const m = new Map(); for (const n of at?.[key] || []) m.set(n, (m.get(n) || 0) + 1); for (const n of from?.[key] || []) if (m.get(n)) m.set(n, m.get(n) - 1); return m; };
+  const pools = { disclosures: poolOf('disclosures'), headings: poolOf('headings') };
+  const takeAll = (pool, names) => { const t = new Map(pool); for (const n of names) { if (!t.get(n)) return false; t.set(n, t.get(n) - 1); } for (const [k, v] of t) pool.set(k, v); return true; };
   const covered = new Set();
   const lostSet = new Set(lost);
   for (const c of (from?.composites || []).filter(c => c.role === 'tablist' && lostSet.has(c.print))) {
-    const tabs = c.items.filter(i => lostSet.has(i));
-    if (tabs.length === c.items.length && c.items.length && tabs.every(t => take(nameOfPrint(t)))) { covered.add(c.print); tabs.forEach(t => covered.add(t)); }
+    const tabs = c.items.filter(i => lostSet.has(i)), names = tabs.map(nameOfPrint);
+    // an accordion (R24-GPT-03) or headed sections (R25-GPT-04): every tab is matched one to one by name, in one form;
+    // the panels' text and actions are checked by the ordinary one-to-one rules
+    if (tabs.length === c.items.length && c.items.length && (takeAll(pools.disclosures, names) || takeAll(pools.headings, names))) { covered.add(c.print); tabs.forEach(t => covered.add(t)); }
   }
   for (const c of (from?.composites || []).filter(c => c.role === 'menubar' && lostSet.has(c.print))) {
     const want = c.items.map(i => `action:${nameOfPrint(i)}`);
@@ -343,9 +348,9 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   const shownAt1440 = results.find(r => r.width === 1440)?.shownPrints || [];
   const shown1440 = new Set(shownAt1440), shownByWidth = {}, groupsByWidth = {};
   const groups1440 = results.find(r => r.width === 1440) || {};
-  const g1440 = { composites: groups1440.composites || [], disclosures: groups1440.disclosures || [] };
+  const g1440 = { composites: groups1440.composites || [], disclosures: groups1440.disclosures || [], headings: groups1440.headings || [] };
   for (const r of results) {
-    shownByWidth[r.width] = r.shownPrints; groupsByWidth[r.width] = { composites: r.composites || [], disclosures: r.disclosures || [] };
+    shownByWidth[r.width] = r.shownPrints; groupsByWidth[r.width] = { composites: r.composites || [], disclosures: r.disclosures || [], headings: r.headings || [] };
     // R22-GPT-06: a control is never excused by a truncation
     // R23-GPT-05: a clamp may only hide text: a clamp or ellipsis box whose cut set (whole or partial) holds a control fails
     for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
@@ -354,9 +359,9 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
     const eq = coverByEquivalents(lostHere, g1440, groupsByWidth[r.width]); // R24-GPT-03: tabs adapted into an accordion
     r.lost = lostHere.filter(p => !eq.has(p)).map(print => ({ print }));
     if (eq.size) r.equivalent = [...eq];
-    r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated'].includes(c.rule));
+    r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated'].includes(c.rule) || (c.rule === 'shown at 1440, lost at this width' && c.collapsed));
     r.pass = r.passExceptReveal && r.clipped.length === 0 && r.lost.length === 0;
-    delete r.shownPrints; delete r.rest; delete r.composites; delete r.disclosures;
+    delete r.shownPrints; delete r.rest; delete r.composites; delete r.disclosures; delete r.headings;
   }
   return { results, shownAt1440, shownByWidth, groups1440: g1440, groupsByWidth, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
 }
@@ -374,20 +379,31 @@ export function resolveReveals(scopes, phase = 'handoff') {
       const others = scopes.filter(o => o.scope && scope && o.scope.screen === scope.screen && o.scope.lang === scope.lang && o.scope.state !== scope.state);
       // R21-GPT-03: matched by print (normalised text or accessible name), never by DOM position
       const at = (o, width) => (width === 1440 ? o.widths?.shownAt1440 : o.widths?.shownByWidth?.[width]) || [];
-      for (const c of r.clipped.filter(c => ['reveal', 'truncated'].includes(c.rule))) {
+      // R25-GPT-03 (Mi'mar's tiebreak, Fadel's tightening): content cut wholly at a narrow width by a box with zero visible
+      // area (max-height or height 0 with overflow hidden) is resolved by a declared state exactly as a display:none loss;
+      // a partial cut, or a box that still shows part of itself, keeps failing
+      const resolvable = c => ['reveal', 'truncated'].includes(c.rule) || (c.rule === 'shown at 1440, lost at this width' && c.collapsed);
+      // R25-GPT-02: one shared one-to-one pool per source screen, state and width, across all clipping boxes (each target
+      // state keeps its own pool, so carousel slide states keep their own counts); R25-GPT-01: a hidden control counts once,
+      // as one name per owning control (text nested inside a control is part of it), also across overlapping ancestors
+      const usedBy = new Map(others.map(o => [o, new Map()]));
+      const usedAt = (o, width) => { const m = usedBy.get(o); if (!m.has(width)) m.set(width, new Map()); return m.get(width); };
+      const done = new Map(); // owning control path -> state that showed it
+      for (const c of r.clipped.filter(resolvable)) {
         // each cut element needs a declared state that shows it (a carousel's slides are shown by different slide states);
-        // a reveal is shown at 1440, a truncation's full text at the same width
+        // a reveal is shown at 1440, a truncation's full text and a collapsed box's content at the same width
         // R22-GPT-06: a truncation's expanded state must show ALL the clamped content (every whole and partial item) at
         // that width, in one declared state
-        // R24-GPT-02 (Mi'mar's tiebreak): matches to a reveal or expand state are one to one, like losses between widths: each
-        // hidden control consumes one shown control of the same name (action family) in that state (two hidden Downloads
-        // need two shown; a carousel's slides are still shown by different slide states); text keeps any-copy matching
-        const items = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
+        // R24-GPT-02: matches to a reveal or expand state are one to one, like losses between widths: each hidden control
+        // consumes one shown control of the same name (action family) in that state; text keeps any-copy matching
+        const raw = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
+        const seenOwner = new Set(), items = raw.filter(p => { if (p.kind !== 'control' || !p.owner) return true; if (seenOwner.has(p.owner)) return false; seenOwner.add(p.owner); return true; });
         const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(at(o, width), p); const k = printKey(p), n = (counts(at(o, width)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
         const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
-        const full = c.rule === 'truncated' ? others.find(o => { const used = new Map(); return items.every(p => assign(o, used, p.print)); })?.scope.state : null;
-        const usedBy = new Map(others.map(o => [o, new Map()]));
-        const states = c.rule === 'truncated' ? items.map(() => full) : items.map(p => others.find(o => assign(o, usedBy.get(o), p.print))?.scope.state);
+        const pick = (o, p) => { const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; if (key && done.has(key)) return done.get(key) === o; if (!assign(o, usedAt(o, width), p.print)) return false; if (key) done.set(key, o); return true; };
+        let full = null;
+        if (c.rule === 'truncated') for (const o of others) { const trial = new Map(usedAt(o, width)); if (items.every(p => { const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; return (key && done.get(key) === o) || assign(o, trial, p.print); })) { usedBy.get(o).set(width, trial); items.forEach(p => p.kind === 'control' && p.owner && done.set(`${width}|${p.owner}`, o)); full = o.scope.state; break; } }
+        const states = c.rule === 'truncated' ? items.map(() => full) : items.map(p => others.find(o => pick(o, p))?.scope.state);
         const by = states.every(Boolean);
         c.revealedBy = by ? [...new Set(states)] : null;
         if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: c.rule, paths: items.filter((p, i) => !states[i]).map(p => p.path), text: items.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
@@ -398,7 +414,7 @@ export function resolveReveals(scopes, phase = 'handoff') {
         l.reachableIn = others.find(o => printShown(at(o, r.width), l.print, need) || coverByEquivalents((r.lost || []).map(x => x.print), w.groups1440, o.widths?.groupsByWidth?.[r.width]).has(l.print))?.scope.state || null;
         if (!l.reachableIn) { l.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: 'shown at 1440, not shown at this width', paths: [], text: [l.print.slice(0, 60)], deferred: l.deferred }); }
       }
-      r.pass = r.passExceptReveal && r.clipped.every(c => !['reveal', 'truncated'].includes(c.rule) || c.revealedBy || c.deferred) && (r.lost || []).every(l => l.reachableIn || l.deferred);
+      r.pass = r.passExceptReveal && r.clipped.every(c => !resolvable(c) || c.revealedBy || c.deferred) && (r.lost || []).every(l => l.reachableIn || l.deferred);
     }
     w.pass = w.results.every(r => r.pass);
   }
