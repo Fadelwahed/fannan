@@ -50,7 +50,9 @@ export function inspectLayout({ reflow = false } = {}) {
   const textRects = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim()).map(n => { const range = document.createRange(); range.selectNodeContents(n); return range.getBoundingClientRect(); }).filter(b => b.width > 0 && b.height > 0);
   // R23-GPT-03: a control is measured by its box AND its own rendered text ranges, so a label cut by the control's box or
   // a wrapper is a text cut, never a media crop
-  const contentRects = el => el.matches(MEDIA) ? [el.getBoundingClientRect()] : isControl(el) && el.getBoundingClientRect().width > 0 ? [el.getBoundingClientRect(), ...textRects(el)] : textRects(el);
+  // R24-GPT-01 (Mi'mar's tiebreak): controls are checked before the media branch (button, input, select and textarea are
+  // also in MEDIA), so a control's label text is always measured, whatever its border
+  const contentRects = el => isControl(el) ? [...(el.getBoundingClientRect().width > 0 ? [el.getBoundingClientRect()] : []), ...textRects(el)] : el.matches(MEDIA) ? [el.getBoundingClientRect()] : textRects(el);
   // R12 M14, R13 N02: hidden, undisplayed or sr-only content (on the element or a composed ancestor) is never
   // measured. Visibility comes from computed style plus geometry: an element box, or (display:contents, zero-size
   // boxes) its rendered text ranges.
@@ -229,7 +231,17 @@ export function inspectLayout({ reflow = false } = {}) {
   const shownEls = contentEls.filter(d => kindOf(d) !== 'media' && !cutPaths.has(pathOf(d)) && !offPaths.has(pathOf(d)));
   const seenControl = new Set(), seenText = new Set(), shownPrints = [];
   for (const d of shownEls) { const c = kindOf(d) === 'control' ? controlOf(d) : null, p = printOf(d); if (c) { if (!seenControl.has(c)) { seenControl.add(c); shownPrints.push(p); } } else if (!seenText.has(p)) { seenText.add(p); shownPrints.push(p); } }
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
+  // R24-GPT-03 (Mi'mar's tiebreak, a closed list): composite containers (tablist, menubar, menu) with the prints of their
+  // own items (tab, menuitem family), and the names of shown disclosure buttons (summary, or a button with aria-expanded)
+  const ITEM = { tab: 'tablist', menuitem: 'menu', menuitemcheckbox: 'menu', menuitemradio: 'menu' }, groups = new Map();
+  for (const i of seenControl) {
+    const want = ITEM[roleOf(i)]; if (!want) continue;
+    let g = null; for (let a = parentOf(i); a; a = parentOf(a)) { if (a.nodeType !== 1) continue; const ar = roleOf(a); if (['tablist', 'menubar', 'menu'].includes(ar)) { g = (want === 'tablist') === (ar === 'tablist') ? a : null; break; } }
+    if (!g) continue; if (!groups.has(g)) groups.set(g, []); groups.get(g).push(`${roleOf(i)}:${nameOf(i)}`);
+  }
+  const composites = [...groups].map(([g, items]) => ({ print: `${roleOf(g)}:${nameOf(g)}`, role: roleOf(g), items }));
+  const disclosures = [...seenControl].filter(c => c.matches('summary') || (roleOf(c) === 'button' && c.hasAttribute('aria-expanded'))).map(c => nameOf(c));
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 // R23-GPT-02, R23-MIMAR-01 (Fadel's tiebreak): prefix and abbreviation matching is retired. A control at a width matches
@@ -256,6 +268,30 @@ export function lostPrints(from, to) {
     if (isControlPrint(p) ? (!p.slice(p.indexOf(':') + 1) || i > (have.get(k) || 0)) : i === 1 && !have.get(k)) out.push(p);
   }
   return out;
+}
+
+// R24-GPT-03 (Mi'mar's tiebreak): the only role swaps allowed. (1) A tablist at 1440 adapted into an accordion: each lost
+// tab is matched one to one by a shown disclosure (summary, or a button with aria-expanded) of the same name, and the
+// lost tablist counts as covered only when every one of its tabs is matched that way. (2) A menubar adapted into a menu
+// (in a declared state): the lost menubar counts as covered only when a shown menu's items match every menubar item one to
+// one by name (the menuitem family). No other role swaps.
+const nameOfPrint = p => String(p).slice(String(p).indexOf(':') + 1);
+export function coverByEquivalents(lost, from, at) {
+  const pool = new Map(); for (const n of at?.disclosures || []) pool.set(n, (pool.get(n) || 0) + 1);
+  for (const n of from?.disclosures || []) if (pool.get(n)) pool.set(n, pool.get(n) - 1); // disclosures shown at 1440 match themselves
+  const take = n => { if (!pool.get(n)) return false; pool.set(n, pool.get(n) - 1); return true; };
+  const covered = new Set();
+  const lostSet = new Set(lost);
+  for (const c of (from?.composites || []).filter(c => c.role === 'tablist' && lostSet.has(c.print))) {
+    const tabs = c.items.filter(i => lostSet.has(i));
+    if (tabs.length === c.items.length && c.items.length && tabs.every(t => take(nameOfPrint(t)))) { covered.add(c.print); tabs.forEach(t => covered.add(t)); }
+  }
+  for (const c of (from?.composites || []).filter(c => c.role === 'menubar' && lostSet.has(c.print))) {
+    const want = c.items.map(i => `action:${nameOfPrint(i)}`);
+    const ok = c.items.length && (at?.composites || []).some(m => { if (m.role !== 'menu') return false; const have = new Map(); for (const i of m.items) { const k = `action:${nameOfPrint(i)}`; have.set(k, (have.get(k) || 0) + 1); } return want.every(k => { if (!have.get(k)) return false; have.set(k, have.get(k) - 1); return true; }); });
+    if (ok) covered.add(c.print);
+  }
+  return covered;
 }
 
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
@@ -305,19 +341,24 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
   // Read-more: a partial cut that is only an intentional truncation is `truncated` and needs a declared state showing
   // the full text at that width; any other partial cut fails.
   const shownAt1440 = results.find(r => r.width === 1440)?.shownPrints || [];
-  const shown1440 = new Set(shownAt1440), shownByWidth = {};
+  const shown1440 = new Set(shownAt1440), shownByWidth = {}, groupsByWidth = {};
+  const groups1440 = results.find(r => r.width === 1440) || {};
+  const g1440 = { composites: groups1440.composites || [], disclosures: groups1440.disclosures || [] };
   for (const r of results) {
-    shownByWidth[r.width] = r.shownPrints;
+    shownByWidth[r.width] = r.shownPrints; groupsByWidth[r.width] = { composites: r.composites || [], disclosures: r.disclosures || [] };
     // R22-GPT-06: a control is never excused by a truncation
     // R23-GPT-05: a clamp may only hide text: a clamp or ellipsis box whose cut set (whole or partial) holds a control fails
     for (const c of r.clipped) c.rule = c.viewport || !(c.whole?.length || c.partial?.length) ? 'clip' : c.truncation && [...c.whole, ...c.partial].some(p => p.kind === 'control') ? 'partly clipped' : c.partial.length ? (c.truncation ? 'truncated' : 'partly clipped') : r.width !== 1440 && c.whole.some(p => shown1440.has(p.print)) ? 'shown at 1440, lost at this width' : 'reveal';
     const lostByClip = new Set(r.clipped.flatMap(c => [...(c.whole || []), ...(c.partial || [])].map(p => p.print))); // reported once, by its clip rule
-    r.lost = r.width === 1440 ? [] : lostPrints(shownAt1440, r.shownPrints).filter(p => !lostByClip.has(p)).map(print => ({ print }));
+    const lostHere = r.width === 1440 ? [] : lostPrints(shownAt1440, r.shownPrints).filter(p => !lostByClip.has(p));
+    const eq = coverByEquivalents(lostHere, g1440, groupsByWidth[r.width]); // R24-GPT-03: tabs adapted into an accordion
+    r.lost = lostHere.filter(p => !eq.has(p)).map(print => ({ print }));
+    if (eq.size) r.equivalent = [...eq];
     r.passExceptReveal = r.rest && r.clipped.every(c => ['reveal', 'truncated'].includes(c.rule));
     r.pass = r.passExceptReveal && r.clipped.length === 0 && r.lost.length === 0;
-    delete r.shownPrints; delete r.rest;
+    delete r.shownPrints; delete r.rest; delete r.composites; delete r.disclosures;
   }
-  return { results, shownAt1440, shownByWidth, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
+  return { results, shownAt1440, shownByWidth, groups1440: g1440, groupsByWidth, pass: results.every(r => r.pass), passExceptReveal: results.every(r => r.passExceptReveal), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
 }
 
 // R20 (Mi'mar's clipping tiebreak, rule 2): a `reveal` clip (content cut wholly at 1440 in one state) is resolved only
@@ -338,9 +379,15 @@ export function resolveReveals(scopes, phase = 'handoff') {
         // a reveal is shown at 1440, a truncation's full text at the same width
         // R22-GPT-06: a truncation's expanded state must show ALL the clamped content (every whole and partial item) at
         // that width, in one declared state
+        // R24-GPT-02 (Mi'mar's tiebreak): matches to a reveal or expand state are one to one, like losses between widths: each
+        // hidden control consumes one shown control of the same name (action family) in that state (two hidden Downloads
+        // need two shown; a carousel's slides are still shown by different slide states); text keeps any-copy matching
         const items = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
-        const full = c.rule === 'truncated' ? others.find(o => items.every(p => printShown(at(o, width), p.print)))?.scope.state : null;
-        const states = c.rule === 'truncated' ? items.map(() => full) : items.map(p => others.find(o => printShown(at(o, width), p.print))?.scope.state);
+        const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(at(o, width), p); const k = printKey(p), n = (counts(at(o, width)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
+        const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
+        const full = c.rule === 'truncated' ? others.find(o => { const used = new Map(); return items.every(p => assign(o, used, p.print)); })?.scope.state : null;
+        const usedBy = new Map(others.map(o => [o, new Map()]));
+        const states = c.rule === 'truncated' ? items.map(() => full) : items.map(p => others.find(o => assign(o, usedBy.get(o), p.print))?.scope.state);
         const by = states.every(Boolean);
         c.revealedBy = by ? [...new Set(states)] : null;
         if (!by) { c.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: c.rule, paths: items.filter((p, i) => !states[i]).map(p => p.path), text: items.filter((p, i) => !states[i]).map(p => p.text), deferred: c.deferred }); }
@@ -348,7 +395,7 @@ export function resolveReveals(scopes, phase = 'handoff') {
       for (const l of r.lost || []) {
         // one to one: the declared state must show as many controls of that name (action family) as 1440 shows here
         const need = (w.shownAt1440 || []).filter(p => printKey(p) === printKey(l.print)).length || 1;
-        l.reachableIn = others.find(o => printShown(at(o, r.width), l.print, need))?.scope.state || null;
+        l.reachableIn = others.find(o => printShown(at(o, r.width), l.print, need) || coverByEquivalents((r.lost || []).map(x => x.print), w.groups1440, o.widths?.groupsByWidth?.[r.width]).has(l.print))?.scope.state || null;
         if (!l.reachableIn) { l.deferred = phase === 'wireframe'; unresolved.push({ ...scope, width: r.width, rule: 'shown at 1440, not shown at this width', paths: [], text: [l.print.slice(0, 60)], deferred: l.deferred }); }
       }
       r.pass = r.passExceptReveal && r.clipped.every(c => !['reveal', 'truncated'].includes(c.rule) || c.revealedBy || c.deferred) && (r.lost || []).every(l => l.reachableIn || l.deferred);
