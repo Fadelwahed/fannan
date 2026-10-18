@@ -123,7 +123,11 @@ test('R28-MIMAR-01: real Chrome: two independent tabsets into headed sections, e
   const gate = gateOf(open);
   const page = (a, b, dropA, dropB) => W(LS2 + tabset('Reports', ['Sales', 'Costs'], a) + tabset('Archive', ['Q1', 'Q2'], b) + `<div class="s">${['Sales', 'Costs'].map(h => `<section><h2>${h}</h2><p>${h} text.</p>${h === dropA ? '' : '<button>Download</button>'}</section>`).join('')}${['Q1', 'Q2'].map(h => `<section><h2>${h}</h2><p>${h} text.</p>${h === dropB ? '' : '<button>Download</button>'}</section>`).join('')}</div>`);
   const all = (dA, dB) => ({ default: page('Sales', 'Q1', dA, dB), 'tab-costs': page('Costs', 'Q1', dA, dB), 'tab-q2': page('Sales', 'Q2', dA, dB) });
-  assert.deepEqual({ allKept: await gate(all()), droppedReports: (await gate(all('Costs'))).pass, droppedArchive: (await gate(all(null, 'Q2'))).pass }, { allKept: { pass: true, rules: [] }, droppedReports: false, droppedArchive: false });
+  // the panel's r27 g02_twoTabsets page: each tabset followed by its own flat headed sections (no section elements)
+  const ts = (lab, names, sel, drop) => `<div role="tablist" aria-label="${lab}" class="l">${names.map(n => `<button role="tab" aria-selected="${n === sel}">${n}</button>`).join('')}</div><div role="tabpanel" class="l"><p>${lab} ${sel} text</p><button>Download</button></div><div class="s">${names.map(n => `<h2>${n}</h2><p>${lab} ${n} text</p>${n === drop ? '' : '<button>Download</button>'}`).join('')}</div>`;
+  const two = (a, c, drop) => W(LS2 + ts('Reports', ['Sales', 'Costs'], a) + ts('Archive', ['Q1', 'Q2'], c, drop));
+  const flat3 = drop => ({ s1: two('Sales', 'Q1', drop), s2: two('Costs', 'Q1', drop), s3: two('Sales', 'Q2', drop) });
+  assert.deepEqual({ allKept: await gate(all()), droppedReports: (await gate(all('Costs'))).pass, droppedArchive: (await gate(all(null, 'Q2'))).pass, flatTwoTabsets: await gate(flat3()), flatDroppedQ2: (await gate(flat3('Q2'))).pass }, { allKept: { pass: true, rules: [] }, droppedReports: false, droppedArchive: false, flatTwoTabsets: { pass: true, rules: [] }, flatDroppedQ2: false });
 }));
 
 test('R28-MIMAR-02: real Chrome: an error state whose Save is hidden at 320 fails though the default state shows Save; a details/summary menu-open still passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {

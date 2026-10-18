@@ -255,7 +255,7 @@ export function inspectLayout({ reflow = false, tag = false } = {}) {
   const FAM = ['button', 'link', 'menuitem', 'menuitemcheckbox', 'menuitemradio'];
   const HEAD = 'h1, h2, h3, h4, h5, h6, [role="heading"]';
   const panelEls = all.filter(e => e.getAttribute('role') === 'tabpanel');
-  const tablistOfPanel = pnl => { const ids = [pnl.id, ...(pnl.getAttribute('aria-labelledby') || '').split(/\s+/)].filter(Boolean); for (const t of all.filter(e => roleOf(e) === 'tablist')) { if ([...t.querySelectorAll('[role="tab"]')].some(tab => (pnl.id && (tab.getAttribute('aria-controls') || '').split(/\s+/).includes(pnl.id)) || (tab.id && ids.includes(tab.id)))) return t; } return all.find(e => roleOf(e) === 'tablist' && pnl.parentElement && within(pnl.parentElement, e)) || null; };
+  const tablistOfPanel = pnl => { const ids = [pnl.id, ...(pnl.getAttribute('aria-labelledby') || '').split(/\s+/)].filter(Boolean); for (const t of all.filter(e => roleOf(e) === 'tablist')) { if ([...t.querySelectorAll('[role="tab"]')].some(tab => (pnl.id && (tab.getAttribute('aria-controls') || '').split(/\s+/).includes(pnl.id)) || (tab.id && ids.includes(tab.id)))) return t; } const k = all.indexOf(pnl); return all.filter((e, j) => j < k && roleOf(e) === 'tablist' && pnl.parentElement && within(pnl.parentElement, e)).at(-1) || null; }; // else the nearest tablist before it (R28-MIMAR-01)
   const panelTablist = new Map(panelEls.map(pnl => [pnl, tablistOfPanel(pnl)]));
   const panelOf = el => { for (let a = el; a; a = parentOf(a)) if (a.nodeType === 1 && panelTablist.has(a)) return a; return null; };
   const ledgerItems = [], itemOfEl = new Map();
