@@ -165,3 +165,38 @@ test('R21-GPT-03 (P3): real Chrome: a reveal is matched by text, not DOM positio
     unrelated: await gate({ default: q(false, answer), expanded: q(true, '<p>Unrelated sentence in the same place.</p>') }),
   }, { wrapper: { pass: true, rules: [] }, unrelated: { pass: false, rules: ['reveal'] } });
 }));
+
+test('R21-GPT-02: glyphRatio: coverage comes from the black and white text shots, so a glyph on a patch of nearly its own colour is still measured, and the faintest cluster decides', () => {
+  const img = (w, h, f) => { const rgb = new Uint8Array(w * h * 3); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) rgb.set(f(x, y), (y * w + x) * 3); return { width: w, height: h, rgb }; };
+  // twenty 6x8 white glyphs over #222, the first three over a #e8e8e8 patch (white on #e8e8e8 is 1.23:1)
+  const glyph = (x, y) => y >= 1 && y < 9 && x % 8 < 6, bg = x => (x < 24 ? [232, 232, 232] : [34, 34, 34]);
+  const off = img(160, 10, x => bg(x)), on = img(160, 10, (x, y) => (glyph(x, y) ? [255, 255, 255] : bg(x)));
+  const cover = { black: img(160, 10, (x, y) => (glyph(x, y) ? [0, 0, 0] : bg(x))), white: img(160, 10, (x, y) => (glyph(x, y) ? [255, 255, 255] : bg(x))) };
+  const r = visibility.glyphRatio(on, off, cover);
+  assert.ok(r.ratio !== null && r.ratio < 1.3, JSON.stringify(r));
+  assert.equal(r.clusters, 20, JSON.stringify(r));
+});
+
+test('R21-GPT-02: real Chrome: the contrast resolver grades every glyph against its own background: one word of a white caption over a light patch of a dark photo (1.67:1, and a near-white patch) stays blocked with a PASS wcag-review; the same caption without the patch, a scrim hero and small grey text resolve (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  const band = (patch, width = 70) => `background:url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200"><rect width="1200" height="200" fill="#222"/>${patch ? `<rect width="${width}" height="200" fill="${patch}"/>` : ''}</svg>`)}')`;
+  const caption = bg => W(`<div style="position:relative;width:1200px;height:200px;${bg}"><p id="t" style="position:absolute;top:70px;left:4px;margin:0;font-size:28px;color:#fff">Teams deliver support across forty countries every single day of the year</p></div>`);
+  const cases = {
+    oneWordC8: caption(band('#c8c8c8')), oneWordE8: caption(band('#e8e8e8')), noPatch: caption(band(null)),
+    scrimHero: W('<section style="position:relative;width:800px;height:240px;color:#fff"><img src="photo.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div><p id="t" style="position:relative;margin:0;padding:48px;font-size:48px;font-weight:700">Over a photo</p></section>'),
+    smallGrey: W('<div style="background:linear-gradient(90deg,#fff,#f4f6fa);padding:12px"><p id="t" style="margin:0;font-size:12px;color:#595959">Small grey legal text, with commas, dots and the letters i and j.</p></div>'),
+  };
+  const review = { id: 'wcag-review', decision: 'PASS', artifact: 'shot.png' };
+  const out = {};
+  for (const [name, html] of Object.entries(cases)) {
+    const r = {};
+    for (const js of [true, false]) {
+      const { probe } = await open(html, js);
+      const paths = await visibility.contrastPaths(probe, [{ id: 'color-contrast', nodes: [{ target: ['#t'] }] }]);
+      r[js ? 'on' : 'off'] = { vis: await visibility.visibilityScan(probe), glyph: await visibility.glyphContrast(probe, paths.map(p => p.path)), paths };
+    }
+    const res = visibility.resolveContrastIncomplete({ incomplete: [{ id: 'color-contrast' }], paths: r.on.paths, integrity: { probeWorld: { visibility: r.on.vis }, jsOff: { visibility: r.off.vis }, glyph: { scripted: r.on.glyph, jsOff: r.off.glyph } }, review, shots: ['shot.png'] });
+    const n = res.contrastNodes[0];
+    out[name] = { pass: res.pass, faintBelowAA: typeof n.scripted === 'number' ? n.scripted < n.floor : null };
+  }
+  assert.deepEqual(out, { oneWordC8: { pass: false, faintBelowAA: true }, oneWordE8: { pass: false, faintBelowAA: true }, noPatch: { pass: true, faintBelowAA: false }, scrimHero: { pass: true, faintBelowAA: false }, smallGrey: { pass: true, faintBelowAA: false } });
+}));

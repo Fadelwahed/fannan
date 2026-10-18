@@ -432,40 +432,54 @@ export function resolveContrastIncomplete({ incomplete = [], paths = [], integri
     const a = p.path && on?.[p.path], b = p.path && off?.[p.path], floor = p.large ? AA.large : AA.normal;
     const ga = p.path ? gOn[p.path]?.ratio ?? null : null, gb = p.path ? gOff[p.path]?.ratio ?? null : null;
     const why = !p.path ? 'element not found by its axe target' : !a || !b ? 'not measured by the visibility backstop in both renderings' : !a.complete || !b.complete ? 'not every line measured uncovered in both renderings' : ga === null || gb === null ? 'faintest-glyph contrast not measured in both renderings (INCOMPLETE)' : ga < floor || gb < floor ? `faintest glyphs measured ${Math.min(ga, gb)}:1, below ${floor}:1` : !cited ? 'no PASS wcag-review record citing the screenshot' : null;
-    return { target: p.target, path: p.path, large: !!p.large, scripted: ga, jsOff: scriptOnly ? null : gb, measure: 'faintest glyphs (p10 of glyph-cluster contrast against the local background)', scriptOnly: !!scriptOnly, floor, resolved: !why, reason: why };
+    return { target: p.target, path: p.path, large: !!p.large, scripted: ga, jsOff: scriptOnly ? null : gb, measure: 'faintest glyph (minimum glyph-cluster contrast against the local background)', scriptOnly: !!scriptOnly, floor, resolved: !why, reason: why };
   });
   const others = incomplete.filter(v => v.id !== 'color-contrast').map(v => v.id);
   const contrastOpen = incomplete.some(v => v.id === 'color-contrast') && (!nodes.length || nodes.some(n => !n.resolved));
   const unresolved = [...others, ...(contrastOpen ? ['color-contrast'] : [])];
   return { unresolved, contrastNodes: nodes, pass: unresolved.length === 0 };
 }
-// R20-GPT-03: the AA measure for an axe colour-contrast incomplete element is its FAINTEST text, not a high
-// percentile of all ink. The element is scrolled into view and its text box captured twice, once as painted and once
-// with the text made transparent (color and -webkit-text-fill-color transparent, no text-shadow or decoration), so
-// the second shot is the local background under every glyph pixel. Glyph pixels are those that change by more than
-// inkDelta in a channel; each is graded against the background pixel under it. Glyph pixels are grouped into
-// 8-connected clusters (at least minCluster = 25 pixels: a glyph or a run of touching glyphs; dots, commas and other
-// marks too small to reach full ink coverage are left out, so anti-aliasing does not lower honest small text); each cluster's contrast is
-// its best pixel (the glyph core, not its anti-aliased edge), and the element's ratio is the 10th percentile of the
-// cluster values, so text over the light part of a photo decides even when most glyphs sit on a dark band. An element
-// whose glyphs cannot be separated (not found, nothing changed, no cluster) is INCOMPLETE (ratio null).
-export const GLYPH = { inkDelta: 24, minCluster: 25, percentile: 0.1 };
-export function glyphRatio(on, off, opts = GLYPH) {
-  const { width: w, height: h } = on, glyph = new Uint8Array(w * h), ratio = new Float64Array(w * h);
-  if (off.width !== w || off.height !== h) return { ratio: null, reason: 'shots differ in size' };
-  for (let k = 0; k < w * h; k++) { const i = k * 3; if (Math.max(Math.abs(on.rgb[i] - off.rgb[i]), Math.abs(on.rgb[i + 1] - off.rgb[i + 1]), Math.abs(on.rgb[i + 2] - off.rgb[i + 2])) > opts.inkDelta) { glyph[k] = 1; ratio[k] = contrast(lum(on.rgb[i], on.rgb[i + 1], on.rgb[i + 2]), lum(off.rgb[i], off.rgb[i + 1], off.rgb[i + 2])); } }
-  const clusters = [], seen = new Uint8Array(w * h);
+// R20-GPT-03, R21-GPT-02 (Fadel's tiebreak): the AA measure for an axe colour-contrast incomplete element is its
+// FAINTEST glyph, and no faint glyph is dropped. The element is scrolled into view and its text box captured four
+// times: as painted, with the text transparent (the local background under every glyph pixel), and with the text forced
+// to solid black and to solid white (no text-shadow or decoration). Glyph coverage is the difference between the black
+// and white shots, so the mask does not depend on the text's own contrast: a glyph on a patch of nearly its own colour
+// is still a glyph. In every pixel covered at least coreAlpha (the glyph core; the anti-aliased edge is excluded) the
+// painted text colour is recovered from the painted shot, the coverage and the background under it, and graded against
+// that local background. Core pixels form 8-connected clusters (a glyph or touching glyphs); each cluster's contrast is
+// the median of its pixels, and the element's ratio is the MINIMUM over all clusters, so one word on a light patch of a
+// photo decides. Small clusters with a low ratio are kept; only punctuation-size clusters (fewer than punctPixels core
+// pixels) over a solid background (every background channel within solidRange) are left out, and only while larger
+// clusters remain (text so small that every glyph is punctuation-size is graded on all of them). An element whose coverage
+// cannot be measured (not found, no covered pixel, the four shots differ in size) is INCOMPLETE (ratio null).
+export const GLYPH = { coreAlpha: 0.75, punctPixels: 12, solidRange: 6 };
+export function glyphRatio(on, off, cover, opts = GLYPH) {
+  const { width: w, height: h } = on || {};
+  if (!on || !off || !cover?.black || !cover?.white) return { ratio: null, reason: 'glyph coverage shots missing (INCOMPLETE)' };
+  if ([off, cover.black, cover.white].some(x => x.width !== w || x.height !== h)) return { ratio: null, reason: 'shots differ in size' };
+  const core = new Uint8Array(w * h), ratio = new Float64Array(w * h), B = cover.black.rgb, Wh = cover.white.rgb;
   for (let k = 0; k < w * h; k++) {
-    if (!glyph[k] || seen[k]) continue;
-    let n = 0, best = 0; const stack = [k]; seen[k] = 1;
-    while (stack.length) { const c = stack.pop(), x = c % w, y = (c - x) / w; n++; if (ratio[c] > best) best = ratio[c];
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const q = yy * w + xx; if (glyph[q] && !seen[q]) { seen[q] = 1; stack.push(q); } } }
-    if (n >= opts.minCluster) clusters.push(best);
+    const i = k * 3, a = Math.max(Math.abs(Wh[i] - B[i]), Math.abs(Wh[i + 1] - B[i + 1]), Math.abs(Wh[i + 2] - B[i + 2])) / 255;
+    if (a < opts.coreAlpha) continue;
+    const t = [0, 1, 2].map(c => Math.max(0, Math.min(255, (on.rgb[i + c] - (1 - a) * off.rgb[i + c]) / a)));
+    core[k] = 1; ratio[k] = contrast(lum(t[0], t[1], t[2]), lum(off.rgb[i], off.rgb[i + 1], off.rgb[i + 2]));
   }
-  if (!clusters.length) return { ratio: null, reason: 'glyphs not separated from the background', clusters: 0 };
+  const clusters = [], small = [], seen = new Uint8Array(w * h); let dropped = 0;
+  for (let k = 0; k < w * h; k++) {
+    if (!core[k] || seen[k]) continue;
+    const px = [], lo = [255, 255, 255], hi = [0, 0, 0]; const stack = [k]; seen[k] = 1;
+    while (stack.length) { const c = stack.pop(), x = c % w, y = (c - x) / w; px.push(ratio[c]); for (let ch = 0; ch < 3; ch++) { const v = off.rgb[c * 3 + ch]; if (v < lo[ch]) lo[ch] = v; if (v > hi[ch]) hi[ch] = v; }
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const q = yy * w + xx; if (core[q] && !seen[q]) { seen[q] = 1; stack.push(q); } } }
+    const solid = hi.every((v, ch) => v - lo[ch] <= opts.solidRange);
+    px.sort((a, b) => a - b); const value = px[Math.floor((px.length - 1) / 2)];
+    if (px.length < opts.punctPixels && solid) { dropped++; small.push(value); continue; }
+    clusters.push(value);
+  }
+  if (!clusters.length && small.length) { clusters.push(...small); dropped = 0; } // small text: every glyph is punctuation-size, so all are graded
+  if (!clusters.length) return { ratio: null, reason: 'no glyph coverage measured (INCOMPLETE)', clusters: 0, dropped };
   clusters.sort((a, b) => a - b);
-  const at = q => Math.round(clusters[Math.floor((clusters.length - 1) * q)] * 100) / 100;
-  return { ratio: at(opts.percentile), min: at(0), max: at(1), clusters: clusters.length };
+  const r2 = v => Math.round(v * 100) / 100;
+  return { ratio: r2(clusters[0]), min: r2(clusters[0]), max: r2(clusters.at(-1)), clusters: clusters.length, dropped, measure: 'minimum glyph cluster (coverage from black/white text shots)' };
 }
 export async function glyphContrast(pg, paths, opts = GLYPH) {
   const out = {};
@@ -486,13 +500,16 @@ export async function glyphContrast(pg, paths, opts = GLYPH) {
       }, path);
       if (!box) { out[path] = { ratio: null, reason: 'element or its text not found in the viewport' }; continue; }
       const frames = () => pg.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
-      await frames();
-      const on = decodePng(await pg.screenshot({ type: 'png', clip: box }));
-      await pg.evaluate(() => { const st = document.createElement('style'); st.id = 'fannan-glyph-style'; st.textContent = '[data-fannan-glyph],[data-fannan-glyph] *{color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;text-decoration-color:transparent!important;caret-color:transparent!important;transition:none!important}'; document.head.append(st); });
-      await frames();
-      const off = decodePng(await pg.screenshot({ type: 'png', clip: box }));
-      await pg.evaluate(() => { document.getElementById('fannan-glyph-style')?.remove(); document.querySelectorAll('[data-fannan-glyph]').forEach(e => e.removeAttribute('data-fannan-glyph')); });
-      out[path] = glyphRatio(on, off, opts);
+      const shot = async colour => {
+        if (colour) await pg.evaluate(colour => { const st = document.createElement('style'); st.id = 'fannan-glyph-style'; st.textContent = `[data-fannan-glyph],[data-fannan-glyph] *{color:${colour}!important;-webkit-text-fill-color:${colour}!important;text-shadow:none!important;text-decoration-color:transparent!important;caret-color:transparent!important;transition:none!important}`; document.head.append(st); }, colour);
+        await frames();
+        const png = decodePng(await pg.screenshot({ type: 'png', clip: box }));
+        if (colour) await pg.evaluate(() => document.getElementById('fannan-glyph-style')?.remove());
+        return png;
+      };
+      const on = await shot(null), off = await shot('transparent'), black = await shot('#000'), white = await shot('#fff');
+      await pg.evaluate(() => document.querySelectorAll('[data-fannan-glyph]').forEach(e => e.removeAttribute('data-fannan-glyph')));
+      out[path] = glyphRatio(on, off, { black, white }, opts);
     } catch (e) { out[path] = { ratio: null, reason: `glyph measure failed: ${e.message}` }; }
   }
   return out;

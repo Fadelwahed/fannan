@@ -123,16 +123,17 @@ test('R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs 
   assert.deepEqual(out, { paleOverLightPhoto: { pass: false, faintBelowAA: true }, scrimHero: { pass: true, faintBelowAA: false }, darkOverGradient: { pass: true, faintBelowAA: false } });
 }));
 
-test('R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast decides; nothing separable is INCOMPLETE (null)', () => {
+test('R20-GPT-03 (as amended by R21-GPT-02): glyphRatio: the faintest glyph cluster decides; no coverage is INCOMPLETE (null)', () => {
   const img = (w, h, f) => { const rgb = new Uint8Array(w * h * 3); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) rgb.set(f(x, y), (y * w + x) * 3); return { width: w, height: h, rgb }; };
   // ten 5x5 glyphs: nine pale (#d0d0d0 over #f0f0f0), one over a dark band (#d0d0d0 over #111111)
   const glyph = (x, y) => y >= 1 && y < 6 && x % 6 >= 0 && x % 6 < 5;
   const bg = x => (x >= 54 ? [17, 17, 17] : [240, 240, 240]);
   const off = img(60, 7, x => bg(x)), on = img(60, 7, (x, y) => (glyph(x, y) ? [208, 208, 208] : bg(x)));
+  const cover = { black: img(60, 7, (x, y) => (glyph(x, y) ? [0, 0, 0] : bg(x))), white: img(60, 7, (x, y) => (glyph(x, y) ? [255, 255, 255] : bg(x))) };
   assert.equal(typeof visibility.glyphRatio, 'function', 'glyphRatio exported');
-  const r = visibility.glyphRatio(on, off);
+  const r = visibility.glyphRatio(on, off, cover);
   assert.equal(r.clusters, 10); assert.ok(r.ratio < 1.4 && r.max > 10, JSON.stringify(r));
-  assert.equal(visibility.glyphRatio(off, off).ratio, null);
+  assert.equal(visibility.glyphRatio(off, off, { black: off, white: off }).ratio, null);
 });
 
 test('R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state\'s JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
