@@ -14,7 +14,7 @@ const chrome = process.env.FANNAN_TEST_CHROME || '/usr/bin/google-chrome';
 const haveChrome = existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome);
 
 const widths = (n = 0) => ({ 1440: 0, 320: n });
-const vector = { glass: 0, h1: 1, placeholders: false, centered: 0, typeSizes: 3, heroGradient: false, purpleBlue: false, iconRows: 0, accent: '#123456', accentRatio: 0.05, maxViewportAccent: 0.1, filler: false, ruleOfThree: false, frames: 0, stylesheetsUnscanned: 0, spacingOffScale: 0, horizontalOverflow: widths(), clipped: widths(), offscreenLeft: widths(), unreachable: widths(), scrolledText: widths(), unmeasured: widths(), unscannedScopes: widths(), reflowFail: false, contrastFailures: 0, contrastUnknown: 0, contrastChecked: 5, contrastEffects: 0 };
+const vector = { glass: 0, h1: 1, placeholders: false, centered: 0, typeSizes: 3, heroGradient: false, purpleBlue: false, iconRows: 0, accent: '#123456', accentRatio: 0.05, maxViewportAccent: 0.1, filler: false, ruleOfThree: false, frames: 0, stylesheetsUnscanned: 0, spacingOffScale: 0, horizontalOverflow: widths(), clipped: widths(), offscreenLeft: widths(), unreachable: widths(), scrolledText: widths(), unmeasured: widths(), unscannedScopes: widths(), reflowFail: false, contrastFailures: 0, contrastUnknown: 0, contrastChecked: 5, contrastEffects: 0, textMeasured: 5, textObscured: 0, textUnreadable: 0, textUnmeasured: 0 };
 const content = { slots: [['hero', 'Welcome home'], ['lede', 'Plans that fit']], headings: [[1, 'Welcome home']], h1: 1, lang: 'en', dir: 'ltr' };
 const run = (v = {}, c = {}) => ({ vector: { ...vector, ...v }, content: { ...content, ...c } });
 const clean = run();
@@ -44,7 +44,7 @@ test('R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between w
     assert.deepEqual([between.status, between.mismatches[0]?.check], ['integrity mismatch', k], `${k}: page world vs probe world`);
     if (VECTOR[k] === 'coverage') continue;
     const off = cmp({ probe: clean, page: clean, jsOff: run({ [k]: changed }) });
-    assert.deepEqual([off.status, off.mismatches[0]?.check, off.mismatches[0]?.source], [k === 'contrastEffects' ? 'INCOMPLETE' : 'integrity mismatch', k, 'js-off'], `${k}: worse with JavaScript off (R16-GPT-01: unresolved compositing is INCOMPLETE)`);
+    assert.deepEqual([off.status, off.mismatches[0]?.check, off.mismatches[0]?.source], [['contrastEffects', 'textUnmeasured'].includes(k) ? 'INCOMPLETE' : 'integrity mismatch', k, 'js-off'], `${k}: worse with JavaScript off (R16-GPT-01: unresolved compositing is INCOMPLETE; R17: unmeasurable text too, the mismatch is still recorded)`);
   }
   // N11: per-width maps; the same total at different widths is a difference.
   const a = run({ horizontalOverflow: { 1440: 1, 320: 0 } }), b = run({ horizontalOverflow: { 1440: 0, 320: 1 } });
