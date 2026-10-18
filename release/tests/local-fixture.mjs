@@ -348,6 +348,45 @@ const r20Want = {
   unplacedDialog: r20.unplacedDialog.state !== 'PASS' && r20.unplacedDialog.stateChecks.includes('content/js-off') && r20.unplacedDialog.statePass === false,
 };
 if (Object.values(r20Want).some(v => !v)) throw Error('R20 full-run expectations failed: ' + JSON.stringify(r20Want));
+// R21 (Fadel's tiebreaks): full gate runs. An image cropped by its frame passes the width screen (R21-MIMAR-01); a
+// Subscribe line hidden at 320 fails it (R21-GPT-04) and a mobile menu in a closed <details> passes with a declared
+// menu-open state (R21-MIMAR-02, R21-GPT-04); one word of a white caption over a light patch (1.67:1) stays blocked
+// with the authored wcag-review PASS citing the screenshot, while the same caption without the patch resolves
+// (R21-GPT-02); a script-only results state that replaces the description slot with an approved slot placed in that
+// state PASSES (R21-GPT-05), and fails when the deck still places the description there.
+const r21 = {};
+r21.imageCrop = r19Run('image-crop', '<div style="overflow:hidden;height:200px;width:100%;max-width:900px"><img src="r19-photo.png" alt="" style="display:block;width:100%;min-width:600px;height:auto"></div>');
+r21.hiddenCta = r19Run('hidden-cta', '<p class="r21cta">Terms apply to all plans.</p>', '', '<style>@media (max-width:600px){.r21cta{display:none}}</style>');
+const menu21 = isOpen => `<style>.r21d a{display:inline-block;padding:8px}.r21m{display:none;position:relative}.r21m .panel{position:absolute;top:40px;left:-134px;width:240px;background:#fff}.r21m[open] .panel{left:20px}@media (max-width:700px){.r21d{display:none}.r21m{display:block}}</style><nav class="r21d"><a href="#a">Products</a><a href="#b">Contact</a></nav><details class="r21m"${isOpen ? ' open' : ''}><summary>Menu</summary><div class="panel"><a href="#a" style="display:block">Products</a><a href="#b" style="display:block">Contact</a></div></details><div style="height:120px"></div>`;
+r21.menuDeclared = r19Run('menu-declared', menu21(false), '', '', authored, [['menu-open', at20(menu21(true))]]);
+r21.menuUndeclared = r19Run('menu-undeclared', menu21(false));
+const patch21 = fill => '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200"><rect width="800" height="200" fill="#222"/>' + (fill ? `<rect width="70" height="200" fill="${fill}"/>` : '') + '</svg>';
+writeFileSync(join(output, 'r21-patch.svg'), patch21('#c8c8c8')); writeFileSync(join(output, 'r21-nopatch.svg'), patch21(null));
+const caption21 = bg => `<div style="position:relative;width:800px;max-width:100%;height:200px;background:url('${bg}')"><p style="position:absolute;top:70px;left:4px;margin:0;font-size:28px;color:#fff">Teams deliver support every day</p></div>`;
+r21.patchWord = r19Run('patch-word', caption21('r21-patch.svg'));
+r21.noPatch = r19Run('no-patch', caption21('r21-nopatch.svg'));
+const results21 = original.replace('</main>', '</main><script>const d = document.querySelector("[data-copy-slot=description]"); const n = document.createElement("p"); n.setAttribute("data-copy-slot", "results-note"); n.textContent = "Start the service"; d.replaceWith(n);</script>');
+const note21 = { ...slot20, id: 'results-note', purpose: 'results summary', placements: [{ lang: 'en', state: 'results', screenshot: shot }] };
+const deck21 = withDescription => ({ ...authored, copySlots: [...authored.copySlots.map(c => (c.id !== 'description' || withDescription) ? { ...c, placements: [...c.placements, { lang: 'en', state: 'results', screenshot: shot }] } : c), note21] });
+const claim21 = { requiresScript: true, trigger: 'Search replaces the description with the results summary' };
+const first21 = r19Run('results-state', '', '', '', deck21(false), [['results', results21]], original, claim21);
+const frame21 = join(output, 'r21-results-1440.png');
+if (existsSync(join(output, 'evidence-r19-results-state', 'home-en-results-1440.png'))) writeFileSync(frame21, readFileSync(join(output, 'evidence-r19-results-state', 'home-en-results-1440.png')));
+r21.replaceSlot = r19Run('results-state-2', '', '', '', deck21(false), [['results', results21]], original, { ...claim21, frame: { path: frame21, width: 1440, version: 'v1', sha256: first21.rendered } });
+r21.replacedStillPlaced = r19Run('results-placed', '', '', '', deck21(true), [['results', results21]], original, claim21);
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R21 fixture runs: ' + JSON.stringify(r21));
+const r21Want = {
+  imageCrop: r21.imageCrop.widths[0] === true,
+  hiddenCta: r21.hiddenCta.widths[0] === false && r21.hiddenCta.reveals > 0,
+  menuDeclared: r21.menuDeclared.widths.every(w => w === true) && r21.menuDeclared.reveals === 0,
+  menuUndeclared: r21.menuUndeclared.widths[0] === false && r21.menuUndeclared.reveals > 0,
+  patchWord: axeOpen(r21.patchWord), noPatch: r21.noPatch.axe[0] === true,
+  replaceSlot: r21.replaceSlot.state === 'PASS' && r21.replaceSlot.statePass === true && r21.replaceSlot.requiresScript?.valid === true,
+  replacedStillPlaced: r21.replacedStillPlaced.state !== 'PASS' && r21.replacedStillPlaced.stateChecks.includes('content/js-off') && r21.replacedStillPlaced.statePass === false,
+};
+if (Object.values(r21Want).some(v => !v)) throw Error('R21 full-run expectations failed: ' + JSON.stringify(r21Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
