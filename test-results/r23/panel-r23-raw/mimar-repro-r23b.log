@@ -1,0 +1,13 @@
+resolver null,8      {"pass":false,"zone":"incomplete","reason":"faintest-glyph contrast not measured in both renderings (INCOMPLETE)"}
+resolver null,null   {"pass":false,"zone":"incomplete","reason":"faintest-glyph contrast not measured in both renderings (INCOMPLETE)"}
+resolver 4,4 (zone c) {"pass":true,"zone":"incomplete (reviewed)","reason":null}
+glyph hair-100       [{"ratio":10.69,"clusters":27}]
+glyph tiny-9px       [{"ratio":10.69,"clusters":15}]
+glyph emoji          [{"ratio":10.69,"clusters":18}]
+saveSaveAs           [[1440,true,[],[],0],[320,true,[],[],0]]
+exportToMenuitem     {"pass":false,"unresolved":[["button:Export report"],["button:Export report"]],"default320":false}
+exportToButtonControl {"pass":true}
+linkTextOverflow     [[1440,true,[],[],1],[320,true,[],[],1]]
+linkTextOverflow320  [[1440,true,[],[],1],[320,true,[],[],1]]
+sliderHidden         [[1440,true,[],[],0],[320,true,[],[],0]]
+clampWholeButton     {"pass":true,"default":[[1440,true,["reveal whole=control partial=0"]],[320,true,["reveal whole=control partial=0"]]]}

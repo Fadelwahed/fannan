@@ -1,5 +1,24 @@
 # R3 executed verification — 17 October 2026
 
+## R23 executed verification (Mi'mar's box, 18 October 2026, about 7:00 PM UTC+3)
+
+Panel round 23 (4 P2: R23-GPT-02 to R23-GPT-05; P3 R23-GPT-01, R23-MIMAR-01; GPT, cross-checked by Mi'mar; `reviews/panel-r23/`), with Fadel's R23 tiebreaks. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 165 PASS, 0 FAIL (R22's 159 + 5 in `tests/panel-r23.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r23/node.log` |
+| same, without deps | 0 | 84 PASS, 0 FAIL, 81 SKIPPED | `test-results/r23/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r23/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 45 PASS / 40 PASS + 5 SKIPPED (`test_r23_sections` added) | `test-results/r23/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=49 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r23/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 158 PASS, 7 FAIL: the same six Style Dictionary tests, plus the R18 autoplay-carousel test, which timed out its slide timing on the loaded box (88 s) and passes on rerun (`node20-r18-rerun.log`: 5 of 5) | `test-results/r23/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r23/local-fixture.log`, and `R23-full-run-after.log`). R23 full pre-handoff runs: 'Save as' hidden at 320 next to 'Save' fails the width screen; 'Export report' moved into a declared More menu as a `menuitem` passes (0 unresolved); a shortened button label fails without an `aria-label` and passes with one keeping the full name; a link label cut by its 100 px box fails (partly clipped); a custom `role="slider"` hidden at 320 fails; a button cut wholly by a two-line clamp fails even with an expanded state. The unmeasured-glyph path (R23-GPT-01) is covered by the resolver test only: no honest page produced an unmeasured glyph (the panel found none either).
+
+**Honest patterns and the real site:** `test-results/r23/R23-honest-patterns.log` (the R18 set and the R19-R23 repro pages, both renderings) and `test-results/r23/R23-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured). With one-to-one matching the real site's default state alone now fails the width screen at 320 (the hidden desktop nav links and the Arabic demo link are no longer matched by their footer copies); with the declared menu-open state (the site's closed `<details>` menu opened) both languages PASS with 0 unresolved.
+
+Per-finding before/after logs: `test-results/r23/R23-*-{before,after}.log` (before = R23 tests against the eeeb371 sources, documents included): Chrome 52 of 59 before (7 assertion failures: the five R23 tests and the R21/R22 tests updated for the tiebreak), 59 of 59 after; the R23-GPT-03 regression passes against the d9e1049 width screen (`R23-GPT03-vs-d9e1049.log`: d9e1049 caught the cut label; eeeb371 regressed); docs 16 of 17 / 17 of 17; package `test_r23_sections` and the archive test FAIL before, OK after; fixture FIXTUREBEFORE, exit 0 after.
+
 ## R22 executed verification (Mi'mar's box, 18 October 2026, about 5:45 PM UTC+3)
 
 Panel round 22 (7 P2: R22-GPT-01 to R22-GPT-06, R22-MIMAR-01; P3 R22-MIMAR-02, R22-GPT-07, R22-GPT-08; GPT, cross-checked by Mi'mar; `reviews/panel-r22/`), with Fadel's R22 three-zone tiebreak for text over images. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.

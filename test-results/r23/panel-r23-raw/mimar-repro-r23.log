@@ -1,0 +1,5 @@
+panning          [12.01,12.01,12.01]
+panningReduced   [12.01,12.01,12]
+fading           [14.52,14.52,14.52]
+prefixMask       [[1440,true,[]],[320,true,[]]]
+prefixMaskLink   [[1440,true,[]],[320,true,[]]]

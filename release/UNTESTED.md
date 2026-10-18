@@ -1,5 +1,15 @@
 # R3 checks not established
 
+## R23 additions (Mi'mar, 18 October 2026, panel round 23)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel's R23 tiebreaks.
+
+- **Same-name, one-to-one control matching (R23-GPT-02, R23-MIMAR-01):** prefix and abbreviation matching is retired. A control's print is listed once per control element; at each width, 1440's controls are matched by the same accessible name, counted (a second Remove button hidden at 320 is lost); button, link, menuitem, menuitemcheckbox and menuitemradio are one action family. A declared state resolves a loss only when it shows at least as many same-name actions at that width as 1440 shows in the original state. Judgement left to Fadel: (1) footer copies of nav links no longer stand in for hidden desktop nav links, so a page whose closed mobile menu is not declared as a state fails (the real site's default alone fails; with `menu-open` declared it passes); (2) the panel's `k-tb-o` open state shows its menu at 1440 too (the More button is hidden there), so that state shows two Export actions at 1440 and one at 320 and fails; a menu hidden at 1440, as real More menus are, passes. UNTESTED: the same name on controls with different destinations (two "Learn more" links) counts as interchangeable; text prints keep any-copy matching.
+- **Control label text (R23-GPT-03):** a control is measured by its box and its own text ranges. Executed: a link and a button whose labels overflow, a fitting label, an image link crop. UNTESTED: labels in pseudo-elements, icon-font glyphs.
+- **Widget roles (R23-GPT-04):** every ARIA 1.2 widget and composite widget role plus native inputs, select, textarea, summary, progress and meter. `tabpanel` is not treated as a control (its text stays text); `separator` only when focusable. UNTESTED: a composite (grid, listbox, menu) whose name is computed from all its content is one print, so text inside a grid without gridcell roles is matched as the grid's name; `role="application"`.
+- **Clamps (R23-GPT-05):** a clamp or ellipsis box whose cut set holds a control fails, whatever the expanded state. UNTESTED: a control made inert or `visibility:hidden` inside a clamp (not cut content).
+- **Unmeasured glyph (R23-GPT-01):** zone (c) when either rendering could not be measured; a measured value below 3:1 less the margin in either rendering fails. Executed on the resolver only.
+
 ## R22 additions (Mi'mar, 18 October 2026, panel round 22)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel's R22 three-zone tiebreak.
