@@ -179,7 +179,7 @@ test('R11 panel A: the accent fails closed at handoff, names the variable, binds
   assert.match(source, /const approvedAccentToken = approvedAccent\(handoff\);/);
   assert.match(source, /ev\.checks\.accent = await accentFor\(p, design\);\nif \(!ev\.checks\.accent\.pass\) fail = true;/, 'the page');
   assert.match(source, /const accent = await accentFor\(p, d\);/, 'every state');
-  assert.match(source, /&& accent\.pass && frames\.pass && integrity\.pass && stateResult\.focusFailures/, 'a state fails on the accent');
+  assert.match(source, /&& accent\.pass && frames\.pass && stylesheets\.pass && integrity\.pass && stateResult\.focusFailures/, 'a state fails on the accent');
 });
 
 test('R12 M04/M05: served HTML/JS/SVG script forms and CSS-escaped property names count as glass; only an explicit none does not', async () => {

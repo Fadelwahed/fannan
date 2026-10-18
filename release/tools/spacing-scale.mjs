@@ -24,7 +24,10 @@ export function spacingProbe(approved = []) {
   const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'rowGap', 'columnGap'];
   const cssName = { marginLeft: 'margin-left', marginRight: 'margin-right', marginTop: 'margin-top', marginBottom: 'margin-bottom' };
   const off = new Map(), exceptions = [];
-  for (const el of document.querySelectorAll('html, body, body *')) { // R12 M15: html and body margins too
+  const composed = [document.documentElement, document.body].filter(Boolean); // R12 M15: html and body margins too
+  const walkComposed = root => { for (const el of root.querySelectorAll('*')) { composed.push(el); if (el.shadowRoot) walkComposed(el.shadowRoot); } };
+  if (document.body) walkComposed(document.body); // R13 N20: open shadow roots too (spacing and exceptions)
+  for (const el of composed) {
     const r = el.getBoundingClientRect(), c = getComputedStyle(el);
     if (!(r.width > 0 && r.height > 0) || c.visibility === 'hidden' || c.display === 'none') continue;
     // R11 panel D1: a documented exception (data-fannan-spacing-exception="<reason>") excuses this element's own

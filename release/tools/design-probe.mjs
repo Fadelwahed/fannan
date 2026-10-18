@@ -3,11 +3,15 @@
 // here from pre-handoff-check.mjs so it can be tested in a real browser.
 export function designProbe() {
   const visible = e => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden' && c.display !== 'none'; };
-  const sections = [...document.querySelectorAll('main section, section')].filter(visible);
+  // R13 N20: one composed-tree list (open shadow roots included) for every counter below.
+  const composed = [];
+  const walkComposed = root => { for (const el of root.querySelectorAll('*')) { composed.push(el); if (el.shadowRoot) walkComposed(el.shadowRoot); } };
+  if (document.body) walkComposed(document.body);
+  const sections = composed.filter(e => e.matches('section')).filter(visible);
   const centered = sections.filter(e => { const c = getComputedStyle(e); return c.textAlign === 'center' && e.getBoundingClientRect().width > 300; }).length;
-  const sizes = [...new Set([...document.querySelectorAll('body *')].filter(visible).map(e => getComputedStyle(e).fontSize))];
+  const sizes = [...new Set(composed.filter(visible).map(e => getComputedStyle(e).fontSize))];
   const pageArea = Math.max(document.documentElement.scrollHeight, innerHeight) * document.documentElement.clientWidth;
-  const rects = [...document.querySelectorAll('body *')].filter(visible).map(e => ({e,r:e.getBoundingClientRect(),c:getComputedStyle(e)}));
+  const rects = composed.filter(visible).map(e => ({e,r:e.getBoundingClientRect(),c:getComputedStyle(e)}));
   // R9 sibling of CODEX-R4-02: colours are normalised by a detached canvas, never by an element in the page, so page CSS
   // (span{color:...!important}) cannot change what "the accent" is.
   const ctx = document.createElement('canvas').getContext('2d');
@@ -24,7 +28,7 @@ export function designProbe() {
   const accentArea = accentComputed ? painted.reduce((sum,{r}) => sum + Math.max(0, Math.min(r.width, innerWidth)) * r.height, 0) : null;
   const accentViewportArea = accentComputed ? painted.reduce((sum,{r}) => sum + Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0)), 0) : null;
   const gradients = rects.filter(({c}) => c.backgroundImage.includes('gradient(')).length;
-  const heroGradient = [...document.querySelectorAll('main > section:first-child, main > header:first-child, .hero, [data-hero]')].some(e => getComputedStyle(e).backgroundImage.includes('gradient('));
+  const heroGradient = composed.filter(e => e.matches('main > section:first-child, main > header:first-child, .hero, [data-hero]')).some(e => getComputedStyle(e).backgroundImage.includes('gradient('));
   // R11 (Asad panel S2): glass is counted on html, body, every visible element and its rendered ::before/::after.
   // Any declared backdrop filter other than none is glass, rendered by Chrome or not: Chrome drops the
   // -webkit-backdrop-filter alias at parse time (Safari renders it) and computes none on the root element, so the raw
@@ -49,7 +53,8 @@ export function designProbe() {
   const visit = (root, inFrame) => {
     for (const el of root.querySelectorAll('*')) {
       if (el.shadowRoot) { scopes.push({ root: el.shadowRoot, kind: 'shadow' }); visit(el.shadowRoot, inFrame); }
-      if (el.matches('iframe, frame')) { let doc = null; try { doc = el.contentDocument; } catch {} if (doc?.documentElement) { scopes.push({ root: doc, kind: 'frame' }); visit(doc, true); } else unscannedFrames.push(el.getAttribute('src') || el.tagName.toLowerCase()); }
+      // R13 N04: every element that can hold a nested document counts as a frame.
+      if (el.matches('iframe, frame, object, embed, fencedframe, portal')) { let doc = null; try { doc = el.contentDocument; } catch {} if (doc?.documentElement) { scopes.push({ root: doc, kind: 'frame' }); visit(doc, true); } else unscannedFrames.push(el.getAttribute('src') || el.tagName.toLowerCase()); }
     }
   };
   visit(document, false);
@@ -61,15 +66,22 @@ export function designProbe() {
   // hold an icon, centred on the container or on every item (tags and wrappers do not exempt it), plus the R3
   // section rule (a centred section with exactly three icons) when no such row sits inside that section.
   const iconSel = 'svg, i, [class*="icon"]';
-  const rows = [...document.querySelectorAll('body *')].filter(visible).filter(e => {
+  const rows = composed.filter(visible).filter(e => {
     const items = [...e.children].filter(visible);
     if (items.length !== 3 || !items.every(item => item.matches(iconSel) || item.querySelector(iconSel))) return false;
     return getComputedStyle(e).textAlign === 'center' || items.every(item => getComputedStyle(item).textAlign === 'center');
   });
   const iconRows = rows.length + sections.filter(e => getComputedStyle(e).textAlign === 'center' && e.querySelectorAll(iconSel).length === 3 && !rows.some(r => e.contains(r))).length;
   const purpleBlue = rects.some(({c}) => /rgb\((?:1[0-5]\d|[2-9]\d),\s*(?:[0-9]|[1-9]\d),\s*(?:1[3-9]\d|2\d\d)\)/.test(c.backgroundColor)) && rects.some(({c}) => /rgb\((?:[0-9]|[1-9]\d),\s*(?:[0-9]|[1-9]\d),\s*(?:1[3-9]\d|2\d\d)\)/.test(c.backgroundColor));
-  const text = document.body.innerText;
-  return { centered, typeSizes: sizes, accent, accentVar, accentInvalid, accentArea, accentRatio: accentArea === null ? null : accentArea / pageArea, accentViewportRatio: accentViewportArea === null ? null : accentViewportArea / (innerWidth * innerHeight), gradients, heroGradient, glass, glassScopes, iconRows, purpleBlue, visibleText: text, headlines: [...document.querySelectorAll('h1,h2,[data-tagline]')].map(e => e.innerText), placeholders: /\[placeholder\]|lorem ipsum|\btbd\b/i.test(text), h1: document.querySelectorAll('h1').length }
+  const shadowText = composed.filter(e => e.shadowRoot).flatMap(e => [...e.shadowRoot.children].filter(c => !['STYLE', 'SCRIPT', 'TEMPLATE'].includes(c.tagName)).map(c => c.innerText || ''));
+  const text = [document.body.innerText, ...shadowText].join('\n');
+  // R13 N07: every stylesheet (link, style, @import, constructed; open shadow roots too) is listed with its URL and
+  // whether its rules could be read. The checker refuses data:/blob: sheets and fails any unreadable sheet it did
+  // not serve and scan itself.
+  const stylesheets = [];
+  const listSheet = (sheet, owner) => { let rules = null; try { rules = [...sheet.cssRules]; } catch {} stylesheets.push({ href: sheet.href || null, owner, readable: rules !== null }); for (const r of rules || []) if (r.styleSheet) listSheet(r.styleSheet, 'import'); };
+  for (const scope of [document, ...composed.filter(e => e.shadowRoot).map(e => e.shadowRoot)]) { for (const sh of scope.styleSheets || []) listSheet(sh, sh.ownerNode?.tagName?.toLowerCase() || 'sheet'); for (const sh of scope.adoptedStyleSheets || []) listSheet(sh, 'adopted'); }
+  return { centered, typeSizes: sizes, accent, accentVar, accentInvalid, accentArea, accentRatio: accentArea === null ? null : accentArea / pageArea, accentViewportRatio: accentViewportArea === null ? null : accentViewportArea / (innerWidth * innerHeight), gradients, heroGradient, glass, glassScopes, iconRows, purpleBlue, visibleText: text, headlines: composed.filter(e => e.matches('h1,h2,[data-tagline]')).map(e => e.innerText), placeholders: /\[placeholder\]|lorem ipsum|\btbd\b/i.test(text), h1: composed.filter(e => e.matches('h1')).length, stylesheets }
 }
 
 // R11 (Asad panel S2): node side. True when CSS or HTML text declares a backdrop filter other than none, prefixed or
@@ -78,10 +90,18 @@ export function rawGlass(text, kind = 'css') {
   // R12 M05: comments removed and CSS escapes resolved first. R12 M04: in HTML, JavaScript and SVG text any script form
   // also counts, with no colon needed (style.backdropFilter, style.webkitBackdropFilter, setProperty('-webkit-backdrop-
   // filter', ...), style['backdrop-filter']); only an explicit `: none` is not glass. Fail closed.
-  const t = String(text).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?/g, (_, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return ''; } }).replace(/\\([^\n0-9a-fA-F])/g, '$1');
-  if (/(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$|["'`]))[^;}]+/i.test(t)) return true;
-  if (kind === 'css') return false;
-  return /\b[wW]ebkitBackdropFilter\b|\bbackdropFilter\b/.test(t) || /(?:-webkit-)?backdrop-filter(?!\s*:\s*none\b)/i.test(t);
+  // R13 N08: in HTML/JS/SVG, JavaScript string escapes (\xNN, \uNNNN, \u{...}) are decoded before matching. R13 N09:
+  // CSS comment syntax inside a JavaScript string is not a comment, so the raw text and the comment-stripped text are
+  // both matched and either match counts. Deliberate obfuscation beyond this is outside the threat model (FANNAN-PLAN.md).
+  const src = String(text);
+  const strip = t => t.replace(/\/\*[\s\S]*?\*\//g, '');
+  const cssUnescape = t => t.replace(/\\([0-9a-fA-F]{1,6})[ \t\n\r\f]?/g, (_, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return ''; } }).replace(/\\([^\n0-9a-fA-F])/g, '$1');
+  const code = h => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return ''; } };
+  const jsUnescape = t => t.replace(/\\u\{([0-9a-fA-F]{1,6})\}/g, (_, h) => code(h)).replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => code(h)).replace(/\\x([0-9a-fA-F]{2})/g, (_, h) => code(h));
+  const declared = t => /(?:-webkit-)?backdrop-filter\s*:\s*(?!\s*none\s*(?:;|\}|!|$|["'`]))[^;}]+/i.test(t);
+  if (kind === 'css') return declared(cssUnescape(strip(src)));
+  const script = t => declared(t) || /\b[wW]ebkitBackdropFilter\b|\bbackdropFilter\b/.test(t) || /(?:-webkit-)?backdrop-filter(?!\s*:\s*none\b)/i.test(t);
+  return [src, strip(src)].some(t => script(jsUnescape(t)) || script(cssUnescape(jsUnescape(t))));
 }
 
 // R11 panel D1 (decision A). Browser side: a colour normalised by a detached canvas (as in designProbe), or null.
