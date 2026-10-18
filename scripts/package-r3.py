@@ -150,6 +150,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r8')  # R8 before/after evidence (Codex cloud port)
     if (ROOT / 'test-results/r9').is_dir():
         paths += files(ROOT / 'test-results/r9')  # R9 before/after evidence (Codex round 4)
+    if (ROOT / 'test-results/r10').is_dir():
+        paths += files(ROOT / 'test-results/r10')  # R10 before/after evidence (Argon round 5)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 

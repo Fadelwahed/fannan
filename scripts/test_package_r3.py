@@ -123,6 +123,9 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r8/') for n in names), 'R8 evidence is archived like R4-R7')
         if (ROOT / 'test-results/r9').is_dir():
             self.assertTrue(any(n.startswith('test-results/r9/') for n in names), 'R9 evidence is archived like R4-R8')
+        if (ROOT / 'test-results/r10').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r10/') for n in names), 'R10 evidence is archived like R4-R9')
+        self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
     def test_doc_lists_the_exclusions(self):
