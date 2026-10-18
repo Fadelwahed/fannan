@@ -1,0 +1,8 @@
+cardWholeBelow  {"w":[[1440,0,true],[320,0,false]],"meas":3,"hidden":1,"unread":0,"obsc":0,"unmeas":0,"byElement":{"body:1/main:0/h1:0":[17.4,true],"body:1/main:0/div:1/h3:0":[17.39,true],"body:1/main:0/div:1/p:1":[17.38,true],"body:1/main:0/div:1/p:2":[null,false]}}
+accordionBare   {"w":[[1440,1,false],[320,1,false]],"meas":2,"hidden":1,"unread":0,"obsc":0,"unmeas":0,"byElement":{"body:1/main:0/h1:0":[17.4,true],"body:1/main:0/button:1":[17.19,true],"body:1/main:0/div:2":[null,false]}}
+carouselMiddle  {"w":[[1440,1,false],[320,1,false]],"meas":2,"hidden":2,"unread":0,"obsc":0,"unmeas":0,"byElement":{"body:1/main:0/h1:0":[17.4,true],"body:1/main:0/div:1/div:0/p:0":[null,false],"body:1/main:0/div:1/div:0/p:1":[17.38,true],"body:1/main:0/div:1/div:0/p:2":[null,false]}}
+gradientVeil    {"w":[[1440,0,true],[320,0,false]],"meas":1,"hidden":1,"unread":0,"obsc":0,"unmeas":0,"byElement":{"body:1/main:0/h1:0":[17.4,true],"body:1/main:0/div:2/p:0":[null,false]}}
+fadeNoMore      {"w":[[1440,0,true],[320,0,false]],"meas":2,"hidden":0,"unread":0,"obsc":0,"unmeas":0,"byElement":{"body:1/main:0/h1:0":[17.4,true],"body:1/main:0/div:2/p:0":[17.38,false]}}
+photoStripe     {"w":[[1440,0,true],[320,0,false]],"meas":1,"hidden":0,"unread":1,"obsc":0,"unmeas":0,"byElement":{"body:1/main:0/h1:0":[17.4,true],"body:1/main:0/div:1/p:0":[1.35,true]}}
+wrapClaim       {"claimed":true,"valid":true,"rendersWithoutScript":false,"onlyScripted":1,"reason":null}
+replaceClaim    {"claimed":true,"valid":false,"rendersWithoutScript":true,"onlyScripted":0,"reason":"the state renders with JavaScript off"}

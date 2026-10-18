@@ -1,0 +1,19 @@
+{
+  "releaseManifestSha256": "8e2019cc33cd7482732e1d651d3ad332c94e2ab1c45964a7768adbffca34a0da",
+  "releaseFiles": 94,
+  "archiveFiles": 755,
+  "archiveSha256": "91316119159c9f486a22a5cc9c7352838b80426ccb78ea070d791263f4486af0",
+  "zipCRC": "PASS",
+  "exactInventoryAndBytes": "PASS",
+  "sevenDeliverables": "PASS",
+  "skills": 16,
+  "changedFiles": 804,
+  "coveredChangedFiles": 802,
+  "uncoveredChangedFiles": [],
+  "deliberateExclusions": {
+    "trust/R3-CHANGES.sha256": "self hash cannot be embedded in its own manifest",
+    "reviews/MIMAR-R21-changes-c344c5b.md": "latest round record, the required last commit after the package freeze; Git records its bytes"
+  },
+  "changesManifestSha256": "3929602859db9488d002b4682f6b58b95dcf17012a32d353ac83b5601c0ce566",
+  "registryPin": "external"
+}

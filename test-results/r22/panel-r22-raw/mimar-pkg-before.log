@@ -1,0 +1,23 @@
+.........F..............................F..
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r22/testpkgb/scripts/test_package_r3.py", line 150, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r21/') for n in names), 'R21 evidence is archived like R4-R20')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R21 evidence is archived like R4-R20
+
+======================================================================
+FAIL: test_r21_sections (__main__.RequiredSectionTests.test_r21_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r22/testpkgb/scripts/test_package_r3.py", line 381, in test_r21_sections
+    self.assertIn(m, required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^
+AssertionError: 'Cropped media is never clipped content' not found in ['The feedback-log artifact records each item', '`grid-per-width`', 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:', 'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)', 'Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:', 'Clipping is one rule based on states and widths, whatever the CSS pattern:', 'Designers must declare reveal states:', 'A high percentile of all ink is never used for AA.']
+
+----------------------------------------------------------------------
+Ran 43 tests in 5.654s
+
+FAILED (failures=2)

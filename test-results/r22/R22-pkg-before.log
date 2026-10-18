@@ -1,0 +1,24 @@
+# R22 before: R22 tests against d9e1049 sources
+.........F..s........s......ss...........F.s
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (scripts.test_package_r3.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 152, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r22/') for n in names), 'R22 evidence is archived like R4-R21')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R22 evidence is archived like R4-R21
+
+======================================================================
+FAIL: test_r22_sections (scripts.test_package_r3.RequiredSectionTests.test_r22_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 391, in test_r22_sections
+    self.assertIn(m, required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^
+AssertionError: 'Text over images is graded in three zones on the faintest real glyph cluster' not found in ['The feedback-log artifact records each item', '`grid-per-width`', 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:', 'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)', 'Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:', 'Clipping is one rule based on states and widths, whatever the CSS pattern:', 'Designers must declare reveal states:', 'A high percentile of all ink is never used for AA.', 'Cropped media is never clipped content', 'Content Chrome does not render is not on screen', 'A read-more clamp is the one partial cut that can pass', 'The faintest-text measure never drops a faint glyph']
+
+----------------------------------------------------------------------
+Ran 44 tests in 0.537s
+
+FAILED (failures=2, skipped=5)

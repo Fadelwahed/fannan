@@ -1,0 +1,24 @@
+# R27 before: R27 tests against 99f4d97 sources
+.........F..s........s......ss................F.s
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (scripts.test_package_r3.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 158, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r27/') for n in names), 'R27 evidence is archived like R4-R26')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R27 evidence is archived like R4-R26
+
+======================================================================
+FAIL: test_r27_sections (scripts.test_package_r3.RequiredSectionTests.test_r27_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 430, in test_r27_sections
+    self.assertIn('R27 makes element identity a stable key, not position', required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'R27 makes element identity a stable key, not position' not found in ['The feedback-log artifact records each item', '`grid-per-width`', 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:', 'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)', 'Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:', 'Clipping is one rule based on states and widths, whatever the CSS pattern:', 'Designers must declare reveal states:', 'A high percentile of all ink is never used for AA.', 'Cropped media is never clipped content', 'Content Chrome does not render is not on screen', 'A read-more clamp is the one partial cut that can pass', 'The faintest-text measure never drops a faint glyph', 'Text over images is graded in three zones on the faintest real glyph cluster', 'AND names the worst region checked in `worstRegion`', 'text matches only text, so a heading with the same words never stands in for a lost button', 'is not rendered either, so it is not text on screen', 'matches its 1440 control only by the SAME accessible name, one to one', 'a clamp may only hide text', "A control's label text is always measured, whatever its border", 'The only role swaps allowed are a tablist adapted into an accordion', 'content tabs becoming headed sections', 'exactly as it rescues display:none; a partial cut still fails', 'R26 replaces name counting with element identity']
+
+----------------------------------------------------------------------
+Ran 49 tests in 0.592s
+
+FAILED (failures=2, skipped=5)
