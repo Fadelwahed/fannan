@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { manualIds, states } from '../tools/handoff-contract.mjs';
+import { criticRows, manualIds, states } from '../tools/handoff-contract.mjs';
 import { tmpdir } from 'node:os';
 import { fixturePage } from './fixture-page.mjs';
 
@@ -95,7 +95,7 @@ const authored = {
   ],
   facts: [], placeholders: [], openQuestions: [], languages: [{ lang: 'en', dir: 'ltr' }], assets: [], motion: [],
   manualChecks: manualIds.map(id => ({ id, screen: 'home', lang: 'en', state: 'default', decision: 'PASS', reviewer: 'fixture-reviewer', artifact: shot, note: 'test fixture only', briefRefs: ['brief.md:1'] })),
-  critic: { referenceWork: shot, rounds: [{ decision: 'PASS', reviewer: 'fixture-critic', evidence: shot, copyChecks: [{ decision: 'PASS', evidence: shot }], designChecks: [{ decision: 'PASS', evidence: shot }] }] },
+  critic: { referenceWork: shot, rounds: [{ decision: 'PASS', reviewer: 'fixture-critic', evidence: shot, copyChecks: [{ row: 'copy-truth', decision: 'PASS', evidence: shot }], designChecks: criticRows.filter(row => row !== 'copy-truth').map(row => ({ row, decision: 'PASS', evidence: shot })) }] },
   approval: { decision: 'approved', approver: 'approver-fixture', record: approved, frameIds: [frameId] }
 };
 writeFileSync(handoff, JSON.stringify(authored));

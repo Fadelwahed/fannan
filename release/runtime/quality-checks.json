@@ -39,6 +39,32 @@
     "navigation-findability",
     "interaction-states",
     "form-behavior",
-    "task-test"
-  ]
+    "task-test",
+    "feedback-log",
+    "emphasis-order",
+    "type-measure",
+    "colour-roles",
+    "grid-per-width"
+  ],
+  "wireframeDeferred": [
+    "accent-area",
+    "palette"
+  ],
+  "wireframeDeferrable": [
+    "emphasis-order",
+    "type-measure",
+    "colour-roles",
+    "grid-per-width"
+  ],
+  "criticRows": [
+    "brief-point-of-view",
+    "copy-truth",
+    "hierarchy-task-flow",
+    "typography-language",
+    "spacing-rhythm-grid",
+    "colour-imagery-restraint",
+    "interaction-states-motion",
+    "accessibility-handoff"
+  ],
+  "criticRowsReason": "R15 B4: one ID per critic-rubric row (references/critic-rubric.md). The final critic round carries at least one passing, evidenced copy or design check for every row, so no rubric row (emphasis order, type measure, colour roles, the per-width grid) can be skipped silently."
 }

@@ -7,6 +7,11 @@ import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { checkHandoff, manualIds, states } from '../tools/handoff-contract.mjs';
+import * as contract from '../tools/handoff-contract.mjs';
+
+// R15 B4: the eight critic-rubric rows (references/critic-rubric.md), in table order.
+const RUBRIC_ROWS = ['brief-point-of-view', 'copy-truth', 'hierarchy-task-flow', 'typography-language', 'spacing-rhythm-grid', 'colour-imagery-restraint', 'interaction-states-motion', 'accessibility-handoff'];
+const R15_CRAFT = ['emphasis-order', 'type-measure', 'colour-roles', 'grid-per-width'];
 
 test('complete handoff passes; missing provenance, state or approval fails', () => {
   const dir = mkdtempSync(join(tmpdir(), 'fannan-contract-'));
@@ -37,7 +42,7 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
       copySlots: [{ id: 'hero', screen: 'home', kind: 'interface', purpose: 'state service', text: 'Specific headline.', minChars: 5, maxChars: 30, tone: 'direct', placementScreenshot: frame, placements: [{ lang: 'en', state: 'default', screenshot: frame }], source: { kind: 'brief', path: brief, ref: 'brief.md:2' }, lang: 'en', dir: 'ltr', variants: [{ lang: 'en', dir: 'ltr', text: 'Specific headline.', source: { path: brief, ref: 'brief.md:2' } }] }],
       facts: [], placeholders: [], openQuestions: [], languages: [{ lang: 'en', dir: 'ltr' }], assets: [], motion: [],
       manualChecks: manualIds.map(id => ({ id, screen: 'home', lang: 'en', state: 'default', decision: 'PASS', reviewer: 'reviewer-x', artifact: frame, note: 'inspected', briefRefs: ['brief.md:1'] })),
-      critic: { referenceWork: frame, rounds: [{ decision: 'PASS', reviewer: 'critic-x', evidence: frame, copyChecks: [{ decision: 'PASS', evidence: frame }], designChecks: [{ decision: 'PASS', evidence: frame }] }] },
+      critic: { referenceWork: frame, rounds: [{ decision: 'PASS', reviewer: 'critic-x', evidence: frame, copyChecks: [{ row: 'copy-truth', decision: 'PASS', evidence: frame }], designChecks: RUBRIC_ROWS.filter(row => row !== 'copy-truth').map(row => ({ row, decision: 'PASS', evidence: frame })) }] },
       approval: { decision: 'approved', approver: 'approver-x', record: approved, frameIds: [frameId] }
     };
     assert.deepEqual(checkHandoff(h), []);
@@ -104,5 +109,38 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     h.screens[0].states[1].reviewer = 'reviewer-x';
     h.approval.frameIds = [];
     assert.match(checkHandoff(h).join('\n'), /approval/);
+    h.approval.frameIds = [frameId];
+    assert.deepEqual(checkHandoff(h), [], 'restored');
+    // R15 B3 (feedback-log), B3/B4 (Step 6 craft manual IDs, deferrable in the wireframe phase) and B4 (one passing
+    // critic check per rubric row). Collected first so a contract without them shows every gap at once.
+    const r15 = {};
+    r15.manualIds = ['feedback-log', ...R15_CRAFT].filter(id => !manualIds.includes(id));
+    r15.criticRows = contract.criticRows;
+    const dropManual = id => { const kept = h.manualChecks; h.manualChecks = kept.filter(m => m.id !== id); const out = checkHandoff(h).join('\n'); h.manualChecks = kept; return out; };
+    r15.missingFeedbackLog = /manual home\/en\/default\/feedback-log/.test(dropManual('feedback-log'));
+    r15.missingCraft = R15_CRAFT.filter(id => !new RegExp(`manual home/en/default/${id}:`).test(dropManual(id)));
+    const final = h.critic.rounds[0];
+    const withoutRow = row => { const saved = final.designChecks; final.designChecks = saved.filter(c => c.row !== row); const out = checkHandoff(h).join('\n'); final.designChecks = saved; return out; };
+    r15.missingRow = RUBRIC_ROWS.filter(row => row !== 'copy-truth' && !withoutRow(row).includes(`critic row ${row}`));
+    const unkeyed = final.designChecks.map(({ row, ...c }) => c);
+    const savedChecks = final.designChecks; final.designChecks = [...unkeyed]; final.copyChecks[0] = { decision: 'PASS', evidence: frame };
+    r15.unkeyedFails = /critic checks must each name a rubric row/.test(checkHandoff(h).join('\n'));
+    final.designChecks = savedChecks; final.copyChecks[0] = { row: 'copy-truth', decision: 'PASS', evidence: frame };
+    // an earlier failing round is fine when the final round covers every row
+    h.critic.rounds = [{ ...final, decision: 'FAIL', designChecks: [{ row: 'spacing-rhythm-grid', decision: 'FAIL', evidence: frame }] }, final];
+    r15.earlierRoundOk = checkHandoff(h).length === 0;
+    h.critic.rounds = [final];
+    // wireframe phase: accent-area/palette DEFERRED, the four craft IDs PASS or DEFERRED, everything else PASS.
+    const wf = JSON.parse(JSON.stringify(h)); wf.phase = 'wireframe';
+    const wfChecks = deferred => manualIds.map(id => ({ id, screen: 'home', lang: 'en', state: 'wireframe', decision: ['accent-area', 'palette', ...deferred].includes(id) ? 'DEFERRED' : 'PASS', reviewer: 'reviewer-x', artifact: frame, note: 'grayscale review', briefRefs: ['brief.md:1'] }));
+    const manualErrors = deferred => { wf.manualChecks = wfChecks(deferred); return checkHandoff(wf, 'wireframe').filter(e => /manual/.test(e)); };
+    r15.wireframeDeferredCraft = manualErrors(R15_CRAFT);
+    r15.wireframePassedCraft = manualErrors([]);
+    r15.wireframeDeferredTaskTest = manualErrors(['task-test']).length > 0;
+    wf.manualChecks = wfChecks([]).map(m => m.id === 'accent-area' ? { ...m, decision: 'PASS' } : m);
+    r15.wireframeAccentPassFails = checkHandoff(wf, 'wireframe').some(e => /accent-area/.test(e));
+    const handoffDeferred = JSON.parse(JSON.stringify(h)); handoffDeferred.manualChecks = handoffDeferred.manualChecks.map(m => m.id === 'type-measure' ? { ...m, decision: 'DEFERRED' } : m);
+    r15.handoffDeferredFails = checkHandoff(handoffDeferred).some(e => /manual/.test(e));
+    assert.deepEqual(r15, { manualIds: [], criticRows: RUBRIC_ROWS, missingFeedbackLog: true, missingCraft: [], missingRow: [], unkeyedFails: true, earlierRoundOk: true, wireframeDeferredCraft: [], wireframePassedCraft: [], wireframeDeferredTaskTest: true, wireframeAccentPassFails: true, handoffDeferredFails: true });
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

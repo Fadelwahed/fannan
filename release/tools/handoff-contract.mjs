@@ -13,6 +13,12 @@ export function validateQualityChecks(config) {
 }
 export const qualityChecks = validateQualityChecks(JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8')));
 export const manualIds = qualityChecks.manualIds;
+// R15 B3/B4: in the wireframe phase accent-area and palette are always DEFERRED (never passed in grayscale); the
+// Step 6 craft checks may be PASS or DEFERRED. Every other manual ID needs PASS in both phases.
+export const wireframeDeferred = qualityChecks.wireframeDeferred;
+export const wireframeDeferrable = qualityChecks.wireframeDeferrable;
+// R15 B4: the critic-rubric row IDs; the final round needs one passing, evidenced check per row.
+export const criticRows = qualityChecks.criticRows;
 export const states = ['default', 'hover', 'focus', 'disabled', 'empty', 'loading', 'error'];
 const filler = /\b(unlock|seamless|empower|cutting[ -]edge|revolutionary|game[ -]changing)\b/i;
 const ref = x => typeof x === 'string' && /:\d+(?:-\d+)?$/.test(x);
@@ -129,12 +135,12 @@ export function checkHandoff(h, phase = 'handoff') {
   need(new Set(manual.map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`)).size === manual.length, 'manual check IDs must be unique per screen/language/state');
   const ids = new Set(manual.filter(m => m.decision === 'PASS' && nonempty(m.reviewer) && file(m.artifact) && nonempty(m.note) && m.briefRefs?.length > 0 && m.briefRefs.every(ref)).map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`));
   const deferred = new Set(manual.filter(m => m.decision === 'DEFERRED' && nonempty(m.reviewer) && file(m.artifact) && nonempty(m.note)).map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`));
-  need(manual.every(m => m.decision === 'PASS' || (phase === 'wireframe' && m.decision === 'DEFERRED' && ['accent-area', 'palette'].includes(m.id))), 'manual FAIL or unjustified DEFERRED blocks');
+  need(manual.every(m => m.decision === 'PASS' || (phase === 'wireframe' && m.decision === 'DEFERRED' && [...wireframeDeferred, ...wireframeDeferrable].includes(m.id))), 'manual FAIL or unjustified DEFERRED blocks');
   for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : [{ state: 'wireframe', lang: h.languages?.[0]?.lang }])) {
     if (st.applicable === false) continue;
     for (const id of manualIds) {
       const key = `${s.id}/${st.lang}/${st.state}/${id}`;
-      need(phase === 'wireframe' && ['accent-area', 'palette'].includes(id) ? deferred.has(key) : ids.has(key), `manual ${key}: required phase decision with reviewer/artifact/brief refs`);
+      need(phase === 'wireframe' && wireframeDeferred.includes(id) ? deferred.has(key) : phase === 'wireframe' && wireframeDeferrable.includes(id) ? deferred.has(key) || ids.has(key) : ids.has(key), `manual ${key}: required phase decision with reviewer/artifact/brief refs`);
     }
   }
   if (phase === 'handoff') {
@@ -153,6 +159,12 @@ export function checkHandoff(h, phase = 'handoff') {
     need(Array.isArray(h.assets) && h.assets.every(a => file(a.path) && nonempty(a.source) && nonempty(a.license) && file(a.consentRecord)), 'assets need file, source, licence and consent record');
     need(Array.isArray(h.motion) && h.motion.every(m => nonempty(m.id) && Number.isFinite(m.duration) && nonempty(m.easing) && nonempty(m.trigger) && nonempty(m.reducedMotion)), 'motion needs duration/easing/trigger/reduced-motion');
     need(Array.isArray(h.critic?.rounds) && h.critic.rounds.length > 0 && h.critic.rounds.length <= 3 && h.critic.rounds.every(r => ['PASS', 'FAIL'].includes(r.decision) && nonempty(r.reviewer) && file(r.evidence) && Array.isArray(r.copyChecks) && r.copyChecks.length > 0 && r.copyChecks.every(c => ['PASS', 'FAIL'].includes(c.decision) && file(c.evidence)) && Array.isArray(r.designChecks) && r.designChecks.length > 0 && r.designChecks.every(c => ['PASS', 'FAIL'].includes(c.decision) && file(c.evidence))) && h.critic.rounds.at(-1).decision === 'PASS' && h.critic.rounds.at(-1).copyChecks.every(c => c.decision === 'PASS') && h.critic.rounds.at(-1).designChecks.every(c => c.decision === 'PASS') && file(h.critic.referenceWork), 'critic needs 1-3 evidenced rounds, all final copy/design checks PASS');
+    // R15 B4: every check names a critic-rubric row; the final round covers each row with a passing, evidenced check.
+    const rounds = Array.isArray(h.critic?.rounds) ? h.critic.rounds : [];
+    const checksOf = r => [...(Array.isArray(r?.copyChecks) ? r.copyChecks : []), ...(Array.isArray(r?.designChecks) ? r.designChecks : [])];
+    need(rounds.every(r => checksOf(r).every(c => criticRows.includes(c?.row))), `critic checks must each name a rubric row (${criticRows.join(', ')})`);
+    const last = rounds.at(-1);
+    for (const row of criticRows) need(checksOf(last).some(c => c?.row === row && c.decision === 'PASS' && file(c.evidence)), `critic row ${row}: the final round needs a passing, evidenced check`);
     const frameIds = (h.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => `${s.id}/${st.lang}/${st.state}/${st.frame?.version}/${st.frame?.sha256}`));
     const approvalText = file(h.approval?.record) ? readFileSync(resolve(h.approval.record), 'utf8') : '';
     need(h.approval?.decision === 'approved' && h.approval.approver === h.settings?.roles?.approver && file(h.approval.record) && /\b20\d\d-\d\d-\d\d\b/.test(approvalText) && approvalText.includes(h.approval.approver) && Array.isArray(h.approval.frameIds) && frameIds.every(id => h.approval.frameIds.includes(id) && approvalText.includes(id)), 'dated approval record must name approver and every versioned frame hash');

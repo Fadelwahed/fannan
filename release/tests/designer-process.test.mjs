@@ -73,3 +73,46 @@ test('R14 Part B text is generic and tool-agnostic: no client, country or design
   for (const t of added) assert.doesNotMatch(t, vendors);
   for (const t of added) assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i);
 });
+
+// R15 B1-B4 (panel round 15): exact wording from the merged review.
+const R15 = {
+  gate: 'Within the existing Step 5 gate, after the task and navigation-findability tests and necessary retests, run the complete wireframe quality gate; require PASS before structure approval and Step 6.',
+  step4: 'At Step 4, check grayscale structure, copy and provenance and record issues for testing.',
+  grid: 'Column counts are positive unitless integers recorded beside the grid spec, not spacing tokens. Gutters, outer margins and maximum content widths reference approved dimension tokens with units (bare 0 allowed, no negative spacing tokens). Document recomposition between widths as behaviour.',
+  feedback: "The feedback-log artifact records each item's exact words, scope, version, interpretation, decision, resulting change and confirmation. A deferral needs the approver's recorded disposition. Missing or unresolved items fail. If no feedback was received, record that explicitly with reviewer and scope.",
+};
+
+test('R15-B1: the complete wireframe gate runs inside Step 5 after the task and findability tests; nine steps unchanged', () => {
+  const plan = read('FANNAN-PLAN.md'), step4 = flat(section(plan, '### 4. Grayscale desktop wireframes')), step5 = flat(section(plan, '### 5. Test and approve'));
+  assert.ok(step4.includes(R15.step4), 'Step 4 checks and records issues for testing');
+  assert.ok(!/Run the wireframe phase of the quality gate before Step 5/.test(flat(plan)), 'the old Step 4 timing is gone');
+  assert.ok(step5.includes(R15.gate), 'the gate sentence sits in Step 5');
+  assert.ok(step5.indexOf(R15.gate) > step5.indexOf('The record is `task-test`.'), 'after the task-test paragraph');
+  assert.deepEqual([...plan.matchAll(/^### (\d+)\. /gm)].map(m => Number(m[1])), [1, 2, 3, 4, 5, 6, 7, 8, 9], 'nine steps unchanged');
+  const skill = flat(read('skills/design-prototype/SKILL.md'));
+  assert.ok(skill.includes('Within the existing Step 5 gate, after the task and navigation-findability tests and necessary retests, run `FANNAN_DEPS=... node "$FANNAN_RELEASE/tools/pre-handoff-check.mjs"'), 'design-prototype runs it inside Step 5');
+  assert.ok(skill.includes('--phase=wireframe` for the full desktop set; require PASS before structure approval and Step 6.'));
+  assert.ok(!skill.includes('At the end of Step 4'), 'design-prototype no longer runs it at the end of Step 4');
+  assert.ok(flat(read('references/design-quality.md')).includes('run within the existing Step 5 gate after the task and navigation-findability tests and necessary retests'));
+});
+
+test('R15-B2: column counts are unitless integers; gutters, margins and maximum widths are dimension tokens', () => {
+  const step6 = flat(section(read('FANNAN-PLAN.md'), '### 6. Desktop visual design'));
+  assert.ok(step6.includes(R15.grid), 'exact grid wording');
+  assert.ok(!step6.includes('each value is a spacing-scale token'), 'the unit-breaking clause is gone');
+});
+
+test('R15-B3/B4: feedback-log and the four craft checks are manual IDs; critic checks are keyed to the eight rubric rows', async () => {
+  const contract = await import('../tools/handoff-contract.mjs');
+  for (const id of ['feedback-log', 'emphasis-order', 'type-measure', 'colour-roles', 'grid-per-width']) assert.ok(contract.manualIds.includes(id), id);
+  assert.deepEqual(contract.wireframeDeferrable, ['emphasis-order', 'type-measure', 'colour-roles', 'grid-per-width']);
+  assert.deepEqual(contract.wireframeDeferred, ['accent-area', 'palette']);
+  const quality = flat(read('references/design-quality.md')), rubric = read('references/critic-rubric.md'), handoff = flat(read('references/handoff-contract.md')), plan = flat(read('FANNAN-PLAN.md'));
+  assert.ok(quality.includes(R15.feedback), 'exact feedback-log wording');
+  for (const id of ['emphasis-order', 'type-measure', 'colour-roles', 'grid-per-width']) assert.ok(plan.includes('`' + id + '`'), `the plan names ${id}`);
+  assert.equal(contract.criticRows?.length, 8);
+  for (const id of contract.criticRows) { assert.ok(rubric.includes('(`' + id + '`) |'), `rubric row ${id}`); assert.ok(handoff.includes('`' + id + '`'), `handoff-contract.md lists ${id}`); }
+  assert.ok(handoff.includes('recorded as the `feedback-log` manual check'));
+  const vendors = /\b(figma|sketch|framer|webflow|canva|penpot|adobe|stitch|miro|hotjar|google analytics)\b/i;
+  for (const t of Object.values(R15)) { assert.doesNotMatch(t, vendors); assert.doesNotMatch(t, /digital[\s_-]*cloud|\bgaza\b|palestin/i); }
+});
