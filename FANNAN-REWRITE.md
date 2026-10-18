@@ -134,7 +134,7 @@ The four project roles are generic throughout the candidate. Proposed memory sav
 
 Six type sizes, a strict ten-percent accent threshold and a 150-percent long-text stress case are design-policy choices made for this assignment, not scientific detectors of AI authorship. The Impeccable detector's findings are advisory; successful execution is not a design-quality PASS. Card-grid, generic-hero, dashboard-trope and decoration judgments require the scoped independent critic evidence in the same gate. English/Arabic filler and common three-part headline scans provide additional screening; semantic review in every project language remains mandatory. Passing these checks removes known bad patterns; it cannot establish that a human would endorse the result. The independent critic and approver remain essential.
 
-The supplied **labelled Digital Cloud example** is used only as a dry-run of the workflow, in `references/example-project-check.md`. Its draft rules, absent authoritative brief/fact register and missing role/stack mappings are detected as blockers. Its project claims are not transplanted into this plan or promoted to confirmed facts.
+The supplied **labelled example project** is used only as a dry-run of the workflow, in `references/example-project-check.md`. Its draft rules, absent authoritative brief/fact register and missing role/stack mappings are detected as blockers. Its project claims are not transplanted into this plan or promoted to confirmed facts.
 
 All local command results and negative-path checks are in the separate verification record. Anything not executed is in the untested list. Historical test claims stay historical. This candidate does not create Amin's review, live credentials, branch enforcement, provider access, a real approved design or a successful live handoff.
 
@@ -448,6 +448,8 @@ Mark visible text wrappers with `data-copy-slot="ID"` and match every displayed 
 
 Where the browser test uses a proxy, label it as a proxy in `evidence.json`. In particular, DOM element rectangles do not measure the actual colored pixels of text, images, gradients or overlapping regions. For accent coverage, the documented acceptance measure is visible accent area divided by total rendered area, separately for the full page and each reviewed viewport. The reviewer supplies an annotated color mask or measured screenshot regions for image/canvas/SVG content and any disputed DOM estimate. Use union area, not summed overlapping boxes. Borderline or unmeasurable coverage remains FAIL pending evidence; do not round 10.1% down to 10%. The automated accent screen fails closed: if a declared accent token (`--accent`, `--colors-accent`, `--colors-primary`) is not a valid colour, or no accent token is declared, the ratios are null and the handoff check fails; it is never treated as zero accent.
 
+The automated probes and axe run in a separate browser world (`tools/probe-world.mjs`): they see the page's DOM and CSS but not its JavaScript globals, so a page script cannot patch `getComputedStyle`, `querySelectorAll` or `axe` to hide a failure. At the 320 px reflow width, text inside a horizontal scroller fails unless it sits in two-dimensional content (`table`, `pre`, `code`, `img`, `svg`, `canvas`, `video`, `iframe`, `role="grid"`, `role="table"` or an element marked `data-fannan-2d="reason"`); every excused scroller is recorded in `evidence.json` under `twoDimensional` for manual review. The spacing-scale probe checks all four margins (`auto` is ignored), padding and gaps.
+
 ## Pass/fail checklist
 
 Every row is BLOCK unless explicitly marked WARN. `wireframe` evaluates the structure/copy column; visual-only criteria are recorded as deferred, never called PASS. `handoff` requires both columns and all fourteen manual IDs listed below.
@@ -461,7 +463,7 @@ Every row is BLOCK unless explicitly marked WARN. `wireframe` evaluates the stru
 | Type sizes | At most six distinct rendered sizes per page/locale, all mapped to named type tokens | Token list and DOM computed `font-size`; inspect pseudo-elements/SVG/canvas text manually | Visual; structural hierarchy in grayscale |
 | Centered icon trio | Zero rows of three centered icon-first feature blocks | DOM grouping and screenshot; changing tags or using SVG does not exempt it | Both |
 | Generic hero | Zero vague transferable headlines, including a vague headline above three icon cards | `generic-hero`: writer/critic swap test and actual hero screenshot; a headline still valid for unrelated firms fails | Both |
-| Default effects | Zero generic gradient heroes and zero stock glassmorphism | Background-image/backdrop-filter detector plus screenshot; decorative effects cannot be relabelled data visuals | Both in grayscale; visual final |
+| Default effects | Zero generic gradient heroes and zero stock glassmorphism | Background-image/backdrop-filter detector (computed on `html`, `body`, visible elements and rendered `::before`/`::after`, plus the raw text of every served CSS/HTML file, style attributes and `<style>` elements, so the `-webkit-` alias and root-element filters that Chrome drops still fail) plus screenshot; decorative effects cannot be relabelled data visuals | Both in grayscale; visual final |
 | Rounded-card grid | Zero repeated default rounded-card grids | `card-grid`: actual grouped content, borders/radii and screenshot; use the content's appropriate structure | Both |
 | Purple-blue default | Zero default purple-blue decorative pairing | Color-role inventory and screenshot; semantic status color is reviewed for its job, never used as a second decorative accent | Visual |
 | Decoration | Every non-content mark has a named comprehension, navigation, hierarchy or identity job | `decoration-job`: asset/element ID → brief line → purpose; unsupported marks are removed | Both |
@@ -473,7 +475,7 @@ Every row is BLOCK unless explicitly marked WARN. `wireframe` evaluates the stru
 | Placeholders | All visible as `[placeholder]` with IDs during draft; zero at final handoff | Copy deck + rendered DOM + placeholder inventory; scan lorem ipsum, TBD and hidden substitutes | Draft recorded; final BLOCK |
 | Craft | Consistent named type/spacing/grid/color roles and purposeful hierarchy | `craft`: token sheet, alignment overlay, actual content and comparative reference critique | Structural before style; complete at handoff |
 | Real reference comparison | Three inspected references with dated notes and project-specific lessons | `reference-work`: source URLs, captures/notes, what to adopt and reject, brief trace | Both |
-| Complete accessibility evidence | No failed applicable WCAG 2.2 A/AA criterion or unresolved automated incomplete result | `wcag-review`: axe + keyboard/screen-reader/manual checklist + reference-state captures | Both at design level; full proof at handoff |
+| Complete accessibility evidence | No failed applicable WCAG 2.2 A/AA criterion or unresolved automated incomplete result | `wcag-review`: axe (tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22a`, `wcag22aa` from `tools/axe-tags.mjs`, plus `target-size`; axe's experimental A/AA rules stay off and are manual) + keyboard/screen-reader/manual checklist + reference-state captures | Both at design level; full proof at handoff |
 | All states/locales and copy fit | Every requested variant accounted for; no clipping, truncation or meaningless N/A | Component matrix, real translations, 150% synthetic stress evidence, LTR/RTL review | Both at current fidelity |
 | Observational improvement | Optional non-blocking preference with owner and disposition | WARN only when no contract, accessibility, truth, approval or implementation question is affected | Both |
 
@@ -574,7 +576,7 @@ Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `gr
 | R4-3 | New `focusSettle` waits (capped 1 s) for finite transitions on the focused element and ancestors before reading; `focusStyleProbe` ignores colour-only changes below 3:1 between states and changes to unrendered outline/border/decoration/pseudo-elements. Both checker tab loops call it. Manual focus evidence stays mandatory. | `tests/focus-screen.test.mjs`; real-Chrome probe in `test-results/r4/` |
 | R4-4 | The checker refuses a browser whose `Browser.version()` differs from the reviewed pin; `runtime/browser-trust.json` now requires `supportTreeSha256`, verified over the executable's own directory by `tools/executable-trust.mjs`. The pin stays BLOCKED. | `tests/host-trust.test.mjs`, `tests/checker-boundaries.test.mjs` |
 | R4-5 | `scripts/package-r3.py verify --registry-sha256 <digest>` anchors the changed-file registry externally (checked first); `PACKAGING.md` documents `chmod 0444` for both trust files. | `scripts/test_package_r3.py` |
-| R4-6 | Fadel's decision (17 Oct 2026, 6:18 AM Gaza): spacing requires units. The converter's units-required check now covers `spacing` (`spacing: 8` fails; `8px` and a bare `0` pass), and shared validation types spacing as dimension only, so hand-edited `number` spacing is rejected by `sd-build.mjs` too. | `tests/token-validation.test.mjs` |
+| R4-6 | Fadel's decision (17 Oct 2026, 6:18 AM UTC+3): spacing requires units. The converter's units-required check now covers `spacing` (`spacing: 8` fails; `8px` and a bare `0` pass), and shared validation types spacing as dimension only, so hand-edited `number` spacing is rejected by `sd-build.mjs` too. | `tests/token-validation.test.mjs` |
 
 
 The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.
@@ -749,6 +751,15 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R11 additions (Mi'mar, 18 October 2026, Asad panel round 5)
+
+- **axe tags (C1):** `wcag21a` and `wcag22a` added; a test checks the set against the pinned axe-core 4.14.0 rule tags. axe's experimental A/AA rules (`css-orientation-lock`, `p-as-heading`, `table-fake-caption`, `td-has-header`) stay off and remain manual. UNTESTED: other axe versions (the pin is 4.14.0).
+- **Glass (S2/C6):** computed on `html`, `body`, visible elements and rendered pseudo-elements, plus raw-text scans of served CSS/HTML, style attributes and `<style>`. Checked in Chrome 155 headless only. UNTESTED: glass inside shadow roots, cross-origin stylesheets (blocked by the checker), constructed stylesheets (`adoptedStyleSheets`) and CSS injected after load; any raw `backdrop-filter` other than `none` fails even when the rule never applies (fail closed).
+- **320 px scroller (S3):** only 2D content is excused. Chrome 155 headless only. UNTESTED: scrollers created with `overflow: overlay` or in shadow roots, and whether an excused table is genuinely two-dimensional (recorded in `twoDimensional`, manual).
+- **Probe world (C3):** probes and axe run in a CDP isolated world; a hostile page that patches `getComputedStyle`, `Document.prototype.querySelectorAll` and pins a fake `axe` is tested in Chrome 155. UNTESTED: a run with page JavaScript disabled (not implemented: it would change what renders); page scripts that change the DOM or CSS during the check (measured as rendered); iframes (the world is created for the main frame only); browsers other than Chromium. The motion counter deliberately reads the page world.
+- **Package junk and secrets (C4):** `.env*`, `.DS_Store`, `Thumbs.db`, `desktop.ini`, credential dotfiles, private keys and certificates, and editor swap/backup files are refused in the package input and among changed paths. Checked with temporary trees. UNTESTED: secrets inside ordinarily named files (only names are screened; the separate secret grep is manual).
+- **Horizontal margins (S7):** spacing scale now checks left and right margins; `auto` (read from `computedStyleMap`) is ignored. Chrome 155 only.
+
 ## R10 additions (Mi'mar, 18 October 2026, Argon round 5)
 
 - **Accent fails closed (ARGON-R5-01):** an invalid declared accent, or none, gives null ratios and a handoff FAIL (also the scrolled viewport maximum). Checked in Chrome 155 headless only. In the wireframe phase the accent area stays deferred to Step 6 (unchanged), so an invalid accent is recorded in `accentInvalid` but does not fail a wireframe run.
@@ -760,7 +771,7 @@ Source: `release/UNTESTED.md`
 - **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.
 - **Accent colour (R9 sibling):** normalised by a detached canvas. Chrome 155 only; colour spaces beyond sRGB (oklch outside sRGB) may round differently from computed backgrounds. UNTESTED.
 - **Package build (CODEX-R4-01):** atomic replace was tested on the box's local filesystem only; a crash between the four output renames can still leave a mix of old and new outputs (each file is whole). `verify` detects that mix.
-- **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM Gaza).
+- **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM UTC+3).
 
 ## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
 
@@ -812,7 +823,33 @@ Source: `release/VERIFICATION.md`
 
 # R3 executed verification — 17 October 2026
 
-## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM Gaza)
+## R11 executed verification (Mi'mar's box, 18 October 2026, about 4:05 AM UTC+3)
+
+Asad panel round 5 (C1, S2/C6, S3, C3, C4, C5, S7 and the R9 syntax count). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Run on a clean tree (everything committed), so every counted file is tracked.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 70 PASS, 0 FAIL | `test-results/r11/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 48 PASS, 0 FAIL | `test-results/r11/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 64 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7-R10) | `test-results/r11/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r11/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r11/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 26 PASS | `test-results/r11/package-tests-git.log` |
+| same, no-git copy | 0 | 22 PASS | `test-results/r11/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r11/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r11/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=32 sh=4 py=4 plus the launcher `.internal`, 0 failures; 32 = R10's 27 tracked + `tools/axe-tags.mjs`, `tools/probe-world.mjs` and three new tests; each file is listed in the log | `test-results/r11/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 22 Node tests in the no-deps copy (need test-only deps or Chrome); 4 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, run in the checkout, exit 0. The checker now runs its probes and axe in the isolated world; browser, contract, spacing, widths (1440 + 320, with `scrolledText` and `twoDimensional` empty), the served-file glass scan (`glassSource`, no files) and state checks pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r11/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r11/R11-*-before.log` / `-after.log`. Before logs run the final R11 tests against the R10 sources (607b2e4); the harness scripts are `before-harness.sh.txt`, `after-harness.sh.txt` and `suites-harness.sh.txt`.
+
+## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM UTC+3)
 
 Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
 
@@ -838,7 +875,7 @@ Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux
 
 Per-finding before/after logs: `test-results/r10/ARGON-R5-0{1,2,3,4,5}-before.log` / `-after.log` (03 passes before and after: not reproduced) and `R10-zip-evidence-before.log` / `-after.log`.
 
-## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM Gaza)
+## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM UTC+3)
 
 Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accent colour measured through a page element). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
 
@@ -855,7 +892,7 @@ Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accen
 | same, no-git copy | 0 | 15 PASS | `test-results/r9/package-tests.log` |
 | `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r9/package-self-test.log` |
 | design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r9/designmd-lint-offline.log` |
-| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r9/syntax.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures. **R11 correction:** the R9 commit has 27 tracked `.mjs` files under `release/tools` and `release/tests` (as do 7508478, 27554b5, e88cf69, b24fd1f and 2059077); the 28th was an untracked file in the working tree, which the scratch copy included (tracked + untracked). Its name was not logged and cannot be recovered. From R11 the syntax log lists every file. | `test-results/r9/syntax.log` |
 | `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
 
 **SKIPPED (not executed, not counted as pass):** 13 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
@@ -864,7 +901,7 @@ Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accen
 
 Per-finding before/after logs: `test-results/r9/CODEX-R4-0{1,2,3,4}-before.log` / `-after.log` and `R9-accent-sibling-before.log` / `-after.log`.
 
-## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM Gaza)
+## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM UTC+3)
 
 Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network.
 
@@ -885,7 +922,7 @@ Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_
 
 Per-port before/after logs are `test-results/r8/PORT-0*-before.log` / `-after.log`. Package build and the anchored verify are in the latest `reviews/MIMAR-R8-changes-*.md`.
 
-## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM Gaza)
+## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM UTC+3)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
 
@@ -905,7 +942,7 @@ Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-onl
 
 Per-finding before/after logs are in `test-results/r7/`. Package build and the anchored verify (trust files at 0444) are in the latest `reviews/MIMAR-R7-changes-*.md`.
 
-## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM Gaza)
+## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM UTC+3)
 
 Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`), copied in after the box restore; no install, no network.
 
