@@ -1,0 +1,7 @@
+# R19 real built site (bilingual, served on 127.0.0.1:8917; server PID killed afterwards), both renderings
+http://127.0.0.1:8917/en/                        on  {"m":88,"o":0,"u":0,"un":0,"a":1,"h":0,"steps":12,"passes":1,"unsettled":0,"ms":11189}
+http://127.0.0.1:8917/en/                        off {"m":88,"o":0,"u":0,"un":0,"a":1,"h":0,"steps":12,"passes":1,"unsettled":0,"ms":6906}
+http://127.0.0.1:8917/ar/                        on  {"m":75,"o":0,"u":0,"un":0,"a":0,"h":0,"steps":8,"passes":1,"unsettled":0,"ms":6579}
+http://127.0.0.1:8917/ar/                        off {"m":75,"o":0,"u":0,"un":0,"a":0,"h":0,"steps":8,"passes":1,"unsettled":0,"ms":6364}
+EXIT 0
+killed 2230118
