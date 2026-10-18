@@ -1,5 +1,25 @@
 # R3 executed verification — 17 October 2026
 
+## R16 executed verification (Mi'mar's box, 18 October 2026, about 7:55 AM UTC+3)
+
+Panel round 16 (4 P2: R16-GPT-01 to 04, GPT only, cross-checked by Mi'mar; `reviews/panel-r16/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 112 PASS, 0 FAIL, 0 skipped (R15's 109 + 2 in `tests/panel-r16.test.mjs` + 1 in `tests/designer-process.test.mjs`; the R16-GPT-03/04 contract cases extend the existing handoff-contract test) | `test-results/r16/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 72 PASS, 0 FAIL, 40 SKIPPED (need deps or Chrome) | `test-results/r16/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r16/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r16/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 38 PASS / 33 PASS + 5 SKIPPED | `test-results/r16/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r16/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=40 sh=4 py=4 plus the launcher, 0 failures | `test-results/r16/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r16/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 106 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R15 (it needs Node 22); not a gate | `test-results/r16/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r16/local-fixture.log`, evidence `local-fixture-evidence.json`). Its handoff carries the shared component inventory and the critic's component comparison, and the contract passes. R16 adds full pre-handoff runs: a blur-in reveal makes the page and its state INCOMPLETE (`contrastEffects`); a submit input faded to .05 and restored by script is an `integrity mismatch` (`contrastFailures`, JavaScript off); a label filled by script differs in content with JavaScript off; and a wireframe run with a second screen and a second language renders every screen and language, fails the second screen's two-H1 page and reports the missing Arabic renderings.
+
+Per-finding before/after logs: `test-results/r16/R16-*-before.log` / `-after.log` (before = R16 tests against the 5fe9101 sources, documents and runtime JSON included; every before failure is an assertion failure, checked for load errors).
+
 ## R15 executed verification (Mi'mar's box, 18 October 2026, about 7:20 AM UTC+3)
 
 Panel round 15 (7 P2: A1-A3 from GPT, confirmed by Mi'mar in Chrome 155 or in process; B1-B3 from GPT; B4 Mi'mar only; `reviews/panel-r15/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.

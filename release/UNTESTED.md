@@ -1,5 +1,14 @@
 # R3 checks not established
 
+## R16 additions (Mi'mar, 18 October 2026, panel round 16)
+
+All browser checks below ran in Chrome 155 headless only. Panel round 16 had one reviewer (GPT), cross-checked by Mi'mar. Scope follows the threat model in `FANNAN-PLAN.md`.
+
+- **Compositing (R16-GPT-01):** `filter: opacity()` is composited like opacity; identity filters are ignored; any other filter function, a blend mode, a backdrop filter or a mask anywhere on the text's composed ancestor chain makes that text unknown (`contrastEffects`), and the cross-check is INCOMPLETE in either rendering. Consequence: a page that keeps such an effect on text cannot pass the integrity cross-check, by design. UNTESTED: effects on pseudo-elements or SVG text; `filter` values set through `url()` to an SVG filter that is in fact an identity (counted unknown); text painted inside a canvas.
+- **Native controls (R16-GPT-02):** values, placeholders (with the `::placeholder` colour), button-type input labels and a select's chosen option are contrast-checked; controls, links, images and elements with a role or ARIA label are compared with their accessible name and displayed value. The accessible name is an approximation of the specification (aria-labelledby, aria-label, label elements, value, alt, own text, title, placeholder), not the full algorithm. UNTESTED: `::file-selector-button`, date and time pickers, autofill colours, `<option>` lists while open, names from CSS generated content. As before, an unexplained JavaScript-off content difference records a content mismatch and the cross-check status is INCOMPLETE (R13 N14).
+- **Wireframe coverage (R16-GPT-03):** the wireframe phase requires each screen's page to exist, an applicable default rendering per declared language, manual records per screen and language, and renders each declared screen/language with phase-appropriate checks (no frame hash, type, accent, spacing or placeholder thresholds yet). Links inside the pages (navigation between screens) are not followed.
+- **Component inventory (R16-GPT-04):** the contract enforces one shared definition per component, references by id, declared variants and states, and equality of any repeated specification field; the critic records a component comparison covering every screen. Whether two instances that do not repeat a field are visually consistent is a reviewer judgment (`component-consistency`), not machine-checked.
+
 ## R15 additions (Mi'mar, 18 October 2026, panel round 15)
 
 All browser checks below ran in Chrome 155 headless only. Panel round 15 had one reviewer (GPT); B4 was found by Mi'mar alone. Scope follows the threat model in `FANNAN-PLAN.md`.
