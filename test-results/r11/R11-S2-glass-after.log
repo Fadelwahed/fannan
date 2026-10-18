@@ -3,13 +3,13 @@ TAP version 13
 # Subtest: R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only)
 ok 1 - R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only)
   ---
-  duration_ms: 1590.28264
+  duration_ms: 1320.326537
   type: 'test'
   ...
 # Subtest: R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops
 ok 2 - R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops
   ---
-  duration_ms: 0.928151
+  duration_ms: 1.035803
   type: 'test'
   ...
 1..2
@@ -20,4 +20,4 @@ ok 2 - R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filt
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 1662.147797
+# duration_ms 1381.528067

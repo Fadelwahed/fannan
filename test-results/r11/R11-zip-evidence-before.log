@@ -1,3 +1,5 @@
+fatal: path 'release/tools/axe-tags.mjs' exists on disk, but not in '607b2e4'
+fatal: path 'release/tools/probe-world.mjs' exists on disk, but not in '607b2e4'
 # R11 before: R11 tests against 607b2e4 sources
 test_build_hashes_everything_but_the_registry (test_package_r3.FinalRecordTests.test_build_hashes_everything_but_the_registry) ... ok
 test_doc_lists_the_exclusions (test_package_r3.FinalRecordTests.test_doc_lists_the_exclusions) ... ok
@@ -15,6 +17,6 @@ Traceback (most recent call last):
 AssertionError: False is not true : R11 evidence is archived like R4-R10
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.028s
+Ran 5 tests in 0.024s
 
 FAILED (failures=1)

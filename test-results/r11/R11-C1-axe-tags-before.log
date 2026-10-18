@@ -1,9 +1,11 @@
+fatal: path 'release/tools/axe-tags.mjs' exists on disk, but not in '607b2e4'
+fatal: path 'release/tools/probe-world.mjs' exists on disk, but not in '607b2e4'
 # R11 before: R11 tests against 607b2e4 sources
 TAP version 13
 # Subtest: R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A and AA
 not ok 1 - R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A and AA
   ---
-  duration_ms: 1.307139
+  duration_ms: 1.454823
   type: 'test'
   location: '<scratch>/release/tests/axe-tags.test.mjs:14:1'
   failureType: 'testCodeFailure'
@@ -24,7 +26,7 @@ not ok 1 - R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A 
 # Subtest: R11 C1: both axe runs (page and every state) use the shared options; no literal tag list remains
 not ok 2 - R11 C1: both axe runs (page and every state) use the shared options; no literal tag list remains
   ---
-  duration_ms: 2.136847
+  duration_ms: 2.166317
   type: 'test'
   location: '<scratch>/release/tests/axe-tags.test.mjs:21:1'
   failureType: 'testCodeFailure'
@@ -398,7 +400,7 @@ not ok 2 - R11 C1: both axe runs (page and every state) use the shared options; 
 # Subtest: R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is selected (test-only deps)
 not ok 3 - R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is selected (test-only deps)
   ---
-  duration_ms: 0.423029
+  duration_ms: 0.444578
   type: 'test'
   location: '<scratch>/release/tests/axe-tags.test.mjs:28:1'
   failureType: 'testCodeFailure'
@@ -419,7 +421,7 @@ not ok 3 - R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is se
 # Subtest: R11 C1: Label in Name (2.5.3) is reported with the shared options (real Chrome, test-only)
 not ok 4 - R11 C1: Label in Name (2.5.3) is reported with the shared options (real Chrome, test-only)
   ---
-  duration_ms: 0.396047
+  duration_ms: 0.422169
   type: 'test'
   location: '<scratch>/release/tests/axe-tags.test.mjs:40:1'
   failureType: 'testCodeFailure'
@@ -445,4 +447,4 @@ not ok 4 - R11 C1: Label in Name (2.5.3) is reported with the shared options (re
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 64.938224
+# duration_ms 68.676518

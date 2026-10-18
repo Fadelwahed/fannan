@@ -1,11 +1,13 @@
+fatal: path 'release/tools/axe-tags.mjs' exists on disk, but not in '607b2e4'
+fatal: path 'release/tools/probe-world.mjs' exists on disk, but not in '607b2e4'
 # R11 before: R11 tests against 607b2e4 sources
 TAP version 13
 # Subtest: R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
 not ok 1 - R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
   ---
-  duration_ms: 660.525958
+  duration_ms: 607.26434
   type: 'test'
-  location: '<scratch>/release/tests/spacing-scale.test.mjs:147:1'
+  location: '<scratch>/release/tests/spacing-scale.test.mjs:159:1'
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly deep-equal:
@@ -25,7 +27,7 @@ not ok 1 - R11 (Asad note): left and right margins are screened too; auto margin
   actual:
   operator: 'deepStrictEqual'
   stack: |-
-    TestContext.<anonymous> (file://<scratch>/release/tests/spacing-scale.test.mjs:154:12)
+    TestContext.<anonymous> (file://<scratch>/release/tests/spacing-scale.test.mjs:166:12)
     async Test.run (node:internal/test_runner/test:1054:7)
     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
   ...
@@ -37,4 +39,4 @@ not ok 1 - R11 (Asad note): left and right margins are screened too; auto margin
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 726.175866
+# duration_ms 671.934327

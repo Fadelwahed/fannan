@@ -6,6 +6,6 @@ test_verify_excludes_only_one_latest_record_written_after_the_freeze (test_packa
 test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (test_package_r3.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.036s
+Ran 5 tests in 0.037s
 
 OK

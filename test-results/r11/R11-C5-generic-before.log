@@ -1,9 +1,11 @@
+fatal: path 'release/tools/axe-tags.mjs' exists on disk, but not in '607b2e4'
+fatal: path 'release/tools/probe-world.mjs' exists on disk, but not in '607b2e4'
 # R11 before: R11 tests against 607b2e4 sources
 TAP version 13
 # Subtest: R11 C5: no client, company or country name anywhere in release/ (tests excluded)
 not ok 1 - R11 C5: no client, company or country name anywhere in release/ (tests excluded)
   ---
-  duration_ms: 9.057593
+  duration_ms: 7.389482
   type: 'test'
   location: '<scratch>/release/tests/generic-instructions.test.mjs:13:1'
   failureType: 'testCodeFailure'
@@ -57,4 +59,4 @@ not ok 1 - R11 C5: no client, company or country name anywhere in release/ (test
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 75.843424
+# duration_ms 56.65779
