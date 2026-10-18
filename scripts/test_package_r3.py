@@ -150,6 +150,8 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r21/') for n in names), 'R21 evidence is archived like R4-R20')
         if (ROOT / 'test-results/r22').is_dir():
             self.assertTrue(any(n.startswith('test-results/r22/') for n in names), 'R22 evidence is archived like R4-R21')
+        if (ROOT / 'test-results/r23').is_dir():
+            self.assertTrue(any(n.startswith('test-results/r23/') for n in names), 'R23 evidence is archived like R4-R22')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -388,6 +390,13 @@ class RequiredSectionTests(unittest.TestCase):
         # design-quality.md.
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         for m in ['Text over images is graded in three zones on the faintest real glyph cluster', 'AND names the worst region checked in `worstRegion`', 'text matches only text, so a heading with the same words never stands in for a lost button', 'is not rendered either, so it is not text on screen']:
+            self.assertIn(m, required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r23_sections(self):
+        # R23: same-name one-to-one control matching and clamps that only hide text are required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        for m in ['matches its 1440 control only by the SAME accessible name, one to one', 'a clamp may only hide text']:
             self.assertIn(m, required)
         self.assertEqual(package.missing_sections(), [])
 

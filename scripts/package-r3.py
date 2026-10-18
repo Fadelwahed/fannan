@@ -234,7 +234,9 @@ REQUIRED_SECTIONS = {
                                              # R21: media crops, unrendered content, content lost at a width, read-more clamps, the minimum-glyph measure
                                              'Cropped media is never clipped content', 'Content Chrome does not render is not on screen', 'A read-more clamp is the one partial cut that can pass', 'The faintest-text measure never drops a faint glyph',
                                              # R22: three contrast zones (worstRegion), typed prints, media fallback content
-                                             'Text over images is graded in three zones on the faintest real glyph cluster', 'AND names the worst region checked in `worstRegion`', 'text matches only text, so a heading with the same words never stands in for a lost button', 'is not rendered either, so it is not text on screen'],
+                                             'Text over images is graded in three zones on the faintest real glyph cluster', 'AND names the worst region checked in `worstRegion`', 'text matches only text, so a heading with the same words never stands in for a lost button', 'is not rendered either, so it is not text on screen',
+                                             # R23: same-name one-to-one matching with the action family, clamps only hide text
+                                             'matches its 1440 control only by the SAME accessible name, one to one', 'a clamp may only hide text'],
     'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows', '## Cross-screen component comparison'],
 }
 # R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
@@ -361,6 +363,8 @@ def archive_paths():
         paths += files(ROOT / 'test-results/r21')  # R21 before/after evidence and raw panel logs (panel round 21)
     if (ROOT / 'test-results/r22').is_dir():
         paths += files(ROOT / 'test-results/r22')  # R22 before/after evidence and raw panel logs (panel round 22)
+    if (ROOT / 'test-results/r23').is_dir():
+        paths += files(ROOT / 'test-results/r23')  # R23 before/after evidence and raw panel logs (panel round 23)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)
 

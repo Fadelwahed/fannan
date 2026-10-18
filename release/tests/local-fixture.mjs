@@ -416,6 +416,33 @@ const r22Want = {
   greyNoRegion: axeOpen(r22.greyNoRegion), greyRegion: r22.greyRegion.axe[0] === true,
 };
 if (Object.values(r22Want).some(v => !v)) throw Error('R22 full-run expectations failed: ' + JSON.stringify(r22Want));
+// R23 (Fadel's tiebreaks), full gate runs: 'Save as' hidden at 320 next to 'Save' fails the width screen (same name only,
+// R23-GPT-02); 'Export report' moved into a declared More menu as a menuitem passes (action family); a shortened label
+// passes only with an aria-label keeping the name; a link label cut by its 100 px box fails (R23-GPT-03); a custom
+// slider hidden at 320 fails (R23-GPT-04); a control cut wholly by a line-clamp fails even with an expanded state
+// (R23-GPT-05).
+const r23 = {};
+const ls23 = '<style>@media (max-width:600px){.r23l{display:none}}@media (min-width:601px){.r23s{display:none}}</style>';
+r23.saveAs = r19Run('save-as', '<div><button>Save</button> <button class="r23l">Save as</button></div>', '', ls23);
+const more23 = isOpen => `${ls23}<div role="toolbar" aria-label="Report"><button>Print</button> <button class="r23l">Export report</button> <button class="r23s" aria-expanded="${isOpen}">More</button>${isOpen ? '<div role="menu" class="r23s"><div role="menuitem" tabindex="-1">Export report</div></div>' : ''}</div>`;
+r23.exportMenu = r19Run('export-menu', more23(false), '', '', authored, [['more-open', at20(more23(true))]]);
+r23.shortLabel = r19Run('short-label', '<button><span class="r23l">Request a demo</span><span class="r23s">Demo</span></button>', '', ls23);
+r23.shortLabelAria = r19Run('short-label-aria', '<button aria-label="Request a demo"><span class="r23l">Request a demo</span><span class="r23s">Demo</span></button>', '', ls23);
+r23.labelCut = r19Run('label-cut', '<div style="width:100px;overflow:hidden"><a href="#r" style="display:inline-block;width:100px;white-space:nowrap">Download the annual report</a></div>');
+r23.slider = r19Run('slider', '<div class="r23l" role="slider" aria-label="Volume" aria-valuenow="5" tabindex="0" style="width:120px;height:12px;background:#767676"></div>', '', ls23);
+const clamp23 = '<div style="max-width:260px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><p style="margin:0">Two short lines of excerpt that fit.</p><p style="margin:0">Second line here.</p><button style="display:block">Download</button></div>';
+r23.clampControl = r19Run('clamp-control', clamp23, '', '', authored, [['expanded', at20(clamp23.replace(';display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden', ''))]]);
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R23 fixture runs: ' + JSON.stringify(r23));
+const r23Want = {
+  saveAs: r23.saveAs.widths[0] === false && r23.saveAs.reveals > 0,
+  exportMenu: r23.exportMenu.widths.every(w => w === true) && r23.exportMenu.reveals === 0,
+  shortLabel: r23.shortLabel.widths[0] === false, shortLabelAria: r23.shortLabelAria.widths[0] === true,
+  labelCut: r23.labelCut.widths[0] === false, slider: r23.slider.widths[0] === false && r23.slider.reveals > 0,
+  clampControl: r23.clampControl.widths[0] === false,
+};
+if (Object.values(r23Want).some(v => !v)) throw Error('R23 full-run expectations failed: ' + JSON.stringify(r23Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');
