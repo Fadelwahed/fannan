@@ -131,7 +131,9 @@ test('R25-GPT-04: real Chrome: tabs becoming headed sections pass when every tab
     droppedAction: await gate({ default: P(tabs + sections({ action: false })) }),
     plainParagraphs: await gate({ default: P(tabs + sections({ tag: 'p' })) }),
   }, {
-    headedSections: { pass: true, rules: [] }, roleHeading: { pass: true, rules: [] },
+    // R26 (Fadel): tabs to headed sections now needs every tab panel declared as a state; these pages declare only the
+    // default (Overview) panel, so the swap does not apply (R26 adds the declared-panel passes in panel-r26.test.mjs)
+    headedSections: { pass: false, rules: ['not shown at this width'] }, roleHeading: { pass: false, rules: ['not shown at this width'] },
     missingHeading: { pass: false, rules: ['not shown at this width'] }, renamedHeading: { pass: false, rules: ['not shown at this width'] },
     droppedAction: { pass: false, rules: ['not shown at this width'] }, plainParagraphs: { pass: false, rules: ['not shown at this width'] },
   });
