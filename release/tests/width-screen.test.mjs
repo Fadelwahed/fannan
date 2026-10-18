@@ -12,7 +12,7 @@ const chrome = process.platform === 'darwin' ? '/Applications/Google Chrome.app/
 
 test('R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state', () => {
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
-  assert.match(source, /import \{ screenWidths, resolveReflowCandidates \} from '\.\/width-screen\.mjs';/); // R11 panel B adds the resolver
+  assert.match(source, /import \{ screenWidths, resolveReflowCandidates, validWidths \} from '\.\/width-screen\.mjs';/); // R11 panel B adds the resolver, R12 the width list check
   assert.equal(source.split('await screenWidths(p, handoff?.settings?.desktopWidths').length - 1, 2, 'page and every declared state');
   assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null\);\nif \(!ev\.checks\.widths\.pass\) fail = true;/);
   assert.match(source, /const widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, \{ lang: st\.lang, dir: st\.dir \}\);/);
@@ -124,7 +124,7 @@ test('ARGON-R5-05: content pushed past the left edge fails; visually hidden and 
 
 test('ARGON-R5-05: off-screen-left content fails the width screen', () => {
   const source = readFileSync(join(release, 'tools/width-screen.mjs'), 'utf8');
-  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.scrolledText\.length === 0 && result\.reflowCandidates\.every\(c => c\.fits && c\.keyboard\) && language/); // R11 S3 + panel B
+  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.unreachable\.length === 0 && result\.scrolledText\.length === 0 && result\.unmeasured\.length === 0 && result\.unscannedScopes\.length === 0 && result\.reflowCandidates\.every\(c => c\.fits && c\.keyboard\) && language/); // R11 S3 + panel B + R12 M01/M02/M11
 });
 
 test('R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
@@ -166,18 +166,74 @@ test('R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller
   } finally { await browser.close(); }
 });
 
-test('R11 panel B/T2: an unresolved reflow candidate blocks the handoff; only an id-matched entry with a reason and a qaGate/approver reviewer resolves it', async () => {
+test('R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it', async () => {
   const { resolveReflowCandidates } = await import('../tools/width-screen.mjs');
-  const handoff = { settings: { roles: { qaGate: 'Amin', approver: 'Fadel', writer: 'W', engineer: 'E' } }, reflowExceptions: [{ id: 't1', reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' }, { id: 'p1', reason: '', reviewer: 'Fadel' }, { id: 'g1', reason: 'grid', reviewer: 'W' }] };
-  const c = (element, id, reason = 'table') => ({ element, id, reason, scroller: 'div', fits: true, keyboard: true });
+  const home = { screen: 'home', state: 'default', lang: 'en' };
+  const handoff = { settings: { roles: { qaGate: 'Amin', approver: 'Fadel', writer: 'W', engineer: 'E' } }, reflowExceptions: [{ ...home, id: 't1', reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' }, { ...home, id: 'p1', reason: '', reviewer: 'Fadel' }, { ...home, id: 'g1', reason: 'grid', reviewer: 'W' }] };
+  const c = (element, id, reason = 'table', scope = home, scroller = 'div') => ({ ...scope, element, id, reason, scroller, fits: true, keyboard: true });
   const r = resolveReflowCandidates([c('table#t1', 't1'), c('table#t1', 't1'), c('pre#p1', 'p1'), c('div#g1', 'g1'), c('table', null), c('div#m', 'm', null)], handoff);
-  assert.deepEqual(r.candidates.map(x => [x.element, x.resolved, x.unresolvedBecause]), [['table#t1', true, null], ['pre#p1', false, 'reflowExceptions entry has no reason'], ['div#g1', false, 'reflowExceptions reviewer is not the qaGate or approver'], ['table', false, 'candidate has no element id to resolve'], ['div#m', false, 'no reflowExceptions entry for this id']]);
+  assert.deepEqual(r.candidates.map(x => [x.element, x.resolved, x.unresolvedBecause]), [['table#t1', true, null], ['pre#p1', false, 'reflowExceptions entry has no reason'], ['div#g1', false, 'reflowExceptions reviewer is not Amin or Fadel'], ['table', false, 'reflowExceptions has no element id to resolve'], ['div#m', false, 'reflowExceptions reason on the page is blank']]);
   assert.deepEqual([r.status, r.pass, r.unresolved], ['FAIL', false, 4]);
   assert.deepEqual(r.candidates[0].decision, { reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' });
-  assert.deepEqual(resolveReflowCandidates([c('table#t1', 't1')], handoff), { candidates: [{ ...c('table#t1', 't1'), resolved: true, decision: { reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' }, unresolvedBecause: null }], unresolved: 0, status: 'PASS', pass: true });
+  assert.deepEqual([resolveReflowCandidates([c('table#t1', 't1')], handoff).status, resolveReflowCandidates([c('table#t1', 't1')], handoff).pass], ['PASS', true]);
+  // R12 M09: a later occurrence with a blank reason is kept (not deduplicated away); scope is part of the match
+  const blankLater = resolveReflowCandidates([c('table#t1', 't1'), c('table#t1', 't1', null)], handoff);
+  assert.deepEqual([blankLater.pass, blankLater.candidates.length, blankLater.candidates[1].unresolvedBecause], [false, 2, 'reflowExceptions reason on the page is blank']);
+  const otherState = resolveReflowCandidates([c('table#t1', 't1', 'table', { screen: 'home', state: 'error', lang: 'en' })], handoff);
+  assert.deepEqual([otherState.pass, otherState.candidates[0].unresolvedBecause], [false, 'no reflowExceptions entry for this id, screen, state and lang'], 'one #t1 entry does not resolve #t1 on another state');
+  const clash = resolveReflowCandidates([c('table#t1', 't1'), c('pre#t1', 't1', 'pre')], handoff);
+  assert.deepEqual(clash.candidates.map(x => x.unresolvedBecause), ['id t1 names different elements in this scope', 'id t1 names different elements in this scope']);
+  assert.equal(resolveReflowCandidates([{ element: 'table#t1', id: 't1', reason: 'table', scroller: 'div', fits: true, keyboard: true }], handoff).candidates[0].unresolvedBecause, 'reflowExceptions has no declared screen/state scope');
   assert.deepEqual([resolveReflowCandidates([c('table', null)], handoff, 'wireframe').status, resolveReflowCandidates([c('table', null)], handoff, 'wireframe').pass], ['DEFERRED', true]);
-  assert.equal(resolveReflowCandidates(Array.from({ length: 40 }, (_, i) => c(`table#t${i}`, `t${i}`)), { ...handoff, reflowExceptions: Array.from({ length: 40 }, (_, i) => ({ id: `t${i}`, reason: 'r', reviewer: 'Amin' })) }).pass, true, 'no count cap (panel T3)');
+  assert.equal(resolveReflowCandidates(Array.from({ length: 40 }, (_, i) => c(`table#t${i}`, `t${i}`)), { ...handoff, reflowExceptions: Array.from({ length: 40 }, (_, i) => ({ ...home, id: `t${i}`, reason: 'r', reviewer: 'Amin' })) }).pass, true, 'no count cap (panel T3)');
   const source = readFileSync(new URL('../tools/pre-handoff-check.mjs', import.meta.url), 'utf8');
   assert.match(source, /ev\.checks\.reflowCandidates = resolveReflowCandidates\(/);
   assert.match(source, /if \(!ev\.checks\.reflowCandidates\.pass\) fail = true;/);
+  assert.match(source, /\.\.\.scopeOf\(/, 'candidates carry their screen, state and lang');
+});
+
+test('R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+  const { screenWidths } = await import('../tools/width-screen.mjs');
+  const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
+  const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const en = { lang: 'en', dir: 'ltr' };
+    const at = async (inner, width = 320) => { await page.setContent(`<html lang="en"><body style="margin:0"><main><h1>Page</h1>${inner}</main></body></html>`); return (await screenWidths(page, [1440], en)).results.find(r => r.width === width); };
+    // M01: the scroller's own text
+    const bare = await at(`<div style="overflow-x:auto;white-space:nowrap">${'bare text '.repeat(60)}</div>`);
+    assert.deepEqual([bare.pass, bare.scrolledText.length], [false, 1], 'bare text directly in a nowrap scroller fails');
+    const pre = await at(`<pre id="code" style="overflow-x:auto">${'x'.repeat(300)}</pre>`);
+    assert.deepEqual(pre.reflowCandidates.map(c => [c.element, c.keyboard]), [['pre#code', false]], 'a directly scrollable pre is a candidate and must be keyboard-usable');
+    assert.equal(pre.pass, false);
+    assert.equal((await at(`<div style="overflow-x:auto"><div style="width:900px;height:1px"></div>short</div>`)).pass, true, 'an empty overflowing spacer is not a failure');
+    // M02: lost past either edge, also in overflow-y-only scrollers, at every width
+    for (const [name, inner] of [['negative margin in an overflow-y scroller', '<div style="overflow-y:auto;height:100px"><p style="margin-left:-200px">Pushed left text that is lost</p></div>'], ['transform in an auto scroller', '<div style="overflow-x:auto"><p style="transform:translateX(-200px)">Translated left text lost</p></div>'], ['relative left in a hidden box', '<div style="overflow:hidden"><p style="position:relative;left:-300px">Hidden past the left edge</p></div>']]) {
+      for (const width of [1440, 320]) {
+        const r = await at(inner, width);
+        assert.equal(r.pass, false, `${name} at ${width}: fails`);
+        assert.ok(r.unreachable.length + r.clipped.length + r.scrolledText.length >= 1, `${name} at ${width}: recorded`);
+      }
+    }
+    assert.deepEqual((await at('<div style="overflow-y:auto;height:100px"><p style="margin-left:-200px">x</p></div>', 1440)).unreachable.map(u => u.side), ['left']);
+    const rtlOk = await at('<div dir="rtl" style="overflow-x:auto;width:300px" tabindex="0"><table id="r" style="width:900px"><tr><td>أ</td><td>ب</td><td>ج</td></tr></table></div>');
+    assert.deepEqual([rtlOk.unreachable, rtlOk.pass], [[], true], 'RTL content reachable by scrolling is not lost');
+    // M10: keyboard reach
+    for (const [name, inner] of [['a hidden disabled button', '<div style="overflow-x:auto"><table id="t" style="width:900px"><tr><td><button disabled style="display:none">x</button>a</td><td>b</td></tr></table></div>'], ['one link in the first cell', '<div style="overflow-x:auto"><table id="t" style="width:900px"><tr><td><a href="#a">a</a></td><td>b</td></tr></table></div>'], ['an inert scroller', '<div inert style="overflow-x:auto" tabindex="0"><table id="t" style="width:900px"><tr><td>a</td><td>b</td></tr></table></div>']]) {
+      const r = await at(inner);
+      assert.deepEqual([r.reflowCandidates[0]?.keyboard, r.pass], [false, false], `${name}: not keyboard-usable`);
+    }
+    const stepped = await at('<div style="overflow-x:auto"><table id="t" style="width:900px"><tr><td><a href="#a">a</a></td><td><a href="#b">b</a></td><td><a href="#c">c</a></td></tr></table></div>');
+    assert.equal(stepped.reflowCandidates[0].keyboard, true, 'links spaced across the whole extent let tabbing scroll it');
+    // M11: open shadow roots
+    const shadow = await at(`<div id="h"></div><script>document.getElementById('h').attachShadow({ mode: 'open' }).innerHTML = '<div style="overflow-x:auto"><p style="width:900px">${'shadow text '.repeat(20)}</p></div>';</script>`);
+    assert.deepEqual([shadow.pass, shadow.scrolledText.length], [false, 1], 'a scroller inside an open shadow root is screened');
+    const frame = await at(`<iframe style="width:300px" srcdoc="<p style='white-space:nowrap'>${'framed text '.repeat(40)}</p>"></iframe>`);
+    assert.equal(frame.pass, false, 'a same-origin frame that scrolls sideways fails');
+    const sandboxed = await at('<iframe sandbox style="width:300px" srcdoc="<p>x</p>"></iframe>');
+    assert.deepEqual([sandboxed.pass, sandboxed.unscannedScopes.length], [false, 1], 'an unreadable frame is an unscanned scope and fails closed');
+    // M14: hidden inactive content is not measured
+    const hidden = await at(`<div style="overflow-x:auto"><p style="width:900px;visibility:hidden">${'hidden inactive text '.repeat(10)}</p><p>ok</p></div>`);
+    assert.deepEqual([hidden.pass, hidden.scrolledText], [true, []], 'visibility:hidden text is not reported');
+  } finally { await browser.close(); }
 });
