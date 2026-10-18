@@ -4,14 +4,18 @@
 // WCAG reflow exceptions and layout quality still need manual evidence. 320 px is not a mobile design approval.
 export const REFLOW_WIDTH = 320;
 
-// R11 (Asad panel S3): WCAG 1.4.10 excuses only content that needs a two-dimensional layout. At the 320 px reflow width a
-// horizontal scroller passes only when everything that overflows it is inside such content: table, pre, code, img, svg,
-// canvas, video, iframe, role=grid/table, or an element marked data-fannan-2d="<reason>" (recorded for review).
-export const TWO_D = 'table, pre, code, img, svg, canvas, video, iframe, [role="grid"], [role="table"], [data-fannan-2d]';
+// R11 (Asad panel S3, panel D1 decision B): WCAG 1.4.10 excuses only the smallest region whose usage or meaning needs a
+// two-dimensional layout. At the 320 px reflow width, ordinary text or media that overflows a sideways scroller (left
+// or right) fails. A table, pre, code, role=grid/table with real rows, or an element marked data-fannan-2d="<reason>"
+// is only a CANDIDATE: it is recorded with its element and reason, never excused automatically. A candidate's
+// scroller must fit inside 320 px and be keyboard-usable (tabindex or a focusable child), and an unresolved candidate
+// blocks the final handoff (resolveReflowCandidates). Resizable media (img, svg, video, canvas, iframe) is not a
+// candidate unless it sits inside a marked data-fannan-2d region. No count caps.
+export const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
 
 export function inspectLayout({ reflow = false } = {}) {
-  const TWO_D = 'table, pre, code, img, svg, canvas, video, iframe, [role="grid"], [role="table"], [data-fannan-2d]';
-  const clipped = [], offscreenLeft = [], scrolledText = [], twoDimensional = [];
+  const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
+  const clipped = [], offscreenLeft = [], scrolledText = [], reflowCandidates = [];
   // ARGON-R5-05: visually hidden (sr-only) content is not a clip: a box of at most 1x1 px, or clip: rect(0...) / clip-path inset(50%).
   const srOnly = (r, c) => (r.width <= 1 && r.height <= 1) || /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(c.clip) || c.clipPath === 'inset(50%)';
   const focusable = e => e.matches('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');
@@ -35,23 +39,29 @@ export function inspectLayout({ reflow = false } = {}) {
   }
   if (reflow) {
     const ownContent = d => d.matches('img, svg, video, canvas, iframe, input, select, textarea, button') || [...d.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim());
+    const label = el => el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '');
+    const contentRects = d => { if (d.matches('img, svg, video, canvas, iframe, input, select, textarea, button')) return [d.getBoundingClientRect()]; return [...d.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim()).map(n => { const range = document.createRange(); range.selectNodeContents(n); return range.getBoundingClientRect(); }); };
+    const candidateOf = (d, scroller) => { for (let t = d.closest(TWO_D); t; t = t.parentElement?.closest(TWO_D)) { if (t !== scroller && !scroller.contains(t)) return null; if (!t.matches('[role="grid"], [role="table"]') || t.querySelector('[role="row"]') || t.matches('[data-fannan-2d]')) return t; } return null; };
     for (const e of document.querySelectorAll('body, body *')) {
       const c = getComputedStyle(e);
       if (!['auto', 'scroll'].includes(c.overflowX) || e.scrollWidth <= e.clientWidth + 1 || c.display === 'none' || c.visibility === 'hidden') continue;
       const box = e.getBoundingClientRect();
-      const self2d = e.matches(TWO_D) ? e : null;
-      const over = [...e.querySelectorAll('*')].filter(d => { const b = d.getBoundingClientRect(); return b.width > 0 && b.height > 0 && ownContent(d) && (b.right > box.right + 1 || b.left < box.left - 1); });
-      const plain = self2d ? [] : over.filter(d => { const t = d.closest(TWO_D); return !t || !e.contains(t); });
-      if (plain.length) scrolledText.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), sample: (plain[0].textContent || plain[0].tagName).trim().slice(0, 60) });
-      else {
-        const content = self2d ?? over.map(d => d.closest(TWO_D)).find(Boolean) ?? e;
-        twoDimensional.push({ tag: e.tagName, content: content.tagName, role: content.getAttribute('role'), reason: content.getAttribute('data-fannan-2d') ?? (content.getAttribute('role') || content.tagName.toLowerCase()) });
+      // the content itself is measured (text-node ranges, or the media box), so text overflowing its own box counts too
+      const over = [...e.querySelectorAll('*')].filter(d => ownContent(d) && contentRects(d).some(b => b.width > 0 && b.height > 0 && (b.right > box.right + 1 || b.left < box.left - 1)));
+      const plain = over.filter(d => !candidateOf(d, e));
+      if (!over.length) continue; // only padding or empty boxes overflow
+      if (plain.length) { scrolledText.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), sample: (plain[0].textContent || plain[0].tagName).trim().slice(0, 60) }); continue; }
+      const keyboard = (e.hasAttribute('tabindex') && e.tabIndex >= 0) || !!e.querySelector('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');
+      for (const t of new Set(over.map(d => candidateOf(d, e)))) {
+        const marked = t.closest('[data-fannan-2d]');
+        const reason = marked ? (marked.getAttribute('data-fannan-2d') || '').trim() || null : (t.getAttribute('role') || t.tagName.toLowerCase());
+        reflowCandidates.push({ element: label(t), id: t.id || null, reason, scroller: label(e), fits: box.left >= -1 && box.right <= innerWidth + 1, keyboard });
       }
     }
   }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
-  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, scrolledText, twoDimensional, lang: root.lang, dir: getComputedStyle(root).direction };
+  return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, scrolledText, reflowCandidates, lang: root.lang, dir: getComputedStyle(root).direction };
 }
 
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
@@ -66,10 +76,27 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
       await page.evaluate(() => scrollTo(0, 0));
       const result = await page.evaluate(inspectLayout, { reflow: width === REFLOW_WIDTH });
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
-      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && result.scrolledText.length === 0 && language });
+      results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && result.scrolledText.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
     }
   } finally {
     await page.setViewportSize({ width: 1440, height });
   }
-  return { results, pass: results.every(r => r.pass), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence.' };
+  return { results, pass: results.every(r => r.pass), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
+}
+
+// R11 panel D1 (decisions B, T2): a candidate is resolved only by a handoff `reflowExceptions` entry naming its element
+// id, a non-empty reason and a reviewer who holds the qaGate or approver role. Anything else stays unresolved, and an
+// unresolved candidate BLOCKS the final handoff (recorded, not failed, in the wireframe phase).
+export function resolveReflowCandidates(candidates, handoff, phase = 'handoff') {
+  const roles = [handoff?.settings?.roles?.qaGate, handoff?.settings?.roles?.approver].filter(r => typeof r === 'string' && r.trim());
+  const entries = Array.isArray(handoff?.reflowExceptions) ? handoff.reflowExceptions : [];
+  const seen = new Map();
+  for (const c of candidates) { const key = `${c.element}|${c.scroller}`; if (!seen.has(key)) seen.set(key, c); }
+  const recorded = [...seen.values()].map(c => {
+    const entry = c.id ? entries.find(x => x?.id === c.id) : null;
+    const why = !c.id ? 'candidate has no element id to resolve' : !entry ? 'no reflowExceptions entry for this id' : !(typeof entry.reason === 'string' && entry.reason.trim()) ? 'reflowExceptions entry has no reason' : !roles.includes(entry.reviewer) ? 'reflowExceptions reviewer is not the qaGate or approver' : !c.reason ? 'data-fannan-2d reason is blank' : null;
+    return { ...c, resolved: !why, decision: entry && !why ? { reason: entry.reason.trim(), reviewer: entry.reviewer } : null, unresolvedBecause: why };
+  });
+  const unresolved = recorded.filter(c => !c.resolved);
+  return { candidates: recorded, unresolved: unresolved.length, status: phase === 'wireframe' ? 'DEFERRED' : unresolved.length ? 'FAIL' : 'PASS', pass: phase === 'wireframe' || unresolved.length === 0 };
 }

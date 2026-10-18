@@ -12,7 +12,7 @@ const chrome = process.platform === 'darwin' ? '/Applications/Google Chrome.app/
 
 test('R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state', () => {
   const source = readFileSync(join(release, 'tools/pre-handoff-check.mjs'), 'utf8');
-  assert.match(source, /import \{ screenWidths \} from '\.\/width-screen\.mjs';/);
+  assert.match(source, /import \{ screenWidths, resolveReflowCandidates \} from '\.\/width-screen\.mjs';/); // R11 panel B adds the resolver
   assert.equal(source.split('await screenWidths(p, handoff?.settings?.desktopWidths').length - 1, 2, 'page and every declared state');
   assert.match(source, /ev\.checks\.widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, null\);\nif \(!ev\.checks\.widths\.pass\) fail = true;/);
   assert.match(source, /const widths = await screenWidths\(p, handoff\?\.settings\?\.desktopWidths, \{ lang: st\.lang, dir: st\.dir \}\);/);
@@ -124,10 +124,10 @@ test('ARGON-R5-05: content pushed past the left edge fails; visually hidden and 
 
 test('ARGON-R5-05: off-screen-left content fails the width screen', () => {
   const source = readFileSync(join(release, 'tools/width-screen.mjs'), 'utf8');
-  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.scrolledText\.length === 0 && language/); // R11 S3 adds scrolledText
+  assert.match(source, /pass: !result\.horizontalOverflow && result\.clipped\.length === 0 && result\.offscreenLeft\.length === 0 && result\.scrolledText\.length === 0 && result\.reflowCandidates\.every\(c => c\.fits && c\.keyboard\) && language/); // R11 S3 + panel B
 });
 
-test('R11 S3: at 320 px, ordinary text that needs sideways scrolling in a scroller fails; only 2D content is excused (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
+test('R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)', { skip: !(existsSync(join(deps, 'node_modules/playwright-core')) && existsSync(chrome)) && 'test-only deps or local Chrome absent' }, async () => {
   const { screenWidths } = await import('../tools/width-screen.mjs');
   const { chromium } = createRequire(join(deps, 'node_modules/'))('playwright-core');
   const browser = await chromium.launch({ executablePath: chrome, args: ['--headless=new'] });
@@ -139,22 +139,45 @@ test('R11 S3: at 320 px, ordinary text that needs sideways scrolling in a scroll
     const text = await at320(cards);
     assert.equal(text.pass, false, 'ordinary text in a horizontal scroller fails at 320 px');
     assert.equal(text.scrolledText.length, 1);
-    const wideP = await at320('<div style="overflow-x:auto"><p style="width:900px">A paragraph that needs sideways scrolling to read.</p></div>');
-    assert.equal(wideP.pass, false);
-    for (const [name, inner] of [['table', '<div style="overflow-x:auto"><table style="width:900px"><tr><td>a</td><td>b</td></tr></table></div>'], ['pre', '<div style="overflow-x:auto"><pre>const aVeryLongLineOfCode = somethingThatDoesNotWrap(1, 2, 3, 4, 5, 6, 7);</pre></div>'], ['role=grid', '<div style="overflow-x:auto"><div role="grid" style="width:900px">grid cells</div></div>'], ['svg', '<div style="overflow-x:auto"><svg width="900" height="50"><text x="10" y="20">diagram</text></svg></div>']]) {
+    assert.equal((await at320('<div style="overflow-x:auto"><p style="width:900px">A paragraph that needs sideways scrolling to read.</p></div>')).pass, false);
+    const rtl = await at320(`<div dir="rtl" style="overflow-x:auto"><p style="white-space:nowrap">${'نص عادي يحتاج إلى تمرير جانبي '.repeat(6)}</p></div>`);
+    assert.equal(rtl.pass, false, 'overflow to the left (RTL) fails too'); assert.equal(rtl.scrolledText.length, 1);
+    assert.equal((await at320('<div style="overflow-x:auto"><img alt="photo" width="900" height="40" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="></div>')).pass, false, 'resizable media is not a candidate');
+    assert.equal((await at320(`<div style="overflow-x:auto" tabindex="0"><div role="grid" style="white-space:nowrap">${'no rows, only text '.repeat(20)}</div></div>`)).pass, false, 'role=grid without real rows is not a candidate');
+    const kb = '<div style="overflow-x:auto" tabindex="0" aria-label="scroll">';
+    for (const [name, inner, element, reason] of [['table', `${kb}<table id="t1" style="width:900px"><tr><td>a</td><td>b</td></tr></table></div>`, 'table#t1', 'table'], ['pre', `${kb}<pre id="p1">const aVeryLongLineOfCode = somethingThatDoesNotWrap(1, 2, 3, 4, 5, 6, 7);</pre></div>`, 'pre#p1', 'pre'], ['role=grid', `${kb}<div id="g1" role="grid" style="width:900px"><div role="row" style="display:flex;gap:400px"><span role="gridcell">a</span><span role="gridcell">b</span><span role="gridcell">c</span></div></div></div>`, 'div#g1', 'grid'], ['marked svg', `${kb}<figure id="map" data-fannan-2d="route map"><svg width="900" height="50"><text x="10" y="20">diagram</text></svg></figure></div>`, 'figure#map', 'route map']]) {
       const r = await at320(inner);
-      assert.equal(r.pass, true, `${name}: 2D content is excused`);
-      assert.equal(r.twoDimensional.length, 1, `${name}: the excused scroller is recorded`);
+      assert.equal(r.pass, true, `${name}: a keyboard-usable candidate that fits does not fail the width screen itself`);
+      assert.deepEqual(r.reflowCandidates.map(c => [c.element, c.reason, c.fits, c.keyboard]), [[element, reason, true, true]], `${name}: recorded as a candidate with element and reason`);
+      assert.equal('twoDimensional' in r, false, 'no automatic excuse list');
     }
-    const marked = await at320('<div data-fannan-2d="timeline diagram" style="overflow-x:auto"><div style="width:900px">2026 · 2027 · 2028</div></div>');
-    assert.equal(marked.pass, true);
-    assert.deepEqual(marked.twoDimensional.map(t => t.reason), ['timeline diagram'], 'the data-fannan-2d reason is recorded for review');
-    const mixed = await at320('<div style="overflow-x:auto"><table style="width:900px"><tr><td>a</td></tr></table><p style="width:900px">Ordinary text next to the table.</p></div>');
-    assert.equal(mixed.pass, false, 'ordinary text beside a table in the same scroller still fails');
-    const fits = await at320('<div style="overflow-x:auto"><p>Short text that fits.</p></div>');
-    assert.equal(fits.pass, true, 'a scroller that does not scroll is fine');
+    const noKb = await at320('<div style="overflow-x:auto"><table id="t2" style="width:900px"><tr><td>a</td><td>b</td></tr></table></div>');
+    assert.equal(noKb.pass, false, 'a candidate scroller that is not keyboard-usable fails'); assert.equal(noKb.reflowCandidates[0].keyboard, false);
+    const wide = await at320(`<div style="overflow-x:auto;width:500px" tabindex="0"><table id="t3" style="width:1400px"><tr><td>a</td><td>b</td></tr></table></div>`);
+    assert.equal(wide.pass, false, 'a candidate scroller wider than 320 px fails'); assert.equal(wide.reflowCandidates[0].fits, false);
+    const mixed = await at320(`${kb}<table style="width:900px"><tr><td>a</td></tr></table><p style="width:900px">Ordinary text next to the table, long enough to run past the scroller edge.</p></div>`);
+    assert.equal(mixed.pass, false, 'ordinary text beside a table in the same scroller still fails (smallest region only)');
+    const marked = await at320(`${kb}<div data-fannan-2d=" " style="white-space:nowrap">${'2026 · 2027 · 2028 · '.repeat(10)}</div></div>`);
+    assert.equal(marked.reflowCandidates[0].reason, null, 'a blank data-fannan-2d reason is recorded as missing');
+    assert.equal((await at320('<div style="overflow-x:auto"><p>Short text that fits.</p></div>')).pass, true, 'a scroller that does not scroll is fine');
     await page.setContent(`<html lang="en"><body style="margin:0"><main><h1>Page</h1>${cards}</main></body></html>`);
     const desktop = (await screenWidths(page, [1440], en)).results[0];
     assert.equal(desktop.width, 1440); assert.deepEqual(desktop.scrolledText, [], 'declared desktop widths keep the scroller exemption');
   } finally { await browser.close(); }
+});
+
+test('R11 panel B/T2: an unresolved reflow candidate blocks the handoff; only an id-matched entry with a reason and a qaGate/approver reviewer resolves it', async () => {
+  const { resolveReflowCandidates } = await import('../tools/width-screen.mjs');
+  const handoff = { settings: { roles: { qaGate: 'Amin', approver: 'Fadel', writer: 'W', engineer: 'E' } }, reflowExceptions: [{ id: 't1', reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' }, { id: 'p1', reason: '', reviewer: 'Fadel' }, { id: 'g1', reason: 'grid', reviewer: 'W' }] };
+  const c = (element, id, reason = 'table') => ({ element, id, reason, scroller: 'div', fits: true, keyboard: true });
+  const r = resolveReflowCandidates([c('table#t1', 't1'), c('table#t1', 't1'), c('pre#p1', 'p1'), c('div#g1', 'g1'), c('table', null), c('div#m', 'm', null)], handoff);
+  assert.deepEqual(r.candidates.map(x => [x.element, x.resolved, x.unresolvedBecause]), [['table#t1', true, null], ['pre#p1', false, 'reflowExceptions entry has no reason'], ['div#g1', false, 'reflowExceptions reviewer is not the qaGate or approver'], ['table', false, 'candidate has no element id to resolve'], ['div#m', false, 'no reflowExceptions entry for this id']]);
+  assert.deepEqual([r.status, r.pass, r.unresolved], ['FAIL', false, 4]);
+  assert.deepEqual(r.candidates[0].decision, { reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' });
+  assert.deepEqual(resolveReflowCandidates([c('table#t1', 't1')], handoff), { candidates: [{ ...c('table#t1', 't1'), resolved: true, decision: { reason: 'comparison table: rows and columns carry meaning', reviewer: 'Amin' }, unresolvedBecause: null }], unresolved: 0, status: 'PASS', pass: true });
+  assert.deepEqual([resolveReflowCandidates([c('table', null)], handoff, 'wireframe').status, resolveReflowCandidates([c('table', null)], handoff, 'wireframe').pass], ['DEFERRED', true]);
+  assert.equal(resolveReflowCandidates(Array.from({ length: 40 }, (_, i) => c(`table#t${i}`, `t${i}`)), { ...handoff, reflowExceptions: Array.from({ length: 40 }, (_, i) => ({ id: `t${i}`, reason: 'r', reviewer: 'Amin' })) }).pass, true, 'no count cap (panel T3)');
+  const source = readFileSync(new URL('../tools/pre-handoff-check.mjs', import.meta.url), 'utf8');
+  assert.match(source, /ev\.checks\.reflowCandidates = resolveReflowCandidates\(/);
+  assert.match(source, /if \(!ev\.checks\.reflowCandidates\.pass\) fail = true;/);
 });

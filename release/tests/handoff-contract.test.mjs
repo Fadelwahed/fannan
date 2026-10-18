@@ -57,6 +57,18 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     }
     wire.settings.desktopWidths = [1440];
     assert.doesNotMatch(checkHandoff(wire, 'wireframe').join('\n'), /settings\.desktopWidths/, 'wireframe with [1440] satisfies the width rule');
+    // R11 panel D1: optional reflowExceptions / jsOffDifferences records are validated when present.
+    h.reflowExceptions = [{ id: 't1', reason: 'comparison table', reviewer: 'qa-x' }, { id: 't2', reason: 'route map', reviewer: 'approver-x' }];
+    h.jsOffDifferences = [{ check: 'reflow', reason: 'menu collapses after its script loads' }];
+    assert.deepEqual(checkHandoff(h), [], 'valid records pass');
+    for (const bad of [{}, [{ id: 't1', reason: '', reviewer: 'qa-x' }], [{ id: 't1', reason: 'r', reviewer: 'writer-x' }], [{ reason: 'r', reviewer: 'qa-x' }], [{ id: 'a', reason: 'r', reviewer: 'qa-x' }, { id: 'a', reason: 'r', reviewer: 'qa-x' }]]) {
+      h.reflowExceptions = bad; assert.match(checkHandoff(h).join('\n'), /reflowExceptions/, `reflowExceptions ${JSON.stringify(bad)} must fail`);
+    }
+    delete h.reflowExceptions;
+    for (const bad of [{}, [{ check: 'contrast', reason: 'r' }], [{ check: 'glass', reason: ' ' }], [{ check: 'glass', reason: 'a' }, { check: 'glass', reason: 'b' }]]) {
+      h.jsOffDifferences = bad; assert.match(checkHandoff(h).join('\n'), /jsOffDifferences/, `jsOffDifferences ${JSON.stringify(bad)} must fail`);
+    }
+    delete h.jsOffDifferences;
     h.settings.desktopWidths = [1440, 1280];
     h.manualChecks.push({ ...h.manualChecks[0], decision: 'FAIL' });
     assert.match(checkHandoff(h).join('\n'), /manual check IDs must be unique|manual FAIL/);

@@ -59,6 +59,10 @@ export function checkHandoff(h, phase = 'handoff') {
   need(Array.isArray(h?.screens) && h.screens.length > 0, 'screens required');
   const widths = h?.settings?.desktopWidths; // R8, ported from codex/fannan-r3-review 2733317
   need(Array.isArray(widths) && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length, 'settings.desktopWidths must declare unique positive integer CSS widths including the canonical 1440');
+  // R11 panel D1 (decisions B and C): optional review records for 2D reflow candidates and expected JavaScript-off differences.
+  const roleNames = [h?.settings?.roles?.qaGate, h?.settings?.roles?.approver].filter(nonempty);
+  if (h?.reflowExceptions !== undefined) need(Array.isArray(h.reflowExceptions) && h.reflowExceptions.every(x => nonempty(x?.id) && nonempty(x?.reason) && roleNames.includes(x?.reviewer)) && new Set(h.reflowExceptions.map(x => x?.id)).size === h.reflowExceptions.length, 'reflowExceptions entries need a unique element id, a reason and a qaGate or approver reviewer');
+  if (h?.jsOffDifferences !== undefined) need(Array.isArray(h.jsOffDifferences) && h.jsOffDifferences.every(x => ['glass', 'reflow'].includes(x?.check) && nonempty(x?.reason)) && new Set(h.jsOffDifferences.map(x => x?.check)).size === h.jsOffDifferences.length, 'jsOffDifferences entries need a check (glass or reflow) and a reason, once per check');
   need(Array.isArray(h?.copySlots) && h.copySlots.length > 0, 'copy slots required before layout');
   need(new Set((h?.copySlots || []).map(c => c.id)).size === (h?.copySlots || []).length, 'copy slot IDs must be unique');
   need(new Set((h?.facts || []).map(f => f.id)).size === (h?.facts || []).length, 'fact IDs must be unique');
