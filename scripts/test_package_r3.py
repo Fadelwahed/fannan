@@ -154,6 +154,7 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r23/') for n in names), 'R23 evidence is archived like R4-R22')
             self.assertTrue(any(n.startswith('test-results/r24/') for n in names), 'R24 evidence is archived like R4-R23')
             self.assertTrue(any(n.startswith('test-results/r25/') for n in names), 'R25 evidence is archived like R4-R24')
+            self.assertTrue(any(n.startswith('test-results/r26/') for n in names), 'R26 evidence is archived like R4-R25')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -414,6 +415,12 @@ class RequiredSectionTests(unittest.TestCase):
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         for m in ['content tabs becoming headed sections', 'exactly as it rescues display:none; a partial cut still fails']:
             self.assertIn(m, required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r26_sections(self):
+        # R26: loss accounting by element identity is required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        self.assertIn('R26 replaces name counting with element identity', required)
         self.assertEqual(package.missing_sections(), [])
 
     def test_r14_build_checks_sections_before_any_output(self):

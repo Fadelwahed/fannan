@@ -1,5 +1,16 @@
 # R3 checks not established
 
+## R26 additions (Mi'mar, 18 October 2026, panel round 26)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel's R26 root-cause instruction (loss accounting by element identity) applied in place of case-by-case name counting.
+
+- **Identity ledger (R26-GPT-01..04):** an item's identity is its composed DOM path plus its print (text, or role and accessible name), the same node across widths and declared states. Covered: the same element shown at that width in any state of the screen; or, only through the closed swap list, a distinct element not shown at 1440 with the same name, each cover used once across the screen. Executed: sloppy and real menu-open states (max-height:0 and display:none, with and without footer copies), tabs to headed sections with a kept panel heading, a missing and a duplicated renamed heading, two report tabs with one Download dropped or a tab state missing, a carousel repeating Shop now with all or not all slides declared; every earlier R13-R25 test.
+- **Two calls beyond the strict swap list (for Fadel):** a distinct, not-shown-at-1440 element with the SAME role and name (a mobile-only copy of a slider or a tab) and a distinct text element with the same text also cover, under the same one-cover rule. Without the text rule, tab panel text moving into an accordion or a section could not be covered.
+- **Identity limits, UNTESTED:** a declared state whose markup inserts or removes elements BEFORE an item shifts its path, so the same element is not recognised there (fails closed); two different elements at the same path with the same print in different states are treated as one. Reveal and truncation resolution keeps the earlier name pool after identity, for states rendered from different markup.
+- **Changed earlier expectation:** R25-GPT-04's default-only headed-sections pages now fail (Fadel's rule: every tab panel must be a declared state).
+- **Collapsed boxes:** at a narrow width a zero-area box hiding 1440 content is display:none (accounted in the ledger); what it hides that 1440 never showed stays a reveal. At 1440 a collapsed box is still a reveal needing a declared state.
+- **Settled motion (R26-MIMAR-01, P3):** before each width, every running finite animation and transition is paused and finished in the same task as the measure, and recorded as `motionAtCapture`; infinite animations are left alone. Executed: a 20 s slide transition (finished, no partial clip, recorded), an infinite spinner (still running). UNTESTED: scripted motion without Web Animations (requestAnimationFrame loops, scroll-driven animation), Web Animations in closed shadow roots.
+
 ## R25 additions (Mi'mar, 18 October 2026, panel round 25)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Mi'mar's R25 tiebreaks, confirmed by Fadel with one tightening (zero visible area).

@@ -240,7 +240,9 @@ REQUIRED_SECTIONS = {
                                              # R24: control labels whatever the border, one-to-one reveals, the closed list of role swaps
                                              "A control's label text is always measured, whatever its border", 'The only role swaps allowed are a tablist adapted into an accordion',
                                              # R25: tabs to headed sections, one name per owning control, zero-area collapse
-                                             'content tabs becoming headed sections', 'exactly as it rescues display:none; a partial cut still fails'],
+                                             'content tabs becoming headed sections', 'exactly as it rescues display:none; a partial cut still fails',
+                                             # R26: loss accounting by element identity
+                                             'R26 replaces name counting with element identity'],
     'release/references/critic-rubric.md': ['the final round carries at least one passing, evidenced check for each of the eight rows', '## Cross-screen component comparison'],
 }
 # R15 B1/B2: superseded wording that must not come back (the old Step 4 gate timing and the unit-breaking grid clause).
@@ -370,6 +372,7 @@ def archive_paths():
     if (ROOT / 'test-results/r23').is_dir():
         paths += files(ROOT / 'test-results/r23')  # R23 before/after evidence and raw panel logs (panel round 23)
         paths += files(ROOT / 'test-results/r24')  # R24 before/after evidence (panel round 24)
+        paths += files(ROOT / 'test-results/r26')  # R26 before/after evidence (panel round 26)
         paths += files(ROOT / 'test-results/r25')  # R25 before/after evidence and the clean R24 before-rerun (panel round 25)
     paths += [ROOT / 'scripts/package-r3.py', ROOT / 'scripts/test_package_r3.py']  # ARGON-R2-08: rerunnable self-test and package tests
     return sorted(paths)

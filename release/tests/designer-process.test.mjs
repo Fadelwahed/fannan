@@ -256,3 +256,10 @@ test('R25: tabs to headed sections, one name per control, the shared count, zero
   for (const m of ['Tabs may become an accordion or headed sections', 'rescued by its declared menu-open state just like a display:none menu']) assert.ok(contract.includes(m), `handoff-contract.md: ${m}`);
   assert.ok(plan.includes('Honest chart encoding (R25-GPT-05'), 'FANNAN-PLAN.md: chart-encoding backlog');
 });
+
+// R26 (panel round 26, Fadel's root-cause fix): loss accounting by element identity, documented
+test('R26: element identity, the closed swap list with one cover per element, declared tab panels and settled motion are documented', () => {
+  const quality = flat(read('references/design-quality.md')), contract = flat(read('references/handoff-contract.md'));
+  for (const m of ['R26 replaces name counting with element identity', 'Each covering element covers one item only, so footer copies never stand in for nav links', 'need every tab panel declared as a state', "a panel's own heading is never subtracted", 'Carousel slides are tracked by element', 'recorded as motion at capture']) assert.ok(quality.includes(m), `design-quality.md: ${m}`);
+  assert.ok(contract.includes('Losses are tracked by element, not by name'), 'handoff-contract.md: identity');
+});
