@@ -155,6 +155,7 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r24/') for n in names), 'R24 evidence is archived like R4-R23')
             self.assertTrue(any(n.startswith('test-results/r25/') for n in names), 'R25 evidence is archived like R4-R24')
             self.assertTrue(any(n.startswith('test-results/r26/') for n in names), 'R26 evidence is archived like R4-R25')
+            self.assertTrue(any(n.startswith('test-results/r27/') for n in names), 'R27 evidence is archived like R4-R26')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -421,6 +422,12 @@ class RequiredSectionTests(unittest.TestCase):
         # R26: loss accounting by element identity is required in design-quality.md.
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         self.assertIn('R26 replaces name counting with element identity', required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r27_sections(self):
+        # R27: the stable identity key (not position) is required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        self.assertIn('R27 makes element identity a stable key, not position', required)
         self.assertEqual(package.missing_sections(), [])
 
     def test_r14_build_checks_sections_before_any_output(self):

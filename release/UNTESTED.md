@@ -1,5 +1,16 @@
 # R3 checks not established
 
+## R27 additions (Mi'mar, 18 October 2026, panel round 27)
+
+Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel confirmed the panel's tiebreaks.
+
+- **Stable identity key (R27-GPT-01):** an element is `#id` when it has one, otherwise nearest landmark (header, nav, main, aside, footer, labelled region or form, or a tab panel) + role family + accessible name + link target + order among same-key elements in that landmark. Covered: a menu-open state that inserts a Close button before the links passes (max-height:0 and display:none); a still-collapsed menu with footer copies fails. UNTESTED: a declared state that inserts a same-name, same-target, same-landmark element BEFORE an item shifts its order (fails closed); two pages where ids are reused for different content in different states (an id is trusted as identity).
+- **Tab panels scope their own keys:** added because R26-GPT-02's panel heading otherwise took the order slot of the same-named section heading in another state (found while running the R26 tests on the new key).
+- **Section-local actions (R27-GPT-02):** a section's actions are the action controls in the heading's nearest section or article (when the heading is its first heading), else the following siblings up to the next heading. UNTESTED: sections built from un-nested headings inside deep wrappers, and sections whose actions sit in a separate toolbar outside the section.
+- **Role changes within the action family (R27-GPT-03):** covered for the same nodes switching button → menuitem at 320. UNTESTED: menuitemcheckbox/menuitemradio, and a link becoming a button with a different target (the key includes the link target, so it is a different element and falls back to the swap list).
+- **Source-state reservation (R27-GPT-04):** names the source state already shows at that width are set aside. UNTESTED: a hidden item whose only legitimate cover is a same-named element the source state also shows elsewhere (fails closed).
+- **Real site:** Fannan baseline in English and Arabic, default-only and menu-open, JavaScript on and off; nothing else.
+
 ## R26 additions (Mi'mar, 18 October 2026, panel round 26)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Fadel's R26 root-cause instruction (loss accounting by element identity) applied in place of case-by-case name counting.
