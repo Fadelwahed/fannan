@@ -1,5 +1,24 @@
 # R3 executed verification — 17 October 2026
 
+## R21 executed verification (Mi'mar's box, 18 October 2026, about 4:15 PM UTC+3)
+
+Panel round 21 (5 P2: R21-MIMAR-01, R21-MIMAR-02, R21-GPT-02, R21-GPT-04, R21-GPT-05; P3 R21-GPT-03, R21-GPT-06, R21-GPT-07; GPT only, cross-checked by Mi'mar; `reviews/panel-r21/`), with Fadel's R21 tiebreaks. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 151 PASS, 0 FAIL (R20's 141 + 9 in `tests/panel-r21.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r21/node.log` |
+| same, without deps | 0 | 80 PASS, 0 FAIL, 71 SKIPPED | `test-results/r21/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r21/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 43 PASS / 38 PASS + 5 SKIPPED (`test_r21_sections` added) | `test-results/r21/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=47 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r21/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 145 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r21/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r21/local-fixture.log`). R21 full pre-handoff runs: an image cropped by its frame passes the width screen; a terms line `display:none` at 320 fails it (not shown at this width); a desktop nav moved into a closed `<details>` menu passes with a declared `menu-open` state (0 unresolved) and fails without it; one word of a white one-line caption over a #c8c8c8 patch (1.67:1) stays blocked with the authored PASS `wcag-review` citing the screenshot, while the same caption without the patch resolves; a script-only `results` state that replaces the `description` slot with an approved `results-note` slot placed there is whole-state PASS, and fails `content/js-off` when the deck still places `description` in that state.
+
+**Honest patterns and the real site:** `test-results/r21/R21-honest-patterns.log` (the R18 set and the R19-R21 repro pages, both renderings; backstop counts identical to R20 on every R18-R20 page) and `test-results/r21/R21-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; width screen PASS in both languages, the Arabic page included; with a declared menu-open state too).
+
+Per-finding before/after logs: `test-results/r21/R21-*-{before,after}.log` (before = R21 tests against the 700297d sources, documents included): Chrome 37 of 47 before (10 assertion failures, 0 load errors), 47 of 47 after; docs 13 of 15 / 15 of 15; package `test_r21_sections` and the archive test FAIL before, OK after; fixture fails before at the R21 expectations (assertion), exit 0 after.
+
 ## R20 executed verification (Mi'mar's box, 18 October 2026, about 2:15 PM UTC+3)
 
 Panel round 20 (5 P2: R20-GPT-01, R20-MIMAR-01, R20-GPT-03, R20-GPT-05, R20-GPT-06; P3 R20-GPT-02, R20-GPT-04; GPT only, cross-checked by Mi'mar; `reviews/panel-r20/`), with Mi'mar's clipping tiebreak. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
