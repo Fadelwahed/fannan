@@ -133,8 +133,9 @@ test('R26-GPT-04: real Chrome: carousel slides are identified by element: a flui
 
 test('R26-MIMAR-01 (P3): real Chrome: motion is settled before each width is measured: a slide caught mid-transition is finished, not graded partly clipped, and motion at capture is recorded; an infinite animation is left running (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const html = W('<style>@keyframes spin{to{transform:rotate(360deg)}}</style><div id="sp" style="width:20px;height:20px;background:#555;animation:spin 2s linear infinite"></div><div style="overflow:hidden;width:300px"><div id="t" style="display:flex;width:900px;transition:transform 20s linear"><div style="flex:0 0 300px"><p>Slide one</p></div><div style="flex:0 0 300px"><p>Slide two</p></div><div style="flex:0 0 300px"><p>Slide three</p></div></div></div>', 'requestAnimationFrame(() => requestAnimationFrame(() => { document.getElementById("t").style.transform = "translateX(-300px)"; }));');
-  const { main } = await open(html); await main.waitForTimeout(300);
-  const w = await ws26.screenWidths(main, [1440], null);
+  const { main, probe } = await open(html); await main.waitForTimeout(300);
+  // the gate measures through the isolated probe world, which evaluates fn.toString(): settling must work there too
+  const w = await ws26.screenWidths(probe, [1440], null);
   const r1440 = w.results.find(r => r.width === 1440);
   const infinite = await main.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
   assert.deepEqual({ motion: (r1440.motionAtCapture || []).map(m => m.kind), partly: w.results.flatMap(r => r.clipped.map(c => c.rule)).filter(x => x === 'partly clipped').length, infiniteRunning: infinite >= 1 }, { motion: ['transition'], partly: 0, infiniteRunning: true });

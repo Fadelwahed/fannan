@@ -417,6 +417,8 @@ export function settleMotion() {
   return moving;
 }
 
+const SETTLE_AND_INSPECT = new Function('arg', `const motion = (${settleMotion.toString()})(); const r = (${inspectLayout.toString()})(arg); r.motionAtCapture = motion; return r;`);
+
 export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
 
 // R13 N16: closed shadow roots cannot be reached from page script, so they are counted through the DevTools protocol
@@ -449,7 +451,8 @@ export async function screenWidths(page, widths, expected = null, height = 900) 
       // R26-MIMAR-01 (P3, Fadel): settle motion first, in the same task as the measure (no timer can start a new slide in
       // between): every running finite animation and transition is paused and finished; infinite animations are left
       // alone (the marquee rule grades them). Anything that was moving is recorded as 'motion at capture'.
-      const result = await page.evaluate(`(() => { const motion = (${settleMotion})(); const r = (${inspectLayout})(${JSON.stringify({ reflow: width === REFLOW_WIDTH })}); r.motionAtCapture = motion; return r; })()`);
+      // a real function (Playwright pages and the isolated probe world both evaluate fn.toString() with its argument)
+      const result = await page.evaluate(SETTLE_AND_INSPECT, { reflow: width === REFLOW_WIDTH });
       result.unscannedScopes.push(...closedScopes);
       const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
       results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', rest: !result.horizontalOverflow && result.offscreenLeft.length === 0 && result.unreachable.length === 0 && result.scrolledText.length === 0 && result.unmeasured.length === 0 && result.unscannedScopes.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
