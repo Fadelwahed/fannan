@@ -260,16 +260,16 @@ const photoPng = () => { // a noisy photograph stand-in, 8-bit RGB
 };
 writeFileSync(join(output, 'r19-photo.png'), photoPng());
 const r19 = {};
-const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored, statePageHtml = null, pageBase = original) => {
+const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored, statePageHtml = null, pageBase = original, stateExtra = {}) => {
   writeFileSync(html, pageBase.replace('</head>', `${head}</head>`).replace('</main>', `${extraHtml}</main>${script ? `<script>${script}</script>` : ''}`));
   let extraState = null;
-  if (statePageHtml) { const sp = join(output, `r19-${name}.html`); writeFileSync(sp, statePageHtml); extraState = sp; const h = JSON.parse(JSON.stringify(handoffJson)); h.screens[0].states.push({ state: 'dialog-open', lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash } }); handoffJson = h; }
+  if (statePageHtml) { const sp = join(output, `r19-${name}.html`); writeFileSync(sp, statePageHtml); extraState = sp; const h = JSON.parse(JSON.stringify(handoffJson)); h.screens[0].states.push({ state: 'dialog-open', lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: 'dialog-open' }))]; handoffJson = h; }
   writeFileSync(handoff, JSON.stringify(handoffJson));
   const { result } = runChecker(join(output, `evidence-r19-${name}`), true);
   const st = result.checks.states.find(x => x.state === (extraState ? 'dialog-open' : 'default'));
   const mm = i => [...new Set((i?.mismatches || []).map(m => `${m.check}/${m.source || 'world'}`))].sort();
   return { page: result.checks.integrity?.status, state: st?.integrity?.status, pageChecks: mm(result.checks.integrity), stateChecks: mm(st?.integrity), widths: [result.checks.widths?.pass, st?.widths?.pass],
-    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
+    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], requiresScript: st?.requiresScript ?? null, contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
 };
 r19.hiddenWidths = r19Run('hidden-widths', '<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two</p><p style="flex:1 0 0">Slide three</p></div></div><button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Collapsed answer</p></div>');
 r19.pseudoVeil = r19Run('pseudo-veil', '<div id="r19v" class="r19load"><p>Card under a loading veil</p></div>', 'document.getElementById("r19v").classList.remove("r19load");', '<style>.r19load{position:relative}.r19load::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.8)}</style>');
@@ -281,6 +281,11 @@ r19.heroDark = r19Run('hero-dark', hero19('#222'));
 r19.heroUncited = r19Run('hero-uncited', hero19('#fff'), '', '', { ...authored, manualChecks: authored.manualChecks.map(m => m.id === 'wcag-review' ? { ...m, artifact: brief } : m) });
 r19.dialogState = r19Run('dialog-state', '', '', '', authored, original.replace('</main>', '<dialog id="r19d"><p>Dialog text</p></dialog></main><script>document.getElementById("r19d").showModal();</script>'));
 r19.nonModalState = r19Run('non-modal-state', '', '', '', authored, original.replace('</main>', '<dialog open style="position:absolute;top:0;left:0;margin:0;width:100%;height:100%;background:#fff;border:0"><p>Non-modal panel</p></dialog></main>'));
+// R19b (Mi'mar's tiebreak): the scripted modal state declared requiresScript with its trigger resolves on the scripted
+// rendering alone; the same claim on a state that renders with JavaScript off is an integrity mismatch
+const modal19 = original.replace('</main>', '<dialog id="r19d"><p>Dialog text</p></dialog></main><script>document.getElementById("r19d").showModal();</script>');
+r19.scriptedModal = r19Run('scripted-modal', '', '', '', authored, modal19, original, { requiresScript: true, trigger: 'Start opens the dialog (showModal)' });
+r19.falseScriptClaim = r19Run('false-script-claim', '', '', '', authored, original, original, { requiresScript: true, trigger: 'Start opens the dialog (showModal)' });
 r19.copyNameUncited = r19Run('copy-name-uncited', '', '', '', { ...authored, copySlots: authored.copySlots.map(c => c.id === 'button' ? { ...c, ariaLabel: 'Begin the journey' } : c) }, null, original.replace('<button data-copy-slot="button">Start</button>', '<button data-copy-slot="button" aria-label="Begin the journey">Start</button>'));
 writeFileSync(html, original);
 writeFileSync(handoff, JSON.stringify(authored));
@@ -292,7 +297,9 @@ const r19Want = {
   pseudoVeil: lost19(r19.pseudoVeil, 'textUnreadable/js-off'), peVeil: lost19(r19.peVeil, 'textUnreadable/rendered'), innerLazy: lost19(r19.innerLazy, 'textUnreadable/rendered'),
   heroReviewed: r19.heroReviewed.page === 'PASS' && r19.heroReviewed.axe[0] === true && Array.isArray(r19.heroReviewed.axe[1]) && r19.heroReviewed.axe[1].length === 0 && Array.isArray(r19.heroReviewed.axe[2]) && r19.heroReviewed.axe[2].length === 0,
   heroDark: axeOpen(r19.heroDark), heroUncited: axeOpen(r19.heroUncited),
-  dialogState: r19.dialogState.state === 'PASS' && r19.dialogState.hidden[0] === 3,
+  dialogState: r19.dialogState.state === 'PASS' && r19.dialogState.hidden[0] === 3 && (r19.dialogState.axe[2] || []).includes('color-contrast'),
+  scriptedModal: r19.scriptedModal.state === 'PASS' && r19.scriptedModal.requiresScript?.valid === true && Array.isArray(r19.scriptedModal.axe[2]) && r19.scriptedModal.axe[2].length === 0,
+  falseScriptClaim: r19.falseScriptClaim.state === 'integrity mismatch' && r19.falseScriptClaim.stateChecks.includes('requiresScript/js-off') && r19.falseScriptClaim.requiresScript?.rendersWithoutScript === true,
   nonModalState: r19.nonModalState.state === 'integrity mismatch' && r19.nonModalState.stateChecks.includes('textObscured/rendered'),
   copyNameUncited: r19.copyNameUncited.contract.includes('copy button: ariaLabel absent from cited source'),
 };

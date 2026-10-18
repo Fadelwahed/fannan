@@ -181,3 +181,37 @@ test('R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from 
     visibleRef: await run('<section aria-labelledby="ttl" data-copy-slot="body"><p>Body copy</p></section>', [slot('body', 'Body copy')]),
   }, { hiddenUnapproved: ['accessible name in slot button differs from deck (no ariaLabel approved): Start the service'], hiddenApproved: [], visibleRef: [] });
 }));
+
+test('R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+  if (typeof visibility.requiresScriptCheck !== 'function') return assert.fail('no requiresScriptCheck');
+  const shot = '/evidence/home-en-dialog-open-1440.png', review = { id: 'wcag-review', decision: 'PASS', artifact: shot, note: 'dialog checked on the screenshot' };
+  const modal = W('<p>Background paragraph behind a modal.</p><dialog id="d"><p>Dialog text at full contrast</p></dialog>', 'd.showModal()');
+  const lightModal = W('<p>Background paragraph behind a modal.</p><dialog id="d"><p style="color:#999">Faint dialog text</p></dialog>', 'd.showModal()');
+  const staticPage = W('<p>A state that renders without script.</p>');
+  const incomplete = sel => [{ id: 'color-contrast', nodes: [{ target: [sel] }] }];
+  const run = async (html, declaration, sel, rev = review) => {
+    const on = await measure((await open(html)).probe, { topLayer: declaration.state !== 'default' }), off = await measure((await open(html, false)).probe, { topLayer: declaration.state !== 'default' });
+    const integrityR = { probeWorld: on.vector, jsOff: off.vector }, claim = visibility.requiresScriptCheck({ declaration, integrity: integrityR });
+    const paths = await visibility.contrastPaths((await open(html)).probe, incomplete(sel));
+    const r = visibility.resolveContrastIncomplete({ incomplete: incomplete(sel), paths, integrity: integrityR, review: rev, shots: [shot], scriptOnly: claim.valid });
+    return { valid: claim.valid, rendersWithoutScript: claim.rendersWithoutScript, unresolved: r.unresolved, reason: r.contrastNodes[0]?.reason?.replace(/(\d\.\d)\d:/, '$1:') ?? null };
+  };
+  const dialogState = { state: 'dialog-open', requiresScript: true, trigger: 'click Start (opens the dialog with showModal)' };
+  assert.deepEqual({
+    scripted: await run(modal, dialogState, '#d > p'),
+    notDeclared: await run(modal, { state: 'dialog-open' }, '#d > p'),
+    noTrigger: await run(modal, { state: 'dialog-open', requiresScript: true }, '#d > p'),
+    defaultState: await run(modal, { state: 'default', requiresScript: true, trigger: 'on load' }, '#d > p'),
+    belowAA: await run(lightModal, dialogState, '#d > p'),
+    noReview: await run(modal, dialogState, '#d > p', null),
+    falseClaim: await run(staticPage, dialogState, 'main > p'),
+  }, {
+    scripted: { valid: true, rendersWithoutScript: false, unresolved: [], reason: null },
+    notDeclared: { valid: false, rendersWithoutScript: null, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
+    noTrigger: { valid: false, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
+    defaultState: { valid: false, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'not measured by the visibility backstop in both renderings' },
+    belowAA: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'measured 2.8:1, below 4.5:1' },
+    noReview: { valid: true, rendersWithoutScript: false, unresolved: ['color-contrast'], reason: 'no PASS wcag-review record citing the screenshot' },
+    falseClaim: { valid: false, rendersWithoutScript: true, unresolved: [], reason: null },
+  });
+}));

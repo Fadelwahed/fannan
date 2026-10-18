@@ -125,6 +125,8 @@ export function checkHandoff(h, phase = 'handoff') {
       need(s.states?.find(st => st.state === 'default')?.applicable !== false, `screen ${s.id}: default state must be applicable`);
       for (const st of s.states || []) {
         need((h.languages || []).some(lang => st.lang === lang.lang && st.dir === lang.dir), `screen ${s.id}/${st.state}: undeclared language/direction`);
+        // R19b: `requiresScript: true` is for a non-default state reachable only by script, with its trigger recorded
+        if (st.requiresScript !== undefined) need(st.requiresScript === false || (st.requiresScript === true && st.state !== 'default' && nonempty(st.trigger)), `screen ${s.id}/${st.state}: requiresScript must be a boolean, only on a non-default state, with its trigger recorded`);
         if (st.applicable === false) need(nonempty(st.reason) && nonempty(st.reviewer) && file(st.evidence), `screen ${s.id}/${st.state}: N/A needs reason, reviewer, evidence`);
         else need(file(st.page) && st.frame?.width === 1440 && nonempty(st.frame.version) && file(st.frame.path) && /^[a-f0-9]{64}$/.test(st.frame.sha256 || '') && (file(st.frame?.path) ? sha(st.frame.path) === st.frame.sha256 && pngWidth(st.frame.path) === 1440 : false), `screen ${s.id}/${st.state}: page and hash-checked 1440px PNG required`);
       }

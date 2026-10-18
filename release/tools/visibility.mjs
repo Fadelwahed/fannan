@@ -411,17 +411,33 @@ export async function contrastPaths(page, incomplete) {
   const found = await page.evaluate(visibilityBand, { mode: 'paths', focus: sels.map(s => s ?? ':not(*)') });
   return nodes.map((n, i) => ({ target: n.target, ...(sels[i] && found[i] ? found[i] : { path: null }) }));
 }
-export function resolveContrastIncomplete({ incomplete = [], paths = [], integrity = null, review = null, shots = [] } = {}) {
-  const on = integrity?.probeWorld?.visibility?.byElement, off = integrity?.jsOff?.visibility?.byElement;
+// R19b (Mi'mar's tiebreak): a declared NON-default state reachable only by script (declared `requiresScript: true`, its
+// trigger recorded, and no JavaScript-off rendering of it) resolves on the scripted rendering alone; the same element,
+// AA and review conditions apply. The default state always needs both renderings. `scriptOnly` is true only when the
+// caller has checked the claim (requiresScriptCheck) and the state is not `default`.
+export function resolveContrastIncomplete({ incomplete = [], paths = [], integrity = null, review = null, shots = [], scriptOnly = false } = {}) {
+  const on = integrity?.probeWorld?.visibility?.byElement, off = scriptOnly ? on : integrity?.jsOff?.visibility?.byElement;
   const base = s => String(s || '').split('/').pop();
   const cited = !!review && review.id === 'wcag-review' && review.decision === 'PASS' && shots.filter(Boolean).some(s => review.artifact === s || (base(s) && String(review.note || '').includes(base(s))));
   const nodes = paths.map(p => {
     const a = p.path && on?.[p.path], b = p.path && off?.[p.path], floor = p.large ? AA.large : AA.normal;
     const why = !p.path ? 'element not found by its axe target' : !a || !b ? 'not measured by the visibility backstop in both renderings' : !a.complete || !b.complete ? 'not every line measured uncovered in both renderings' : a.min < floor || b.min < floor ? `measured ${Math.min(a.min, b.min)}:1, below ${floor}:1` : !cited ? 'no PASS wcag-review record citing the screenshot' : null;
-    return { target: p.target, path: p.path, large: !!p.large, scripted: a?.min ?? null, jsOff: b?.min ?? null, floor, resolved: !why, reason: why };
+    return { target: p.target, path: p.path, large: !!p.large, scripted: a?.min ?? null, jsOff: scriptOnly ? null : b?.min ?? null, scriptOnly: !!scriptOnly, floor, resolved: !why, reason: why };
   });
   const others = incomplete.filter(v => v.id !== 'color-contrast').map(v => v.id);
   const contrastOpen = incomplete.some(v => v.id === 'color-contrast') && (!nodes.length || nodes.some(n => !n.resolved));
   const unresolved = [...others, ...(contrastOpen ? ['color-contrast'] : [])];
   return { unresolved, contrastNodes: nodes, pass: unresolved.length === 0 };
+}
+// R19b: is a `requiresScript` claim true? The state renders with JavaScript off when every element the scripted
+// rendering shows (measured text, by composed path) is shown by the JavaScript-off rendering as well; a claim on such a
+// state is false and fails as an integrity mismatch. Without both scans the claim cannot be checked (not valid).
+export function requiresScriptCheck({ declaration = null, integrity = null } = {}) {
+  const claimed = declaration?.requiresScript === true;
+  if (!claimed) return { claimed: false, valid: false, rendersWithoutScript: null };
+  const on = integrity?.probeWorld?.visibility?.byElement, off = integrity?.jsOff?.visibility?.byElement;
+  if (!on || !off) return { claimed, valid: false, rendersWithoutScript: null, reason: 'visibility scans missing' };
+  const shown = Object.keys(on), rendersWithoutScript = shown.length > 0 && shown.every(k => k in off);
+  const nonDefault = declaration.state !== 'default', trigger = typeof declaration.trigger === 'string' && declaration.trigger.trim().length > 0;
+  return { claimed, valid: nonDefault && trigger && !rendersWithoutScript, rendersWithoutScript, onlyScripted: shown.filter(k => !(k in off)).length, reason: !nonDefault ? 'the default state needs both renderings' : !trigger ? 'no trigger recorded' : rendersWithoutScript ? 'the state renders with JavaScript off' : null };
 }

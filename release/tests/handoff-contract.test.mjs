@@ -114,6 +114,13 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     delete h.copySlots[0].variants[0].ariaLabel;
     assert.doesNotMatch(checkHandoff(h).join('\n'), /ariaLabel/);
     delete h.copySlots[0].ariaLabel;
+    // R19b: requiresScript only on a non-default state, with its trigger recorded
+    h.screens[0].states[0].requiresScript = true;
+    assert.match(checkHandoff(h).join('\n'), /requiresScript must be a boolean, only on a non-default state, with its trigger recorded/);
+    h.screens[0].states[0].requiresScript = 'yes';
+    assert.match(checkHandoff(h).join('\n'), /requiresScript must be a boolean/);
+    delete h.screens[0].states[0].requiresScript;
+    assert.doesNotMatch(checkHandoff(h).join('\n'), /requiresScript/);
     h.screens[0].states[1].reviewer = '';
     assert.match(checkHandoff(h).join('\n'), /N\/A needs reason/);
     h.screens[0].states[1].reviewer = 'reviewer-x';
