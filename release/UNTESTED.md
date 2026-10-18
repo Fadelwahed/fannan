@@ -1,5 +1,15 @@
 # R3 checks not established
 
+## R14 additions (Mi'mar, 18 October 2026, panel round 14)
+
+All browser checks below ran in Chrome 155 headless only. Panel round 14 had one reviewer (GPT) and no cross-check; Mi'mar acted as the second Part B reviewer. Scope follows the threat model in `FANNAN-PLAN.md`.
+
+- **Content and contrast (R14-GPT-01/02):** copy slots and headings count as rendered when their text ranges have area (`display: contents`, zero-size boxes); contrast walks open shadow roots and resolves backgrounds through slots and hosts. UNTESTED: text inside closed shadow roots (fails as an unscanned scope in the width screen, not in the contrast diagnostic); backgrounds painted by a slotted element's light-DOM ancestors that the slot's own composed chain does not include.
+- **Width screen (R14-GPT-03/04):** closed shadow roots are counted at each width after a bounded settle (two animation frames or 250 ms); a viewport that cannot scroll vertically (html, or a propagated body, with `overflow: hidden`/`clip`) fails text and media below its bottom edge unless an inner scroller holds them. UNTESTED: a closed root created later than the settle; `position: sticky` content; horizontal reach on a hidden viewport beyond the existing overflow check.
+- **Reduced motion (R14-GPT-05):** the snapshot covers the composed tree with composed-path keys, on the page and every state (executed fixture runs). UNTESTED: motion inside closed shadow roots or frames; motion that only starts after the 700 ms window.
+- **Package (R14-GPT-06):** credential keys anywhere in `tokens.json` (every dict and list) are refused, and the content screen refuses JSON credential keys with real-looking values (8+ characters). Known limit: credentials under keys the list does not name, or values shorter than 8 characters.
+- **Designer process (R14-GPT-07 to 11, R14-MIMAR-01 to 05):** the text and manual-check IDs are present and enforced by tests and the package build; whether a real project's ledger, navigation model, task tests, state and form specifications, feedback log, emphasis check, type measure, colour matrix and per-width grid are good is a reviewer judgment, not machine-checked. No real project was run through them.
+
 ## R13 additions (Mi'mar, 18 October 2026, panel round 13)
 
 All browser checks below ran in Chrome 155 headless only. Scope follows the threat model in `FANNAN-PLAN.md` (honest but possibly sloppy authors; fail closed on what cannot be measured; deliberate obfuscation is a known limit, ENH in future rounds).

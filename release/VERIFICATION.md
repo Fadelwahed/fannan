@@ -1,5 +1,25 @@
 # R3 executed verification — 17 October 2026
 
+## R14 executed verification (Mi'mar's box, 18 October 2026, about 6:55 AM UTC+3)
+
+Panel round 14 (R14-GPT-01 to 11, single reviewer; Mi'mar's own Part B pass added R14-MIMAR-01 to 05; `reviews/panel-r14/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 104 PASS, 0 FAIL, 0 skipped (R13's 94 + 5 in `tests/panel-r14.test.mjs` + 5 in `tests/designer-process.test.mjs`) | `test-results/r14/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 68 PASS, 0 FAIL, 36 SKIPPED (need deps or Chrome) | `test-results/r14/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r14/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r14/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 34 PASS / 30 PASS + 4 SKIPPED | `test-results/r14/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r14/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=38 sh=4 py=4 plus the launcher, 0 failures | `test-results/r14/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r14/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 98 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R13 (it needs Node 22); not a gate | `test-results/r14/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r14/local-fixture.log`, evidence `local-fixture-evidence.json`). In addition to the R12/R13 assertions it runs two shadow-motion checker runs (R14-GPT-05): timer motion in an open shadow root fails reduced motion on the positional page, and on a declared state while the page and the default state pass.
+
+Per-finding before/after logs: `test-results/r14/R14-*-before.log` / `-after.log` (before = R14 tests against the 7fc0d6f sources, documents and runtime JSON included; every before failure is an assertion failure, checked).
+
 ## R13 executed verification (Mi'mar's box, 18 October 2026, about 5:55 AM UTC+3)
 
 Panel round 13 (N01-N21, D1 closed, q1/q2 decided; `reviews/panel-r13/`). The gate's threat model and the review convergence rule are in `FANNAN-PLAN.md` ("Threat model for the pre-handoff gate", "Review convergence rule"); deliberate obfuscation is a known limit listed in `UNTESTED.md`. Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
