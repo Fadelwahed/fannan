@@ -97,6 +97,8 @@ export function checkHandoff(h, phase = 'handoff') {
     need(['ltr', 'rtl'].includes(c.dir) && nonempty(c.lang), `${prefix} language and direction required`);
     // R18-GPT-01: an approved accessible name, when declared (on the slot or a variant), is real copy too
     for (const n of [c.ariaLabel, ...(c.variants || []).map(v => v?.ariaLabel)].filter(x => x !== undefined)) need(nonempty(n) && !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(n) && !filler.test(n), `${prefix} ariaLabel must be real approved copy`);
+    // R19-GPT-06 (P3): and, like the displayed text, it must appear in its cited source (the slot's, or the variant's)
+    for (const [n, src] of [[c.ariaLabel, c.source], ...(c.variants || []).map(v => [v?.ariaLabel, v?.source])]) if (nonempty(n) && file(src?.path)) need(readFileSync(resolve(src.path), 'utf8').includes(n), `${prefix} ariaLabel absent from cited source`);
     if (phase === 'handoff') need(file(c.placementScreenshot), `${prefix} placement screenshot required`);
     if (phase === 'handoff') {
       const targets = (h.screens || []).filter(s => s.id === c.screen).flatMap(s => (s.states || []).filter(st => st.applicable !== false));

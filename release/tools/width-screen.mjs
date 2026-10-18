@@ -64,6 +64,12 @@ export function inspectLayout({ reflow = false } = {}) {
     return { left: left + min - cur, right: right + top - cur, inner: { left, right } };
   };
   const beyond = (e, r) => all.some(d => d !== e && holds.has(d) && within(e, d) && [...(shown(d) && d.getBoundingClientRect().width > 0 ? [d.getBoundingClientRect()] : []), ...contentRects(d)].some(b => b.right > r.right + 1 || b.left < r.left - 1)); // R13 N03: composed ancestry and content
+  const nothingShownCut = (e, r) => {
+    const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;
+    const rects = all.filter(d => d !== e && within(e, d) && isContent(d) && shown(d)).flatMap(contentRects).filter(b => b.width > 0 && b.height > 0);
+    const out = rects.filter(b => b.left < left - 1 || b.right > right + 1 || b.top < top - 1 || b.bottom > bottom + 1);
+    return out.length > 0 && out.every(b => b.right <= left || b.left >= right || b.bottom <= top || b.top >= bottom);
+  };
   // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
   for (const e of all) {
     const c = getComputedStyle(e), r = e.getBoundingClientRect();
@@ -73,6 +79,11 @@ export function inspectLayout({ reflow = false } = {}) {
     const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (clipBox(e) && ['hidden', 'clip'].includes(c.overflowX) && beyond(e, r));
     const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);
     // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.
+    // R19-GPT-01: content clipped to nothing by a hidden/clip box that cannot scroll (a collapsed max-height:0
+    // accordion panel, the inactive slides of an overflow:hidden carousel track) is not displayed, which is the
+    // backstop's textHidden rule, so it is not a clip; the JavaScript-off comparison catches content that only a
+    // script reveals. Displayed content the box cuts partly (a rect that straddles the inner box) still fails.
+    if ((x || y) && nothingShownCut(e, r)) continue;
     if ((x || y)) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });
     const s = scrollerOf(e);
     // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the

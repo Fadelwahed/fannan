@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { deflateSync } from 'node:zlib';
 import { criticRows, manualIds, states } from '../tools/handoff-contract.mjs';
 import { tmpdir } from 'node:os';
 import { fixturePage } from './fixture-page.mjs';
@@ -76,7 +77,7 @@ if (status !== 1 || result.pass || !result.checks.axe || !result.checks.design |
 const shot = join(evidence, 'page-1440.png');
 const hash = createHash('sha256').update(readFileSync(shot)).digest('hex');
 const brief = join(output, 'brief.md'), rules = join(output, 'rules.md'), settings = join(output, 'settings.md'), approved = join(output, 'approval.md');
-writeFileSync(brief, 'Residents need a clear service.\nSpecific service\nA service for residents.\nStart\n');
+writeFileSync(brief, 'Residents need a clear service.\nSpecific service\nA service for residents.\nStart\nStart the service\n'); // R19-GPT-06: the approved accessible name of the R18 copy run is cited too
 writeFileSync(rules, 'Use verified copy.');
 writeFileSync(settings, 'repo-fixture stack-fixture engineer-fixture qa-fixture writer-fixture approver-fixture');
 const frameId = `home/en/default/v1/${hash}`;
@@ -245,6 +246,57 @@ const r18Want = {
   copyUnapprovedName: r18.copyUnapprovedName.copy.some(e => /accessible name in slot button differs from deck \(no ariaLabel approved\): Start the service/.test(e)),
 };
 if (Object.values(r18Want).some(v => !v)) throw Error('R18 full-run expectations failed: ' + JSON.stringify(r18Want));
+// R19 (panel round 19): full pre-handoff runs for the width screen's hidden content (R19-GPT-01), covers the hit test
+// cannot see (R19-GPT-02), lazy content inside an app panel (R19-GPT-04), the colour-contrast incomplete resolver
+// (R19-MIMAR-01), a declared modal-dialog state (R19-MIMAR-02) and the cited accessible name (R19-GPT-06). Results are
+// collected first so a checker without the fixes shows every gap.
+const photoPng = () => { // a noisy photograph stand-in, 8-bit RGB
+  const w = 320, h = 200, raw = Buffer.alloc((w * 3 + 1) * h); let seed = 7; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const o = y * (w * 3 + 1) + 1 + x * 3, base = 90 + 80 * Math.sin(x / 23) * Math.cos(y / 17); for (let c = 0; c < 3; c++) raw[o + c] = Math.max(0, Math.min(255, base + [40, 10, -20][c] + (rnd() - 0.5) * 120)); }
+  const crc = b => { let c = ~0; for (const x of b) { c ^= x; for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1; } return ~c >>> 0; };
+  const chunk = (t, d) => { const len = Buffer.alloc(4); len.writeUInt32BE(d.length); const td = Buffer.concat([Buffer.from(t), d]), c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([len, td, c]); };
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+};
+writeFileSync(join(output, 'r19-photo.png'), photoPng());
+const r19 = {};
+const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored, statePageHtml = null, pageBase = original) => {
+  writeFileSync(html, pageBase.replace('</head>', `${head}</head>`).replace('</main>', `${extraHtml}</main>${script ? `<script>${script}</script>` : ''}`));
+  let extraState = null;
+  if (statePageHtml) { const sp = join(output, `r19-${name}.html`); writeFileSync(sp, statePageHtml); extraState = sp; const h = JSON.parse(JSON.stringify(handoffJson)); h.screens[0].states.push({ state: 'dialog-open', lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash } }); handoffJson = h; }
+  writeFileSync(handoff, JSON.stringify(handoffJson));
+  const { result } = runChecker(join(output, `evidence-r19-${name}`), true);
+  const st = result.checks.states.find(x => x.state === (extraState ? 'dialog-open' : 'default'));
+  const mm = i => [...new Set((i?.mismatches || []).map(m => `${m.check}/${m.source || 'world'}`))].sort();
+  return { page: result.checks.integrity?.status, state: st?.integrity?.status, pageChecks: mm(result.checks.integrity), stateChecks: mm(st?.integrity), widths: [result.checks.widths?.pass, st?.widths?.pass],
+    axe: [result.checks.axe?.pass, result.checks.axe?.unresolvedIncomplete, st?.axeIncompleteUnresolved], hidden: [st?.integrity?.probeWorld?.visibility?.textHidden, st?.integrity?.jsOff?.visibility?.textHidden], contract: (result.checks.contract?.errors || []).filter(e => /copy button/.test(e)) };
+};
+r19.hiddenWidths = r19Run('hidden-widths', '<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%"><p style="flex:1 0 0">Slide one</p><p style="flex:1 0 0">Slide two</p><p style="flex:1 0 0">Slide three</p></div></div><button aria-expanded="false">Questions</button><div style="max-height:0;overflow:hidden"><p>Collapsed answer</p></div>');
+r19.pseudoVeil = r19Run('pseudo-veil', '<div id="r19v" class="r19load"><p>Card under a loading veil</p></div>', 'document.getElementById("r19v").classList.remove("r19load");', '<style>.r19load{position:relative}.r19load::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.8)}</style>');
+r19.peVeil = r19Run('pe-veil', '<div style="position:relative"><p>Under a click-through veil</p><div style="position:absolute;inset:0;background:rgba(255,255,255,.7);pointer-events:none"></div></div>');
+r19.innerLazy = r19Run('inner-lazy', '<div style="height:3000px"></div><div id="r19s" style="height:1px"></div><div id="r19f"></div>', 'new IntersectionObserver(e => { if (e[0].isIntersecting) document.getElementById("r19f").innerHTML = \'<p style="color:#eee">Lazy panel text</p>\'; }, { root: document.querySelector("main") }).observe(document.getElementById("r19s"));', '<style>html,body{height:100%;overflow:hidden}main{height:100%;overflow:auto}</style>');
+const hero19 = colour => '<section style="position:relative;height:360px;color:' + colour + '"><img src="r19-photo.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;background:rgba(0,0,0,.6)"></div><div style="position:relative;padding:48px"><p style="font-size:48px;font-weight:700">Over a photo</p></div></section>';
+r19.heroReviewed = r19Run('hero-reviewed', hero19('#fff'));
+r19.heroDark = r19Run('hero-dark', hero19('#222'));
+r19.heroUncited = r19Run('hero-uncited', hero19('#fff'), '', '', { ...authored, manualChecks: authored.manualChecks.map(m => m.id === 'wcag-review' ? { ...m, artifact: brief } : m) });
+r19.dialogState = r19Run('dialog-state', '', '', '', authored, original.replace('</main>', '<dialog id="r19d"><p>Dialog text</p></dialog></main><script>document.getElementById("r19d").showModal();</script>'));
+r19.nonModalState = r19Run('non-modal-state', '', '', '', authored, original.replace('</main>', '<dialog open style="position:absolute;top:0;left:0;margin:0;width:100%;height:100%;background:#fff;border:0"><p>Non-modal panel</p></dialog></main>'));
+r19.copyNameUncited = r19Run('copy-name-uncited', '', '', '', { ...authored, copySlots: authored.copySlots.map(c => c.id === 'button' ? { ...c, ariaLabel: 'Begin the journey' } : c) }, null, original.replace('<button data-copy-slot="button">Start</button>', '<button data-copy-slot="button" aria-label="Begin the journey">Start</button>'));
+writeFileSync(html, original);
+writeFileSync(handoff, JSON.stringify(authored));
+console.log('R19 fixture runs: ' + JSON.stringify(r19));
+const lost19 = (r, check) => r.page === 'integrity mismatch' && r.state === 'integrity mismatch' && r.pageChecks.includes(check) && r.stateChecks.includes(check);
+const axeOpen = r => r.axe[0] === false && (r.axe[1] || []).includes('color-contrast') && (r.axe[2] || []).includes('color-contrast');
+const r19Want = {
+  hiddenWidths: r19.hiddenWidths.page === 'PASS' && r19.hiddenWidths.state === 'PASS' && r19.hiddenWidths.widths.every(w => w === true) && r19.hiddenWidths.hidden.every(n => n === 3),
+  pseudoVeil: lost19(r19.pseudoVeil, 'textUnreadable/js-off'), peVeil: lost19(r19.peVeil, 'textUnreadable/rendered'), innerLazy: lost19(r19.innerLazy, 'textUnreadable/rendered'),
+  heroReviewed: r19.heroReviewed.page === 'PASS' && r19.heroReviewed.axe[0] === true && Array.isArray(r19.heroReviewed.axe[1]) && r19.heroReviewed.axe[1].length === 0 && Array.isArray(r19.heroReviewed.axe[2]) && r19.heroReviewed.axe[2].length === 0,
+  heroDark: axeOpen(r19.heroDark), heroUncited: axeOpen(r19.heroUncited),
+  dialogState: r19.dialogState.state === 'PASS' && r19.dialogState.hidden[0] === 3,
+  nonModalState: r19.nonModalState.state === 'integrity mismatch' && r19.nonModalState.stateChecks.includes('textObscured/rendered'),
+  copyNameUncited: r19.copyNameUncited.contract.includes('copy button: ariaLabel absent from cited source'),
+};
+if (Object.values(r19Want).some(v => !v)) throw Error('R19 full-run expectations failed: ' + JSON.stringify(r19Want));
 writeFileSync(handoff, JSON.stringify(authored));
 writeFileSync(html, readFileSync(html, 'utf8').replace('A service for residents.', 'Invented service copy.'));
 const evidence3 = join(output, 'evidence-mutated');

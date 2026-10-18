@@ -105,6 +105,15 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
     h.copySlots[0].text = 'Invented headline.';
     assert.match(checkHandoff(h).join('\n'), /absent from cited source/);
     h.copySlots[0].text = 'Specific headline.';
+    // R19-GPT-06 (P3): an approved accessible name must appear in its cited source as well (slot and variant)
+    h.copySlots[0].ariaLabel = 'Invented accessible name';
+    assert.match(checkHandoff(h).join('\n'), /copy hero: ariaLabel absent from cited source/);
+    h.copySlots[0].ariaLabel = 'A service for residents.';
+    h.copySlots[0].variants[0].ariaLabel = 'Invented variant name';
+    assert.match(checkHandoff(h).join('\n'), /copy hero: ariaLabel absent from cited source/);
+    delete h.copySlots[0].variants[0].ariaLabel;
+    assert.doesNotMatch(checkHandoff(h).join('\n'), /ariaLabel/);
+    delete h.copySlots[0].ariaLabel;
     h.screens[0].states[1].reviewer = '';
     assert.match(checkHandoff(h).join('\n'), /N\/A needs reason/);
     h.screens[0].states[1].reviewer = 'reviewer-x';

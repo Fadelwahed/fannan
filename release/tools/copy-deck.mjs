@@ -30,7 +30,10 @@ export function copyDeckProbe({ slots, lang, dir }) {
   // R18-GPT-01: the displayed native strings and the accessible name are approved separately; a name identical to a
   // displayed string of the same element is one string (counted once). R18-GPT-02: an option shows its label.
   const shownNative = e => [...new Set([e.tagName === 'INPUT' && ['submit', 'reset', 'button'].includes(e.type) ? e.value : '', /^(INPUT|TEXTAREA)$/.test(e.tagName) ? e.getAttribute('placeholder') : '', ...(e.tagName === 'SELECT' ? [...e.options].map(o => o.label) : [])].map(norm).filter(Boolean))];
-  const nameOf = e => { const n = norm(e.getAttribute('aria-label')); return n && !shownNative(e).includes(n) ? n : ''; };
+  // R19-GPT-05 (P3): a name taken by aria-labelledby from a hidden or undisplayed element is announced but never shown,
+  // so it is an accessible name to approve (references to displayed text are displayed copy, checked above)
+  const hiddenRefName = e => { const ids = norm(e.getAttribute('aria-labelledby')).split(' ').filter(Boolean); if (!ids.length) return ''; const root = e.getRootNode(), refs = ids.map(id => root.getElementById?.(id) ?? document.getElementById(id)).filter(Boolean); return refs.some(r => !r.checkVisibility()) ? norm(refs.map(r => r.textContent).join(' ')) : ''; };
+  const nameOf = e => { const n = hiddenRefName(e) || norm(e.getAttribute('aria-label')); return n && !shownNative(e).includes(n) ? n : ''; };
   for (const e of elements) {
     const style = getComputedStyle(e), box = e.getBoundingClientRect();
     if (style.display === 'none' || style.visibility === 'hidden' || !(box.width > 0 && box.height > 0)) continue;

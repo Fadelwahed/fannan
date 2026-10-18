@@ -80,7 +80,7 @@ export async function visibilitySettle({ y = null, waitMs }) {
 // Browser side (probe world). Mode 'reset' clears the target registry; mode 'focus' scrolls one line of a target into
 // view (scrollable ancestors, then the document); mode 'restore' puts every scrolled ancestor back and scrolls to the
 // top; otherwise (measure) it returns every target of the document with its lines and their state in this viewport.
-export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCover = 0.9, focus = null } = {}) {
+export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCover = 0.9, focus = null, topLayer = false } = {}) {
   const R = mode === 'reset' || !globalThis.__fannanVisibility ? (globalThis.__fannanVisibility = { ids: new WeakMap(), byId: new Map(), next: 0, scrolled: new Map() }) : globalThis.__fannanVisibility;
   if (mode === 'reset') return { ok: true };
   const vw = innerWidth, vh = innerHeight;
@@ -158,8 +158,14 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
     return out;
   };
   if (mode === 'restore') { for (const [el, [l, t]] of R.scrolled) { el.scrollLeft = l; el.scrollTop = t; } R.scrolled.clear(); R.byId.clear(); scrollTo(0, 0); return { ok: true }; }
+  // R18 path of an element in the composed tree (the same in every rendering of the same markup)
+  const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = up(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
+  if (mode === 'paths') return focus.map(sel => { try { const el = document.querySelector(sel); if (!el) return null; const s = getComputedStyle(el), size = parseFloat(s.fontSize), large = size >= 24 || (size >= 18.66 && Number(s.fontWeight) >= 700); return { path: pathOf(el), large }; } catch { return null; } });
+  // R19-GPT-04: the inner scrollports (elements that scroll), so the end of each can be collected again
+  if (mode === 'scrollers') { const out = []; const walk = root => { for (const el of root.querySelectorAll('*')) { const s = getComputedStyle(el); if (el !== document.body && scrollerOf(el, s) && el.checkVisibility()) { R.sids ||= new WeakMap(); let id = R.sids.get(el); if (!id) { id = 's' + R.next++; R.sids.set(el, id); } R.byId.set(id, { kind: 'scroller', el }); out.push(id); } if (el.shadowRoot) walk(el.shadowRoot); } }; walk(document); return out; }
   if (mode === 'focus') {
     const t = R.byId.get(focus.id); if (!t || !(t.node || t.el).isConnected) return { ok: false };
+    if (t.kind === 'scroller') { const a = t.el; if (!R.scrolled.has(a)) R.scrolled.set(a, [a.scrollLeft, a.scrollTop]); a.scrollTop = a.scrollHeight; a.scrollLeft = getComputedStyle(a).direction === 'rtl' ? -a.scrollWidth : a.scrollWidth; return { ok: true }; }
     const line = () => linesOf(t)[focus.line];
     if (!line()) return { ok: false };
     for (const c of clippers(t.kind === 'text' ? t.el : up(t.el) || t.el).out) {
@@ -181,7 +187,9 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   const paintsAt = (e, x, yy) => {
     const s = getComputedStyle(e), op = opacityOf(e);
     if (s.visibility !== 'visible' || op < 0.02) return null;
-    if (e instanceof SVGElement || /^(IMG|VIDEO|CANVAS|IFRAME|OBJECT|EMBED|INPUT|TEXTAREA|SELECT|PICTURE)$/.test(e.tagName)) return op >= opaqueCover ? 'opaque' : 'translucent';
+    // R19-GPT-03 (P3): an SVG is mostly transparent shapes (a decorative wave): its pixels decide, not its box
+    if (e instanceof SVGElement) return 'translucent';
+    if (/^(IMG|VIDEO|CANVAS|IFRAME|OBJECT|EMBED|INPUT|TEXTAREA|SELECT|PICTURE)$/.test(e.tagName)) return op >= opaqueCover ? 'opaque' : 'translucent';
     const bg = parse(s.backgroundColor);
     if (bg && bg[3] * op >= opaqueCover && s.backgroundImage === 'none') return 'opaque';
     if ((bg && bg[3] * op > 0.02) || s.backgroundImage !== 'none' || (s.backdropFilter && s.backdropFilter !== 'none')) return 'translucent';
@@ -190,9 +198,42 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   const coverAt = (target, x, yy) => {
     const roots = [document]; for (let r = target.getRootNode(); r instanceof ShadowRoot; r = r.host.getRootNode()) roots.splice(1, 0, r);
     let found = null;
-    for (const root of roots) for (const e of root.elementsFromPoint(x, yy)) { if (e === target || inside(target, e) || inside(e, target)) break; const p = paintsAt(e, x, yy); if (p === 'opaque') return 'opaque'; if (p) found = 'translucent'; }
+    for (const root of roots) for (const e of root.elementsFromPoint(x, yy)) { if (e === target || inside(target, e) || inside(e, target)) break; if (popovers.some(pp => inside(pp, e) && !inside(pp, target))) return 'toplayer'; const p = paintsAt(e, x, yy); if (p === 'opaque') return 'opaque'; if (p) found = 'translucent'; }
     return found;
   };
+  // R19-GPT-02: covers the hit test cannot see. (1) An absolutely or fixed positioned ::before/::after with a
+  // background on the text's element or an ancestor (a loading veil, a scrim); (2) a positioned pointer-events:none
+  // layer that paints. Behind-the-text layers (negative z-index) are skipped. A line under such a layer is compositing
+  // the CSS pass cannot resolve, so its pixels grade it at 3:1. A gradient pseudo-element on a clipping ancestor is the
+  // fade of a truncated text block: the lines under it are cut text, not displayed (like a clipped line).
+  const px = v => /px$/.test(v || '') ? parseFloat(v) : null;
+  const paints = s => { const bg = parse(s.backgroundColor); return (bg && bg[3] * Number(s.opacity) > 0.02) || s.backgroundImage !== 'none' || (s.backdropFilter && s.backdropFilter !== 'none'); };
+  const behind = s => /^-\d/.test(s.zIndex);
+  const pseudoCache = new Map();
+  const pseudoOf = a => {
+    if (pseudoCache.has(a)) return pseudoCache.get(a);
+    const out = [];
+    for (const which of ['::before', '::after']) {
+      const s = getComputedStyle(a, which);
+      if (['none', 'normal'].includes(s.content) || !['absolute', 'fixed'].includes(s.position) || !paints(s) || behind(s) || s.display === 'none' || s.visibility !== 'visible') continue;
+      const R0 = s.position === 'fixed' ? { left: 0, top: 0, right: vw, bottom: vh } : a.getBoundingClientRect();
+      const t = px(s.top), b = px(s.bottom), l = px(s.left), r = px(s.right), w = px(s.width), h = px(s.height);
+      const top = t !== null ? R0.top + t : b !== null && h !== null ? R0.bottom - b - h : R0.top, bottom = b !== null ? R0.bottom - b : t !== null && h !== null ? top + h : R0.bottom;
+      const left = l !== null ? R0.left + l : r !== null && w !== null ? R0.right - r - w : R0.left, right = r !== null ? R0.right - r : l !== null && w !== null ? left + w : R0.right;
+      const ac = getComputedStyle(a), clipsOwn = !(ac.overflowX === 'visible' && ac.overflowY === 'visible');
+      out.push({ rect: { left, top, right, bottom }, fade: clipsOwn && /gradient/.test(s.backgroundImage) });
+    }
+    pseudoCache.set(a, out); return out;
+  };
+  const layers = []; // positioned pointer-events:none layers that paint
+  { const walk = root => { for (const e of root.querySelectorAll('*')) { const s = getComputedStyle(e); if (s.pointerEvents === 'none' && ['absolute', 'fixed'].includes(s.position) && !behind(s) && s.visibility === 'visible' && (paints(s) || /^(IMG|VIDEO|CANVAS|PICTURE)$/.test(e.tagName))) layers.push({ el: e, rect: e.getBoundingClientRect() }); if (e.shadowRoot) walk(e.shadowRoot); } }; walk(document); }
+  const within = (r, x, yy) => x >= r.left && x <= r.right && yy >= r.top && yy <= r.bottom;
+  const hiddenLayerAt = (el, x, yy) => { let fade = false, cover = false; for (let a = el; a && a !== document.documentElement; a = up(a)) for (const p of pseudoOf(a)) if (within(p.rect, x, yy)) { if (p.fade) fade = true; else cover = true; } for (const L of layers) if (!inside(L.el, el) && !inside(el, L.el) && within(L.rect, x, yy)) cover = true; return fade ? 'fade' : cover ? 'cover' : null; };
+  // R19-MIMAR-02 (declared states only): with a modal dialog open (or an element with aria-modal="true" shown) the
+  // rest of the page is inert and is not graded; page text covered by an open popover (the top layer) is not graded;
+  // the dialog's and the popover's own text are. A non-modal <dialog open> is not inert: text it covers stays graded.
+  const modal = topLayer ? (document.querySelector(':modal') || [...document.querySelectorAll('[aria-modal="true"]')].find(e => e.checkVisibility())) : null;
+  const popovers = topLayer ? [...document.querySelectorAll(':popover-open')] : [];
   const sw = document.documentElement.scrollWidth, docH = document.documentElement.scrollHeight;
   const view = { left: 0, top: 0, right: vw, bottom: vh };
   const targets = [];
@@ -201,6 +242,8 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
     const cl = clippers(t.kind === 'text' ? el : up(el) || el);
     if (inactive(el)) { targets.push({ ...rec, status: 'inactive', lines: [] }); continue; }
     if (cl.tiny || assistiveOf(el)) { targets.push({ ...rec, status: 'assistive', lines: [] }); continue; }
+    if (modal && !inside(modal, el)) { targets.push({ ...rec, status: 'inert', lines: [] }); continue; }
+    if (t.kind !== 'name') { const fs = getComputedStyle(el), size = parseFloat(fs.fontSize); rec.path = pathOf(el); rec.large = size >= 24 || (size >= 18.66 && Number(fs.fontWeight) >= 700); }
     const v = contrast?.get(el); rec.known = t.kind !== 'name' && !!v?.known; if (v?.known) rec.predicted = v.ratio;
     const lines = linesOf(t).map(b => {
       const all = cl.out.reduce((acc, c) => acc && cut(acc, c.r), b), fixed = cl.out.filter(c => !c.scroller).reduce((acc, c) => acc && cut(acc, c.r), b);
@@ -212,8 +255,11 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
       if (!seen || !(fraction >= 0.999 || ((all.bottom - all.top > vh / 2 || all.right - all.left > vw * 0.9) && fraction >= 0.5))) return { status: 'pending' };
       const my = (seen.top + seen.bottom) / 2, pts = [0.2, 0.5, 0.8].map(f => [seen.left + (seen.right - seen.left) * f, my]).filter(([x, yy]) => x >= 0 && x < vw && yy >= 0 && yy < vh);
       const covers = pts.map(([x, yy]) => coverAt(el, x, yy)), opaque = covers.filter(c => c === 'opaque').length, any = covers.filter(Boolean).length;
+      if (covers.includes('toplayer')) return { status: 'hidden', reason: 'under an open popover' };
+      const unseen = pts.map(([x, yy]) => hiddenLayerAt(el, x, yy)), fades = unseen.filter(u => u === 'fade').length, veiled = unseen.filter(Boolean).length;
+      if (pts.length && fades * 2 > pts.length) return { status: 'hidden', reason: 'under the fade of a truncated block' };
       const h = seen.bottom - seen.top;
-      return { status: 'measured', points: pts.length, opaque, obscured: pts.length > 0 && opaque * 2 > pts.length, composited: pts.length > 0 && any * 2 > pts.length, rect: [seen.left, seen.top + h * 0.2, seen.right, seen.bottom - h * 0.2], score: 1 - Math.abs(my - vh / 2) / vh };
+      return { status: 'measured', points: pts.length, opaque, obscured: pts.length > 0 && opaque * 2 > pts.length, composited: pts.length > 0 && (any + veiled) * 2 > pts.length, rect: [seen.left, seen.top + h * 0.2, seen.right, seen.bottom - h * 0.2], score: 1 - Math.abs(my - vh / 2) / vh };
     });
     targets.push({ ...rec, status: 'shown', lines });
   }
@@ -267,7 +313,7 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
   const o = { ...VISIBILITY, ...opts }, started = Date.now();
   const T = new Map(); // id -> { kind, text, status, known, predicted, lines: [{ status, best, tries }], present }
   let steps = 0, unsettled = 0, seenAt = 0;
-  const band = { minTextHeight: o.minTextHeight, opaqueCover: o.opaqueCover };
+  const band = { minTextHeight: o.minTextHeight, opaqueCover: o.opaqueCover, topLayer: !!o.topLayer };
   const look = async y => {
     const at = await pg.evaluate(visibilitySettle, { y, waitMs: o.animationWaitMs });
     if (!at.settled) unsettled++;
@@ -277,11 +323,11 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
     steps++; seenAt++;
     for (const t of b.targets) {
       const r = T.get(t.id) || { lines: [] }; T.set(t.id, r);
-      Object.assign(r, { kind: t.kind, text: t.text, status: t.status, known: t.known, predicted: t.predicted, present: seenAt });
+      Object.assign(r, { kind: t.kind, text: t.text, status: t.status, known: t.known, predicted: t.predicted, path: t.path, large: t.large, present: seenAt });
       r.lines.length = t.lines.length;
       t.lines.forEach((l, i) => {
         const cur = r.lines[i] || (r.lines[i] = { tries: 0 });
-        if (l.status !== 'measured') { if (!cur.best) cur.status = l.status; return; }
+        if (l.status !== 'measured') { if (!cur.best) { cur.status = l.status; cur.reason = l.reason; } return; }
         if (t.kind !== 'name') l.pixel = pixelContrast(img, [l.rect], scale, o);
         l.known = t.known && !l.composited; delete l.rect;
         l.bad = l.obscured || (l.pixel && (l.pixel.ratio === null || (l.known ? l.pixel.peak < o.paintFloor : l.pixel.ratio < (l.pixel.ink < o.smallInk ? o.smallFloor : o.floor))));
@@ -312,7 +358,12 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
       // the page bottom, collected again: content added on scroll (lazy sections, infinite lists) is found here
       const known = new Set(T.keys()), height = last.docH;
       last = await look(Math.max(0, last.docH - last.vh));
-      growing = last.targets.some(t => !known.has(t.id)) || last.docH > height || !!next();
+      // R19-GPT-04: and the end of every inner scrollport (an app panel whose IntersectionObserver adds content)
+      const ends = await pg.evaluate(visibilityBand, { mode: 'scrollers' });
+      let added = last.targets.some(t => !known.has(t.id));
+      for (const id of ends) { if (steps >= o.maxSteps) { stopped = true; break; } if ((await pg.evaluate(visibilityBand, { mode: 'focus', focus: { id } })).ok) { const b = await look(null); added ||= b.targets.some(t => !known.has(t.id)); last = b; } }
+      if (stopped) break;
+      growing = added || last.docH > height || !!next();
       if (!growing) break;
     }
   } finally { await pg.evaluate(visibilityBand, { mode: 'restore' }); }
@@ -322,6 +373,7 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
     if (r.present !== seenAt) continue; // no longer in the document (a removed preloader)
     const base = { id, kind: r.kind, text: r.text };
     if (r.status === 'inactive' || r.status === 'assistive') { assistive++; continue; }
+    if (r.status === 'inert') { hidden++; continue; } // R19-MIMAR-02: behind an open modal on a declared state
     const ls = r.lines.filter(Boolean), m = ls.filter(l => l.best).map(l => l.best);
     const ob = m.find(l => l.obscured), un = m.find(l => !l.obscured && l.bad && l.pixel?.ratio !== null), tiny = ls.some(l => !l.best && l.status === 'tiny');
     const open = ls.filter(l => !l.best && !['hidden', 'tiny'].includes(l.status)), nopx = m.find(l => l.pixel && l.pixel.ratio === null);
@@ -333,5 +385,43 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
     else measured++;
   }
   if (growing) { unmeasured++; items.push({ problem: 'unmeasured', reason: `content still added after ${o.maxPasses} passes over the page` }); }
-  return { textMeasured: measured, textObscured: obscured, textUnreadable: unreadable, textUnmeasured: unmeasured, textHidden: hidden, textAssistive: assistive, steps, passes: passes + 1, unsettledSteps: unsettled, ms: Date.now() - started, items: items.slice(0, o.maxItems), itemsTotal: items.length, method: `target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under ${o.paintFloor}:1) where the CSS pass resolved the colours, readability (90th-percentile ink under ${o.floor}:1) where it could not` };
+  // R19-MIMAR-01: per element (composed path): the lowest measured pixel readability ratio over its lines and whether
+  // every line was measured uncovered, for resolving an automated colour-contrast incomplete result
+  const byElement = {};
+  for (const [, r] of T) {
+    if (r.present !== seenAt || !r.path || r.status !== 'shown') continue;
+    const ls = r.lines.filter(Boolean), m = ls.map(l => l.best), e = byElement[r.path] || (byElement[r.path] = { min: Infinity, complete: true, large: !!r.large });
+    e.complete &&= ls.length > 0 && m.every(b => b && !b.obscured && b.pixel && b.pixel.ratio !== null);
+    for (const b of m) if (b?.pixel?.ratio != null) e.min = Math.min(e.min, b.pixel.ratio);
+  }
+  for (const e of Object.values(byElement)) if (!Number.isFinite(e.min)) { e.min = null; e.complete = false; }
+  return { textMeasured: measured, textObscured: obscured, textUnreadable: unreadable, textUnmeasured: unmeasured, textHidden: hidden, textAssistive: assistive, byElement, steps, passes: passes + 1, unsettledSteps: unsettled, ms: Date.now() - started, items: items.slice(0, o.maxItems), itemsTotal: items.length, method: `target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under ${o.paintFloor}:1) where the CSS pass resolved the colours, readability (90th-percentile ink under ${o.floor}:1) where it could not` };
+}
+
+// R19-MIMAR-01: an automated colour-contrast "incomplete" result (axe could not resolve the colours: text over a photo,
+// a gradient or a scrim) is resolved only when (1) the backstop measured that exact element (the same composed path)
+// with every line uncovered and at or above the AA ratio for its size (4.5:1, or 3:1 for large text) in BOTH the scripted
+// and the JavaScript-off rendering, and (2) a PASS `wcag-review` manual record for the same screen, language and state
+// cites the screenshot (its artifact is the state's frame or the evidence screenshot, or its note names one of them).
+// Every other incomplete rule, and any node that fails one condition, stays blocking.
+export const AA = { normal: 4.5, large: 3 };
+export async function contrastPaths(page, incomplete) {
+  const nodes = (incomplete || []).filter(v => v.id === 'color-contrast').flatMap(v => v.nodes || []);
+  const sels = nodes.map(n => Array.isArray(n.target) && n.target.length === 1 && typeof n.target[0] === 'string' ? n.target[0] : null);
+  const found = await page.evaluate(visibilityBand, { mode: 'paths', focus: sels.map(s => s ?? ':not(*)') });
+  return nodes.map((n, i) => ({ target: n.target, ...(sels[i] && found[i] ? found[i] : { path: null }) }));
+}
+export function resolveContrastIncomplete({ incomplete = [], paths = [], integrity = null, review = null, shots = [] } = {}) {
+  const on = integrity?.probeWorld?.visibility?.byElement, off = integrity?.jsOff?.visibility?.byElement;
+  const base = s => String(s || '').split('/').pop();
+  const cited = !!review && review.id === 'wcag-review' && review.decision === 'PASS' && shots.filter(Boolean).some(s => review.artifact === s || (base(s) && String(review.note || '').includes(base(s))));
+  const nodes = paths.map(p => {
+    const a = p.path && on?.[p.path], b = p.path && off?.[p.path], floor = p.large ? AA.large : AA.normal;
+    const why = !p.path ? 'element not found by its axe target' : !a || !b ? 'not measured by the visibility backstop in both renderings' : !a.complete || !b.complete ? 'not every line measured uncovered in both renderings' : a.min < floor || b.min < floor ? `measured ${Math.min(a.min, b.min)}:1, below ${floor}:1` : !cited ? 'no PASS wcag-review record citing the screenshot' : null;
+    return { target: p.target, path: p.path, large: !!p.large, scripted: a?.min ?? null, jsOff: b?.min ?? null, floor, resolved: !why, reason: why };
+  });
+  const others = incomplete.filter(v => v.id !== 'color-contrast').map(v => v.id);
+  const contrastOpen = incomplete.some(v => v.id === 'color-contrast') && (!nodes.length || nodes.some(n => !n.resolved));
+  const unresolved = [...others, ...(contrastOpen ? ['color-contrast'] : [])];
+  return { unresolved, contrastNodes: nodes, pass: unresolved.length === 0 };
 }
