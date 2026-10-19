@@ -1,4 +1,4 @@
-# Grok handoff — independent Fannan R3 review
+# Grok handoff — independent Fannan review (R3 onward)
 
 You are collaborating with Codex on the final Fannan UI/UX design-bot plan and package.
 
@@ -8,11 +8,15 @@ Repository: https://github.com/Fadelwahed/fannan (private). Branch: main. Read t
 
 Improve and verify the complete plan/package against ORIGINAL-ASSIGNMENT.md. Deliver all seven required outputs, preserve all rules, fix confirmed defects, and distinguish local test evidence from live-host readiness. R3 is unfinished; R2 is the last packaged baseline. Do not label the current working tree final or approved.
 
-## Division of work
+## Division of work (updated 17 October 2026, 6:00 AM Gaza time, by Fadel)
 
-- Codex owns implementation: tools, tests, runtime config, skills, plan, corrected findings ledger, final manifest, combined Markdown and ZIP.
-- You own independent review and reconciliation of source/host evidence. Do not edit Codex-owned files or push changes to main. If Git is available, put only your report on a separate grok-review branch at reviews/GROK-R3-<short-reviewed-SHA>.md; otherwise return the complete report to Fadel. No live changes are authorized.
-- Do not wait for Codex to finish before reviewing the baseline and preparing concrete checks. Mark findings as provisional until you recheck the updated commit. A previous PASS never transfers to changed bytes.
+This replaces the earlier split, in which Codex implemented and Grok only reviewed.
+
+- **Implementer: Mi'mar (Grok bot designer) only.** Mi'mar implements every fix: tools, tests, runtime config, skills, plan, findings ledger, manifest, combined Markdown and ZIP. Work happens only on `mimar-*` branches (for example `mimar-r4-fixes`), one commit per finding, each with a test that fails before and passes after. Mi'mar writes `reviews/MIMAR-R<n>-changes-<short-sha>.md` for each round.
+- **Reviewers only list findings: Codex (Codex CLI on Fadel's Mac), Argon (Gemini app), Opus 5.5 (Claude app) and Mi'mar's own independent review.** A reviewer reports findings with file:line, evidence and the exact fix needed, as `reviews/<REVIEWER>-R<n>-<short-reviewed-SHA>.md` on a review branch (Grok uses `grok-review`) or returned to Fadel. Reviewers do not edit implementation files, do not push to `main` or any `mimar-*` branch, and do not open pull requests.
+- **Fadel alone merges to `main`.** No one else pushes or force-pushes `main`. Existing `reviews/GROK-*` and `reviews/CODEX-*` files are historical records and are never edited.
+- No live changes are authorized by any review or implementation round. Installation still needs Amin's review of the final digest and Fadel's written yes in Fannan's own chat.
+- Mark findings as provisional until they are rechecked on the updated commit. A previous PASS never transfers to changed bytes.
 
 ## Read in order
 
