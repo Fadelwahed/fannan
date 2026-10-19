@@ -1,0 +1,5 @@
+TEST-ONLY fixture evidence: /tmp/fannan-browser-fixture-XXXX
+designmd-to-sd: wrote /tmp/fannan-browser-fixture-XXXX/design-output/test/tokens.json (colors, rounded, spacing, breakpoints, typography, components)
+CSS variables written: /tmp/fannan-browser-fixture-XXXX/design-output/test/variables.css
+pre-handoff-check: browser version 155.0.8059.84 does not match reviewed pin undefined
+node:fs:440

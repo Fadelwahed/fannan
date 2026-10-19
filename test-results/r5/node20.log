@@ -1,0 +1,179 @@
+v20.19.2
+TAP version 13
+# Subtest: checker detector call leaves executable selection to the pinned launcher
+ok 1 - checker detector call leaves executable selection to the pinned launcher
+  ---
+  duration_ms: 3.934617
+  ...
+# Subtest: checker verifies browser before launch and records checked identity and runtime version
+ok 2 - checker verifies browser before launch and records checked identity and runtime version
+  ---
+  duration_ms: 2.574311
+  ...
+# Subtest: R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+ok 3 - R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+  ---
+  duration_ms: 1.126567
+  ...
+# Subtest: flags English and Arabic clichés and three-part headlines, not body lists
+ok 4 - flags English and Arabic clichés and three-part headlines, not body lists
+  ---
+  duration_ms: 9.777916
+  ...
+# Subtest: dependency inventory rejects a changed package and wrong ledger
+ok 5 - dependency inventory rejects a changed package and wrong ledger
+  ---
+  duration_ms: 7.326955
+  ...
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 6 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 3.581786
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 7 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 9.778317
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+ok 8 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 1.340558
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 9 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 74.953776
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 10 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 1.466993
+  ...
+# Subtest: OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+ok 11 - OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+  ---
+  duration_ms: 19.253067
+  ...
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+ok 12 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 46.840693
+  ...
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 13 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 2.243914
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 14 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 14.136661
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 15 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.369101
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 16 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.271918
+  ...
+# Subtest: R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+ok 17 - R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+  ---
+  duration_ms: 5.864503
+  ...
+# Subtest: OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+ok 18 - OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+  ---
+  duration_ms: 1.753914
+  ...
+# Subtest: browser only serves bytes from selected project
+ok 19 - browser only serves bytes from selected project
+  ---
+  duration_ms: 6.820301
+  ...
+# Subtest: OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+ok 20 - OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+  ---
+  duration_ms: 1.843464
+  ...
+# Subtest: OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only)
+ok 21 - OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only)
+  ---
+  duration_ms: 1518.141919
+  ...
+# Subtest: shared token validation rejects malformed values and incompatible references
+ok 22 - shared token validation rejects malformed values and incompatible references
+  ---
+  duration_ms: 12.247042
+  ...
+# Subtest: CSS build rejects hand-edited malformed token JSON before dependencies or writes
+not ok 23 - CSS build rejects hand-edited malformed token JSON before dependencies or writes
+  ---
+  duration_ms: 168.720798
+  location: '<scratch>/release/tests/token-validation.test.mjs:61:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /invalid dimension value/. Input:
+    
+    'Node 22.12+ required\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    Node 22.12+ required
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/token-validation.test.mjs:77:14)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: token conversion validates types, dimensions and references before writing
+not ok 24 - token conversion validates types, dimensions and references before writing
+  ---
+  duration_ms: 4719.922875
+  location: '<scratch>/release/tests/token-validation.test.mjs:83:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Node 22.12+ required
+    
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/token-validation.test.mjs:144:12)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+ok 25 - OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+  ---
+  duration_ms: 0.469112
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 23
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5248.698315

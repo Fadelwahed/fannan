@@ -1,0 +1,13 @@
+# before (eb2d540 focus-screen.mjs, no settle)
+staticShadowNoOutline          focusVisible= false  expected= false
+backgroundOnlyStrong           focusVisible= true   expected= true
+noIndicator                    focusVisible= false  expected= false
+defaultUA                      focusVisible= true   expected= true
+animatedAncestorNoIndicator    focusVisible= false  expected= false
+transition2s                   focusVisible= false  expected= true
+transition150                  focusVisible= true   expected= true
+outlineTransition              focusVisible= true   expected= true
+colorTiny                      focusVisible= true   expected= false
+wrapperFocusWithin             focusVisible= true   expected= true
+pseudoRing                     focusVisible= true   expected= true
+lightGrayBg                    focusVisible= true   expected= weak (<3:1)

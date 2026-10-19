@@ -1,0 +1,9 @@
+test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first (__main__.RegistryPinTests.test_cli_accepts_registry_option_and_refuses_a_wrong_pin_first) ... ok
+test_packaging_doc_names_both_read_only_files_and_the_pin_option (__main__.RegistryPinTests.test_packaging_doc_names_both_read_only_files_and_the_pin_option) ... ok
+test_registry_pin_must_match_an_external_value (__main__.RegistryPinTests.test_registry_pin_must_match_an_external_value) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.116s
+
+OK
+exit=0

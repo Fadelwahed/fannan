@@ -1,0 +1,16 @@
+# after (CODEX-R2-01 fix)
+staticShadowNoOutline          focusVisible= false  expected= false
+backgroundOnlyStrong           focusVisible= true   expected= true
+noIndicator                    focusVisible= false  expected= false
+defaultUA                      focusVisible= true   expected= true
+animatedAncestorNoIndicator    focusVisible= false  expected= false
+transition2s                   focusVisible= true   expected= true
+transition150                  focusVisible= true   expected= true
+outlineTransition              focusVisible= true   expected= true
+colorTiny                      focusVisible= false  expected= false
+wrapperFocusWithin             focusVisible= true   expected= true
+pseudoRing                     focusVisible= true   expected= true
+transparentRing                focusVisible= false  expected= false
+transparentOutline             focusVisible= false  expected= false
+blueOutline                    focusVisible= true   expected= true
+lightGrayBg                    focusVisible= false  expected= weak (<3:1)

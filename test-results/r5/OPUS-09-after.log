@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 1 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 3.744943
+  type: 'test'
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 2 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 3.643731
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+ok 3 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 0.761604
+  type: 'test'
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 4 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 71.928655
+  type: 'test'
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 5 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 0.868135
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+ok 6 - OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+  ---
+  duration_ms: 6.158926
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5080.926495

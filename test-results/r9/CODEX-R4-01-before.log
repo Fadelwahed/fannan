@@ -1,0 +1,80 @@
+test_bad_start_preserves_outputs (test_package_r3.BuildOrderTests.test_bad_start_preserves_outputs) ... ERROR
+test_build_lists_archive_paths_once (test_package_r3.BuildOrderTests.test_build_lists_archive_paths_once) ... ERROR
+test_cache_in_input_preserves_outputs (test_package_r3.BuildOrderTests.test_cache_in_input_preserves_outputs) ... FAIL
+test_missing_archive_input_preserves_outputs (test_package_r3.BuildOrderTests.test_missing_archive_input_preserves_outputs) ... ERROR
+test_symlink_in_release_preserves_outputs (test_package_r3.BuildOrderTests.test_symlink_in_release_preserves_outputs) ... FAIL
+
+======================================================================
+ERROR: test_bad_start_preserves_outputs (test_package_r3.BuildOrderTests.test_bad_start_preserves_outputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 198, in test_bad_start_preserves_outputs
+    self.run_build(damage)
+    ~~~~~~~~~~~~~~^^^^^^^^
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 175, in run_build
+    package.build('9ee1ca6')
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/workspace/fannan-mimar-wt/scripts/package-r3.py", line 154, in build
+    entry.external_attr = (stat.S_IFREG | stat.S_IMODE(path.stat().st_mode)) << 16
+                                                       ~~~~~~~~~^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 517, in stat
+    return os.stat(self, follow_symlinks=follow_symlinks)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmpd65ucr9d/CLOUD-HANDOFF.md'
+
+======================================================================
+ERROR: test_build_lists_archive_paths_once (test_package_r3.BuildOrderTests.test_build_lists_archive_paths_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 204, in test_build_lists_archive_paths_once
+    self.assertLess(body.index('archive_paths()'), body.index('write_bytes('))
+                                                   ~~~~~~~~~~^^^^^^^^^^^^^^^^
+ValueError: substring not found
+
+======================================================================
+ERROR: test_missing_archive_input_preserves_outputs (test_package_r3.BuildOrderTests.test_missing_archive_input_preserves_outputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 191, in test_missing_archive_input_preserves_outputs
+    self.run_build(lambda root: None)  # ORIGINAL-ASSIGNMENT.md and the other named inputs are absent
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 175, in run_build
+    package.build('9ee1ca6')
+    ~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/workspace/fannan-mimar-wt/scripts/package-r3.py", line 154, in build
+    entry.external_attr = (stat.S_IFREG | stat.S_IMODE(path.stat().st_mode)) << 16
+                                                       ~~~~~~~~~^^
+  File "/usr/lib/python3.13/pathlib/_local.py", line 517, in stat
+    return os.stat(self, follow_symlinks=follow_symlinks)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/tmp/tmp67d6e7te/CLOUD-HANDOFF.md'
+
+======================================================================
+FAIL: test_cache_in_input_preserves_outputs (test_package_r3.BuildOrderTests.test_cache_in_input_preserves_outputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 188, in test_cache_in_input_preserves_outputs
+    self.run_build(damage)
+    ~~~~~~~~~~~~~~^^^^^^^^
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 179, in run_build
+    self.assertEqual((root / name).read_bytes(), before[name], name + ' was changed by a rejected build')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'regenerated' != b'previous FANNAN-REWRITE.md' : FANNAN-REWRITE.md was changed by a rejected build
+
+======================================================================
+FAIL: test_symlink_in_release_preserves_outputs (test_package_r3.BuildOrderTests.test_symlink_in_release_preserves_outputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 183, in test_symlink_in_release_preserves_outputs
+    self.run_build(lambda root: (root / 'release/link').symlink_to(root / 'input/brief.md'))
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/fannan-mimar-wt/scripts/test_package_r3.py", line 179, in run_build
+    self.assertEqual((root / name).read_bytes(), before[name], name + ' was changed by a rejected build')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: b'regenerated' != b'previous FANNAN-REWRITE.md' : FANNAN-REWRITE.md was changed by a rejected build
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.011s
+
+FAILED (failures=2, errors=3)
+exit 1

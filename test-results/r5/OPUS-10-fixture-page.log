@@ -1,0 +1,4 @@
+# OPUS-R2-10: spacingProbe on the bundled fixture page (box Chrome 155, test-only, unpinned; 1440x900)
+{"spacingScale":[],"spacingOffScale":[{"value":"32px","property":"paddingTop","example":"main"},{"value":"21.44px","property":"marginTop","example":"h1"},{"value":"16px","property":"marginTop","example":"p"},{"value":"1px","property":"paddingTop","example":"button"},{"value":"6px","property":"paddingRight","example":"button"}]}
+# The fixture page links no --spacing-* tokens and keeps UA default margins/button padding, so at handoff it would now fail the design check (threshold 0).
+# End-to-end local-fixture.mjs run: BLOCKED before probes at both c661547 and R5 ('browser version 155.0.8059.84 does not match reviewed pin undefined'); pre-existing, not caused by R5.

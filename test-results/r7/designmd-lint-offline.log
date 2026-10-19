@@ -1,0 +1,13 @@
+# design.md lint, offline (unshare -rn), pinned test-only deps
+$ design.md lint input/fannan-review-pack/example-DESIGN.md
+{"errors": 0, "warnings": 1, "infos": 1}
+exit=0
+$ design.md lint test-results/local-fixture/design-output/test/fixture-DESIGN.md
+{"errors": 0, "warnings": 2, "infos": 1}
+exit=0
+$ design.md lint test-results/r5/OPUS-04-sample-DESIGN.md
+{"errors": 0, "warnings": 0, "infos": 3}
+exit=0
+input/fannan-review-pack/example-DESIGN.md: convert rc=0 build rc=0
+test-results/local-fixture/design-output/test/fixture-DESIGN.md: convert rc=0 build rc=0
+test-results/r5/OPUS-04-sample-DESIGN.md: convert rc=0 build rc=0

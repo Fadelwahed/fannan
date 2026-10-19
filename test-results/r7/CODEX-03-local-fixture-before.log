@@ -1,0 +1,18 @@
+TEST-ONLY fixture evidence: /tmp/fannan-browser-fixture-XXXX
+designmd-to-sd: wrote /tmp/fannan-browser-fixture-XXXX/design-output/test/tokens.json (colors, rounded, spacing, breakpoints, typography, components)
+CSS variables written: /tmp/fannan-browser-fixture-XXXX/design-output/test/variables.css
+{"pass":false,"lint":true,"axe":[],"custom22":true,"reducedMotion":true,"impeccable":{"ran":false,"exit":4,"pass":false,"note":"detect did not run or gave no parseable output"}}
+impeccable (Fannan launcher): detect path outside project output
+file:///workspace/fannan-mimar-wt/release/tests/zz-before-fixture.mjs:45
+  if (result.checks.impeccable?.exit !== 3 || result.checks.impeccable.ran !== false || !r.stderr.split('\n').includes(missingBinary)) throw Error(`expected launcher exit 3 "${missingBinary}"; got exit ${result.checks.impeccable?.exit}: ${r.stderr.trim().split('\n').filter(l => l.includes('impeccable')).join(' | ')}`);
+                                                                                                                                             ^
+
+Error: expected launcher exit 3 "impeccable (Fannan launcher): pinned binary missing; no download fallback"; got exit 4: impeccable (Fannan launcher): detect path outside project output
+    at runChecker (file:///workspace/fannan-mimar-wt/release/tests/zz-before-fixture.mjs:45:142)
+    at file:///workspace/fannan-mimar-wt/release/tests/zz-before-fixture.mjs:74:26
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.3
+exit 1

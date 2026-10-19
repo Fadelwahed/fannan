@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 1 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 1.23111
+  type: 'test'
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 2 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 2.492704
+  type: 'test'
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 3 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.222447
+  type: 'test'
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 4 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.27311
+  type: 'test'
+  ...
+# Subtest: R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+ok 5 - R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+  ---
+  duration_ms: 4.039797
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+ok 6 - OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+  ---
+  duration_ms: 0.235377
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+ok 7 - ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+  ---
+  duration_ms: 0.619374
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+ok 8 - ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+  ---
+  duration_ms: 0.271381
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 71.638161

@@ -1,0 +1,272 @@
+TAP version 13
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 1 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 1.57673
+  type: 'test'
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 2 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 3.164669
+  type: 'test'
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 3 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.233591
+  type: 'test'
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 4 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.387637
+  type: 'test'
+  ...
+# Subtest: R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+ok 5 - R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+  ---
+  duration_ms: 5.765451
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+ok 6 - OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+  ---
+  duration_ms: 0.340146
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+not ok 7 - ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+  ---
+  duration_ms: 1.744662
+  type: 'test'
+  location: '/workspace/fannan-mimar-wt/release/tests/host-trust.test.mjs:74:1'
+  failureType: 'testCodeFailure'
+  error: 'a symlinked root is refused before realpath, not after'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  error: 'unprotected path: /tmp/fannan-browser-kss9EF/chrome-154'
+  stack: |-
+    assertProtectedMetadata (file:///workspace/fannan-mimar-wt/release/tools/executable-trust.mjs:10:71)
+    assertProtectedPath (file:///workspace/fannan-mimar-wt/release/tools/executable-trust.mjs:18:5)
+    supportTreeDigest (file:///workspace/fannan-mimar-wt/release/tools/executable-trust.mjs:42:25)
+    file:///workspace/fannan-mimar-wt/release/tests/host-trust.test.mjs:79:25
+    getActual (node:assert:609:5)
+    Function.throws (node:assert:757:24)
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/host-trust.test.mjs:79:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+  operator: 'throws'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/host-trust.test.mjs:79:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+not ok 8 - ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+  ---
+  duration_ms: 0.854552
+  type: 'test'
+  location: '/workspace/fannan-mimar-wt/release/tests/host-trust.test.mjs:86:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /if \(protectedStorage\) throw Error\(`browser support symlink forbidden/. Input:
+    
+    "import { readFileSync, lstatSync, realpathSync, readdirSync, readlinkSync } from 'node:fs';\n" +
+      "import { createHash } from 'node:crypto';\n" +
+      "import { isAbsolute, dirname, join, sep, posix } from 'node:path';\n" +
+      "import { fileURLToPath } from 'node:url';\n" +
+      '\n' +
+      "const sha = bytes => createHash('sha256').update(bytes).digest('hex');\n" +
+      'const here = dirname(fileURLToPath(import.meta.url));\n' +
+      '\n' +
+      'export function assertProtectedMetadata(st, path, file = false) {\n' +
+      '  if (st.isSymbolicLink() || st.uid !== 0 || (st.mode & 0o022)) throw Error(`unprotected path: ${path}`);\n' +
+      '  if (file && (st.mode & 0o222)) throw Error(`protected file must be read-only: ${path}`);\n' +
+      '  if (file ? !st.isFile() : !st.isDirectory()) throw Error(`protected path has wrong type: ${path}`);\n' +
+      '}\n' +
+      '\n' +
+      'export function assertProtectedPath(path, file = false) {\n' +
+      "  if (!isAbsolute(path)) throw Error('protected path must be absolute');\n" +
+      '  for (let at = path; ; at = dirname(at)) {\n' +
+      '    assertProtectedMetadata(lstatSync(at), at, at === path && file);\n' +
+      '    if (at === dirname(at)) break;\n' +
+      '  }\n' +
+      '}\n' +
+      '\n' +
+      'export function verifyExecutable(pin, protectedStorage = false) {\n' +
+      "  if (!pin?.sha256 || !/^[a-f0-9]{64}$/.test(pin.sha256)) throw Error('executable pin missing');\n" +
+      "  if (!isAbsolute(pin.path)) throw Error('executable path must be absolute');\n" +
+      "  if (lstatSync(pin.path).isSymbolicLink()) throw Error('executable path is a symlink');\n" +
+      "  if (pin.path !== realpathSync(pin.path)) throw Error('executable path must be canonical without symlink or traversal');\n" +
+      '  if (protectedStorage) {\n' +
+      '    assertProtectedPath(pin.path, true);\n' +
+      "    if (!(lstatSync(pin.path).mode & 0o111)) throw Error('protected executable is not executable');\n" +
+      '  }\n' +
+      "  else if (!lstatSync(pin.path).isFile()) throw Error('executable path is not a file');\n" +
+      '  const actual = sha(readFileSync(pin.path));\n' +
+      "  if (actual !== pin.sha256) throw Error('executable hash mismatch');\n" +
+      '  return { path: pin.path, sha256: actual, version: pin.version };\n' +
+      '}\n' +
+      '\n' +
+      '// R4-4: hash the whole browser directory (libraries, .pak, ICU data, helpers), not only the executable.\n' +
+      '// Same entry format as verify-deps inventoryDigest; symlinks must stay inside the tree.\n' +
+      'export function supportTreeDigest(root, protectedStorage = false) {\n' +
+      '  root = realpathSync(root);\n' +
+      '  if (protectedStorage) assertProtectedPath(root);\n' +
+      '  const entries = [];\n' +
+      "  (function walk(dir, prefix = '') {\n" +
+      '    for (const name of readdirSync(dir).sort()) {\n' +
+      '      const path = join(dir, name), rel = prefix ? `${prefix}/${name}` : name, st = lstatSync(path);\n' +
+      '      if (st.isDirectory()) { if (protectedStorage) assertProtectedPath(path); entries.push(`d ${rel}`); walk(path, rel); }\n' +
+      '      else if (st.isFile()) { if (protectedStorage) assertProtectedPath(path, true); entries.push(`f ${rel} ${sha(readFileSync(path))}`); }\n' +
+      '      else if (st.isSymbolicLink()) {\n' +
+      '        const target = readlinkSync(path), resolved = realpathSync(path);\n' +
+      '        if (resolved !== root && !resolved.startsWith(root + sep)) throw Error(`browser support symlink escapes tree: ${rel}`);\n' +
+      '        entries.push(`l ${rel} ${target}`);\n' +
+      '      } else throw Error(`unsupported browser support entry: ${rel}`);\n' +
+      '    }\n' +
+      '  })(root);\n' +
+      "  return sha(entries.join('\\n') + '\\n');\n" +
+      '}\n' +
+      '\n' +
+      'export function verifyBrowserPin(pin, protectedStorage = true) {\n' +
+      "  if (!pin?.version) throw Error('browser pin missing version');\n" +
+      "  if (!/^[a-f0-9]{64}$/.test(pin.supportTreeSha256 ?? '')) throw Error('browser support tree pin missing');\n" +
+      '  const identity = verifyExecutable(pin, protectedStorage);\n' +
+      '  const supportTreeSha256 = supportTreeDigest(dirname(pin.path), protectedStorage);\n' +
+      "  if (supportTreeSha256 !== pin.supportTreeSha256) throw Error('browser support tree mismatch');\n" +
+      '  return { ...identity, supportTreeSha256 };\n' +
+      '}\n' +
+      '\n' +
+      "// OPUS-R2-06: the support tree is the executable's own directory, so the browser must sit in its own directory\n" +
+      "// under /opt/fannan/bin, never directly in it, and the path must be absolute and normalised (no '..').\n" +
+      'export function assertBrowserPinLocation(path) {\n' +
+      "  if (typeof path !== 'string' || !path.startsWith('/opt/fannan/bin/') || posix.normalize(path) !== path) throw Error('browser pin missing protected path or version');\n" +
+      "  if (dirname(path) === '/opt/fannan/bin') throw Error('browser must live in its own directory under /opt/fannan/bin/');\n" +
+      '}\n' +
+      '\n' +
+      'export function verifiedBrowser() {\n' +
+      "  for (const name of ['CHROME_PATH', 'PUPPETEER_EXECUTABLE_PATH'])\n" +
+      '    if (process.env[name]) throw Error(`${name} browser override is forbidden`);\n' +
+      "  const pin = JSON.parse(readFileSync(join(here, '../runtime/browser-trust.json'), 'utf8'));\n" +
+      "  if (pin.status !== 'reviewed') throw Error('browser pin blocked: reviewed target-host executable identity missing');\n" +
+      "  if (!pin.version) throw Error('browser pin missing protected path or version');\n" +
+      '  assertBrowserPinLocation(pin.path);\n' +
+      '  return verifyBrowserPin(pin, true);\n' +
+      '}\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { readFileSync, lstatSync, realpathSync, readdirSync, readlinkSync } from 'node:fs';
+    import { createHash } from 'node:crypto';
+    import { isAbsolute, dirname, join, sep, posix } from 'node:path';
+    import { fileURLToPath } from 'node:url';
+    
+    const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+    const here = dirname(fileURLToPath(import.meta.url));
+    
+    export function assertProtectedMetadata(st, path, file = false) {
+      if (st.isSymbolicLink() || st.uid !== 0 || (st.mode & 0o022)) throw Error(`unprotected path: ${path}`);
+      if (file && (st.mode & 0o222)) throw Error(`protected file must be read-only: ${path}`);
+      if (file ? !st.isFile() : !st.isDirectory()) throw Error(`protected path has wrong type: ${path}`);
+    }
+    
+    export function assertProtectedPath(path, file = false) {
+      if (!isAbsolute(path)) throw Error('protected path must be absolute');
+      for (let at = path; ; at = dirname(at)) {
+        assertProtectedMetadata(lstatSync(at), at, at === path && file);
+        if (at === dirname(at)) break;
+      }
+    }
+    
+    export function verifyExecutable(pin, protectedStorage = false) {
+      if (!pin?.sha256 || !/^[a-f0-9]{64}$/.test(pin.sha256)) throw Error('executable pin missing');
+      if (!isAbsolute(pin.path)) throw Error('executable path must be absolute');
+      if (lstatSync(pin.path).isSymbolicLink()) throw Error('executable path is a symlink');
+      if (pin.path !== realpathSync(pin.path)) throw Error('executable path must be canonical without symlink or traversal');
+      if (protectedStorage) {
+        assertProtectedPath(pin.path, true);
+        if (!(lstatSync(pin.path).mode & 0o111)) throw Error('protected executable is not executable');
+      }
+      else if (!lstatSync(pin.path).isFile()) throw Error('executable path is not a file');
+      const actual = sha(readFileSync(pin.path));
+      if (actual !== pin.sha256) throw Error('executable hash mismatch');
+      return { path: pin.path, sha256: actual, version: pin.version };
+    }
+    
+    // R4-4: hash the whole browser directory (libraries, .pak, ICU data, helpers), not only the executable.
+    // Same entry format as verify-deps inventoryDigest; symlinks must stay inside the tree.
+    export function supportTreeDigest(root, protectedStorage = false) {
+      root = realpathSync(root);
+      if (protectedStorage) assertProtectedPath(root);
+      const entries = [];
+      (function walk(dir, prefix = '') {
+        for (const name of readdirSync(dir).sort()) {
+          const path = join(dir, name), rel = prefix ? `${prefix}/${name}` : name, st = lstatSync(path);
+          if (st.isDirectory()) { if (protectedStorage) assertProtectedPath(path); entries.push(`d ${rel}`); walk(path, rel); }
+          else if (st.isFile()) { if (protectedStorage) assertProtectedPath(path, true); entries.push(`f ${rel} ${sha(readFileSync(path))}`); }
+          else if (st.isSymbolicLink()) {
+            const target = readlinkSync(path), resolved = realpathSync(path);
+            if (resolved !== root && !resolved.startsWith(root + sep)) throw Error(`browser support symlink escapes tree: ${rel}`);
+            entries.push(`l ${rel} ${target}`);
+          } else throw Error(`unsupported browser support entry: ${rel}`);
+        }
+      })(root);
+      return sha(entries.join('\n') + '\n');
+    }
+    
+    export function verifyBrowserPin(pin, protectedStorage = true) {
+      if (!pin?.version) throw Error('browser pin missing version');
+      if (!/^[a-f0-9]{64}$/.test(pin.supportTreeSha256 ?? '')) throw Error('browser support tree pin missing');
+      const identity = verifyExecutable(pin, protectedStorage);
+      const supportTreeSha256 = supportTreeDigest(dirname(pin.path), protectedStorage);
+      if (supportTreeSha256 !== pin.supportTreeSha256) throw Error('browser support tree mismatch');
+      return { ...identity, supportTreeSha256 };
+    }
+    
+    // OPUS-R2-06: the support tree is the executable's own directory, so the browser must sit in its own directory
+    // under /opt/fannan/bin, never directly in it, and the path must be absolute and normalised (no '..').
+    export function assertBrowserPinLocation(path) {
+      if (typeof path !== 'string' || !path.startsWith('/opt/fannan/bin/') || posix.normalize(path) !== path) throw Error('browser pin missing protected path or version');
+      if (dirname(path) === '/opt/fannan/bin') throw Error('browser must live in its own directory under /opt/fannan/bin/');
+    }
+    
+    export function verifiedBrowser() {
+      for (const name of ['CHROME_PATH', 'PUPPETEER_EXECUTABLE_PATH'])
+        if (process.env[name]) throw Error(`${name} browser override is forbidden`);
+      const pin = JSON.parse(readFileSync(join(here, '../runtime/browser-trust.json'), 'utf8'));
+      if (pin.status !== 'reviewed') throw Error('browser pin blocked: reviewed target-host executable identity missing');
+      if (!pin.version) throw Error('browser pin missing protected path or version');
+      assertBrowserPinLocation(pin.path);
+      return verifyBrowserPin(pin, true);
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/fannan-mimar-wt/release/tests/host-trust.test.mjs:88:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 6
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 97.892992
