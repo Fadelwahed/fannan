@@ -240,7 +240,32 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   // R19-MIMAR-02 (declared states only): with a modal dialog open (or an element with aria-modal="true" shown) the
   // rest of the page is inert and is not graded; page text covered by an open popover (the top layer) is not graded;
   // the dialog's and the popover's own text are. A non-modal <dialog open> is not inert: text it covers stays graded.
-  const modal = topLayer ? (document.querySelector(':modal') || [...document.querySelectorAll('[aria-modal="true"]')].find(e => e.checkVisibility())) : null;
+  // R32-M-08: discover :modal across open shadow roots (match width-screen); aria-modal alone is a last-resort light-DOM fallback
+  let modal = null;
+  if (topLayer) {
+    const modals = [];
+    const walkModal = root => {
+      let list = []; try { list = [...root.querySelectorAll('dialog')]; } catch { list = []; }
+      for (const d of list) { try { if (d.matches(':modal')) modals.push(d); } catch {} }
+      for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walkModal(el.shadowRoot);
+    };
+    try { if (document.documentElement) walkModal(document); } catch {}
+    if (modals.length) {
+      const selfHit = [];
+      for (const d of modals) {
+        const r = d.getBoundingClientRect();
+        const left = Math.max(r.left, 0), top = Math.max(r.top, 0), right = Math.min(r.right, vw), bottom = Math.min(r.bottom, vh);
+        if (!(right > left && bottom > top)) continue;
+        const x = (left + right) / 2, y = (top + bottom) / 2;
+        let hit = document.elementFromPoint(x, y);
+        for (let k = 0; hit?.shadowRoot && k < 20; k++) { const n = hit.shadowRoot.elementFromPoint(x, y); if (!n || n === hit) break; hit = n; }
+        let inside = false; for (let a = hit; a; a = up(a)) if (a === d) { inside = true; break; }
+        if (inside) selfHit.push(d);
+      }
+      modal = selfHit.length ? selfHit[selfHit.length - 1] : null;
+    }
+    if (!modal) modal = [...document.querySelectorAll('[aria-modal="true"]')].find(e => e.checkVisibility()) || null;
+  }
   const popovers = topLayer ? [...document.querySelectorAll(':popover-open')] : [];
   const sw = document.documentElement.scrollWidth, docH = document.documentElement.scrollHeight;
   const view = { left: 0, top: 0, right: vw, bottom: vh };
