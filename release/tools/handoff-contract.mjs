@@ -3,9 +3,22 @@ import { resolve, basename } from 'node:path';
 import { createHash } from 'node:crypto';
 import { inflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { INTEGRITY_CHECKS } from './integrity.mjs';
 
-export const qualityChecks = JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8'));
+// OPUS-R2-09: the focus-state contrast is configurable upward only; 3:1 (WCAG 1.4.11 AA) is the floor.
+export function validateQualityChecks(config) {
+  const value = config?.thresholds?.focusStateContrast;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 3) throw Error('quality-checks focusStateContrast must be a number >= 3 (WCAG 1.4.11 floor)');
+  return config;
+}
+export const qualityChecks = validateQualityChecks(JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8')));
 export const manualIds = qualityChecks.manualIds;
+// R15 B3/B4: in the wireframe phase accent-area and palette are always DEFERRED (never passed in grayscale); the
+// Step 6 craft checks may be PASS or DEFERRED. Every other manual ID needs PASS in both phases.
+export const wireframeDeferred = qualityChecks.wireframeDeferred;
+export const wireframeDeferrable = qualityChecks.wireframeDeferrable;
+// R15 B4: the critic-rubric row IDs; the final round needs one passing, evidenced check per row.
+export const criticRows = qualityChecks.criticRows;
 export const states = ['default', 'hover', 'focus', 'disabled', 'empty', 'loading', 'error'];
 const filler = /\b(unlock|seamless|empower|cutting[ -]edge|revolutionary|game[ -]changing)\b/i;
 const ref = x => typeof x === 'string' && /:\d+(?:-\d+)?$/.test(x);
@@ -37,6 +50,11 @@ const cited = source => {
   return line > 0 && line <= readFileSync(resolve(source.path), 'utf8').split(/\r?\n/).length;
 };
 
+// R20-GPT-06: screen types. `marketing` and `landing` screens carry promotional hero copy and claims of distinction,
+// which the generic-hero swap test grades; `functional` screens (settings, dashboards, forms, task flows) use clear
+// task headings and are not graded by it.
+export const SCREEN_TYPES = ['marketing', 'landing', 'functional'];
+export const HERO_TYPES = ['marketing', 'landing'];
 export function checkHandoff(h, phase = 'handoff') {
   const errors = [];
   const need = (ok, message) => { if (!ok) errors.push(message); };
@@ -51,6 +69,17 @@ export function checkHandoff(h, phase = 'handoff') {
   }
   need(nonempty(h?.pointOfView?.idea) && h.pointOfView?.briefRefs?.length > 0 && h.pointOfView.briefRefs.every(ref), 'point of view needs an idea and brief line refs');
   need(Array.isArray(h?.screens) && h.screens.length > 0, 'screens required');
+  const widths = h?.settings?.desktopWidths; // R8, ported from codex/fannan-r3-review 2733317
+  need(Array.isArray(widths) && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length, 'settings.desktopWidths must declare unique positive integer CSS widths including the canonical 1440');
+  // R11 panel D1 (decisions B and C): optional review records for 2D reflow candidates and expected JavaScript-off differences.
+  const roleNames = [h?.settings?.roles?.qaGate, h?.settings?.roles?.approver].filter(nonempty);
+  // R12 M09/M20/M21: every review record is scoped to one declared screen/state/lang and names its reviewer, so a
+  // reason recorded for one state never excuses another, and nothing is excused by a reason alone.
+  const declaredScope = x => (h?.screens || []).some(sc => sc.id === x?.screen && (sc.states || []).some(st => st.state === x?.state && st.lang === x?.lang && st.applicable !== false));
+  const scoped = (list, key, ok) => Array.isArray(list) && list.every(x => ok(x) && nonempty(x?.reason) && declaredScope(x)) && new Set(list.map(x => [x?.[key], x?.screen, x?.state, x?.lang].join('|'))).size === list.length;
+  if (h?.reflowExceptions !== undefined) need(scoped(h.reflowExceptions, 'id', x => nonempty(x?.id) && roleNames.includes(x?.reviewer)), 'reflowExceptions entries need an element id, a declared screen/state/lang, a reason and a qaGate or approver reviewer, once per scope');
+  if (h?.jsOffDifferences !== undefined) need(scoped(h.jsOffDifferences, 'check', x => INTEGRITY_CHECKS.includes(x?.check) && roleNames.includes(x?.reviewer)), `jsOffDifferences entries need a check (${INTEGRITY_CHECKS.join(', ')}), a declared screen/state/lang, a reason and a qaGate or approver reviewer, once per check and scope`);
+  if (h?.spacingExceptions !== undefined) need(scoped(h.spacingExceptions, 'id', x => nonempty(x?.id) && nonempty(h?.settings?.roles?.approver) && x?.reviewer === h.settings.roles.approver), 'spacingExceptions entries need an element id, a declared screen/state/lang, a reason and the approver as reviewer, once per scope');
   need(Array.isArray(h?.copySlots) && h.copySlots.length > 0, 'copy slots required before layout');
   need(new Set((h?.copySlots || []).map(c => c.id)).size === (h?.copySlots || []).length, 'copy slot IDs must be unique');
   need(new Set((h?.facts || []).map(f => f.id)).size === (h?.facts || []).length, 'fact IDs must be unique');
@@ -71,6 +100,10 @@ export function checkHandoff(h, phase = 'handoff') {
     need(['claim', 'interface'].includes(c.kind) && (c.kind !== 'claim' || c.claimRefs?.length > 0), `${prefix} claim copy needs confirmed fact refs`);
     if (file(c.source?.path) && nonempty(c.text) && !(phase === 'wireframe' && /\[placeholder\]/i.test(c.text))) need(readFileSync(resolve(c.source.path), 'utf8').includes(c.text), `${prefix} text absent from cited source`);
     need(['ltr', 'rtl'].includes(c.dir) && nonempty(c.lang), `${prefix} language and direction required`);
+    // R18-GPT-01: an approved accessible name, when declared (on the slot or a variant), is real copy too
+    for (const n of [c.ariaLabel, ...(c.variants || []).map(v => v?.ariaLabel)].filter(x => x !== undefined)) need(nonempty(n) && !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(n) && !filler.test(n), `${prefix} ariaLabel must be real approved copy`);
+    // R19-GPT-06 (P3): and, like the displayed text, it must appear in its cited source (the slot's, or the variant's)
+    for (const [n, src] of [[c.ariaLabel, c.source], ...(c.variants || []).map(v => [v?.ariaLabel, v?.source])]) if (nonempty(n) && file(src?.path)) need(readFileSync(resolve(src.path), 'utf8').includes(n), `${prefix} ariaLabel absent from cited source`);
     if (phase === 'handoff') need(file(c.placementScreenshot), `${prefix} placement screenshot required`);
     if (phase === 'handoff') {
       const targets = (h.screens || []).filter(s => s.id === c.screen).flatMap(s => (s.states || []).filter(st => st.applicable !== false));
@@ -84,7 +117,13 @@ export function checkHandoff(h, phase = 'handoff') {
   }
   for (const s of h?.screens || []) {
     need(nonempty(s.id) && nonempty(s.page), `screen ${s.id || '?'}: id/page required`);
+    need(file(s.page), `screen ${s.id || '?'}: page must exist`); // R16-GPT-03
+    // R16-GPT-03: a wireframe PASS covers every declared screen and locale: each declared language/direction has an
+    // applicable default rendering with an existing page (frames and approval are not required yet).
+    if (phase === 'wireframe') for (const lang of h.languages || []) need((s.states || []).some(st => st.state === 'default' && st.lang === lang.lang && st.dir === lang.dir && st.applicable !== false && file(st.page)), `screen ${s.id}: wireframe rendering for ${lang.lang}/${lang.dir} needs a default state with an existing page`);
     need(Array.isArray(s.headingOutline) && s.headingOutline.filter(x => x.level === 1).length === 1, `screen ${s.id}: exactly one H1 in outline`);
+    // R20-GPT-06: each screen declares its type; the generic-hero swap test applies to marketing and landing screens
+    need(SCREEN_TYPES.includes(s.type), `screen ${s.id}: type must be one of ${SCREEN_TYPES.join(', ')}`);
     need(nonempty(s.seoIntent) && nonempty(s.schemaIntent), `screen ${s.id}: SEO/schema intent required`);
     need(Array.isArray(s.images) && s.images.every(i => nonempty(i.id) && nonempty(i.altIntent) && typeof i.alt === 'string'), `screen ${s.id}: image alt text and intent required`);
     need(Array.isArray(s.actions) && s.actions.every(a => nonempty(a.id) && nonempty(a.label) && !/^(click here|learn more|read more)$/i.test(a.label)), `screen ${s.id}: standalone action labels required`);
@@ -93,6 +132,8 @@ export function checkHandoff(h, phase = 'handoff') {
       need(s.states?.find(st => st.state === 'default')?.applicable !== false, `screen ${s.id}: default state must be applicable`);
       for (const st of s.states || []) {
         need((h.languages || []).some(lang => st.lang === lang.lang && st.dir === lang.dir), `screen ${s.id}/${st.state}: undeclared language/direction`);
+        // R19b: `requiresScript: true` is for a non-default state reachable only by script, with its trigger recorded
+        if (st.requiresScript !== undefined) need(st.requiresScript === false || (st.requiresScript === true && st.state !== 'default' && nonempty(st.trigger)), `screen ${s.id}/${st.state}: requiresScript must be a boolean, only on a non-default state, with its trigger recorded`);
         if (st.applicable === false) need(nonempty(st.reason) && nonempty(st.reviewer) && file(st.evidence), `screen ${s.id}/${st.state}: N/A needs reason, reviewer, evidence`);
         else need(file(st.page) && st.frame?.width === 1440 && nonempty(st.frame.version) && file(st.frame.path) && /^[a-f0-9]{64}$/.test(st.frame.sha256 || '') && (file(st.frame?.path) ? sha(st.frame.path) === st.frame.sha256 && pngWidth(st.frame.path) === 1440 : false), `screen ${s.id}/${st.state}: page and hash-checked 1440px PNG required`);
       }
@@ -107,16 +148,35 @@ export function checkHandoff(h, phase = 'handoff') {
     }
   }
   need(Array.isArray(h.languages) && h.languages.length > 0 && h.languages.every(l => nonempty(l.lang) && ['ltr', 'rtl'].includes(l.dir)), 'languages/directions required');
+  // R16-GPT-04: one shared definition per reused component (variants, states, token bindings, behaviour) that every
+  // screen instance references by id. An instance may choose a declared variant and account for its states, but any
+  // specification field it repeats must equal the shared definition, so one component specified differently on two
+  // screens fails. Token bindings may be empty in the grayscale wireframe phase.
+  const stable = x => JSON.stringify(x, (k, v) => v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(key => [key, v[key]])) : v);
+  const inventory = Array.isArray(h?.components) ? h.components : [];
+  need(inventory.length > 0 && new Set(inventory.map(c => c?.id)).size === inventory.length && inventory.every(c => nonempty(c?.id) && Array.isArray(c.variants) && c.variants.length > 0 && c.variants.every(nonempty) && Array.isArray(c.states) && c.states.includes('default') && c.states.every(nonempty) && !!c.tokens && typeof c.tokens === 'object' && !Array.isArray(c.tokens) && (phase !== 'handoff' || Object.keys(c.tokens).length > 0) && nonempty(c.behaviour)), 'components: one shared definition per component (unique id, variants, states including default, token bindings, behaviour) required');
+  const shared = new Map(inventory.filter(c => nonempty(c?.id)).map(c => [c.id, c]));
+  const SPEC = ['variants', 'tokens', 'behaviour', 'anatomy', 'sizes', 'usage', 'content'];
+  for (const s of h?.screens || []) for (const c of Array.isArray(s.components) ? s.components : []) {
+    const def = shared.get(c?.id);
+    need(!!def, `screen ${s.id}: component ${c?.id} must reference the shared component inventory`);
+    if (!def) continue;
+    if (c.variant !== undefined) need(def.variants?.includes(c.variant), `screen ${s.id}: component ${c.id} uses variant ${c.variant}, not in its shared definition`);
+    for (const k of SPEC) if (c[k] !== undefined) need(stable(c[k]) === stable(def[k]), `screen ${s.id}: component ${c.id} specifies ${k} differently from its shared definition`);
+    for (const st of Array.isArray(c.states) ? c.states : []) if (st?.applicable !== false) need(def.states?.includes(st?.state), `screen ${s.id}: component ${c.id} state ${st?.state} is not in its shared definition`);
+  }
   const manual = h?.manualChecks || [];
   need(new Set(manual.map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`)).size === manual.length, 'manual check IDs must be unique per screen/language/state');
   const ids = new Set(manual.filter(m => m.decision === 'PASS' && nonempty(m.reviewer) && file(m.artifact) && nonempty(m.note) && m.briefRefs?.length > 0 && m.briefRefs.every(ref)).map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`));
   const deferred = new Set(manual.filter(m => m.decision === 'DEFERRED' && nonempty(m.reviewer) && file(m.artifact) && nonempty(m.note)).map(m => `${m.screen}/${m.lang}/${m.state}/${m.id}`));
-  need(manual.every(m => m.decision === 'PASS' || (phase === 'wireframe' && m.decision === 'DEFERRED' && ['accent-area', 'palette'].includes(m.id))), 'manual FAIL or unjustified DEFERRED blocks');
-  for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : [{ state: 'wireframe', lang: h.languages?.[0]?.lang }])) {
+  need(manual.every(m => m.decision === 'PASS' || (phase === 'wireframe' && m.decision === 'DEFERRED' && [...wireframeDeferred, ...wireframeDeferrable].includes(m.id))), 'manual FAIL or unjustified DEFERRED blocks');
+  // R16-GPT-03: wireframe manual records are required for every screen in every declared language, not only the first.
+  for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : (h.languages || []).map(l => ({ state: 'wireframe', lang: l.lang })))) {
     if (st.applicable === false) continue;
     for (const id of manualIds) {
+      if (id === 'generic-hero' && !HERO_TYPES.includes(s.type)) continue; // R20-GPT-06: a functional screen has no promotional hero
       const key = `${s.id}/${st.lang}/${st.state}/${id}`;
-      need(phase === 'wireframe' && ['accent-area', 'palette'].includes(id) ? deferred.has(key) : ids.has(key), `manual ${key}: required phase decision with reviewer/artifact/brief refs`);
+      need(phase === 'wireframe' && wireframeDeferred.includes(id) ? deferred.has(key) : phase === 'wireframe' && wireframeDeferrable.includes(id) ? deferred.has(key) || ids.has(key) : ids.has(key), `manual ${key}: required phase decision with reviewer/artifact/brief refs`);
     }
   }
   if (phase === 'handoff') {
@@ -135,6 +195,15 @@ export function checkHandoff(h, phase = 'handoff') {
     need(Array.isArray(h.assets) && h.assets.every(a => file(a.path) && nonempty(a.source) && nonempty(a.license) && file(a.consentRecord)), 'assets need file, source, licence and consent record');
     need(Array.isArray(h.motion) && h.motion.every(m => nonempty(m.id) && Number.isFinite(m.duration) && nonempty(m.easing) && nonempty(m.trigger) && nonempty(m.reducedMotion)), 'motion needs duration/easing/trigger/reduced-motion');
     need(Array.isArray(h.critic?.rounds) && h.critic.rounds.length > 0 && h.critic.rounds.length <= 3 && h.critic.rounds.every(r => ['PASS', 'FAIL'].includes(r.decision) && nonempty(r.reviewer) && file(r.evidence) && Array.isArray(r.copyChecks) && r.copyChecks.length > 0 && r.copyChecks.every(c => ['PASS', 'FAIL'].includes(c.decision) && file(c.evidence)) && Array.isArray(r.designChecks) && r.designChecks.length > 0 && r.designChecks.every(c => ['PASS', 'FAIL'].includes(c.decision) && file(c.evidence))) && h.critic.rounds.at(-1).decision === 'PASS' && h.critic.rounds.at(-1).copyChecks.every(c => c.decision === 'PASS') && h.critic.rounds.at(-1).designChecks.every(c => c.decision === 'PASS') && file(h.critic.referenceWork), 'critic needs 1-3 evidenced rounds, all final copy/design checks PASS');
+    // R15 B4: every check names a critic-rubric row; the final round covers each row with a passing, evidenced check.
+    const rounds = Array.isArray(h.critic?.rounds) ? h.critic.rounds : [];
+    const checksOf = r => [...(Array.isArray(r?.copyChecks) ? r.copyChecks : []), ...(Array.isArray(r?.designChecks) ? r.designChecks : [])];
+    need(rounds.every(r => checksOf(r).every(c => criticRows.includes(c?.row))), `critic checks must each name a rubric row (${criticRows.join(', ')})`);
+    const last = rounds.at(-1);
+    // R16-GPT-04: the critic compares equivalent component instances across every screen in the final round.
+    const comparison = last?.componentComparison;
+    need(comparison?.decision === 'PASS' && file(comparison.evidence) && Array.isArray(comparison.screens) && (h.screens || []).every(sc => comparison.screens.includes(sc.id)), 'critic final round needs a passing, evidenced componentComparison covering every screen');
+    for (const row of criticRows) need(checksOf(last).some(c => c?.row === row && c.decision === 'PASS' && file(c.evidence)), `critic row ${row}: the final round needs a passing, evidenced check`);
     const frameIds = (h.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => `${s.id}/${st.lang}/${st.state}/${st.frame?.version}/${st.frame?.sha256}`));
     const approvalText = file(h.approval?.record) ? readFileSync(resolve(h.approval.record), 'utf8') : '';
     need(h.approval?.decision === 'approved' && h.approval.approver === h.settings?.roles?.approver && file(h.approval.record) && /\b20\d\d-\d\d-\d\d\b/.test(approvalText) && approvalText.includes(h.approval.approver) && Array.isArray(h.approval.frameIds) && frameIds.every(id => h.approval.frameIds.includes(id) && approvalText.includes(id)), 'dated approval record must name approver and every versioned frame hash');
