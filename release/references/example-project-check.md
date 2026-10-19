@@ -1,6 +1,6 @@
-# Labelled example: Digital Cloud dry-run
+# Labelled example: supplied example project dry-run
 
-This is an example-only desk check against `example-project-digital-cloud-settings.md` and `example-project-digital-cloud-project-rules.md` from the supplied pack. It is not a new design, an approval or a claim that the source facts are confirmed. No example facts belong in generic skills or memory.
+This is an example-only desk check against the supplied pack's example project settings and project rules files (`input/fannan-review-pack/example-project-*`; their names and hashes are in the pack manifest). It is not a new design, an approval or a claim that the source facts are confirmed. No example facts belong in generic skills or memory.
 
 | Workflow question | Observed input | Correct outcome |
 |---|---|---|
@@ -12,4 +12,4 @@ This is an example-only desk check against `example-project-digital-cloud-settin
 | Can multilingual layouts be finalized? | The example distinguishes present launch language from a later language/direction | Preserve that phase distinction in project settings; test only authorized design scope and record future work deferred |
 | Can the engineer start a build? | No approved frame set, private design link, complete copy deck, real acceptance bundle or final approval record is supplied | No Step 9. An honest blocker is the correct result of this example check |
 
-The workflow therefore succeeds at detecting incomplete authority, source and handoff inputs. It has **not** demonstrated that a finished Digital Cloud design passes the quality or accessibility gate. The source example's pending legal, privacy, client-consent and sitemap decisions are not resolved by this rewrite.
+The workflow therefore succeeds at detecting incomplete authority, source and handoff inputs. It has **not** demonstrated that a finished design for the example project passes the quality or accessibility gate. The source example's pending legal, privacy, client-consent and sitemap decisions are not resolved by this rewrite.
