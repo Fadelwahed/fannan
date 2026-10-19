@@ -29,15 +29,15 @@ const withBrowser = async fn => {
 
 const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir === 'rtl' ? 'ar' : 'en'}" dir="${dir}"><head></head><body style="background:#fff;margin:0;font:16px/1.5 sans-serif;color:#1a1a1a"><main style="padding:20px"><h1>${dir === 'rtl' ? 'عنوان' : 'Title'}</h1>${body}</main>${script ? `<script>${script}</script>` : ''}</body></html>`;
 const ws = await import('../tools/width-screen.mjs');
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 const scopesOf = async (open, list, dir = 'ltr') => {
-  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals }));
-  const scopes = []; for (const x of list) scopes.push({ scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(x.html)).main, [1440], null, 900, probes), declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals } : null });
+  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) }));
+  const scopes = []; for (const x of list) scopes.push({ scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(x.html)).main, [1440], null, 900, probes), declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) } : null });
   const r = ws.resolveReveals(scopes); return { pass: r.pass && scopes.every(s => s.widths.pass), scopes, r };
 };
 const gateOf = open => async (states) => {
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-  const list = decl.map(([state, v]) => ({ state, html: v.html, opener: v.opener, reveals: v.reveals }));
+  const list = decl.map(([state, v]) => ({ state, html: v.html, opener: v.opener, reveals: v.reveals, carousel: v.carousel }));
   return scopesOf(open, list);
 };
 const narrow = '@media(max-width:600px){.wide{display:none}}';
@@ -92,9 +92,14 @@ test('R30-M-05: real Chrome: clamped bio with footer text fails; real expanded s
 test('R30-M-06: real Chrome: unchanged carousel first slide cannot cover hidden second Remove; translated track passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const bad = selected => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px"><div style="flex:0 0 200px"><button>Remove</button></div><div style="flex:0 0 200px"><button>Remove</button></div></div></div><button style="background:${selected === 1 ? '#ddd' : 'white'}">1</button><button style="background:${selected === 2 ? '#ddd' : 'white'}">2</button>`);
-  const good = i => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(-${i * 200}px)"><div style="flex:0 0 200px"><button>Remove</button></div><div style="flex:0 0 200px"><button>Remove</button></div></div></div><button aria-current="${i === 0}">1</button><button aria-current="${i === 1}">2</button>`);
+  const good = i => P(`<div id="g" style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(-${i * 200}px)"><div id="s1" style="flex:0 0 200px"><button>Remove</button></div><div id="s2" style="flex:0 0 200px"><button>Remove</button></div></div></div><button id="dot1" aria-current="${i === 0}">1</button><button id="dot2" aria-current="${i === 1}">2</button>`);
+  const CM = { root: '#g', slides: ['#s1', '#s2'] };
   assert.equal((await gate({ default: bad(1), 'slide-2': bad(2) })).pass, false);
-  assert.equal((await gate({ default: good(0), 'slide-2': good(1) })).pass, true);
+  assert.equal((await gate({
+    default: good(0),
+    'slide-1': D(good(0), '#dot1', '#s1', CM),
+    'slide-2': D(good(1), '#dot2', '#s2', CM),
+  })).pass, true);
 }));
 
 test('R30-M-07: real Chrome: one physical Remove cannot cover two losses via nested regions or clip+loss (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -220,14 +225,16 @@ test('R30-M-17: real Chrome: opener unmounted after opening dialog still passes 
 
 test('R30-M-18: real Chrome: declared Prev/Next carousel slides pass; unchanged track fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
-  const track = i => P(`<div style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[1, 2, 3].map(k => `<div class="slide" style="flex:0 0 300px"><p>Slide ${k} unique</p><button>Shop</button></div>`).join('')}</div></div><button class="prev">Previous</button><button class="next">Next</button>`);
-  const stuck = P(`<div style="overflow:hidden;width:300px"><div style="display:flex;width:900px">${[1, 2, 3].map(k => `<div class="slide" style="flex:0 0 300px"><p>Slide ${k} unique</p><button>Shop</button></div>`).join('')}</div></div><button class="prev">Previous</button><button class="next">Next</button>`);
+  const track = i => P(`<div id="g" style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[1, 2, 3].map(k => `<div class="slide" id="s${k}" style="flex:0 0 300px"><p>Slide ${k} unique</p><button>Shop</button></div>`).join('')}</div></div><button class="prev">Previous</button><button class="next">Next</button>`);
+  const stuck = P(`<div id="g" style="overflow:hidden;width:300px"><div style="display:flex;width:900px">${[1, 2, 3].map(k => `<div class="slide" id="s${k}" style="flex:0 0 300px"><p>Slide ${k} unique</p><button>Shop</button></div>`).join('')}</div></div><button class="prev">Previous</button><button class="next">Next</button>`);
+  const CM = { root: '#g', slides: ['#s1', '#s2', '#s3'] };
   assert.equal((await gate({
     default: track(0),
-    'slide-2': D(track(1), '.next', '.slide:nth-child(2)'),
-    'slide-3': D(track(2), '.next', '.slide:nth-child(3)'),
+    'slide-1': D(track(0), '.prev', '#s1', CM),
+    'slide-2': D(track(1), '.next', '#s2', CM),
+    'slide-3': D(track(2), '.next', '#s3', CM),
   })).pass, true);
-  assert.equal((await gate({ default: track(0), 'slide-2': D(stuck, '.next', '.slide:nth-child(2)') })).pass, false);
+  assert.equal((await gate({ default: track(0), 'slide-2': D(stuck, '.next', '#s2', CM) })).pass, false);
 }));
 
 test('R30-M-19: real Chrome: undeclared collapsed FAQ fails; declared disclosure passes; carousel fallback kept (test-only)', { skip }, async () => withBrowser(async ({ open }) => {

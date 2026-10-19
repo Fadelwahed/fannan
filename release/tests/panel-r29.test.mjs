@@ -68,8 +68,8 @@ const ws = await import('../tools/width-screen.mjs');
 const gateOf = open => async (states, dir = 'ltr') => {
   // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
-  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -88,11 +88,11 @@ const P = x => W(LS + x);
 
 
 // R29: a declared state that rescues hidden content names its opener and the region it reveals
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 
 const scopesOf = async (open, list, dir = 'ltr') => {
-  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals }));
-  const scopes = []; for (const x of list) scopes.push({ scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(x.html)).main, [1440], null, 900, probes), declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals } : null });
+  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) }));
+  const scopes = []; for (const x of list) scopes.push({ scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(x.html)).main, [1440], null, 900, probes), declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) } : null });
   const r = ws.resolveReveals(scopes); return { pass: r.pass && scopes.every(s => s.widths.pass), scopes };
 };
 // R29: the gate verdict plus each declaration's validity and reason at 320 (reported by the gate)
@@ -151,15 +151,16 @@ test('R29-GPT-07: real Chrome: a popovertarget menu passes with its declaration;
   assert.deepEqual({ popover: await gate({ default: pop(false), 'menu-open': D(pop(true), '.m', '#pm') }), haspopupShown: await gate({ default: hp(false), 'menu-open': D(hp(true), '.m', '.mm') }) }, { popover: { pass: true, rules: [] }, haspopupShown: { pass: true, rules: [] } });
 }));
 
-const carousel = (cls, i) => `<div class="${cls}"><div style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[1, 2, 3].map(k => `<div class="slide" style="flex:0 0 300px"><p>${cls} slide ${k}</p><a href="/s${k}">Shop now</a></div>`).join('')}</div></div><div class="dots">${[1, 2, 3].map(k => `<button aria-current="${k === i + 1}">${k}</button>`).join('')}</div></div>`;
-const slideState = (cls, i, html) => D(html, `.${cls} .dots button:nth-child(${i + 1})`, `.${cls} .slide:nth-child(${i + 1})`);
+const carousel = (cls, i) => `<div class="${cls}"><div id="root-${cls}" style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[1, 2, 3].map(k => `<div class="slide" id="${cls}-s${k}" style="flex:0 0 300px"><p>${cls} slide ${k}</p><a href="/s${k}">Shop now</a></div>`).join('')}</div></div><div class="dots">${[1, 2, 3].map(k => `<button aria-current="${k === i + 1}">${k}</button>`).join('')}</div></div>`;
+const CM = cls => ({ root: `#root-${cls}`, slides: [`#${cls}-s1`, `#${cls}-s2`, `#${cls}-s3`] });
+const slideState = (cls, i, html) => D(html, `.${cls} .dots button:nth-child(${i + 1})`, `#${cls}-s${i + 1}`, CM(cls));
 test('R29-GPT-08: real Chrome: unlabelled carousels with declared slide controls pass beside an image crop, and two unlabelled carousels each pass; an undeclared slide still fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const crop = `<div style="overflow:hidden;width:200px;height:80px"><img src="photo.png" alt="" style="display:block;width:400px;height:160px"></div>`;
   const one = i => W(carousel('a', i) + crop), two = (i, j) => W(carousel('a', i) + carousel('b', j));
   assert.deepEqual({
-    withCrop: await gate({ default: one(0), 'slide-2': slideState('a', 1, one(1)), 'slide-3': slideState('a', 2, one(2)) }),
-    twoCarousels: await gate({ default: two(0, 0), 'a-2': slideState('a', 1, two(1, 0)), 'a-3': slideState('a', 2, two(2, 0)), 'b-2': slideState('b', 1, two(0, 1)), 'b-3': slideState('b', 2, two(0, 2)) }),
+    withCrop: await gate({ default: one(0), 'slide-1': slideState('a', 0, one(0)), 'slide-2': slideState('a', 1, one(1)), 'slide-3': slideState('a', 2, one(2)) }),
+    twoCarousels: await gate({ default: two(0, 0), 'a-1': slideState('a', 0, two(0, 0)), 'a-2': slideState('a', 1, two(1, 0)), 'a-3': slideState('a', 2, two(2, 0)), 'b-1': slideState('b', 0, two(0, 0)), 'b-2': slideState('b', 1, two(0, 1)), 'b-3': slideState('b', 2, two(0, 2)) }),
     undeclaredSlide: (await gate({ default: one(0), 'slide-2': slideState('a', 1, one(1)) })).pass,
   }, { withCrop: { pass: true, rules: [] }, twoCarousels: { pass: true, rules: [] }, undeclaredSlide: false });
 }));

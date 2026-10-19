@@ -65,17 +65,18 @@ test('R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and wid
   const ws = await import('../tools/width-screen.mjs');
   const shot = async html => ws.screenWidths((await open(html)).main, [1440], null);
   // states: { stateName: html }; returns the overall result after resolving reveals across the declared states
-  const D = (html, opener, reveals) => ({ html, opener, reveals });
+  const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
   const gate = async (states, dir = 'ltr') => {
     const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-    const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
-    const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
+    const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) }));
+    const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) } : null });
     if (typeof ws.resolveReveals !== 'function') return { pass: scopes.every(s => s.widths.pass), rules: ['no resolveReveals'] };
     const r = ws.resolveReveals(scopes);
     return { pass: r.pass && scopes.every(s => s.widths.pass), rules: [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => x.clipped.filter(c => !c.revealedBy).map(c => c.rule))))].sort(), ...(process.env.DUMP ? { d: scopes.map(s => [s.widths.shownAt1440, s.widths.results.map(x => [x.width, x.clipped])]) } : {}) };
   };
   const acc = open1 => W(`<button aria-expanded="${open1}">Question</button><div style="${open1 ? '' : 'max-height:0;'}overflow:hidden">Bare answer text, no wrapper element.</div>`);
-  const slides = (n, dir = 'ltr') => W(`<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%;transform:translateX(${dir === 'rtl' ? '' : '-'}${n * 100 / 3}%)"><p style="flex:1 0 0;margin:0">${dir === 'rtl' ? 'الشريحة الأولى' : 'Slide one'}</p><p style="flex:1 0 0;margin:0">${dir === 'rtl' ? 'الشريحة الثانية' : 'Slide two'}</p><p style="flex:1 0 0;margin:0">${dir === 'rtl' ? 'الشريحة الثالثة' : 'Slide three'}</p></div></div>`, '', dir);
+  const CM = { root: '#g', slides: ['#s1', '#s2', '#s3'] };
+  const slides = (n, dir = 'ltr') => W(`<div id="g" style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%;transform:translateX(${dir === 'rtl' ? '' : '-'}${n * 100 / 3}%)"><p id="s1" style="flex:1 0 0;margin:0">${dir === 'rtl' ? 'الشريحة الأولى' : 'Slide one'}</p><p id="s2" style="flex:1 0 0;margin:0">${dir === 'rtl' ? 'الشريحة الثانية' : 'Slide two'}</p><p id="s3" style="flex:1 0 0;margin:0">${dir === 'rtl' ? 'الشريحة الثالثة' : 'Slide three'}</p></div></div><button id="prev">Previous</button><button id="next">Next</button>`, '', dir);
   const card = W('<div style="max-width:320px;height:90px;overflow:hidden;border:1px solid #ccc;padding:8px;box-sizing:border-box"><h3 style="margin:0 0 8px">Card title</h3><p style="margin:0 0 40px">Short line.</p><p style="margin:0">Important paragraph wholly below the fixed height.</p></div>');
   const table = W('<div style="overflow:hidden;width:100%"><table style="width:900px"><tr><th>Plan</th><th>Price</th><th>Seats</th><th>Support</th><th>Storage</th></tr><tr><td>Basic</td><td>$10</td><td>1</td><td>Email</td><td>10 GB</td></tr></table></div>');
   const nav = dir => W(`<nav style="overflow:hidden;white-space:nowrap;border:1px solid #ccc">${(dir === 'rtl' ? ['الرئيسية', 'الخدمات', 'الأسعار', 'دراسات الحالة', 'من نحن', 'الوظائف', 'اتصل بنا'] : ['Home', 'Services', 'Pricing', 'Case studies', 'About us', 'Careers', 'Contact']).map(t => `<a href="#x" style="display:inline-block;padding:8px 16px">${t}</a>`).join('')}</nav>`, '', dir);
@@ -83,13 +84,13 @@ test('R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and wid
     accordionDeclared: await gate({ default: acc(false), expanded: D(acc(true), 'button[aria-expanded]', 'button[aria-expanded] + div') }),
     accordionUndeclared: await gate({ default: acc(false) }),
     accordionPartly: await gate({ default: W('<div style="max-height:2em;overflow:hidden"><p style="margin:0">Line one<br>Line two<br>Line three</p></div>'), expanded: W('<div><p style="margin:0">Line one<br>Line two<br>Line three</p></div>') }),
-    carouselMiddle: await gate({ default: slides(1), 'slide-1': slides(0), 'slide-3': slides(2) }),
+    carouselMiddle: await gate({ default: slides(1), 'slide-1': D(slides(0), '#prev', '#s1', CM), 'slide-2': D(slides(1), '#next', '#s2', CM), 'slide-3': D(slides(2), '#next', '#s3', CM) }),
     carouselUndeclared: await gate({ default: slides(1) }),
     cardBelowEdge: await gate({ default: card, hover: card }),
     table320: await gate({ default: table }),
     nav320: await gate({ default: nav('ltr') }),
     navRtl320: await gate({ default: nav('rtl') }, 'rtl'),
-    carouselRtl: await gate({ default: slides(1, 'rtl'), 'slide-1': slides(0, 'rtl'), 'slide-3': slides(2, 'rtl') }, 'rtl'),
+    carouselRtl: await gate({ default: slides(1, 'rtl'), 'slide-1': D(slides(0, 'rtl'), '#prev', '#s1', CM), 'slide-2': D(slides(1, 'rtl'), '#next', '#s2', CM), 'slide-3': D(slides(2, 'rtl'), '#next', '#s3', CM) }, 'rtl'),
   };
   const lost = 'shown at 1440, lost at this width';
   // a nav link cut at 320 is either lost wholly or partly cut; both fail, neither may be read as a reveal

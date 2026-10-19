@@ -30,22 +30,22 @@ const withBrowser = async fn => {
 const W = (body, script = '', dir = 'ltr', lang = null) => `<!doctype html><html lang="${lang || (dir === 'rtl' ? 'ar' : 'en')}" dir="${dir}"><head></head><body style="background:#fff;margin:0;font:16px/24px sans-serif;color:#1a1a1a"><main style="margin:20px"><h1>${dir === 'rtl' ? 'عنوان' : 'Title'}</h1>${body}</main>${script ? `<script>${script}</script>` : ''}</body></html>`;
 const ws = await import('../tools/width-screen.mjs');
 const vis = await import('../tools/visibility.mjs');
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 const scopesOf = async (open, list, dir = 'ltr', desktop = [1440]) => {
-  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals }));
+  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) }));
   const scopes = [];
   for (const x of list) {
     scopes.push({
       scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' },
       widths: await ws.screenWidths((await open(x.html)).main, desktop, null, 900, probes),
-      declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals } : null,
+      declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) } : null,
     });
   }
   const r = ws.resolveReveals(scopes);
   return { pass: r.pass && scopes.every(s => s.widths.pass), scopes, r };
 };
 const gateOf = (open) => async (states, dir = 'ltr') => {
-  const list = Object.entries(states).map(([state, v]) => ({ state, html: typeof v === 'string' ? v : v.html, opener: v.opener, reveals: v.reveals }));
+  const list = Object.entries(states).map(([state, v]) => ({ state, html: typeof v === 'string' ? v : v.html, opener: v.opener, reveals: v.reveals, carousel: typeof v === 'string' ? undefined : v.carousel }));
   return scopesOf(open, list, dir);
 };
 const P = (body, css = '', dir = 'ltr') => W(`${css ? `<style>${css}</style>` : ''}${body}`, '', dir);
@@ -98,35 +98,40 @@ test('R33-M-02: declared non-flex and localized carousel transitions remain elig
         ? `<div id="a" style="${slideStyle}"><p>Slide A unique</p></div><div id="b" style="${slideStyle}"><p>Slide B unique</p></div>`
         : `<div id="a" style="${slideStyle};${display.includes('inline') ? 'display:inline-block;' : ''}"><p>Slide A unique</p></div><div id="b" style="${slideStyle};${display.includes('inline') ? 'display:inline-block;' : ''}"><p>Slide B unique</p></div>`;
     const role = roleDesc ? ` aria-roledescription="${roleDesc}"` : '';
-    return P(`<div style="width:200px;overflow:hidden"${role}><div style="${trackStyle}">${child}</div></div>
+    return P(`<div id="g" style="width:200px;overflow:hidden"${role}><div style="${trackStyle}">${child}</div></div>
       <button id="prev">Previous</button><button id="next">Next</button>`);
   };
+  const CM = { root: '#g', slides: ['#a', '#b'] };
   for (const disp of ['inline-block', 'float', 'positioned', 'inline-grid']) {
     const g = await scopesOf(open, [
       { state: 'default', html: track(disp, 0) },
-      { state: 'slide-2', html: track(disp, -200), opener: '#next', reveals: '#b' },
+      { state: 'slide-1', html: track(disp, 0), opener: '#prev', reveals: '#a', carousel: CM },
+      { state: 'slide-2', html: track(disp, -200), opener: '#next', reveals: '#b', carousel: CM },
     ]);
     assert.equal(g.pass, true, disp);
   }
   // localized role description
-  const ar = (tx) => W(`<div style="width:200px;overflow:hidden;direction:ltr" aria-roledescription="كاروسيل"><div style="display:flex;width:400px;transform:translateX(${tx}px)">
+  const ar = (tx) => W(`<div style="width:200px;overflow:hidden;direction:ltr" id="g" aria-roledescription="كاروسيل"><div style="display:flex;width:400px;transform:translateX(${tx}px)">
     <div id="a" style="flex:0 0 200px"><p>شريحة أ</p></div><div id="b" style="flex:0 0 200px"><p>شريحة ب</p></div></div></div>
-    <button id="next">التالي</button>`, '', 'rtl');
+    <button id="prev">السابق</button><button id="next">التالي</button>`, '', 'rtl');
   assert.equal((await scopesOf(open, [
     { state: 'default', html: ar(0) },
-    { state: 'slide-2', html: ar(-200), opener: '#next', reveals: '#b' },
+    { state: 'slide-1', html: ar(0), opener: '#prev', reveals: '#a', carousel: CM },
+    { state: 'slide-2', html: ar(-200), opener: '#next', reveals: '#b', carousel: CM },
   ], 'rtl')).pass, true);
   // block display:none/block
-  const block = (which) => P(`<div aria-roledescription="carousel" style="width:200px">
+  const block = (which) => P(`<div id="g" aria-roledescription="carousel" style="width:200px">
     <div id="a" style="display:${which === 'a' ? 'block' : 'none'}"><p>Block A unique</p></div>
     <div id="b" style="display:${which === 'b' ? 'block' : 'none'}"><p>Block B unique</p></div>
-    <button id="next">Next</button></div>`);
+    <button id="prev">Previous</button><button id="next">Next</button></div>`);
   const gb = await scopesOf(open, [
     { state: 'default', html: block('a') },
-    { state: 'slide-2', html: block('b'), opener: '#next', reveals: '#b' },
+    { state: 'slide-1', html: block('a'), opener: '#prev', reveals: '#a', carousel: CM },
+    { state: 'slide-2', html: block('b'), opener: '#next', reveals: '#b', carousel: CM },
   ]);
-  const decl = gb.scopes[0].widths.results.find(x => x.width === 320)?.declarations?.[0];
-  assert.equal(decl?.valid, true, 'block-track declaration valid');
+  const decls = gb.scopes[0].widths.results.find(x => x.width === 320)?.declarations || [];
+  const decl = decls.find(d => d.state === 'slide-2') || decls.find(d => d.valid);
+  assert.equal(decl?.valid, true, `block-track declaration valid: ${JSON.stringify(decls)}`);
   // negative: expanded false on target
   const neg = (tx, exp) => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(${tx}px)">
     <div id="a" style="flex:0 0 200px"><p>Neg A</p></div><div id="b" style="flex:0 0 200px"><p>Neg B</p></div></div></div>
@@ -213,7 +218,7 @@ test('R33-M-07: carousel word in a FAQ label does not exempt a vertical disclosu
   const faq = (h) => P(`<div style="width:200px;height:${h};overflow:hidden" aria-label="Questions about the carousel"><p style="margin:0">Shipping answer.</p></div>`);
   assert.equal((await gate({ default: faq('0'), expanded: faq('auto') })).pass, false);
   const slide = i => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(-${i * 200}px)"><div style="flex:0 0 200px"><p>One</p></div><div style="flex:0 0 200px"><p>Two</p></div></div></div>`);
-  assert.equal((await gate({ default: slide(0), 'slide-2': slide(1) })).pass, true);
+  assert.equal((await gate({ default: slide(0), 'slide-2': slide(1) })).pass, false); // R34: undeclared fallback deleted
 }));
 
 test('R33-M-08: a single pointer-transparent native modal still inerts its background', { skip }, async () => withBrowser(async ({ open }) => {

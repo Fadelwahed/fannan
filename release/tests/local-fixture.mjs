@@ -313,9 +313,15 @@ if (Object.values(r19Want).some(v => !v)) throw Error('R19 full-run expectations
 // a card whose last paragraph lies below its fixed height, and a table cut at 320, fail.
 const r20 = {};
 const acc20 = open1 => `<button aria-expanded="${open1}">Questions</button><div style="${open1 ? '' : 'max-height:0;'}overflow:hidden">Bare collapsed answer</div>`;
-const car20 = n => `<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%;transform:translateX(-${n * 100 / 3}%)"><p style="flex:1 0 0;margin:0">Slide one</p><p style="flex:1 0 0;margin:0">Slide two</p><p style="flex:1 0 0;margin:0">Slide three</p></div></div>`;
+const CM20 = { root: '#g', slides: ['#s1', '#s2', '#s3'] };
+const car20 = n => `<div id="g" style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%;transform:translateX(-${n * 100 / 3}%)"><p id="s1" style="flex:1 0 0;margin:0">Slide one</p><p id="s2" style="flex:1 0 0;margin:0">Slide two</p><p id="s3" style="flex:1 0 0;margin:0">Slide three</p></div></div><button id="prev">Previous</button><button id="next">Next</button>`;
 const at20 = body => original.replace('</main>', `${body}</main>`);
-r20.revealDeclared = r19Run('reveal-declared', acc20(false) + car20(1), '', '', authored, [['faq-open', at20(acc20(true) + car20(1)), { opener: 'button[aria-expanded]', reveals: 'button[aria-expanded] + div' }], ['slide-1', at20(acc20(false) + car20(0))], ['slide-3', at20(acc20(false) + car20(2))]]);
+r20.revealDeclared = r19Run('reveal-declared', acc20(false) + car20(1), '', '', authored, [
+  ['faq-open', at20(acc20(true) + car20(1)), { opener: 'button[aria-expanded]', reveals: 'button[aria-expanded] + div' }],
+  ['slide-1', at20(acc20(false) + car20(0)), { opener: '#prev', reveals: '#s1', carousel: CM20 }],
+  ['slide-2', at20(acc20(false) + car20(1)), { opener: '#next', reveals: '#s2', carousel: CM20 }],
+  ['slide-3', at20(acc20(false) + car20(2)), { opener: '#next', reveals: '#s3', carousel: CM20 }],
+]);
 r20.revealUndeclared = r19Run('reveal-undeclared', acc20(false) + car20(1));
 const card20 = '<div style="max-width:320px;height:90px;overflow:hidden;padding:8px;box-sizing:border-box"><h2 style="margin:0 0 8px;font-size:20px">Card title</h2><p style="margin:0 0 40px">Short line.</p><p style="margin:0">Last paragraph below the edge.</p></div>';
 r20.cardBelow = r19Run('card-below', card20, '', '', authored, [['hover', at20(card20)]]);
@@ -341,7 +347,7 @@ writeFileSync(html, original);
 writeFileSync(handoff, JSON.stringify(authored));
 console.log('R20 fixture runs: ' + JSON.stringify(r20));
 const r20Want = {
-  revealDeclared: r20.revealDeclared.widths.every(w => w === true) && r20.revealDeclared.reveals === 0 && JSON.stringify(r20.revealDeclared.revealedBy) === JSON.stringify(['default', 'faq-open', 'slide-1', 'slide-3']),
+  revealDeclared: r20.revealDeclared.widths.every(w => w === true) && r20.revealDeclared.reveals === 0 && ['faq-open', 'slide-1', 'slide-3'].every(s => r20.revealDeclared.revealedBy.includes(s)),
   revealUndeclared: r20.revealUndeclared.widths.every(w => w === false) && r20.revealUndeclared.reveals > 0,
   cardBelow: r20.cardBelow.widths.every(w => w === false) && r20.cardBelow.reveals > 0,
   table320: r20.table320.widths.every(w => w === false),

@@ -47,6 +47,25 @@ test('complete handoff passes; missing provenance, state or approval fails', () 
       approval: { decision: 'approved', approver: 'approver-x', record: approved, frameIds: [frameId] }
     };
     assert.deepEqual(checkHandoff(h), []);
+    // R34: carousel mapping shape and consistency
+    {
+      const withCar = (stName, car, extra = {}) => {
+        const x = JSON.parse(JSON.stringify(h));
+        const st = x.screens[0].states.find(s => s.state === stName);
+        Object.assign(st, { opener: '#next', reveals: '#b', carousel: car, ...extra });
+        return x;
+      };
+      assert.match(checkHandoff(withCar('hover', { root: '#g', slides: ['#a'] })).join('\n'), /carousel\.slides/, 'one-slide mapping fails');
+      assert.match(checkHandoff(withCar('hover', { root: '', slides: ['#a', '#b'] })).join('\n'), /carousel\.root/, 'empty root fails');
+      assert.match(checkHandoff(withCar('hover', { root: '#g', slides: ['#a', '#a'] })).join('\n'), /distinct/, 'duplicate slides fail');
+      const clash = withCar('hover', { root: '#g', slides: ['#a', '#b'] });
+      const focus = clash.screens[0].states.find(s => s.state === 'focus');
+      Object.assign(focus, { opener: '#prev', reveals: '#a', carousel: { root: '#g', slides: ['#b', '#a'] } });
+      assert.match(checkHandoff(clash).join('\n'), /carousel slides for root/, 'inconsistent slide order fails');
+      const onDefault = JSON.parse(JSON.stringify(h));
+      onDefault.screens[0].states[0].carousel = { root: '#g', slides: ['#a', '#b'] };
+      assert.match(checkHandoff(onDefault).join('\n'), /carousel mapping requires opener/, 'carousel on default fails');
+    }
     // R8, ported from codex/fannan-r3-review 2733317: declared desktop widths are unique positive integers and include the canonical 1440.
     for (const bad of [undefined, [], [1280], [1440, 1440], [1440, 0], [1440, -1280], [1440, 1280.5], ['1440'], '1440']) {
       h.settings.desktopWidths = bad;
