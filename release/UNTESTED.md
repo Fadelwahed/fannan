@@ -1,19 +1,27 @@
 # R3 checks not established
 
+## R34 additions (Mi'mar, 19 October 2026, panel round 34)
+
+- **Declared carousels (Sol root-cause design):** carousel identity and slide membership come only from an optional `carousel:{root,slides}` object on a reveal declaration. Geometric/description inference (`carouselRootOf`, `multiSlideTrackOf`, one-capture `carouselStep`, `carouselLike` undeclared box fallback) is **deleted**. A verified step is a cross-capture payload transition: the target slide is not displayed in the source capture and is fully displayed in the declared capture; explicit `aria-expanded="false"` still vetoes. Slide visibility is recorded at the authored scroll before probe scrolling.
+- **SUPERSEDED (R32/R33 carousel eligibility / undeclared fallback):** claims that structural tracks, role-description text, pure-horizontal overflow, or clipping-box signatures can establish carousel eligibility or cross-state cover without an explicit mapping are obsolete. Marked below where they remain as historical notes.
+- **Evaluation widths:** ordinary losses evaluate source/target at the loss width; whole-content reveal clips evaluate content at 1440 with graded-width source-opener checks; truncation still requires full text at the evaluated width.
+- **UNTESTED:** probe-induced scroll edge cases beyond the save/restore path; author mis-mapping ordinary content as slides (honest-author threat model); live interaction proving a click reaches the declared state (static captures only).
+
+
 ## R33 additions (Mi'mar, 19 October 2026, panel round 33)
 
-- **Carousel tracks (R33-M-01..M-03):** sibling slides must share a constraining viewport (or display:none/block peers under a carousel-described root); ordinary flex/grid under a distant overflow ancestor and auxiliary panels do not qualify.
+- **Carousel tracks (R33-M-01..M-03):** SUPERSEDED by R34 declared `carousel:{root,slides}` mapping; geometric/description inference deleted.
 - **Graded-width operability (R33-M-04):** teaser visibility at the graded width does not invalidate a desktop-baseline reveal.
 - **Expansion-only veto (R33-M-05):** pressed/selected false no longer documented as blocking haspopup.
 - **Twin pass (R33-M-06):** equivalent captures share clip decisions without copying independent width failures.
-- **Fallback signature (R33-M-07):** accessible-name / copy-slot substrings never establish undeclared carousel eligibility.
+- **Fallback signature (R33-M-07):** SUPERSEDED by R34 — undeclared cross-state carousel/box fallback deleted entirely.
 - **Sole transparent modal (R33-M-08):** a single native :modal remains active even when pointer hit-testing misses.
 
 ## R32 additions (Mi'mar, 19 October 2026, panel round 32)
 
 - **Equivalent captures (R32-M-01):** duplicate identical defaults share one truncation/clip allocation.
-- **Carousel eligibility (R32-M-03/M-04):** structural carousel semantics or multi-slide tracks with verified transitions; no name-word lists and no bare overflow-x ancestors.
-- **Undeclared fallback (R32-M-05):** pure horizontal (not mixed-axis) or carousel signature only.
+- **Carousel eligibility (R32-M-03/M-04):** SUPERSEDED by R34 explicit mapping; structural/description guessing deleted.
+- **Undeclared fallback (R32-M-05):** SUPERSEDED by R34 — no undeclared horizontal/signature rescue.
 - **Graded-width operability (R32-M-06):** 1440 remains the reveal-content baseline; opener operability is checked at the evaluated width.
 - **Unmounted panels (R32-M-09):** closed-state absence is allowed only when open-rendering targets resolve cleanly.
 - **Expansion vs selection (R32-M-10):** aria-expanded true remains valid with aria-selected/pressed false.
@@ -22,8 +30,8 @@
 
 - **Per-width cover pools (R31-M-01):** allocations are keyed by losing state, source rendering and evaluation width; capacity at 1280 is independent of 320.
 - **Truncation with visible intro (R31-M-02):** a declared read-more may keep an already-visible introduction; ordinary cross-state losses still require the region hidden in the losing state.
-- **Carousel steps (R31-M-03):** verified by carousel semantics or a multi-slide track with a hidden-to-shown transition (R32-M-03/M-04; name tokens never decide eligibility).
-- **Undeclared fallback (R31-M-05):** limited to horizontal tracks/carousels; a link or control inside a vertical clip does not exempt an undeclared FAQ.
+- **Carousel steps (R31-M-03):** SUPERSEDED by R34 — verified only via declared `carousel` mapping and cross-capture payload transition.
+- **Undeclared fallback (R31-M-05):** SUPERSEDED by R34 — undeclared fallback deleted; FAQ still fails without an ordinary open signal.
 - **Haspopup tokens (R31-M-12 / R33-M-05):** only true/menu/listbox/tree/grid/dialog certify popup capability; only explicit aria-expanded="false" blocks the haspopup/step shortcut (selection or pressed false does not).
 
 
@@ -32,9 +40,9 @@
 Chrome headless only, 1440 × 900, device scale one. Mi'mar's decision applied: reveals are declared (`opener` + `reveals`) and verified by the gate; opener inference deleted.
 
 - **Cover pool (ruling, for the round 30 panel):** one pool per losing state and width, shared across every declared state and region. The literal "global across all states" reading was not used: it fails an honest page with two menus (default spends help-open's FAQ, then main-open needs the same item). Covered: two menus, nested regions, two regions in one state. UNTESTED: three or more losing states drawing on one region in ways that would double count across losing states (allowed by design).
-- **Opener checks:** visible and operable by a hit test at the centre of each matched opener (all matches must pass); open = aria-expanded=true, an open details, popovertarget to a `:popover-open` element or a region that is `:popover-open`, dialog[open]/:modal, checked checkbox/radio, a supported non-false aria-haspopup whose declared panel is shown, a verified carousel step (semantics/track transition; not name tokens), aria-selected, aria-pressed or aria-current. SUPERSEDED (R31-M-11/M-12): the old claim "aria-haspopup with no open state is invalid by design" — a supported haspopup token with a shown declared panel is valid; "false"/empty/invalid tokens are not. UNTESTED: an opener operable only off-centre; an opener whose open state is shown only visually (no ARIA, no details, no popover, no checked/haspopup/step): the declaration is invalid by design.
+- **Opener checks:** visible and operable by a hit test at the centre of each matched opener (all matches must pass); open = aria-expanded=true, an open details, popovertarget to a `:popover-open` element or a region that is `:popover-open`, dialog[open]/:modal, checked checkbox/radio, a supported non-false aria-haspopup whose declared panel is shown, a verified carousel step (explicit `carousel:{root,slides}` mapping with cross-capture payload transition; not name tokens or geometry), aria-selected, aria-pressed or aria-current. SUPERSEDED (R31-M-11/M-12): the old claim "aria-haspopup with no open state is invalid by design" — a supported haspopup token with a shown declared panel is valid; "false"/empty/invalid tokens are not. UNTESTED: an opener operable only off-centre; an opener whose open state is shown only visually (no ARIA, no details, no popover, no checked/haspopup/step): the declaration is invalid by design.
 - **Twins:** default (or any state) renderings are accounted once only when their prints and losses are identical at every width; near-identical renderings are accounted separately.
-- **Undeclared carousels:** a slide clipped at 1440 whose revealing state declares nothing falls back to the same clipping box (one box with the signature, or the box at the same structural path). UNTESTED: carousels restructured between states (different structural paths) without a declaration fail closed.
+- **Undeclared carousels:** SUPERSEDED by R34 — no clipping-box fallback; without a valid declaration, horizontal clips fail closed.
 - **Sections:** a section ends at the next heading of equal or higher rank or at the end of its sectioning ancestor (article, section, main, aside), whichever comes first.
 - **Real site with JavaScript off:** run in the checker's shape in the isolated world (VERIFICATION R29).
 - **Honest sets R18-R29 old against new: UNTESTED this round** (stopped at the time cap under box load 90-155); false positives on them are not established for R29.
