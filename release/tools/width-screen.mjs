@@ -87,7 +87,8 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
       let inside = false; for (let a = t; a; a = parentOf(a)) if (a === d) { inside = true; break; }
       if (inside) selfHit.push(d);
     }
-    activeModal = selfHit.length ? selfHit[selfHit.length - 1] : null;
+    // R33-M-08: a sole native :modal stays active even when pointer hit-testing misses; multiple modals still require a self-hit
+    activeModal = selfHit.length ? selfHit[selfHit.length - 1] : (modals.length === 1 ? modals[0] : null);
   } catch { activeModal = null; }
   const behindModal = el => { if (!activeModal) return false; for (let a = el; a; a = parentOf(a)) { if (a === activeModal) return false; } return true; };
   const effectiveOpaque = el => { let p = 1; for (let a = el; a && a.nodeType === 1; a = parentOf(a)) { p *= Number(getComputedStyle(a).opacity); if (!(p > 0)) return false; } return true; };
@@ -348,24 +349,46 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
       // R32-M-10: expansion, selection and pressed are independent; only aria-expanded=false blocks popup/step shortcuts
       const expandedTrue = control.getAttribute?.('aria-expanded') === 'true' || o.getAttribute('aria-expanded') === 'true';
       const expandedFalse = control.getAttribute?.('aria-expanded') === 'false' || o.getAttribute('aria-expanded') === 'false';
-      // R32-M-03/M-04: genuine carousel only — aria-roledescription=carousel or multi-slide track; no name-token / bare overflow-x shortcuts
-      const carouselRootOf = el => { for (let a = el; a; a = parentOf(a)) { if ((a.getAttribute?.('aria-roledescription') || '').toLowerCase() === 'carousel') return a; } return null; };
+      // R33-M-01/M-02/M-03: sibling slides sharing a constraining viewport (any display); auxiliary panels under a carousel root do not qualify
+      const carouselRootOf = el => { for (let a = el; a; a = parentOf(a)) { if ((a.getAttribute?.('aria-roledescription') || '').trim()) return a; } return null; };
       const multiSlideTrackOf = el => {
         for (let a = parentOf(el); a; a = parentOf(a)) {
           const kids = [...a.children].filter(ch => ch.nodeType === 1);
           if (kids.length < 2) continue;
-          const c = getComputedStyle(a);
-          const flexish = c.display === 'flex' || c.display === 'inline-flex' || c.display === 'grid';
-          if (!flexish) continue;
-          for (let p = parentOf(a); p; p = parentOf(p)) {
-            const pc = getComputedStyle(p);
-            if (['hidden', 'clip'].includes(pc.overflowX) || ['hidden', 'clip'].includes(pc.overflowY)) return a;
+          if (!kids.some(k => k === el || within(k, el))) continue;
+          // Bootstrap-style display:none/block peers under a carousel-described ancestor
+          const root = carouselRootOf(el);
+          if (root && (a === root || within(root, a))) {
+            const shownK = kids.filter(k => getComputedStyle(k).display !== 'none' && k.getBoundingClientRect().width > 0 && k.getBoundingClientRect().height > 0);
+            const hiddenK = kids.filter(k => getComputedStyle(k).display === 'none');
+            if (shownK.length >= 1 && hiddenK.length >= 1 && shownK.some(k => k === el || within(k, el))) return a;
           }
-          if (['hidden', 'clip'].includes(c.overflowX) && a.scrollWidth > a.clientWidth + 1) return a;
+          // Constraining viewport that actually cuts side-by-side peer slides (not stacked menu/disclosure chrome)
+          let viewport = null;
+          for (let p = a; p; p = parentOf(p)) {
+            const pc = getComputedStyle(p);
+            if (['hidden', 'clip'].includes(pc.overflowX) || ['hidden', 'clip'].includes(pc.overflowY)) { viewport = p; break; }
+          }
+          if (!viewport) continue;
+          const vr = viewport.getBoundingClientRect();
+          const visiblePeers = kids.filter(k => { const kr = k.getBoundingClientRect(); return kr.width > 0 && kr.height > 0; });
+          if (visiblePeers.length < 2) continue;
+          // Peers must sit on the same row (carousel track), not a vertical stack with an overflowing spacer
+          const sideBySide = visiblePeers.some((k, i) => visiblePeers.some((o, j) => {
+            if (i >= j) return false;
+            const kr = k.getBoundingClientRect(), or = o.getBoundingClientRect();
+            const yOverlap = Math.min(kr.bottom, or.bottom) - Math.max(kr.top, or.top);
+            return yOverlap > Math.min(kr.height, or.height) * 0.3 && Math.abs(kr.left - or.left) > 1;
+          }));
+          if (!sideBySide) continue;
+          const anyOutside = visiblePeers.some(k => { const kr = k.getBoundingClientRect(); return kr.right > vr.right + 1 || kr.left < vr.left - 1 || kr.bottom > vr.bottom + 1 || kr.top < vr.top - 1; });
+          const anyInside = visiblePeers.some(k => { const kr = k.getBoundingClientRect(); return kr.left < vr.right - 1 && kr.right > vr.left + 1 && kr.top < vr.bottom - 1 && kr.bottom > vr.top + 1; });
+          if (anyOutside && anyInside) return a;
         }
         return null;
       };
-      const inGenuineCarousel = associatedRegions.some(r => carouselRootOf(r) || multiSlideTrackOf(r));
+      // Region must sit in a real multi-slide track; a carousel-described ancestor alone does not certify an aside/disclosure
+      const inGenuineCarousel = associatedRegions.some(r => !!multiSlideTrackOf(r));
       const isBtn = !!(control.matches?.('button, [role="button"]') || o.matches?.('button, [role="button"]'));
       const carouselStep = !expandedFalse && !hasPopup && !popId && regionShown && isBtn && inGenuineCarousel;
       const open = expandedTrue
@@ -720,18 +743,18 @@ export function resolveReveals(scopes, phase = 'handoff') {
           const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(pool(o), p); const k = printKey(p), n = (counts(pool(o)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
           const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
           const mine = w.ledgerByWidth?.[width] || {};
-          // R32-M-05: undeclared fallback needs carousel sig or pure horizontal (not mixed-axis/collapsed) evidence
-          const carouselLike = !!((c.sig || '').toLowerCase().includes('carousel') || (c.x && !c.y && !c.collapsed));
+          // R32-M-05 / R33-M-07: pure-horizontal overflow only; label/copy-slot/sig substrings never establish eligibility
+          const carouselLike = !!(c.x && !c.y && !c.collapsed);
           const regionFor = (o, p) => {
             const theirs = o.widths?.ledgerByWidth?.[width] || {};
             if (o.declaration) {
               const inR = probeOf(o, width, o.scope.state);
               const inS = probeOf({ widths: w }, width, o.scope.state);
               if (declarationProblems(inS, inR).length) return null;
-              // R32-M-06: also validate operability at the currently graded width when content baseline is 1440
+              // R33-M-04: at the graded width, check source-opener existence/visibility/enabled/hit only — not region visibility
               if (width !== r.width) {
-                const inSg = probeOf({ widths: w }, r.width, o.scope.state), inRg = probeOf(o, r.width, o.scope.state);
-                if (declarationProblems(inSg, inRg).length) return null;
+                const inSg = probeOf({ widths: w }, r.width, o.scope.state);
+                if (!inSg || inSg.openerCount < 1 || !inSg.openerVisible || inSg.openerDisabled || !inSg.openerHit) return null;
               }
               return { key: `${o.scope.state}|declared`, items: inR.items, mineBox: null, theirsBox: null, declared: true };
             }
@@ -762,7 +785,8 @@ export function resolveReveals(scopes, phase = 'handoff') {
               const inR = probeOf(o, width, o.scope.state);
               if (declarationProblems(probeOf({ widths: w }, width, o.scope.state), inR, { allowVisibleRegion: true }).length) continue;
               if (width !== r.width) {
-                if (declarationProblems(probeOf({ widths: w }, r.width, o.scope.state), probeOf(o, r.width, o.scope.state), { allowVisibleRegion: true }).length) continue;
+                const inSg = probeOf({ widths: w }, r.width, o.scope.state);
+                if (!inSg || inSg.openerCount < 1 || !inSg.openerVisible || inSg.openerDisabled || !inSg.openerHit) continue;
               }
               if (!items.every(p => inR.items.some(e => e.kind === 'text' && e.print === p.print) || (isControlPrint(p.print) && inR.items.some(e => sameItem(asItem(p), e))))) continue;
               const spentKeys = [], provisional = new Set();
@@ -788,7 +812,7 @@ export function resolveReveals(scopes, phase = 'handoff') {
         r.pass = r.passExceptReveal && r.clipped.every(c => !resolvable(c) || c.revealedBy || c.deferred);
       }
     }
-    // propagate clip decisions to twin scopes
+    // R33-M-06: share clip decisions but recompute pass from each twin's own passExceptReveal (never copy canon pass)
     for (const [twin, canon] of twinCanon) {
       if (!twin.widths?.results || !canon.widths?.results) continue;
       for (const r of twin.widths.results) {
@@ -798,9 +822,9 @@ export function resolveReveals(scopes, phase = 'handoff') {
           const fc = (f.clipped || [])[i];
           if (fc) { r.clipped[i].revealedBy = fc.revealedBy; r.clipped[i].deferred = fc.deferred; }
         }
-        r.pass = f.pass;
+        const resolvable = c => ['reveal', 'truncated'].includes(c.rule);
+        r.pass = r.passExceptReveal && (r.clipped || []).every(c => !resolvable(c) || c.revealedBy || c.deferred);
       }
-      twin.widths.pass = canon.widths.pass;
     }
     unresolved.push(...accountLosses(groupScopes, phase, sharedSpent));
   }
