@@ -289,7 +289,7 @@ test('R35-M-08: the finalized package passes its published anchored verification
     '--start', '9ee1ca6aaa4a257cb84fb7381056005f48554bf3',
     '--registry-sha256', digest], { cwd: root, encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr || run.stdout);
-  const report = JSON.parse(run.stdout.trim().split('\n').filter(l => l.startsWith('{')).pop());
+  const report = JSON.parse(run.stdout.slice(run.stdout.indexOf('{')));
   assert.equal(report.registryPin, 'external');
   assert.deepEqual(report.uncoveredChangedFiles, []);
   assert.equal(report.zipCRC, 'PASS');
