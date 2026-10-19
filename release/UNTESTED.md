@@ -9,7 +9,8 @@ Chrome headless only, 1440 × 900, device scale one. Mi'mar's decision applied: 
 - **Twins:** default (or any state) renderings are accounted once only when their prints and losses are identical at every width; near-identical renderings are accounted separately.
 - **Undeclared carousels:** a slide clipped at 1440 whose revealing state declares nothing falls back to the same clipping box (one box with the signature, or the box at the same structural path). UNTESTED: carousels restructured between states (different structural paths) without a declaration fail closed.
 - **Sections:** a section ends at the next heading of equal or higher rank or at the end of its sectioning ancestor (article, section, main, aside), whichever comes first.
-- **Real site with JavaScript off:** see VERIFICATION R29 for what was run.
+- **Real site with JavaScript off:** run in the checker's shape in the isolated world (VERIFICATION R29).
+- **Honest sets R18-R29 old against new: UNTESTED this round** (stopped at the time cap under box load 90-155); false positives on them are not established for R29.
 - **Superseded doc assertions:** the R28 doc test no longer requires "Another declared state covers a lost item only through a reveal", "An ambiguous opener-to-region link fails closed", "nothing outside the revealed region" or "covers a lost item only through the region a visible opener reveals"; the R29 doc test requires the declared-reveal wording instead.
 
 ## R28 additions (Mi'mar, 19 October 2026, panel round 28)
