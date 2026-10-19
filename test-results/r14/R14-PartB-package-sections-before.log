@@ -1,0 +1,26 @@
+# R14 before: R14 tests against 7fc0d6f sources
+test_r14_build_checks_sections_before_any_output (test_package_r3.RequiredSectionTests.test_r14_build_checks_sections_before_any_output) ... FAIL
+test_r14_release_carries_every_designer_process_section (test_package_r3.RequiredSectionTests.test_r14_release_carries_every_designer_process_section) ... FAIL
+
+======================================================================
+FAIL: test_r14_build_checks_sections_before_any_output (test_package_r3.RequiredSectionTests.test_r14_build_checks_sections_before_any_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 302, in test_r14_build_checks_sections_before_any_output
+    self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : the package checks the required sections
+
+======================================================================
+FAIL: test_r14_release_carries_every_designer_process_section (test_package_r3.RequiredSectionTests.test_r14_release_carries_every_designer_process_section)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 286, in test_r14_release_carries_every_designer_process_section
+    self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : the package checks the required sections
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=2)

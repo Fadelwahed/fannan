@@ -1,0 +1,71 @@
+# R13 after: R13 sources
+TAP version 13
+# Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+ok 1 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+  ---
+  duration_ms: 3.807172
+  type: 'test'
+  ...
+# Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+ok 2 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+  ---
+  duration_ms: 7.60879
+  type: 'test'
+  ...
+# Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+ok 3 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+  ---
+  duration_ms: 2.230588
+  type: 'test'
+  ...
+# Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+ok 4 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+  ---
+  duration_ms: 1.082435
+  type: 'test'
+  ...
+# Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
+ok 5 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
+  ---
+  duration_ms: 0.201932
+  type: 'test'
+  ...
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+ok 6 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 0.986948
+  type: 'test'
+  ...
+# Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+ok 7 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+  ---
+  duration_ms: 866.291121
+  type: 'test'
+  ...
+# Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+ok 8 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+  ---
+  duration_ms: 1032.754236
+  type: 'test'
+  ...
+# Subtest: R11 C3: the checker wraps every page in the isolated probe world; only the rAF counter reads the main world
+ok 9 - R11 C3: the checker wraps every page in the isolated probe world; only the rAF counter reads the main world
+  ---
+  duration_ms: 2.318547
+  type: 'test'
+  ...
+# Subtest: R11 C3: a page script that patches getComputedStyle, querySelectorAll and axe fools the main world but not the probe world (real Chrome, test-only)
+ok 10 - R11 C3: a page script that patches getComputedStyle, querySelectorAll and axe fools the main world but not the probe world (real Chrome, test-only)
+  ---
+  duration_ms: 934.696157
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1977.007721

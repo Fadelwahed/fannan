@@ -1,0 +1,22 @@
+fatal: path 'release/tools/axe-tags.mjs' exists on disk, but not in '607b2e4'
+fatal: path 'release/tools/probe-world.mjs' exists on disk, but not in '607b2e4'
+# R11 before: R11 tests against 607b2e4 sources
+test_build_hashes_everything_but_the_registry (test_package_r3.FinalRecordTests.test_build_hashes_everything_but_the_registry) ... ok
+test_doc_lists_the_exclusions (test_package_r3.FinalRecordTests.test_doc_lists_the_exclusions) ... ok
+test_records_are_not_in_the_zip (test_package_r3.FinalRecordTests.test_records_are_not_in_the_zip) ... ok
+test_verify_excludes_only_one_latest_record_written_after_the_freeze (test_package_r3.FinalRecordTests.test_verify_excludes_only_one_latest_record_written_after_the_freeze) ... ok
+test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (test_package_r3.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records) ... FAIL
+
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (test_package_r3.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<scratch>/scripts/test_package_r3.py", line 129, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r11/') for n in names), 'R11 evidence is archived like R4-R10')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R11 evidence is archived like R4-R10
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.024s
+
+FAILED (failures=1)

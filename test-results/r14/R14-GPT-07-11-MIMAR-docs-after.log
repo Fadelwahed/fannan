@@ -1,0 +1,41 @@
+# R14 after: R14 sources
+TAP version 13
+# Subtest: R14-GPT-07 to 11: the exact process and contract text is in the plan, skills and references
+ok 1 - R14-GPT-07 to 11: the exact process and contract text is in the plan, skills and references
+  ---
+  duration_ms: 5.696643
+  type: 'test'
+  ...
+# Subtest: R14-GPT-07 to 11: each new step is a required manual check, documented in design-quality.md
+ok 2 - R14-GPT-07 to 11: each new step is a required manual check, documented in design-quality.md
+  ---
+  duration_ms: 5.69932
+  type: 'test'
+  ...
+# Subtest: R14-MIMAR-01 to 05: feedback loop, emphasis order, type measure, colour roles and per-width grid are required
+ok 3 - R14-MIMAR-01 to 05: feedback loop, emphasis order, type measure, colour roles and per-width grid are required
+  ---
+  duration_ms: 2.961501
+  type: 'test'
+  ...
+# Subtest: R14 Part B keeps the floors: desktop first at 1440, WCAG 2.2 AA, zero glass, spacing scale, 320 px reflow plus desktopWidths with 1440
+ok 4 - R14 Part B keeps the floors: desktop first at 1440, WCAG 2.2 AA, zero glass, spacing scale, 320 px reflow plus desktopWidths with 1440
+  ---
+  duration_ms: 1.649597
+  type: 'test'
+  ...
+# Subtest: R14 Part B text is generic and tool-agnostic: no client, country or design-tool vendor names in the new text
+ok 5 - R14 Part B text is generic and tool-agnostic: no client, country or design-tool vendor names in the new text
+  ---
+  duration_ms: 1.023942
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 72.777208

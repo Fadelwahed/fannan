@@ -1,0 +1,124 @@
+# R15 before: R15 tests against 67f3577 sources
+TAP version 13
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+not ok 1 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 57.213306
+  type: 'test'
+  location: '<scratch>/release/tests/handoff-contract.test.mjs:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+    +   criticRows: undefined,
+    +   earlierRoundOk: true,
+    +   handoffDeferredFails: false,
+    +   manualIds: [
+    +     'feedback-log',
+    +     'emphasis-order',
+    +     'type-measure',
+    +     'colour-roles',
+    +     'grid-per-width'
+    +   ],
+    +   missingCraft: [
+    +     'emphasis-order',
+    +     'type-measure',
+    +     'colour-roles',
+    +     'grid-per-width'
+    +   ],
+    +   missingFeedbackLog: false,
+    +   missingRow: [
+    -   criticRows: [
+          'brief-point-of-view',
+    -     'copy-truth',
+          'hierarchy-task-flow',
+          'typography-language',
+          'spacing-rhythm-grid',
+          'colour-imagery-restraint',
+          'interaction-states-motion',
+          'accessibility-handoff'
+        ],
+    +   unkeyedFails: false,
+    -   earlierRoundOk: true,
+    -   handoffDeferredFails: true,
+    -   manualIds: [],
+    -   missingCraft: [],
+    -   missingFeedbackLog: true,
+    -   missingRow: [],
+    -   unkeyedFails: true,
+        wireframeAccentPassFails: true,
+        wireframeDeferredCraft: [],
+        wireframeDeferredTaskTest: true,
+        wireframePassedCraft: []
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    manualIds:
+    criticRows:
+      0: 'brief-point-of-view'
+      1: 'copy-truth'
+      2: 'hierarchy-task-flow'
+      3: 'typography-language'
+      4: 'spacing-rhythm-grid'
+      5: 'colour-imagery-restraint'
+      6: 'interaction-states-motion'
+      7: 'accessibility-handoff'
+    missingFeedbackLog: true
+    missingCraft:
+    missingRow:
+    unkeyedFails: true
+    earlierRoundOk: true
+    wireframeDeferredCraft:
+    wireframePassedCraft:
+    wireframeDeferredTaskTest: true
+    wireframeAccentPassFails: true
+    handoffDeferredFails: true
+  actual:
+    manualIds:
+      0: 'feedback-log'
+      1: 'emphasis-order'
+      2: 'type-measure'
+      3: 'colour-roles'
+      4: 'grid-per-width'
+    missingFeedbackLog: false
+    missingCraft:
+      0: 'emphasis-order'
+      1: 'type-measure'
+      2: 'colour-roles'
+      3: 'grid-per-width'
+    missingRow:
+      0: 'brief-point-of-view'
+      1: 'hierarchy-task-flow'
+      2: 'typography-language'
+      3: 'spacing-rhythm-grid'
+      4: 'colour-imagery-restraint'
+      5: 'interaction-states-motion'
+      6: 'accessibility-handoff'
+    unkeyedFails: false
+    earlierRoundOk: true
+    wireframeDeferredCraft:
+    wireframePassedCraft:
+    wireframeDeferredTaskTest: true
+    wireframeAccentPassFails: true
+    handoffDeferredFails: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/handoff-contract.test.mjs:144:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 115.453963

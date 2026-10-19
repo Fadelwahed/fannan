@@ -1,0 +1,8 @@
+# R14 after: R14 sources
+test_r14_build_checks_sections_before_any_output (test_package_r3.RequiredSectionTests.test_r14_build_checks_sections_before_any_output) ... ok
+test_r14_release_carries_every_designer_process_section (test_package_r3.RequiredSectionTests.test_r14_release_carries_every_designer_process_section) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.005s
+
+OK

@@ -1,0 +1,35 @@
+# R11 after: R11 sources
+TAP version 13
+# Subtest: R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A and AA
+ok 1 - R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A and AA
+  ---
+  duration_ms: 2.820008
+  type: 'test'
+  ...
+# Subtest: R11 C1: both axe runs (page and every state) use the shared options; no literal tag list remains
+ok 2 - R11 C1: both axe runs (page and every state) use the shared options; no literal tag list remains
+  ---
+  duration_ms: 0.441051
+  type: 'test'
+  ...
+# Subtest: R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is selected (test-only deps)
+ok 3 - R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is selected (test-only deps)
+  ---
+  duration_ms: 44.848714
+  type: 'test'
+  ...
+# Subtest: R11 C1: Label in Name (2.5.3) is reported with the shared options (real Chrome, test-only)
+ok 4 - R11 C1: Label in Name (2.5.3) is reported with the shared options (real Chrome, test-only)
+  ---
+  duration_ms: 753.104986
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 858.739641

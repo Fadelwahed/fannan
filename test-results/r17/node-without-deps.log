@@ -1,0 +1,724 @@
+TAP version 13
+# Subtest: R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A and AA
+ok 1 - R11 C1: the axe tag set is exactly WCAG 2.0, 2.1 and 2.2 at levels A and AA
+  ---
+  duration_ms: 2.492785
+  type: 'test'
+  ...
+# Subtest: R11 C1: both axe runs (page and every state) use the shared options; no literal tag list remains
+ok 2 - R11 C1: both axe runs (page and every state) use the shared options; no literal tag list remains
+  ---
+  duration_ms: 0.455254
+  type: 'test'
+  ...
+# Subtest: R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is selected (test-only deps)
+ok 3 - R11 C1: every non-experimental WCAG A/AA rule in the pinned axe is selected (test-only deps) # SKIP test-only deps absent
+  ---
+  duration_ms: 0.085637
+  type: 'test'
+  ...
+# Subtest: R11 C1: Label in Name (2.5.3) is reported with the shared options (real Chrome, test-only)
+ok 4 - R11 C1: Label in Name (2.5.3) is reported with the shared options (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.077537
+  type: 'test'
+  ...
+# Subtest: checker detector call leaves executable selection to the pinned launcher
+ok 5 - checker detector call leaves executable selection to the pinned launcher
+  ---
+  duration_ms: 2.16763
+  type: 'test'
+  ...
+# Subtest: checker verifies browser before launch and records checked identity and runtime version
+ok 6 - checker verifies browser before launch and records checked identity and runtime version
+  ---
+  duration_ms: 3.218405
+  type: 'test'
+  ...
+# Subtest: R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+ok 7 - R4-4: checker refuses a browser whose runtime version differs from the reviewed pin
+  ---
+  duration_ms: 1.203411
+  type: 'test'
+  ...
+# Subtest: flags English and Arabic clichés and three-part headlines, not body lists
+ok 8 - flags English and Arabic clichés and three-part headlines, not body lists
+  ---
+  duration_ms: 4.323227
+  type: 'test'
+  ...
+# Subtest: dependency inventory rejects a changed package and wrong ledger
+ok 9 - dependency inventory rejects a changed package and wrong ledger
+  ---
+  duration_ms: 4.782148
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-quality.md: zero stock glassmorphism, both)
+ok 10 - ARGON-R2-09: stock glassmorphism is gated at zero in both phases (design-quality.md: zero stock glassmorphism, both)
+  ---
+  duration_ms: 1.003852
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only)
+ok 11 - ARGON-R2-09: accent falls back to the Style Dictionary names; centred icon trios are found in any wrapper (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.143088
+  type: 'test'
+  ...
+# Subtest: R9 (sibling of CODEX-R4-02): page CSS cannot change the accent colour the probe measures (real Chrome, test-only)
+ok 12 - R9 (sibling of CODEX-R4-02): page CSS cannot change the accent colour the probe measures (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.074749
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-01: a declared but invalid accent fails closed; it never shadows a valid one into a pass (real Chrome, test-only)
+ok 13 - ARGON-R5-01: a declared but invalid accent fails closed; it never shadows a valid one into a pass (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.056449
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-01: the gate treats a null accent as a FAIL on the page and on every state, including the scrolled viewport maximum
+ok 14 - ARGON-R5-01: the gate treats a null accent as a FAIL on the page and on every state, including the scrolled viewport maximum
+  ---
+  duration_ms: 0.240629
+  type: 'test'
+  ...
+# Subtest: R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only)
+ok 15 - R11 S2/C6: glass on html, body, rendered ::before/::after and -webkit-backdrop-filter is counted (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.064501
+  type: 'test'
+  ...
+# Subtest: R11 panel D: glass inside open shadow roots, same-origin frames and constructed stylesheets is counted, also from the isolated probe world (real Chrome, test-only)
+ok 16 - R11 panel D: glass inside open shadow roots, same-origin frames and constructed stylesheets is counted, also from the isolated probe world (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.101229
+  type: 'test'
+  ...
+# Subtest: R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops
+ok 17 - R11 S2: the node side scans served CSS and HTML for -webkit-backdrop-filter, which Chrome drops
+  ---
+  duration_ms: 0.634549
+  type: 'test'
+  ...
+# Subtest: R11 panel A: the accent fails closed at handoff, names the variable, binds to the approved token and is DEFERRED in wireframes
+ok 18 - R11 panel A: the accent fails closed at handoff, names the variable, binds to the approved token and is DEFERRED in wireframes
+  ---
+  duration_ms: 2.450535
+  type: 'test'
+  ...
+# Subtest: R12 M04/M05: served HTML/JS/SVG script forms and CSS-escaped property names count as glass; only an explicit none does not
+ok 19 - R12 M04/M05: served HTML/JS/SVG script forms and CSS-escaped property names count as glass; only an explicit none does not
+  ---
+  duration_ms: 1.038448
+  type: 'test'
+  ...
+# Subtest: R12 M05: real Chrome: an escaped root-element glass rule in a stylesheet is counted through the CSSOM (test-only)
+ok 20 - R12 M05: real Chrome: an escaped root-element glass rule in a stylesheet is counted through the CSSOM (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.161959
+  type: 'test'
+  ...
+# Subtest: R12 M03: any frame, readable or not, fails the final handoff (axe and probes do not run inside frames); wireframes record it
+ok 21 - R12 M03: any frame, readable or not, fails the final handoff (axe and probes do not run inside frames); wireframes record it
+  ---
+  duration_ms: 0.25574
+  type: 'test'
+  ...
+# Subtest: R14-GPT-07 to 11: the exact process and contract text is in the plan, skills and references
+ok 22 - R14-GPT-07 to 11: the exact process and contract text is in the plan, skills and references
+  ---
+  duration_ms: 6.732829
+  type: 'test'
+  ...
+# Subtest: R14-GPT-07 to 11: each new step is a required manual check, documented in design-quality.md
+ok 23 - R14-GPT-07 to 11: each new step is a required manual check, documented in design-quality.md
+  ---
+  duration_ms: 6.103537
+  type: 'test'
+  ...
+# Subtest: R14-MIMAR-01 to 05: feedback loop, emphasis order, type measure, colour roles and per-width grid are required
+ok 24 - R14-MIMAR-01 to 05: feedback loop, emphasis order, type measure, colour roles and per-width grid are required
+  ---
+  duration_ms: 3.072215
+  type: 'test'
+  ...
+# Subtest: R14 Part B keeps the floors: desktop first at 1440, WCAG 2.2 AA, zero glass, spacing scale, 320 px reflow plus desktopWidths with 1440
+ok 25 - R14 Part B keeps the floors: desktop first at 1440, WCAG 2.2 AA, zero glass, spacing scale, 320 px reflow plus desktopWidths with 1440
+  ---
+  duration_ms: 2.606735
+  type: 'test'
+  ...
+# Subtest: R14 Part B text is generic and tool-agnostic: no client, country or design-tool vendor names in the new text
+ok 26 - R14 Part B text is generic and tool-agnostic: no client, country or design-tool vendor names in the new text
+  ---
+  duration_ms: 0.939276
+  type: 'test'
+  ...
+# Subtest: R15-B1: the complete wireframe gate runs inside Step 5 after the task and findability tests; nine steps unchanged
+ok 27 - R15-B1: the complete wireframe gate runs inside Step 5 after the task and findability tests; nine steps unchanged
+  ---
+  duration_ms: 2.16592
+  type: 'test'
+  ...
+# Subtest: R15-B2: column counts are unitless integers; gutters, margins and maximum widths are dimension tokens
+ok 28 - R15-B2: column counts are unitless integers; gutters, margins and maximum widths are dimension tokens
+  ---
+  duration_ms: 0.436743
+  type: 'test'
+  ...
+# Subtest: R15-B3/B4: feedback-log and the four craft checks are manual IDs; critic checks are keyed to the eight rubric rows
+ok 29 - R15-B3/B4: feedback-log and the four craft checks are manual IDs; critic checks are keyed to the eight rubric rows
+  ---
+  duration_ms: 1.700312
+  type: 'test'
+  ...
+# Subtest: R16-GPT-03/04: wireframe coverage of every screen and locale; one shared component specification compared across screens
+ok 30 - R16-GPT-03/04: wireframe coverage of every screen and locale; one shared component specification compared across screens
+  ---
+  duration_ms: 2.028436
+  type: 'test'
+  ...
+# Subtest: R17: fail-closed compositing sentence, ENH backlog and the rendered-visibility backstop method are documented
+ok 31 - R17: fail-closed compositing sentence, ENH backlog and the rendered-visibility backstop method are documented
+  ---
+  duration_ms: 1.039033
+  type: 'test'
+  ...
+# Subtest: focus screen compares unfocused and focused appearance rather than decoration presence
+ok 32 - focus screen compares unfocused and focused appearance rather than decoration presence
+  ---
+  duration_ms: 3.504296
+  type: 'test'
+  ...
+# Subtest: R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+ok 33 - R4-3: weak colour-only and unrendered changes do not count as a visible focus indicator
+  ---
+  duration_ms: 5.950965
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+ok 34 - OPUS-R2-02: indicators are measured against the nearest opaque ancestor background, not white
+  ---
+  duration_ms: 1.128442
+  type: 'test'
+  ...
+# Subtest: R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+ok 35 - R4-3: focus settle waits for finite transitions on the focused element and ancestors, capped
+  ---
+  duration_ms: 80.85842
+  type: 'test'
+  ...
+# Subtest: R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+ok 36 - R4-3: both checker tab loops settle animations after Tab and before reading focus appearance
+  ---
+  duration_ms: 0.848445
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+ok 37 - OPUS-R2-09: focus-state contrast comes from quality-checks.json, floored at 3:1, and reaches both probe calls
+  ---
+  duration_ms: 18.673804
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+ok 38 - ARGON-R2-04: percentage rgb() channels scale to 0..255 (alpha % to 0..1); transparent outline/shadow still do not count
+  ---
+  duration_ms: 1.047934
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+ok 39 - ARGON-R2-05: both tab loops take the unfocused baseline once, before the loop, with nothing focused
+  ---
+  duration_ms: 0.374772
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only)
+ok 40 - ARGON-R2-05: a :focus-within container indicator counts for every child, not only the first (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.361939
+  type: 'test'
+  ...
+# Subtest: R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+ok 41 - R6: an outline or outer ring is measured against the backdrop it is drawn on, an inset ring against the element
+  ---
+  duration_ms: 1.016175
+  type: 'test'
+  ...
+# Subtest: R11 C5: no client, company or country name anywhere in release/ (tests excluded)
+ok 42 - R11 C5: no client, company or country name anywhere in release/ (tests excluded)
+  ---
+  duration_ms: 6.914833
+  type: 'test'
+  ...
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+ok 43 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 106.464004
+  type: 'test'
+  ...
+# Subtest: protected storage rejects shared ownership, writable modes and links
+ok 44 - protected storage rejects shared ownership, writable modes and links
+  ---
+  duration_ms: 1.078761
+  type: 'test'
+  ...
+# Subtest: executable identity requires exact bytes and a real absolute file
+ok 45 - executable identity requires exact bytes and a real absolute file
+  ---
+  duration_ms: 2.579603
+  type: 'test'
+  ...
+# Subtest: production browser refuses an environment override before execution
+ok 46 - production browser refuses an environment override before execution
+  ---
+  duration_ms: 0.199123
+  type: 'test'
+  ...
+# Subtest: production browser remains blocked without a reviewed target-host pin
+ok 47 - production browser remains blocked without a reviewed target-host pin
+  ---
+  duration_ms: 0.210373
+  type: 'test'
+  ...
+# Subtest: R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+ok 48 - R4-4: browser support tree is hashed and any changed, added or escaping entry is refused
+  ---
+  duration_ms: 4.486407
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+ok 49 - OPUS-R2-06: browser pin location must be its own directory under /opt/fannan/bin
+  ---
+  duration_ms: 0.226462
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+ok 50 - ARGON-R2-01: protected mode checks the support root before resolving it and refuses /opt/fannan/bin itself
+  ---
+  duration_ms: 0.665409
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+ok 51 - ARGON-R2-01: protected mode refuses any symlink inside the support tree (browser-trust.json: no symlinks)
+  ---
+  duration_ms: 0.257404
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env
+ok 52 - ARGON-R2-06: the checker launches the browser with a minimal explicit environment, never process.env
+  ---
+  duration_ms: 1.829795
+  type: 'test'
+  ...
+# Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+ok 53 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+  ---
+  duration_ms: 3.978549
+  type: 'test'
+  ...
+# Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+ok 54 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+  ---
+  duration_ms: 14.085945
+  type: 'test'
+  ...
+# Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+ok 55 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+  ---
+  duration_ms: 3.302059
+  type: 'test'
+  ...
+# Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+ok 56 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+  ---
+  duration_ms: 1.545773
+  type: 'test'
+  ...
+# Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
+ok 57 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
+  ---
+  duration_ms: 0.296887
+  type: 'test'
+  ...
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+ok 58 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 1.548317
+  type: 'test'
+  ...
+# Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+ok 59 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.208363
+  type: 'test'
+  ...
+# Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+ok 60 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.132717
+  type: 'test'
+  ...
+# Subtest: browser only serves bytes from selected project
+ok 61 - browser only serves bytes from selected project
+  ---
+  duration_ms: 2.319785
+  type: 'test'
+  ...
+# Subtest: R13 N08/N09: JavaScript escapes are decoded and comment markers inside strings cannot hide glass (cheap defence)
+ok 62 - R13 N08/N09: JavaScript escapes are decoded and comment markers inside strings cannot hide glass (cheap defence)
+  ---
+  duration_ms: 7.257711
+  type: 'test'
+  ...
+# Subtest: R13 N07: data: and blob: stylesheets are refused and unreadable unserved ones fail, on the page and on every state
+ok 63 - R13 N07: data: and blob: stylesheets are refused and unreadable unserved ones fail, on the page and on every state
+  ---
+  duration_ms: 0.521057
+  type: 'test'
+  ...
+# Subtest: R13 N04/q1: every nested-document element is a frame for the probes and the width screen
+ok 64 - R13 N04/q1: every nested-document element is a frame for the probes and the width screen
+  ---
+  duration_ms: 5.419839
+  type: 'test'
+  ...
+# Subtest: R13 N01/N02/N03/N04/N15/N16: real Chrome: the width screen sees body-clipped, zero-box, shadow-clipped and nested-scope content (test-only)
+ok 65 - R13 N01/N02/N03/N04/N15/N16: real Chrome: the width screen sees body-clipped, zero-box, shadow-clipped and nested-scope content (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.423823
+  type: 'test'
+  ...
+# Subtest: R13 N17: real Chrome: a page that patches Function.prototype.call cannot capture the native rAF; the patch is a tamper sign (test-only)
+ok 66 - R13 N17: real Chrome: a page that patches Function.prototype.call cannot capture the native rAF; the patch is a tamper sign (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.812883
+  type: 'test'
+  ...
+# Subtest: R13 N20/N13: real Chrome: spacing, placeholders, h1 and the content record include open shadow roots (test-only)
+ok 67 - R13 N20/N13: real Chrome: spacing, placeholders, h1 and the content record include open shadow roots (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.398077
+  type: 'test'
+  ...
+# Subtest: R14-GPT-01: real Chrome: a display:contents or zero-size copy slot filled by script is compared by its text; empty without JavaScript is INCOMPLETE (test-only)
+ok 68 - R14-GPT-01: real Chrome: a display:contents or zero-size copy slot filled by script is compared by its text; empty without JavaScript is INCOMPLETE (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.64121
+  type: 'test'
+  ...
+# Subtest: R14-GPT-02: real Chrome: contrast covers open (declarative) shadow roots; white-on-white shadow text only without JavaScript fails integrity (test-only)
+ok 69 - R14-GPT-02: real Chrome: contrast covers open (declarative) shadow roots; white-on-white shadow text only without JavaScript fails integrity (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.088542
+  type: 'test'
+  ...
+# Subtest: R14-GPT-03: real Chrome: a closed shadow root that exists only at 320 px is an unscanned scope at 320 (test-only)
+ok 70 - R14-GPT-03: real Chrome: a closed shadow root that exists only at 320 px is an unscanned scope at 320 (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.069873
+  type: 'test'
+  ...
+# Subtest: R14-GPT-04: real Chrome: a root or propagated body that cannot scroll hides lower text at 1440 and 320; a real inner scroller is fine (test-only)
+ok 71 - R14-GPT-04: real Chrome: a root or propagated body that cannot scroll hides lower text at 1440 and 320; a real inner scroller is fine (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.069034
+  type: 'test'
+  ...
+# Subtest: R14-GPT-05: real Chrome: the reduced-motion snapshot sees timer-driven motion inside an open shadow root (test-only)
+ok 72 - R14-GPT-05: real Chrome: the reduced-motion snapshot sees timer-driven motion inside an open shadow root (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.067932
+  type: 'test'
+  ...
+# Subtest: R15-A1: real Chrome: an unbounded overflow-y:auto wrapper under a hidden viewport cannot scroll, so lower text fails at 1440 and 320; a bounded app shell passes (test-only)
+ok 73 - R15-A1: real Chrome: an unbounded overflow-y:auto wrapper under a hidden viewport cannot scroll, so lower text fails at 1440 and 320; a bounded app shell passes (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.725354
+  type: 'test'
+  ...
+# Subtest: R15-A3: real Chrome: text faded by opacity on the element or an ancestor and raised by script fails integrity without JavaScript; opaque or slightly translucent text is unchanged (test-only)
+ok 74 - R15-A3: real Chrome: text faded by opacity on the element or an ancestor and raised by script fails integrity without JavaScript; opaque or slightly translucent text is unchanged (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.094397
+  type: 'test'
+  ...
+# Subtest: R16-GPT-01: real Chrome: filters, blend modes, backdrop filters and masks on the text or any ancestor are resolved or unknown, never a silent pass (test-only)
+ok 75 - R16-GPT-01: real Chrome: filters, blend modes, backdrop filters and masks on the text or any ancestor are resolved or unknown, never a silent pass (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.850818
+  type: 'test'
+  ...
+# Subtest: R16-GPT-02: real Chrome: native control text is contrast-checked and controls, labels and accessible names are compared with JavaScript off (test-only)
+ok 76 - R16-GPT-02: real Chrome: native control text is contrast-checked and controls, labels and accessible names are compared with JavaScript off (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.16511
+  type: 'test'
+  ...
+# Subtest: R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only)
+ok 77 - R17-MIMAR-01/02, R17-GPT-02: real Chrome: text hidden by any CSS means with JavaScript off is caught by the rendered-visibility backstop (hit test and pixels), never PASS (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.550097
+  type: 'test'
+  ...
+# Subtest: R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails, and text it cannot measure is INCOMPLETE (test-only)
+ok 78 - R17-MIMAR-01: real Chrome: text that is obscured or unreadable with JavaScript on fails, and text it cannot measure is INCOMPLETE (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.084991
+  type: 'test'
+  ...
+# Subtest: R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only)
+ok 79 - R17: real Chrome: healthy pages and normal animations pass the backstop with JavaScript on and off (no false positives) (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.067162
+  type: 'test'
+  ...
+# Subtest: R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only)
+ok 80 - R17-GPT-02, R17-MIMAR-02: real Chrome: the CSS pass composites placeholder opacity and reads the text-fill colour (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.064842
+  type: 'test'
+  ...
+# Subtest: R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only)
+ok 81 - R17-GPT-01: real Chrome: a control's displayed value and its accessible name are compared separately with JavaScript on and off (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.066443
+  type: 'test'
+  ...
+# Subtest: R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only)
+ok 82 - R17-GPT-03: real Chrome: button values, placeholders, option labels and accessible names reach the placeholder and filler screens (test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.052487
+  type: 'test'
+  ...
+# Subtest: R11 C3: the checker wraps every page in the isolated probe world; only the rAF counter reads the main world
+ok 83 - R11 C3: the checker wraps every page in the isolated probe world; only the rAF counter reads the main world
+  ---
+  duration_ms: 2.383402
+  type: 'test'
+  ...
+# Subtest: R11 C3: a page script that patches getComputedStyle, querySelectorAll and axe fools the main world but not the probe world (real Chrome, test-only)
+ok 84 - R11 C3: a page script that patches getComputedStyle, querySelectorAll and axe fools the main world but not the probe world (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.121339
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: access proof forbids mutation probes and does not treat 403/422 as proof of read-only
+ok 85 - R8 PORT-03: access proof forbids mutation probes and does not treat 403/422 as proof of read-only
+  ---
+  duration_ms: 0.829517
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: the daily check must have run within its interval, otherwise it escalates
+ok 86 - R8 PORT-03: the daily check must have run within its interval, otherwise it escalates
+  ---
+  duration_ms: 0.107246
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: a separate runtime identity is mandatory and the shared uid 1000 folders do not qualify
+ok 87 - R8 PORT-03: a separate runtime identity is mandatory and the shared uid 1000 folders do not qualify
+  ---
+  duration_ms: 0.124349
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: the detector has one fixed path and one pinned source, matching the launcher pin
+ok 88 - R8 PORT-03: the detector has one fixed path and one pinned source, matching the launcher pin
+  ---
+  duration_ms: 0.283638
+  type: 'test'
+  ...
+# Subtest: R8 PORT-03: runtime stays a proposal; cloud "reported complete/installed" text is not taken
+ok 89 - R8 PORT-03: runtime stays a proposal; cloud "reported complete/installed" text is not taken
+  ---
+  duration_ms: 0.291988
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+ok 90 - OPUS-R2-10: handoff config and both checker passes use the spacing off-scale count
+  ---
+  duration_ms: 1.351299
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only)
+ok 91 - OPUS-R2-10: spacing probe counts computed margins/paddings/gaps that are not on the built --spacing-* scale (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.188956
+  type: 'test'
+  ...
+# Subtest: ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only)
+ok 92 - ARGON-R2-06: a secret-looking variable in the checker environment does not reach the browser process (real Chrome, Linux /proc, test-only) # SKIP Linux, test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.069926
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only)
+ok 93 - OPUS-R2-10 follow-up: the bundled fixture page uses the built spacing scale and passes the spacing check unweakened (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.064183
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-02: a page-declared --spacing-* variable does not legitimise off-scale spacing; only the approved scale counts (real Chrome, test-only)
+ok 94 - CODEX-R3-02: a page-declared --spacing-* variable does not legitimise off-scale spacing; only the approved scale counts (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.063234
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-02: the approved spacing scale is read from the hash-checked handoff token JSON and its build evidence
+ok 95 - CODEX-R3-02: the approved spacing scale is read from the hash-checked handoff token JSON and its build evidence
+  ---
+  duration_ms: 7.934357
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-02: page CSS cannot change the approved scale, and em is converted at each element's own font size (real Chrome, test-only)
+ok 96 - CODEX-R4-02: page CSS cannot change the approved scale, and em is converted at each element's own font size (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.083703
+  type: 'test'
+  ...
+# Subtest: R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
+ok 97 - R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.053314
+  type: 'test'
+  ...
+# Subtest: R12 M15: margins on html and body are screened too (real Chrome, test-only)
+ok 98 - R12 M15: margins on html and body are screened too (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.18617
+  type: 'test'
+  ...
+# Subtest: R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches
+ok 99 - R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches
+  ---
+  duration_ms: 1.787532
+  type: 'test'
+  ...
+# Subtest: R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)
+ok 100 - R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)
+  ---
+  duration_ms: 0.312981
+  type: 'test'
+  ...
+# Subtest: shared token validation rejects malformed values and incompatible references
+ok 101 - shared token validation rejects malformed values and incompatible references
+  ---
+  duration_ms: 4.046474
+  type: 'test'
+  ...
+# Subtest: CSS build rejects hand-edited malformed token JSON before dependencies or writes
+ok 102 - CSS build rejects hand-edited malformed token JSON before dependencies or writes
+  ---
+  duration_ms: 232.519256
+  type: 'test'
+  ...
+# Subtest: token conversion validates types, dimensions and references before writing
+ok 103 - token conversion validates types, dimensions and references before writing # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.173636
+  type: 'test'
+  ...
+# Subtest: OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+ok 104 - OPUS-R2-08: stitch-design-md skill states the units rule the converter enforces
+  ---
+  duration_ms: 0.241553
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)
+ok 105 - CODEX-R3-01: numeric negatives and references to negative values are refused where CSS forbids negatives (validator and builder)
+  ---
+  duration_ms: 65.19177
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps)
+ok 106 - CODEX-R3-01: the converter refuses numeric negatives and references to negative values, and still builds allowed negatives (real Style Dictionary, test-only deps) # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.084979
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-04: component typography follows the typography type rules (validator and builder)
+ok 107 - CODEX-R3-04: component typography follows the typography type rules (validator and builder)
+  ---
+  duration_ms: 336.64089
+  type: 'test'
+  ...
+# Subtest: CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps)
+ok 108 - CODEX-R3-04: the converter applies the typography rules to component typography and builds valid values (real Style Dictionary, test-only deps) # SKIP existing runtime dependencies absent
+  ---
+  duration_ms: 0.090054
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-03: one rule per consuming path applies to literals and resolved references alike (type, units, sign, percent only for lineHeight)
+ok 109 - CODEX-R4-03: one rule per consuming path applies to literals and resolved references alike (type, units, sign, percent only for lineHeight)
+  ---
+  duration_ms: 1.392983
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+ok 110 - R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+  ---
+  duration_ms: 0.851094
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+ok 111 - R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+  ---
+  duration_ms: 2.12358
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
+ok 112 - R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.099271
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
+ok 113 - CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.087515
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+ok 114 - ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.091683
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+ok 115 - ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.065865
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: off-screen-left content fails the width screen
+ok 116 - ARGON-R5-05: off-screen-left content fails the width screen
+  ---
+  duration_ms: 0.241788
+  type: 'test'
+  ...
+# Subtest: R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
+ok 117 - R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.069391
+  type: 'test'
+  ...
+# Subtest: R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
+ok 118 - R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
+  ---
+  duration_ms: 2.748689
+  type: 'test'
+  ...
+# Subtest: R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
+ok 119 - R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only) # SKIP test-only deps or local Chrome absent
+  ---
+  duration_ms: 0.337966
+  type: 'test'
+  ...
+1..119
+# tests 119
+# suites 0
+# pass 73
+# fail 0
+# cancelled 0
+# skipped 46
+# todo 0
+# duration_ms 5094.710482

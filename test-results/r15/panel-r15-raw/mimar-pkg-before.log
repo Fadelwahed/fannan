@@ -1,0 +1,50 @@
+.........F........FF..........FF..
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r15/testpkgb/scripts/test_package_r3.py", line 136, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r14/') for n in names), 'R14 evidence is archived like R4-R13')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R14 evidence is archived like R4-R13
+
+======================================================================
+FAIL: test_r14_credential_keys_anywhere_in_tokens_json_are_refused (__main__.JunkAndSecretTests.test_r14_credential_keys_anywhere_in_tokens_json_are_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r15/testpkgb/scripts/test_package_r3.py", line 412, in test_r14_credential_keys_anywhere_in_tokens_json_are_refused
+    with temp, self.assertRaises(ValueError, msg=json.dumps(tokens)):
+               ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised : {"colors": {"primary": {"$value": "#123456", "$extensions": {"auth": {"password": "x"}}}}}
+
+======================================================================
+FAIL: test_r14_json_credential_values_in_ordinary_files_are_refused (__main__.JunkAndSecretTests.test_r14_json_credential_values_in_ordinary_files_are_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r15/testpkgb/scripts/test_package_r3.py", line 426, in test_r14_json_credential_values_in_ordinary_files_are_refused
+    with self.assertRaises(ValueError, msg=key):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised : password
+
+======================================================================
+FAIL: test_r14_build_checks_sections_before_any_output (__main__.RequiredSectionTests.test_r14_build_checks_sections_before_any_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r15/testpkgb/scripts/test_package_r3.py", line 304, in test_r14_build_checks_sections_before_any_output
+    self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : the package checks the required sections
+
+======================================================================
+FAIL: test_r14_release_carries_every_designer_process_section (__main__.RequiredSectionTests.test_r14_release_carries_every_designer_process_section)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r15/testpkgb/scripts/test_package_r3.py", line 288, in test_r14_release_carries_every_designer_process_section
+    self.assertTrue(hasattr(package, 'missing_sections'), 'the package checks the required sections')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : the package checks the required sections
+
+----------------------------------------------------------------------
+Ran 34 tests in 0.494s
+
+FAILED (failures=5)

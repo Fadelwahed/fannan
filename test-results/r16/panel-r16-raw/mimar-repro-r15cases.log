@@ -1,0 +1,6 @@
+GPT-04 width 1440 {"clipped":1,"offscreenLeft":0,"unreachable":0,"scrolledText":0} {"clientH":1550,"scrollH":1550,"docScroll":1550}
+GPT-04 width 320 {"clipped":1,"offscreenLeft":0,"unreachable":0,"scrolledText":0} {"clientH":1550,"scrollH":1550,"docScroll":1550}
+GPT-04 control app-shell {"clipped":0,"offscreenLeft":0,"unreachable":0,"scrolledText":0}
+GPT-12 js-on  {"contrastFailures":0,"contrastUnknown":0,"contrastChecked":1}
+GPT-12 js-off {"contrastFailures":1,"contrastUnknown":0,"contrastChecked":1}
+GPT-12 control light-grey js-off {"contrastFailures":1,"contrastUnknown":0,"contrastChecked":1}

@@ -1,0 +1,35 @@
+# R12 after: R12 sources
+TAP version 13
+# Subtest: R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
+ok 1 - R11 (Asad note): left and right margins are screened too; auto margins are not (real Chrome, test-only)
+  ---
+  duration_ms: 1044.434216
+  type: 'test'
+  ...
+# Subtest: R12 M15: margins on html and body are screened too (real Chrome, test-only)
+ok 2 - R12 M15: margins on html and body are screened too (real Chrome, test-only)
+  ---
+  duration_ms: 542.590902
+  type: 'test'
+  ...
+# Subtest: R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches
+ok 3 - R12 M20: a data-fannan-spacing-exception excuses nothing unless a handoff entry with its id, scope, a reason and the approver matches
+  ---
+  duration_ms: 2.601232
+  type: 'test'
+  ...
+# Subtest: R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)
+ok 4 - R12 M16: the configured spacing reason matches what is screened (horizontal margins, html and body, approver-backed exceptions)
+  ---
+  duration_ms: 0.312577
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1654.683881

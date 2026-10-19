@@ -1,0 +1,35 @@
+control         on  {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+page.evaluate: Target page, context or browser has been closed
+    at look (/workspace/panel-r19/testrun/release/tools/visibility.mjs:272:25)
+    at visibilityScan (/workspace/panel-r19/testrun/release/tools/visibility.mjs:301:66)
+    at async file:///workspace/panel-r19/repro/repro19.mjs:31:13 {
+  log: []
+}
+
+Node.js v22.23.3
+0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":1,"cssUnk":0,"clipped":0} []
+heroImgNoScrim  off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":1,"cssUnk":0,"clipped":0} []
+clippedCard     on  {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":1} []
+clippedCard     off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":1} []
+svgOverlay      on  {"meas":1,"obsc":1,"unread":0,"unmeas":0,"hidden":0,"steps":3,"cssFail":0,"cssUnk":0,"clipped":0} [["obscured","Body text under a decora","3/3"]]
+svgOverlay      off {"meas":1,"obsc":1,"unread":0,"unmeas":0,"hidden":0,"steps":3,"cssFail":0,"cssUnk":0,"clipped":0} [["obscured","Body text under a decora","3/3"]]
+pngSticker      on  {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+pngSticker      off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+veilPE70        on  {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+veilPE70        off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+veilPE70js      on  {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+veilPE70js      off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+veil70          on  {"meas":1,"obsc":0,"unread":1,"unmeas":0,"hidden":0,"steps":3,"cssFail":0,"cssUnk":0,"clipped":0} [["unreadable","Body text under a 70% wh",1.94]]
+veil70          off {"meas":1,"obsc":0,"unread":1,"unmeas":0,"hidden":0,"steps":3,"cssFail":0,"cssUnk":0,"clipped":0} [["unreadable","Body text under a 70% wh",1.94]]
+focusRing       on  {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+focusRing       off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+popoverOpen     on  {"meas":3,"obsc":1,"unread":0,"unmeas":0,"hidden":0,"steps":3,"cssFail":0,"cssUnk":0,"clipped":0} [["obscured","Page heading","3/3"]]
+popoverOpen     off {"meas":3,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+dialogOpen      on  {"meas":1,"obsc":2,"unread":0,"unmeas":0,"hidden":0,"steps":4,"cssFail":0,"cssUnk":0,"clipped":0} [["obscured","Page heading","3/3"],["obscured","Background paragraph beh","3/3"]]
+dialogOpen      off {"meas":2,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":2,"cssFail":0,"cssUnk":0,"clipped":0} []
+stickyThead     on  {"meas":43,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":5,"cssFail":0,"cssUnk":0,"clipped":0} []
+stickyThead     off {"meas":43,"obsc":0,"unread":0,"unmeas":0,"hidden":0,"steps":5,"cssFail":0,"cssUnk":0,"clipped":0} []

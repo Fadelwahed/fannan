@@ -1,0 +1,41 @@
+# R14 after: R14 sources
+TAP version 13
+# Subtest: R14-GPT-01: real Chrome: a display:contents or zero-size copy slot filled by script is compared by its text; empty without JavaScript is INCOMPLETE (test-only)
+ok 1 - R14-GPT-01: real Chrome: a display:contents or zero-size copy slot filled by script is compared by its text; empty without JavaScript is INCOMPLETE (test-only)
+  ---
+  duration_ms: 864.046593
+  type: 'test'
+  ...
+# Subtest: R14-GPT-02: real Chrome: contrast covers open (declarative) shadow roots; white-on-white shadow text only without JavaScript fails integrity (test-only)
+ok 2 - R14-GPT-02: real Chrome: contrast covers open (declarative) shadow roots; white-on-white shadow text only without JavaScript fails integrity (test-only)
+  ---
+  duration_ms: 629.774448
+  type: 'test'
+  ...
+# Subtest: R14-GPT-03: real Chrome: a closed shadow root that exists only at 320 px is an unscanned scope at 320 (test-only)
+ok 3 - R14-GPT-03: real Chrome: a closed shadow root that exists only at 320 px is an unscanned scope at 320 (test-only)
+  ---
+  duration_ms: 548.307761
+  type: 'test'
+  ...
+# Subtest: R14-GPT-04: real Chrome: a root or propagated body that cannot scroll hides lower text at 1440 and 320; a real inner scroller is fine (test-only)
+ok 4 - R14-GPT-04: real Chrome: a root or propagated body that cannot scroll hides lower text at 1440 and 320; a real inner scroller is fine (test-only)
+  ---
+  duration_ms: 1393.678193
+  type: 'test'
+  ...
+# Subtest: R14-GPT-05: real Chrome: the reduced-motion snapshot sees timer-driven motion inside an open shadow root (test-only)
+ok 5 - R14-GPT-05: real Chrome: the reduced-motion snapshot sees timer-driven motion inside an open shadow root (test-only)
+  ---
+  duration_ms: 1633.931023
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5137.352119
