@@ -144,11 +144,11 @@ test('R29-GPT-06: real Chrome: opener names are never compared: Menu becoming Cl
   }, { menuToClose: { pass: true, rules: [] }, twoMenus: { pass: true, rules: [] } });
 }));
 
-test('R29-GPT-07: real Chrome: a popovertarget menu passes with its declaration; an aria-haspopup button with no open state is an invalid declaration (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
+test('R29-GPT-07: real Chrome: a popovertarget menu passes with its declaration; an aria-haspopup menu whose declared popup is shown passes without aria-expanded (R30-M-02) (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const pop = opened => W(`<style>@media (max-width:600px){.d{display:none}}@media (min-width:601px){.m,#pm{display:none}}</style><nav class="d" aria-label="Main"><a href="/about">About</a> <a href="/work">Work</a></nav><button class="m" popovertarget="pm">Menu</button><div id="pm" popover><a href="/about">About</a> <a href="/work">Work</a></div>`, opened ? 'document.getElementById("pm").showPopover();' : '');
   const hp = opened => W(`<style>@media (max-width:600px){.d{display:none}.mm{${opened ? '' : 'display:none'}}}@media (min-width:601px){.m,.mm{display:none}}</style><nav class="d" aria-label="Main"><a href="/about">About</a></nav><button class="m" aria-haspopup="true">Menu</button><div class="mm"><a href="/about">About</a></div>`);
-  assert.deepEqual({ popover: await gate({ default: pop(false), 'menu-open': D(pop(true), '.m', '#pm') }), haspopupNoOpenState: (await gate({ default: hp(false), 'menu-open': D(hp(true), '.m', '.mm') })).pass }, { popover: { pass: true, rules: [] }, haspopupNoOpenState: false });
+  assert.deepEqual({ popover: await gate({ default: pop(false), 'menu-open': D(pop(true), '.m', '#pm') }), haspopupShown: await gate({ default: hp(false), 'menu-open': D(hp(true), '.m', '.mm') }) }, { popover: { pass: true, rules: [] }, haspopupShown: { pass: true, rules: [] } });
 }));
 
 const carousel = (cls, i) => `<div class="${cls}"><div style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[1, 2, 3].map(k => `<div class="slide" style="flex:0 0 300px"><p>${cls} slide ${k}</p><a href="/s${k}">Shop now</a></div>`).join('')}</div></div><div class="dots">${[1, 2, 3].map(k => `<button aria-current="${k === i + 1}">${k}</button>`).join('')}</div></div>`;
