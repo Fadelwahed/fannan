@@ -5,6 +5,6 @@ exec /usr/bin/env -i PATH=/usr/bin:/bin LANG=C.UTF-8 \
   /bin/sh -ec '
     [ ! -L "$1" ] || { echo "impeccable (Fannan launcher): launcher symlink" >&2; exit 3; }
     launcher=$(realpath -e -- "$1")
-    shift 2
-    exec /bin/sh "$launcher.internal" "$@"
+    shift
+    exec /bin/bash "$launcher.internal" "$@"
   ' sh "$0" "$@"

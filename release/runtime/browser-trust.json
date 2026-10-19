@@ -1,0 +1,10 @@
+{
+  "status": "blocked",
+  "reason": "No reviewed target-host browser executable identity, version or SHA-256 is available.",
+  "requiredWhenReviewed": {
+    "path": "/opt/fannan/bin/<browser-dir>/<executable> (own directory, root-owned, read-only, no symlinks)",
+    "sha256": "sha256 of the executable",
+    "version": "exact Browser.version() string reported at launch",
+    "supportTreeSha256": "supportTreeDigest() of the executable's directory (tools/executable-trust.mjs)"
+  }
+}
