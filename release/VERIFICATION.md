@@ -1,39 +1,513 @@
-# Verification — revision 2, 16 October 2026
+# R3 executed verification — 17 October 2026
 
-**Result: local revision and tests complete; live installation and full production handoff remain BLOCKED.** This revision addresses the user-supplied Grok review. Tests ran on the local Mac with Node v22.22.3 and Chrome 155.0.8059.85. The original Node20 Linux machine was not accessed. No installed skill, provider, credential, repository, live memory or approval was changed.
+## R28 (panel round 28, 19 October 2026)
 
-Commands below ran from the workspace root. `R` means `fannan-rewrite-2026-10-16/release`. Full outputs and evidence are in `test-results/REVISION2-TEST-RESULTS.json`, `REVISION2-STATIC-CHECKS.json` and `local-fixture/` in the ZIP.
+- Mi'mar's decision applied in `release/tools/width-screen.mjs`: (A) same-state identity is the DOM node, tagged at 1440 in the session; (B) cross-state cover only through a visible opener's revealed region, one to one per region; sections end at the next heading of the same or higher rank; panels without an aria link belong to the nearest tablist before them. The R26/R27 key code (landmark keys, stable-key memo, source-state reservation, cross-state identity matches) is deleted. R28-GPT-06: design-quality.md and handoff-contract.md.
+- Before (R28 tests against 9cc38f1 sources): `test-results/r28/R28-chrome-before.log` 75/82 (all seven R28 tests fail on their assertions), docs 20/21, package 2 failures. After: chrome 82/82, docs 21/21, package OK.
+- Real site (en/ar, JS on/off default-only, menu-open): `R28-real-site-old.log` and `-new.log` identical apart from timings; menu-open passes in both languages. Honest sets R18-R27 (536 renderings): no verdict changes against the 9cc38f1 code. pages28: four renderings now fail (h1, h4 JS on; s1 both), the panel's R28-GPT-01 and 03 pages, as intended.
+- Full Node suite: `test-results/r28/node.log` 192/192.
 
-| Command/check | Observed result | Scope |
-|---|---|---|
-| `node --test "$R"/tests/*.test.mjs` | Exit 0; **4/4 tests pass** | Contract negatives; English/Arabic filler and punctuation/conjunction taglines; dependency tampering, extra files, wrong lock, inside-release prefix and escaping link; local-file, network and symlink boundaries |
-| `python3 -B "$R/tests/test_guard_tools.py" -v` | Exit 0; **3 tests pass, 1 Linux-only test skipped** | Strict project/traversal validation; direct launcher refuses outside/missing-project inputs; test-only internal environment probe proves ambient secret/preload/PATH removal. Linux exclusive-write/symlink/race assertions are not executed on Mac |
-| `node "$R/tests/local-fixture.mjs"` | Exit 0 for fixture assertions | Locked token converter/build, sandboxed Chrome, contract/state/copy/frame checks and actual external-resource refusal |
-| Fixture token converter and CSS build | Exit 0 | Six token groups including breakpoints; generated `--colors-primary`, `--breakpoints-desktop` and hash receipt; original dependency versions preserved |
-| Valid fixture's full checker | **Exit 1, overall FAIL** | Contract, lint, axe, state, copy, focus, targets, reduced motion and resource boundary pass; original pinned detector absent, launcher exit 3. This is correct blocking, not a full checker PASS |
-| Mutated-copy fixture | FAIL as expected | Copy-deck mismatch and approved-frame hash mismatch detected |
-| Outside-resource fixture | FAIL as expected | Actual outside-project iframe and HTTPS image refused; eight blocked attempts across contexts recorded; resource-boundary PASS is false |
-| Syntax checks | PASS: **13 JavaScript modules, 5 shell files, 2 Python files** | `node --check`, `/bin/sh -n` including `.sh.internal`, Python `ast.parse`; syntax is not live integration proof |
-| Pinned YAML frontmatter parsing and relative-link checks | **16/16 skills pass** | Names/descriptions, matching folder names, Gotchas and supporting links |
-| Active skill caller/required-rule scan | PASS | No obsolete skill callers; nine ordered steps retained, authority/grayscale/desktop/AA/paid gates remain. Original helper/data path and migration map intentionally retain historical identifiers |
-| Source SHA256 verification | **51/51 input entries match** | Supplied source pack unchanged |
-| Proposed Node artifact record | Matches official versioned checksum list | Exact proposed v22.23.3 Linux x64 URL/hash; archive download, signature, actual installation and host compatibility remain untested |
-| Candidate manifest and archive verification | Recorded in `test-results/PACKAGING-VERIFICATION.json` | Exact file set, hashes, pin, archive CRC/content, seven deliverables and 16 full skills; performed after document freeze |
+## R27 (panel round 27, 18 October 2026)
 
-The dependency verifier checks the release's lock binding and the entire external installed-tree inventory before any of the three consumers loads npm code. Its local staged inventory SHA256 is `0f7891dbbd5883f8123781844c41a1eae7aea70750a13d87cf56693d7124a031`. It is included in the reviewed release manifest, not accepted from an environment override. This is not an Amin signature, upstream attestation or proof of target-host storage immutability. Target-platform differences require review and a new deployment digest before use.
+- R27-GPT-01..04 fixed in `release/tools/width-screen.mjs` (stable identity key, not position; tab panels scope keys; action family keeps identity across role changes; source-state reservation before name matching; tabs to headed sections counts section-local actions, at least each panel's). R27-GPT-06: design-quality.md and handoff-contract.md.
+- Before (R27 tests against 99f4d97 sources): `test-results/r27/R27-chrome-before.log` 71/75 (all four R27 tests fail on their assertions), docs 20/21, package 2 failures. After: chrome 75/75, docs 21/21, package OK.
+- Real site (en/ar, JS on/off default-only, menu-open): `R27-real-site-old.log` and `R27-real-site-new.log` identical apart from timings. Honest sets R18-R26 (436 page renderings) match the panel's 99f4d97 log verdict for verdict; R27 pages27: one change, r1.html JS on now passes (toolbar to menu items).
+- Full Node suite: `test-results/r27/node.log` 184/185; the R18 inner-scroll test fails only under full-suite load and passes in isolation (`R18-isolated-rerun.log`).
 
-## Fixture boundaries
+## R26 executed verification (Mi'mar's box, 18 October 2026, about 9:45 PM UTC+3)
 
-The fixture copies the tools, substitutes **only copied** output guards with a test-root adapter, and changes the copied checker's fixed output-base constant to that fixture root. Production files retain the fixed `/workspace/design-output` policy. There is no production environment variable to override that root. The dependency inventory is the real local external tree; no detector is substituted. The launcher remains blocked by the missing original binary.
+Panel round 26 (4 P2: R26-GPT-01 to R26-GPT-04; P3 R26-MIMAR-01; `reviews/panel-r26/`). Fadel's root-cause instruction applied: loss accounting by element identity in `width-screen.mjs` (one ledger per screen; the closed swap list; one cover per element; collapsed boxes as display:none; carousel slides by element), plus settled motion. Serial runs; the shared box spiked to load 93 during the first suite run (other processes).
 
-The fixture uses synthetic copy, role names, approval and manual-review records. It proves validation behavior, not actual approval, design quality, truth, rights or WCAG conformance. Chromium launches with its sandbox explicitly enabled. Browser routes apply to whole contexts; an outside iframe and network image are tested, not every browser exploit or popup form. Host isolation and immutable input trees remain deployment requirements.
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps), after the probe-world fix | 1 | 179 PASS, 1 FAIL of 180: the R18 autoplay integrity test (121 s, hidden 1 vs 2), the known timing failure; it passes in isolation (`node-r18-rerun.log`). The earlier run of the same code minus the probe-world fix and the doc test: 179/179 | `test-results/r26/node.log` |
+| R26 Chrome before (R26 tests against 49169df sources) | 1 | 65 PASS, 6 FAIL: the five R26 tests at their assertions (5 ERR_ASSERTION) plus R25-GPT-04 (its expectation changed in R26), which hit a `page.goto` timeout in this run | `test-results/r26/R26-chrome-before.log` |
+| without deps; Python guard; `revisions/r2`; package tests (git / no-git); self-test; syntax | 0 | 87 PASS, 0 FAIL without deps; the rest pass | `test-results/r26/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 174 PASS, 6 FAIL: the same six Style Dictionary tests | `test-results/r26/node20.log` |
 
-The valid render and approved PNG match SHA256 `8d66325bf2462eb2b75f51d9f71bd62eb99fd894ad3bc165f0c17afb628f0214`; the deliberate copy mutation renders `56cadf21a310b9c11c2c40d9250c212f698eb075bdc05b00770a94404e553dea`. These identifiers describe the actual fixture runs, not reusable project approvals.
+**Found and fixed during the round:** the first push (7eca59a) evaluated settle-and-measure as a string, which the isolated probe world (the gate's) cannot run; the Node suite did not catch it. f6ff685 makes it a real function, and the R26 motion test now measures through the probe world (it fails on the 7eca59a code).
 
-The Linux writer requires GNU tools, Python3, openat2 on Linux x86_64/aarch64, trusted root ownership/modes and a dedicated non-root writer with a pre-provisioned project directory. Its exclusive-create, symlink and ancestor-swap test is supplied but skipped on this Mac; no local Docker/Podman/Colima runtime was available. The original GNU precheck's Mac incompatibility remains historical evidence in `VERIFICATION-R1-HISTORICAL.md`. A denied unsupported-host run is not proof of the Linux implementation. Partial-file failures and hostile same-identity writers still require target-host validation and enforcement.
+**Fixture, expected stop:** exit 0 on the fixed code (`test-results/r26/local-fixture.log`): every R19-R25 full-run expectation holds through the gate's probe world.
 
-## Review and remaining conditions
+**Not completed in this round's 45 minutes:** the real site after the probe-world fix (`R26-real-site.log` records the 7eca59a failure: the survey threw in the probe world), the honest sets R18-R26, and a separate Chrome after-log (the Node suite runs those tests).
 
-`REVIEW-RESPONSE.md` records all 21 findings. The two bounded implementation lanes produced edits and targeted results; their final turns reached the account usage limit. The root agent read the changes, strengthened regressions and reran the checks above. No new independent security approval is claimed. R1 independent review and command records remain labelled historical evidence; they do not approve R2.
+## R25 executed verification (Mi'mar's box, 18 October 2026, about 8:50 PM UTC+3)
 
-The all-seven-P1/live-readiness condition is still not achieved: actual Amin review (R3-2), real scoped-token/branch/task proof (R3-4), original detector, reviewed target runtime, Linux enforcement and proven atomic activation/rollback remain prerequisites. The successful full-gate branch generating `HANDOFF.md` was not executed with the protected detector. No real project handoff or live installation occurred. See `UNTESTED.md` for the complete separate list.
+Panel round 25 (4 P2: R25-GPT-01 to R25-GPT-04; P3 R25-GPT-05, R25-GPT-06; GPT, cross-checked by Mi'mar; `reviews/panel-r25/`), with Mi'mar's R25 tiebreaks confirmed by Fadel (tightening: only zero visible area is rescued). Linux x86_64, Node v22.23.3, Chrome 155 headless. All runs serial on a quiet box (load average 2-10).
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 174 PASS, 0 FAIL (R24's 169 + 4 in `tests/panel-r25.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r25/node.log` |
+| same, without deps; Python guard, `revisions/r2`; package tests (git / no-git); self-test; syntax; offline lint | 0 | pass | `test-results/r25/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 168 PASS, 6 FAIL: the same six Style Dictionary tests as before | `test-results/r25/node20.log` |
+| R25 Chrome before (R25 tests against dc1338f sources) / after | 1 / 0 | before: 62 PASS, 4 FAIL, the four R25 tests, each at its assertion (4 ERR_ASSERTION, 0 timeouts); after: 66 PASS, 0 FAIL | `test-results/r25/R25-chrome-before.log`, `R25-chrome-after.log` |
+| R24 Chrome before, rerun (R25-GPT-06) | 1 | the three R24 tests fail at their assertions against ec977f2 (3 ERR_ASSERTION, 0 timeouts) | `test-results/r25/R24-chrome-before-rerun-r25.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r25/local-fixture.log`): all earlier full-run expectations hold, including the R24-MIMAR-02 clamp reason, and the R25 full-gate nav cases: a max-height:0 nav fails alone, passes with menu-open, and a 1.2em partial cut fails with menu-open.
+
+**Honest patterns and the real site:** `test-results/r25/R25-real-site.log` is identical to R24 (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; with menu-open both languages PASS). `test-results/r25/R25-honest-patterns.log`: the R18-R24 sets match R24 except the R18 autoplay carousel's JavaScript-on rendering at 320, which recorded `partly clipped` instead of `reveal` (the slide was captured mid-transition, the known autoplay timing sensitivity; nothing in R25 changes partial-cut classification). The R25 repro pages with their states (p-mh-o, p-dn-o, p-n-e, p-p-e, p-s-e, p-ts, p-ta) pass; the default-only pages fail as expected without declared states.
+
+## R24 executed verification (Mi'mar's box, 18 October 2026, about 7:45 PM UTC+3)
+
+Panel round 24 (3 P2: R24-GPT-01 to R24-GPT-03; P3 R24-MIMAR-01, R24-MIMAR-02; GPT, cross-checked by Mi'mar; `reviews/panel-r24/`), with Mi'mar's R24 tiebreaks. Linux x86_64, Node v22.23.3, Chrome 155 headless. The box was shared and heavily loaded during this round (load average up to 77, memory full from other processes), so some Chrome runs timed out on `page.goto`.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 1 | 168 PASS, 1 FAIL of 169 (R23's 165 + 3 in `tests/panel-r24.test.mjs` + 1 in `tests/designer-process.test.mjs`). The one failure is the R18 autoplay-carousel timing test on the loaded box; it passes in isolation (`node-r18-rerun.log`) | `test-results/r24/node.log` |
+| Python guard; `scripts/test_package_r3.py -v` (git checkout) | 0 | OK; 46 PASS (`test_r24_sections` added) | `test-results/r24/python.log`, `package-tests-git.log` |
+| R24 Chrome before (R24 tests against ec977f2 sources) / after | 1 / 1 | before: R24-GPT-01 fails at its assertion; R24-GPT-02 and R24-GPT-03 ended in `page.goto` timeouts in this log (corrected in R25, R25-GPT-06: the R25 rerun on a quiet box, `test-results/r25/R24-chrome-before-rerun-r25.log`, shows all three failing at their assertions, 3 ERR_ASSERTION and 0 timeouts); after: the R24 tests pass in the full suite (`node.log` tests 130-132). Both runs also had `page.goto` timeouts in older tests while the box was overloaded, so they are not clean before/after logs | `test-results/r24/R24-chrome-before.log`, `R24-chrome-after.log` |
+
+**Honest patterns and the real site:** `test-results/r24/R24-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; identical to R23: the default state alone fails at 320, and with the declared menu-open state both languages PASS with 0 unresolved). `test-results/r24/R24-honest-patterns.log` (the R18 set and the R19-R24 repro pages).
+
+**Not run this round (time limit):** the full-run fixture (`local-fixture.mjs`, including the R24-MIMAR-02 clamp-reason assertion), the no-deps suite, the no-git package copy, the self-test and syntax sweep.
+
+## R23 executed verification (Mi'mar's box, 18 October 2026, about 7:00 PM UTC+3)
+
+Panel round 23 (4 P2: R23-GPT-02 to R23-GPT-05; P3 R23-GPT-01, R23-MIMAR-01; GPT, cross-checked by Mi'mar; `reviews/panel-r23/`), with Fadel's R23 tiebreaks. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 165 PASS, 0 FAIL (R22's 159 + 5 in `tests/panel-r23.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r23/node.log` |
+| same, without deps | 0 | 84 PASS, 0 FAIL, 81 SKIPPED | `test-results/r23/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r23/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 45 PASS / 40 PASS + 5 SKIPPED (`test_r23_sections` added) | `test-results/r23/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=49 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r23/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 158 PASS, 7 FAIL: the same six Style Dictionary tests, plus the R18 autoplay-carousel test, which timed out its slide timing on the loaded box (88 s) and passes on rerun (`node20-r18-rerun.log`: 5 of 5) | `test-results/r23/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r23/local-fixture.log`, and `R23-full-run-after.log`). R23 full pre-handoff runs: 'Save as' hidden at 320 next to 'Save' fails the width screen; 'Export report' moved into a declared More menu as a `menuitem` passes (0 unresolved); a shortened button label fails without an `aria-label` and passes with one keeping the full name; a link label cut by its 100 px box fails (partly clipped); a custom `role="slider"` hidden at 320 fails; a button cut wholly by a two-line clamp fails even with an expanded state. The unmeasured-glyph path (R23-GPT-01) is covered by the resolver test only: no honest page produced an unmeasured glyph (the panel found none either).
+
+**Honest patterns and the real site:** `test-results/r23/R23-honest-patterns.log` (the R18 set and the R19-R23 repro pages, both renderings) and `test-results/r23/R23-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured). With one-to-one matching the real site's default state alone now fails the width screen at 320 (the hidden desktop nav links and the Arabic demo link are no longer matched by their footer copies); with the declared menu-open state (the site's closed `<details>` menu opened) both languages PASS with 0 unresolved.
+
+Per-finding before/after logs: `test-results/r23/R23-*-{before,after}.log` (before = R23 tests against the eeeb371 sources, documents included): Chrome 52 of 59 before (7 assertion failures: the five R23 tests and the R21/R22 tests updated for the tiebreak), 59 of 59 after; the R23-GPT-03 regression passes against the d9e1049 width screen (`R23-GPT03-vs-d9e1049.log`: d9e1049 caught the cut label; eeeb371 regressed); docs 16 of 17 / 17 of 17; package `test_r23_sections` and the archive test FAIL before, OK after; fixture before not completed (cut off by an interruption during the R20 runs, `R23-full-run-before.log`; the R23 fixture expectations were not run against eeeb371), exit 0 after.
+
+## R22 executed verification (Mi'mar's box, 18 October 2026, about 5:45 PM UTC+3)
+
+Panel round 22 (7 P2: R22-GPT-01 to R22-GPT-06, R22-MIMAR-01; P3 R22-MIMAR-02, R22-GPT-07, R22-GPT-08; GPT, cross-checked by Mi'mar; `reviews/panel-r22/`), with Fadel's R22 three-zone tiebreak for text over images. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 159 PASS, 0 FAIL (R21's 151 + 7 in `tests/panel-r22.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r22/node.log` |
+| same, without deps | 0 | 82 PASS, 0 FAIL, 77 SKIPPED | `test-results/r22/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r22/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 44 PASS / 39 PASS + 5 SKIPPED (`test_r22_sections` added) | `test-results/r22/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=48 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r22/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 153 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r22/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r22/local-fixture.log`). R22 full pre-handoff runs with the authored PASS `wcag-review` citing the screenshot: a white 28 px caption at 70% opacity over a dark photo and a white 48 px hero with a strong dark halo over a light image resolve axe's colour-contrast incomplete (zone a); white 12 px and 14 px text whose first thin letters ("ill fill lilt") sit on a #e6e6e6 patch stays blocked even with `worstRegion` named (zone b); #767676 12 px text over an image (about 4.54:1, zone c) stays blocked without `worstRegion` and resolves with it. The R19 scrim hero with an uncited review now resolves (zone a: clearly above AA needs no review).
+
+**Honest patterns and the real site:** `test-results/r22/R22-honest-patterns.log` (the R18 set and the R19-R22 repro pages, both renderings, plus the glyph measure on the R22 text-over-image and small-grey pages) and `test-results/r22/R22-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; width screen PASS in both languages; with a declared menu-open state too). Changes from R21 on R18-R21 pages: a nowrap nav cut at 320 is now `partly clipped` (links are controls) instead of `shown at 1440, lost at this width`, still failing; lost prints are typed.
+
+Per-finding before/after logs: `test-results/r22/R22-*-{before,after}.log` (before = R22 tests against the d9e1049 sources, documents included): Chrome 46 of 54 before (8 assertion failures: six R22 tests and the two R19 tests updated for the zones), 54 of 54 after; the R22-GPT-07 content-visibility and popover regressions pass at d9e1049 and fail against the 700297d width screen (`R22-GPT07-regressions-vs-700297d.log`); docs 15 of 16 / 16 of 16; package `test_r22_sections` and the archive test FAIL before, OK after; fixture exit 0 after.
+
+## R21 executed verification (Mi'mar's box, 18 October 2026, about 4:15 PM UTC+3)
+
+Panel round 21 (5 P2: R21-MIMAR-01, R21-MIMAR-02, R21-GPT-02, R21-GPT-04, R21-GPT-05; P3 R21-GPT-03, R21-GPT-06, R21-GPT-07; GPT only, cross-checked by Mi'mar; `reviews/panel-r21/`), with Fadel's R21 tiebreaks. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 151 PASS, 0 FAIL (R20's 141 + 9 in `tests/panel-r21.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r21/node.log` |
+| same, without deps | 0 | 80 PASS, 0 FAIL, 71 SKIPPED | `test-results/r21/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r21/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 43 PASS / 38 PASS + 5 SKIPPED (`test_r21_sections` added) | `test-results/r21/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=47 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r21/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 145 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r21/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r21/local-fixture.log`). R21 full pre-handoff runs: an image cropped by its frame passes the width screen; a terms line `display:none` at 320 fails it (not shown at this width); a desktop nav moved into a closed `<details>` menu passes with a declared `menu-open` state (0 unresolved) and fails without it; one word of a white one-line caption over a #c8c8c8 patch (1.67:1) stays blocked with the authored PASS `wcag-review` citing the screenshot, while the same caption without the patch resolves; a script-only `results` state that replaces the `description` slot with an approved `results-note` slot placed there is whole-state PASS, and fails `content/js-off` when the deck still places `description` in that state.
+
+**Honest patterns and the real site:** `test-results/r21/R21-honest-patterns.log` (the R18 set and the R19-R21 repro pages, both renderings; backstop counts identical to R20 on every R18-R20 page) and `test-results/r21/R21-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; width screen PASS in both languages, the Arabic page included; with a declared menu-open state too).
+
+Per-finding before/after logs: `test-results/r21/R21-*-{before,after}.log` (before = R21 tests against the 700297d sources, documents included): Chrome 37 of 47 before (10 assertion failures, 0 load errors), 47 of 47 after; docs 13 of 15 / 15 of 15; package `test_r21_sections` and the archive test FAIL before, OK after; fixture fails before at the R21 expectations (assertion), exit 0 after.
+
+## R20 executed verification (Mi'mar's box, 18 October 2026, about 2:15 PM UTC+3)
+
+Panel round 20 (5 P2: R20-GPT-01, R20-MIMAR-01, R20-GPT-03, R20-GPT-05, R20-GPT-06; P3 R20-GPT-02, R20-GPT-04; GPT only, cross-checked by Mi'mar; `reviews/panel-r20/`), with Mi'mar's clipping tiebreak. Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 141 PASS, 0 FAIL (R19b's 134 + 6 in `tests/panel-r20.test.mjs` + 1 in `tests/designer-process.test.mjs`; R20-GPT-06 assertions added to `tests/handoff-contract.test.mjs`) | `test-results/r20/node.log` |
+| same, without deps | 0 | 78 PASS, 0 FAIL, 63 SKIPPED | `test-results/r20/node-without-deps.log` |
+| Python guard, `revisions/r2` | 0 | 10; 4 + 4 PASS | `test-results/r20/python.log`, `r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 42 PASS / 37 PASS + 5 SKIPPED (`test_r20_sections` added) | `test-results/r20/package-tests-git.log`, `package-tests.log` |
+| self-test, syntax (mjs=46 sh=4 py=4 plus the launcher, 0 failures), offline lint (0 errors) | 0 | pass | `test-results/r20/` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 135 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r20/node20.log` |
+
+**Fixture, expected stop:** exit 0 (`test-results/r20/local-fixture.log`). R20 full pre-handoff runs: a collapsed bare-text accordion plus a middle-slide carousel pass the width screen with declared reveal states (`faq-open`, `slide-1`, `slide-3`; 0 unresolved reveals) and fail without them; a fixed-height card whose last paragraph lies below its edge fails even with a second declared state; an `overflow:hidden` table cut at 320 fails; pale text over a light photo with a dark band inside the line box (1.35:1 at its faintest) stays blocked with the authored PASS `wcag-review`, while the honest scrim hero still resolves; a slotted script-only dialog (`requiresScript`) is whole-state PASS against the default state's JavaScript-off baseline (state-only content: the `dialog-note` slot), and the same dialog with its slot not placed in the state is `content/js-off`.
+
+**Honest patterns and the real site:** `test-results/r20/R20-honest-patterns.log` (the R18 set, the R19 and R20 repro pages, both renderings, backstop plus width screen with each clip's rule) and `test-results/r20/R20-real-site.log` (English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; 6.3-11.2 s per rendering).
+
+Per-finding before/after logs: `test-results/r20/R20-*-{before,after}.log` (before = R20 tests against the b4747e3 sources, documents included): Chrome 19 of 32 before (13 assertion failures, 0 load errors), 32 of 32 after; docs 13 of 14 / 14 of 14; package `test_r20_sections` and the archive test FAIL before, OK after; fixture fails before at the R20 expectation on the collapsed content (assertion), exit 0 after.
+
+## R19b executed verification (Mi'mar's box, 18 October 2026, about 12:25 PM UTC+3)
+
+Mi'mar's tiebreak on script-only declared states (`requiresScript`). Same environment as R19.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 134 PASS, 0 FAIL (R19's 132 + 1 in `tests/panel-r19.test.mjs` + 1 in `tests/designer-process.test.mjs`; contract assertions added to `tests/handoff-contract.test.mjs`) | `test-results/r19/node.log` |
+| same, without deps | 0 | 76 PASS, 0 FAIL, 58 SKIPPED | `test-results/r19/node-without-deps.log` |
+| Python guard, `revisions/r2`, package tests (41 / 36 + 5 SKIPPED), self-test, syntax (mjs=45, 0 failures), offline lint | 0 | unchanged from R19 | `test-results/r19/` |
+| Node 20, informational | 1 | 128 PASS, 6 FAIL (the same six Style Dictionary tests) | `test-results/r19/node20.log` |
+
+**Fixture:** exit 0. Full pre-handoff runs: the scripted modal state declared `requiresScript: true` with its trigger is state PASS with axe's colour-contrast incomplete resolved on the scripted rendering alone (`requiresScript.valid` true); the same modal without the declaration stays blocking; the claim on a state that renders with JavaScript off is a `requiresScript/js-off` integrity mismatch. Before/after: `test-results/r19/R19b-*-{before,after}.log` (before = 3dabdf9 sources; assertion failures only).
+
+## R19 executed verification (Mi'mar's box, 18 October 2026, about 12:05 PM UTC+3)
+
+Panel round 19 (5 P2: R19-GPT-01, 02, 04, R19-MIMAR-01/02; P3 R19-GPT-03, 05, 06; GPT only, cross-checked by Mi'mar; `reviews/panel-r19/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 132 PASS, 0 FAIL, 0 skipped (R18's 125 + 6 in `tests/panel-r19.test.mjs` + 1 in `tests/designer-process.test.mjs`; R19-GPT-06 added to `tests/handoff-contract.test.mjs`) | `test-results/r19/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 75 PASS, 0 FAIL, 57 SKIPPED (need deps or Chrome) | `test-results/r19/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r19/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r19/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 41 PASS / 36 PASS + 5 SKIPPED | `test-results/r19/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r19/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=45 sh=4 py=4 plus the launcher, 0 failures | `test-results/r19/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r19/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 126 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R18 (it needs Node 22); not a gate | `test-results/r19/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r19/local-fixture.log`). R17 and R18 full runs unchanged in outcome. R19 full pre-handoff runs: inactive carousel slides with a collapsed accordion pass the width screen on the page and its state (`widths.pass` true, `textHidden` 3 in both renderings); a script-removed `::after` loading veil is a `textUnreadable/js-off` mismatch; a pointer-events:none 70% veil and light lazy text inside an app panel are `textUnreadable/rendered` mismatches; a photo hero with a scrim and a PASS `wcag-review` record citing the frame resolves axe's colour-contrast incomplete (page and state), while dark text on the photo and a record that does not cite the screenshot stay blocking; a declared modal-dialog state is integrity PASS (`textHidden` 3 with JavaScript on), a non-modal open dialog covering the page is `textObscured/rendered`; an `ariaLabel` absent from the cited brief is a contract error.
+
+**Honest patterns and the real site:** `test-results/r19/R19-honest-patterns.log` (the R18 set and the R19 repro pages, both renderings, plus the dialog and popover repros as declared states: only true positives and the round's misses report problems) and `test-results/r19/R19-real-site.log` (a built bilingual site, English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; 6.4-11.2 s per rendering, 8-12 steps).
+
+Per-finding before/after logs: `test-results/r19/R19-*-before.log` / `-after.log` (before = R19 tests against the 613f489 sources, documents included; every before failure is an assertion failure, checked for load errors).
+
+## R18 executed verification (Mi'mar's box, 18 October 2026, about 10:15 AM UTC+3)
+
+Panel round 18 (8 P2: R18-GPT-01, 03 to 07, R18-MIMAR-01/02; P3 R18-GPT-02; GPT only, cross-checked by Mi'mar; `reviews/panel-r18/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 125 PASS, 0 FAIL, 0 skipped (R17's 119 + 5 in `tests/panel-r18.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r18/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 74 PASS, 0 FAIL, 51 SKIPPED (need deps or Chrome) | `test-results/r18/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r18/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r18/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 40 PASS / 35 PASS + 5 SKIPPED | `test-results/r18/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r18/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=44 sh=4 py=4 plus the launcher, 0 failures | `test-results/r18/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r18/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 119 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R17 (it needs Node 22); not a gate | `test-results/r18/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r18/local-fixture.log`). R17 full runs unchanged in outcome. R18 full pre-handoff runs: a display:contents reveal and a partly clipped three-line reveal removed by script are `textUnreadable/js-off` mismatches on the page and its state; a 3% white layer, inactive carousel slides with a collapsed accordion (`textHidden` 3 in both renderings) and light weights (Lato 300 and 100, Inter 200, in #767676) are integrity PASS; an accordion only script opens is a `textHidden/js-off` mismatch; the copy deck accepts an approved `ariaLabel` and an identical value and name, and still reports an accessible name with no approved `ariaLabel`. Backstop time per rendering on the fixture page: about 0.4 s (0.6-0.9 s with JavaScript-off losses, 1.2 s with a scroll reveal); per checker run about 7-8 s.
+
+**Honest patterns and the real site:** `test-results/r18/R18-honest-patterns.log` (the round's 21 repro pages plus four GPT repros, both renderings: only the fixed cookie banner, a true positive, and the two misses report problems) and `test-results/r18/R18-real-site.log` (a built bilingual site, English and Arabic, JavaScript on and off: 0 obscured, 0 unreadable, 0 unmeasured; 6.3-11.1 s per rendering, 8-12 steps).
+
+Per-finding before/after logs: `test-results/r18/R18-*-before.log` / `-after.log` (before = R18 tests against the e0362e6 sources, documents included, `copy-deck.mjs` removed; every before failure is an assertion failure, checked for load errors).
+
+## R17 executed verification (Mi'mar's box, 18 October 2026, about 9:15 AM UTC+3)
+
+Panel round 17 (4 P2: R17-GPT-01 to 03, R17-MIMAR-01; P3 R17-MIMAR-02; GPT only, cross-checked by Mi'mar; `reviews/panel-r17/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 119 PASS, 0 FAIL, 0 skipped (R16's 112 + 6 in `tests/panel-r17.test.mjs` + 1 in `tests/designer-process.test.mjs`) | `test-results/r17/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 73 PASS, 0 FAIL, 46 SKIPPED (need deps or Chrome) | `test-results/r17/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r17/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r17/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 39 PASS / 34 PASS + 5 SKIPPED | `test-results/r17/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r17/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=42 sh=4 py=4 plus the launcher, 0 failures | `test-results/r17/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r17/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 113 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R16 (it needs Node 22); not a gate | `test-results/r17/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r17/local-fixture.log`). The healthy fixture page keeps integrity PASS with the backstop. R17 full pre-handoff runs: clip-path, `scale(.02)`, white preloader, `::placeholder` opacity, text-fill colour and gradient overlay (each removed by script) are `integrity mismatch` on the page and its state with `textUnreadable/js-off` or `textObscured/js-off`; the aria-labelled submit whose value only script sets is a `content/js-off` difference; unlisted `[placeholder]`/`Lorem ipsum` native strings fail the copy deck and set `placeholders`; a scroll reveal with a `noscript` fallback stays PASS. Backstop time per rendering on the fixture page: about 0.2 s (1.2 s with the scroll reveal); per checker run about 6.5 s (9.5 s with the reveal).
+
+Per-finding before/after logs: `test-results/r17/R17-*-before.log` / `-after.log` (before = R17 tests against the 86e2a31 sources, documents included, `visibility.mjs` removed; every before failure is an assertion failure, checked for load errors). `R17-healthy-real-site-patterns-first-version.log`: the real-site regression against the first backstop version (cc052a8), showing its false positives.
+
+## R16 executed verification (Mi'mar's box, 18 October 2026, about 7:55 AM UTC+3)
+
+Panel round 16 (4 P2: R16-GPT-01 to 04, GPT only, cross-checked by Mi'mar; `reviews/panel-r16/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 112 PASS, 0 FAIL, 0 skipped (R15's 109 + 2 in `tests/panel-r16.test.mjs` + 1 in `tests/designer-process.test.mjs`; the R16-GPT-03/04 contract cases extend the existing handoff-contract test) | `test-results/r16/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 72 PASS, 0 FAIL, 40 SKIPPED (need deps or Chrome) | `test-results/r16/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r16/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r16/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 38 PASS / 33 PASS + 5 SKIPPED | `test-results/r16/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r16/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=40 sh=4 py=4 plus the launcher, 0 failures | `test-results/r16/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r16/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 106 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R15 (it needs Node 22); not a gate | `test-results/r16/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r16/local-fixture.log`, evidence `local-fixture-evidence.json`). Its handoff carries the shared component inventory and the critic's component comparison, and the contract passes. R16 adds full pre-handoff runs: a blur-in reveal makes the page and its state INCOMPLETE (`contrastEffects`); a submit input faded to .05 and restored by script is an `integrity mismatch` (`contrastFailures`, JavaScript off); a label filled by script differs in content with JavaScript off; and a wireframe run with a second screen and a second language renders every screen and language, fails the second screen's two-H1 page and reports the missing Arabic renderings.
+
+Per-finding before/after logs: `test-results/r16/R16-*-before.log` / `-after.log` (before = R16 tests against the 5fe9101 sources, documents and runtime JSON included; every before failure is an assertion failure, checked for load errors).
+
+## R15 executed verification (Mi'mar's box, 18 October 2026, about 7:20 AM UTC+3)
+
+Panel round 15 (7 P2: A1-A3 from GPT, confirmed by Mi'mar in Chrome 155 or in process; B1-B3 from GPT; B4 Mi'mar only; `reviews/panel-r15/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 109 PASS, 0 FAIL, 0 skipped (R14's 104 + 2 in `tests/panel-r15.test.mjs` + 3 in `tests/designer-process.test.mjs`; the B3/B4 contract cases extend the existing handoff-contract test) | `test-results/r15/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 71 PASS, 0 FAIL, 38 SKIPPED (need deps or Chrome) | `test-results/r15/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r15/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r15/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 37 PASS / 32 PASS + 5 SKIPPED (the real-build test needs Git) | `test-results/r15/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r15/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=39 sh=4 py=4 plus the launcher, 0 failures | `test-results/r15/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r15/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 103 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R14 (it needs Node 22); not a gate | `test-results/r15/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r15/local-fixture.log`, evidence `local-fixture-evidence.json`). Its handoff now carries one critic check per rubric row and the five new manual checks, and the contract passes.
+
+**A2 through a real package build:** `test_r15_real_build_refuses_camel_case_json_credentials` clones the checkout, lays the working files on top and runs `package-r3.py build`: a camelCase `accessToken` value in a changed path and in package input stops the build with "secret-looking content" and leaves the registry untouched; the same file with an empty value builds (`test-results/r15/R15-A2-real-build-after.log`; before, with the 67f3577 `package-r3.py`, the build accepted it: `-before.log`).
+
+Per-finding before/after logs: `test-results/r15/R15-*-before.log` / `-after.log` (before = R15 tests against the 67f3577 sources, documents and runtime JSON included; every before failure is an assertion failure, checked for load errors).
+
+## R14 executed verification (Mi'mar's box, 18 October 2026, about 6:55 AM UTC+3)
+
+Panel round 14 (R14-GPT-01 to 11, single reviewer; Mi'mar's own Part B pass added R14-MIMAR-01 to 05; `reviews/panel-r14/`). Threat model and convergence rule unchanged (`FANNAN-PLAN.md`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 104 PASS, 0 FAIL, 0 skipped (R13's 94 + 5 in `tests/panel-r14.test.mjs` + 5 in `tests/designer-process.test.mjs`) | `test-results/r14/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 68 PASS, 0 FAIL, 36 SKIPPED (need deps or Chrome) | `test-results/r14/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r14/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r14/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 34 PASS / 30 PASS + 4 SKIPPED | `test-results/r14/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r14/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=38 sh=4 py=4 plus the launcher, 0 failures | `test-results/r14/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r14/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 98 PASS, 6 FAIL: the same six Style Dictionary tests as in R11-R13 (it needs Node 22); not a gate | `test-results/r14/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r14/local-fixture.log`, evidence `local-fixture-evidence.json`). In addition to the R12/R13 assertions it runs two shadow-motion checker runs (R14-GPT-05): timer motion in an open shadow root fails reduced motion on the positional page, and on a declared state while the page and the default state pass.
+
+Per-finding before/after logs: `test-results/r14/R14-*-before.log` / `-after.log` (before = R14 tests against the 7fc0d6f sources, documents and runtime JSON included; every before failure is an assertion failure, checked).
+
+## R13 executed verification (Mi'mar's box, 18 October 2026, about 5:55 AM UTC+3)
+
+Panel round 13 (N01-N21, D1 closed, q1/q2 decided; `reviews/panel-r13/`). The gate's threat model and the review convergence rule are in `FANNAN-PLAN.md` ("Threat model for the pre-handoff gate", "Review convergence rule"); deliberate obfuscation is a known limit listed in `UNTESTED.md`. Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 94 PASS, 0 FAIL, 0 skipped (R12's 88 + 6 in `tests/panel-r13.test.mjs`) | `test-results/r13/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 63 PASS, 0 FAIL, 31 SKIPPED (need deps or Chrome) | `test-results/r13/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r13/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r13/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 30 PASS / 26 PASS + 4 SKIPPED | `test-results/r13/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r13/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=36 (R12's 35 + `tests/panel-r13.test.mjs`) sh=4 py=4 plus the launcher, 0 failures | `test-results/r13/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r13/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 88 PASS, 6 FAIL: the same six Style Dictionary tests as in R11/R12 (it needs Node 22); not a gate | `test-results/r13/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r13/local-fixture.log`, evidence `test-results/r13/local-fixture-evidence.json`). It asserts the R12 claims plus stylesheets and the hardened reduced-motion routine on the page and the state, then runs three negative fixtures (N05): a `srcdoc` frame fails the handoff and the state (DEFERRED in wireframes); a spacing exception without a handoff entry fails and with an approver entry passes; a state page whose script removes a wide element fails its state with an integrity mismatch while the positional page passes.
+
+Per-finding before/after logs: `test-results/r13/R13-*-before.log` / `-after.log` (before = R13 tests against the R12 sources, f9a8d7e; every before failure is an assertion failure, none a module-load error). Chrome reproduction of the browser items: `test-results/r13/repro-before.log` / `repro-after.log` (script `repro.mjs.txt`).
+
+## R12 executed verification (Mi'mar's box, 18 October 2026, about 5:10 AM UTC+3)
+
+Panel round 12 (M01-M18 agreed, M20 and M21 fixed, M19 closed; `reviews/panel-r12/`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned), axe-core 4.14.0. Test-only deps: the existing locked tree, no new installs.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 88 PASS, 0 FAIL, 0 skipped | `test-results/r12/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 60 PASS, 0 FAIL, 28 SKIPPED (need deps or Chrome) | `test-results/r12/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r12/python.log` |
+| `node --test` and Python in `revisions/r2` | 0 | 4 + 4 PASS | `test-results/r12/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout / no-git copy) | 0 | 27 PASS / 23 PASS + 4 SKIPPED | `test-results/r12/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | pass | `test-results/r12/package-self-test.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=35 (R11's 34 + `tools/exceptions.mjs`) sh=4 py=4 plus the launcher, 0 failures | `test-results/r12/syntax.log` |
+| design.md lint, offline | 0 | 0 errors | `test-results/r12/designmd-lint-offline.log` |
+| Node 20 (`/usr/bin/node` v20.19.2), informational | 1 | 82 PASS, 6 FAIL: the same six Style Dictionary tests that fail on Node 20 in R11 (it needs Node 22); not a gate | `test-results/r12/node20.log` |
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, exit 0 (`test-results/r12/local-fixture.log`). From R12 the fixture ASSERTS, and prints in its log, what this file claims: integrity PASS on the page and on the declared state (full vector, page world = probe world = JavaScript off, same content), `glassSource` pass, accent PASS on the page and on the state, frames PASS, `spacingExceptions` PASS. The evidence JSON is kept as `test-results/r12/R12-fixture-evidence-valid.json`. The R11 entry below stated accent, integrity and `glassSource` as passing on the fixture without the fixture asserting them (M18); those values were true in that run's evidence but were not checked, so they were an unasserted claim.
+
+Per-finding before/after logs: `test-results/r12/R12-*-before.log` / `-after.log` (before = R12 tests against the R11 sources, d8408d4). Chrome reproduction of the browser items: `test-results/r12/R12-chrome-repro-before.log` / `-after.log` (script `repro.mjs.txt`). Harnesses: `before-after-harness.sh.txt`, `suites-harness.sh.txt`.
+
+## R11 executed verification (Mi'mar's box, 18 October 2026, about 4:20 AM UTC+3)
+
+Asad panel round 5 (C1, S2/C6, S3, C3, C4, C5, S7 and the R9 syntax count), built to the panel D1 decisions (A-D, T1-T4; `reviews/panel-d1/`). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Run on a clean tree (everything committed), so every counted file is tracked.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 76 PASS, 0 FAIL | `test-results/r11/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 52 PASS, 0 FAIL | `test-results/r11/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 70 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7-R10) | `test-results/r11/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r11/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r11/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 26 PASS | `test-results/r11/package-tests-git.log` |
+| same, no-git copy | 0 | 22 PASS | `test-results/r11/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r11/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r11/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=34 sh=4 py=4 plus the launcher `.internal`, 0 failures; 34 = R10's 27 tracked + `tools/axe-tags.mjs`, `tools/probe-world.mjs`, `tools/integrity.mjs` and four new tests; each file is listed in the log | `test-results/r11/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 24 Node tests in the no-deps copy (need test-only deps or Chrome); 4 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, run in the checkout, exit 0. The checker now runs its probes and axe in the isolated world; browser, contract, spacing, accent (approved `colors.primary`, PASS on the page and the state), widths (1440 + 320, `scrolledText` and `reflowCandidates` empty), integrity (page world = probe world = JavaScript off, no tamper signs), the served-file glass scan (`glassSource`, no files) and state checks pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r11/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r11/R11-*-before.log` / `-after.log`. Before logs run the final R11 tests against the R10 sources (607b2e4); the harness scripts are `before-harness.sh.txt`, `after-harness.sh.txt` and `suites-harness.sh.txt`.
+
+## R10 executed verification (Mi'mar's box, 18 October 2026, about 3:45 AM UTC+3)
+
+Argon round 5 (ARGON-R5-01..05; ARGON-R2-06, -07 and -09 CLOSED by Argon). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (`/workspace/fannan-testdeps`, lock identical to `release/runtime/package-lock.json`); no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 59 PASS, 0 FAIL | `test-results/r10/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 43 PASS, 0 FAIL | `test-results/r10/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 53 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7-R9) | `test-results/r10/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r10/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r10/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 22 PASS | `test-results/r10/package-tests-git.log` |
+| same, no-git copy | 0 | 19 PASS | `test-results/r10/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r10/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r10/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=27 sh=4 py=4 plus the launcher `.internal`, 0 failures (27 tracked `.mjs` files; no `.mjs` was added or removed in R10) | `test-results/r10/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean (after the R10 fix to `test-results/r9/versions.txt`; before it this gate failed on that file's trailing space) | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 16 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs`, run in the checkout (its dependency check refuses a symlinked deps folder, so the scratch copy is not used for it), exit 0. Browser, contract, spacing, desktop widths (1440 + 320 reflow, page and state, now including the body and left-edge screens) and state checks run and pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r10/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r10/ARGON-R5-0{1,2,3,4,5}-before.log` / `-after.log` (03 passes before and after: not reproduced) and `R10-zip-evidence-before.log` / `-after.log`.
+
+## R9 executed verification (Mi'mar's box, 18 October 2026, about 12:40 AM UTC+3)
+
+Codex round 4 fixes (CODEX-R4-01..05) plus one sibling found in the audit (accent colour measured through a page element). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network. Executed results, SKIPs and the fixture's expected stop are listed separately.
+
+**Executed (pass/fail counted):**
+
+| Command | Exit | Executed result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 54 PASS, 0 FAIL | `test-results/r9/node.log` |
+| same, without deps (clean copy, no `runtime-deps`) | 0 | 41 PASS, 0 FAIL | `test-results/r9/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 48 PASS, 6 FAIL: the intended `Node 22.12+ required` refusals (same six as R7/R8) | `test-results/r9/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r9/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r9/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` (git checkout) | 0 | 18 PASS | `test-results/r9/package-tests-git.log` |
+| same, no-git copy | 0 | 15 PASS | `test-results/r9/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r9/package-self-test.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample | `test-results/r9/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=28 sh=4 py=4 plus the launcher `.internal`, 0 failures. **R11 correction:** the R9 commit has 27 tracked `.mjs` files under `release/tools` and `release/tests` (as do 7508478, 27554b5, e88cf69, b24fd1f and 2059077); the 28th was an untracked file in the working tree, which the scratch copy included (tracked + untracked). Its name was not logged and cannot be recovered. From R11 the syntax log lists every file. | `test-results/r9/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+**SKIPPED (not executed, not counted as pass):** 13 Node tests in the no-deps copy (need test-only deps or Chrome); 3 package tests in the no-git copy (need a git checkout).
+
+**Fixture, expected stop (not a gate PASS):** `node release/tests/local-fixture.mjs` exit 0. Browser, contract, spacing, desktop widths (1440 + 320 reflow, page and state) and state checks run and pass; every gate run then stops at launcher exit 3 `pinned binary missing; no download fallback`, which the fixture asserts. The real Impeccable detector never ran (`test-results/r9/local-fixture.log`).
+
+Per-finding before/after logs: `test-results/r9/CODEX-R4-0{1,2,3,4}-before.log` / `-after.log` and `R9-accent-sibling-before.log` / `-after.log`.
+
+## R8 executed verification (Mi'mar's box, 18 October 2026, about 12:00 AM UTC+3)
+
+Port of selected Codex cloud work (`codex/fannan-r3-review` 2733317). Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 50 PASS, 0 FAIL, 0 SKIP | `test-results/r8/node.log` |
+| same, without deps (worktree copy, no `runtime-deps`) | 0 | 40 PASS, 0 FAIL, 10 SKIP (need deps or Chrome) | `test-results/r8/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 44 PASS, 6 FAIL: the same intended `Node 22.12+ required` refusals as R7 | `test-results/r8/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r8/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r8/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 13 PASS in the git checkout; 10 PASS, 3 SKIP in a no-git copy | `test-results/r8/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r8/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract, spacing, desktop-width (1440 + 320 reflow, page and state) and state checks PASS; every run stops at launcher exit 3 `pinned binary missing; no download fallback`, asserted | `test-results/r8/local-fixture.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), lint only | 0 | 0 errors on example, fixture and OPUS-04 sample (convert + build run inside the local fixture) | `test-results/r8/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | mjs=27 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r8/syntax.log` |
+| Cloud `scripts/verify-static.mjs`, ad hoc on this tree (not a shipped tool) | 0 | PASS (16 skills, 51 source hashes, ledger, frontmatter and links); two local adjustments noted in the log | `test-results/r8/cloud-verify-static-adhoc.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+Per-port before/after logs are `test-results/r8/PORT-0*-before.log` / `-after.log`. Package build and the anchored verify are in the latest `reviews/MIMAR-R8-changes-*.md`.
+
+## R7 executed verification (Mi'mar's box, 17 October 2026, about 11:50 PM UTC+3)
+
+Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`); no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 42 PASS, 0 FAIL, 0 SKIP | `test-results/r7/node.log` |
+| same, without deps (committed tree exported with `git archive`, no `runtime-deps`) | 0 | 33 PASS, 0 FAIL, 9 SKIP (need deps or Chrome) | `test-results/r7/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 36 PASS, 6 FAIL: every failure is the intended `Node 22.12+ required` refusal by `sd-build.mjs` | `test-results/r7/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r7/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r7/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r7/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r7/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract, spacing (approved scale from the hash-checked tokens.json) and state checks PASS; every run stops at launcher exit 3 `pinned binary missing; no download fallback`, asserted (CODEX-R3-03) | `test-results/r7/local-fixture.log` |
+| design.md lint 0.4.0 offline (`unshare -rn`), convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r7/designmd-lint-offline.log` |
+| Syntax (`node --check`, `bash -n`/`sh -n`, `ast.parse`) | 0 | mjs=24 sh=4 py=4 plus the launcher `.internal`, 0 failures | `test-results/r7/syntax.log` |
+| `git diff --check eb2d540..HEAD -- . ':(exclude)test-results/**/*.log'` | 0 | clean | (this table) |
+
+Per-finding before/after logs are in `test-results/r7/`. Package build and the anchored verify (trust files at 0444) are in the latest `reviews/MIMAR-R7-changes-*.md`.
+
+## R6 executed verification (Mi'mar's box, 17 October 2026, about 11 AM UTC+3)
+
+Linux x86_64, Node v22.23.3, Python 3.13.5, local Chrome 155.0.8059.84 (test-only, unpinned). Test-only deps: the existing locked tree (lock identical to `release/runtime/package-lock.json`), copied in after the box restore; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 36 PASS, 0 FAIL, 0 SKIP | `test-results/r6/node.log` |
+| same, without deps | 0 | 30 PASS, 0 FAIL, 6 SKIP (need deps or Chrome) | `test-results/r6/node-without-deps.log` |
+| Node 20.19.2, same | 1 | 34 PASS, 2 FAIL: the intended `Node 22.12+ required` refusal | `test-results/r6/node20.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS | `test-results/r6/python.log` |
+| R2 Node / R2 Python | 0 / 0 | 4 / 4 PASS | `test-results/r6/r2-node.log`, `r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 11 PASS in the git checkout; 8 PASS, 3 SKIP in a no-git copy | `test-results/r6/package-tests-git.log`, `package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS | `test-results/r6/package-self-test.log` |
+| `node release/tests/local-fixture.mjs` | 0 | browser, contract and state checks PASS; full gate blocked, but **R7 correction (CODEX-R3-03):** the log shows the launcher stopping with exit 4 `detect path outside project output` (the fixture had not relocated the launcher's root), not the missing-binary stop this row claimed. Corrected run: R7 below | `test-results/r6/local-fixture.log` |
+| design.md lint 0.4.0 offline, convert + build | 0 | 0 errors on example, fixture and OPUS-04 sample; convert/build rc 0 | `test-results/r6/designmd-lint-offline.log` |
+| Syntax | 0 | mjs=25 sh=4 py=4, 0 failures | `test-results/r6/syntax.log` |
+
+Per-finding before/after logs are in `test-results/r6/`. Package build/verify results are in the latest `reviews/MIMAR-R6-changes-*.md`.
+
+## R4 executed verification (Mi'mar's box, 17 October 2026)
+
+Linux x86_64, Debian glibc 2.41, Node v22.23.3, Python 3.13.5. Not the target bot host. Node runs used an existing locked dependency tree (lock sha256 `55a645b1…8710`, matches the pin) copied in as **test evidence only**; no install, no network.
+
+| Command | Exit | Result | Log |
+|---|---|---|---|
+| `node --test release/tests/*.test.mjs` (with test-only deps) | 0 | 19 PASS, 0 FAIL, 0 SKIP (re-run after R4-6) | `test-results/r4/node.log` |
+| same, without deps | 0 | 18 PASS, 0 FAIL, 1 SKIP (dependency-backed conversion) | `test-results/r4/node-without-deps.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 10 PASS, 0 SKIP (Linux runs the GNU/openat2 cases) | `test-results/r4/python.log` |
+| `node --test revisions/r2/release/tests/*.test.mjs` | 0 | 4 PASS | `test-results/r4/r2-node.log` |
+| `python3 -B revisions/r2/release/tests/test_guard_tools.py -v` | 0 | 4 PASS | `test-results/r4/r2-python.log` |
+| `python3 -B scripts/test_package_r3.py -v` | 0 | 3 PASS | `test-results/r4/package-tests.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS (tamper, extra, symlink, writable) | `test-results/r4/package-self-test.log` |
+| Node 20.19.2 `node --test release/tests/*.test.mjs` | 1 | 17 PASS, 2 FAIL: sd-build refuses Node < 22.12 by design (Node 22 is a hard prerequisite) | `test-results/r4/node20.log` |
+| Syntax (`node --check`, `bash -n`, `ast.parse`) | 0 | 0 failures | `test-results/r4/syntax.log` |
+| Before/after per finding | — | each R4 test fails on the pre-fix code and passes after | `test-results/r4/R4-*-before*.log`, `R4-*-after.log` |
+
+The package build/verify, GNU `verify-manifest.sh` and coverage results are recorded in `reviews/MIMAR-R4-changes-*.md` (written after the package freeze).
+
+
+**Overall: local unit/syntax/content/package checks pass with explicit skips; dependency-backed fixtures and live readiness remain BLOCKED.** This is Darwin/macOS with Node v22.22.3 and Python 3.15.0, not the independent review's Linux box or a proven live bot host. Exact commands and complete stdout/stderr are committed in `test-results/r3/` and repeated in the final `reviews/CODEX-R3-response-*.md`. R2 evidence elsewhere is historical.
+
+| Exact command (globs expanded) | Exit | Observed result | Full output |
+|---|---|---|---|
+| `node --test release/tests/checker-boundaries.test.mjs release/tests/copy-signals.test.mjs release/tests/dependency-trust.test.mjs release/tests/focus-screen.test.mjs release/tests/handoff-contract.test.mjs release/tests/host-trust.test.mjs release/tests/local-file-boundary.test.mjs release/tests/token-validation.test.mjs` | 0 | 13 PASS, 0 FAIL, 1 SKIP (14 tests) | `test-results/r3/node.log` |
+| `python3 -B release/tests/test_guard_tools.py -v` | 0 | 6 PASS, 0 FAIL, 4 SKIP (10 tests) | `test-results/r3/python.log` |
+| `node --test revisions/r2/release/tests/copy-signals.test.mjs revisions/r2/release/tests/dependency-trust.test.mjs revisions/r2/release/tests/handoff-contract.test.mjs revisions/r2/release/tests/local-file-boundary.test.mjs` | 0 | 4 PASS, 0 FAIL, 0 SKIP (4 tests) | `test-results/r3/r2-node.log` |
+| `python3 -B revisions/r2/release/tests/test_guard_tools.py -v` | 0 | 3 PASS, 0 FAIL, 1 SKIP (4 tests) | `test-results/r3/r2-python.log` |
+| `node release/tests/local-fixture.mjs` | 2 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/browser-fixture.log` |
+| `node /private/tmp/fannan-r2-suites-fof65rhb/release/tests/local-fixture.mjs` | 1 | BLOCKED: runtime dependencies absent; not a PASS | `test-results/r3/r2-browser-fixture.log` |
+| `python3 -B scripts/package-r3.py self-test` | 0 | PASS; four negative tamper/inventory/link/mode cases rejected | `test-results/r3/package-self-test.log` |
+| `git diff --check` | 0 | PASS: no whitespace errors (R4 correction: this row previously repeated the fixture BLOCKED text by mistake) | `test-results/r3/diff-check.log` |
+
+Current R3 totals: **Node 13 PASS / 0 FAIL / 1 SKIP; Python 6 PASS / 0 FAIL / 4 SKIP**. Historical R2 rerun: Node 4 PASS; Python 3 PASS / 1 SKIP. Combined unit suites: **26 PASS / 0 FAIL / 6 SKIP**. The package self-check is separate, with four meaningful negative cases. Two browser-fixture commands are blocked, not counted as unit passes. The archived fixture is copied unchanged into an isolated temporary tree before running because its historical runner removes its own evidence folder; no archived/source bytes were changed.
+
+The token converter/build success case is skipped because the pinned packages are absent. An offline-only `npm ci --offline --ignore-scripts --no-audit --no-fund --prefix runtime-deps` from unchanged lockfiles failed ENOTCACHED for zwitch-2.0.4. It made no registry request in offline cache-only mode. No network/global/live install ran; no dependency, lock or inventory pin changed. Actual sd-build rejection tests still execute before dependency loading and prove invalid JSON cannot write CSS.
+
+Python production Linux openat2, GNU manifest, launcher environment and direct negative-path tests have real SKIP reasons on Mac. Exact wrapper argv and canonical detector parser tests execute using temporary copied tools with narrowly labelled platform adapters. The dedicated-user/shared-owner rejection test mocks metadata only; it does not claim real host enforcement. The new dependency verifier requires protected root-owned `/opt/fannan/deps` and complete tree/ancestor metadata; content/tamper tests use synthetic unprotected trees solely through the lower-level verifier, never production entrypoints.
+
+The checker invocation block test records actual caller argv/environment and the browser launch block test proves a denied pin prevents launch. These are boundary unit tests, not a stubbed full-gate PASS. The production browser trust record remains explicitly BLOCKED without a reviewed target identity. A separate actual Chrome headless focus attempt with a fresh temporary profile aborted signal 6 in sandbox; no no-sandbox retry or browser-rendering PASS is claimed. The focus screen tests computed-style comparisons, including static decoration, background, borders, outlines, wrappers and pseudo-elements. Manual visibility, contrast and WCAG evidence remain mandatory.
+
+Additional executed checks:
+
+- `node --check` for all 43 .mjs files plus Node syntax checking of two historical Node shebang `.sh` adapters: **45 JavaScript checks PASS**. `/bin/sh -n` or `/bin/bash -n` per shebang: **17 shell files PASS**. Python `ast.parse` without bytecode artifacts: **6 Python files PASS**. Initial extension-based dispatch wrongly tried shell parsing on the two historical Node adapters; the raw failures remain in `syntax-initial-dispatch.json`, and shebang-corrected results are in `syntax.json`. No source was changed to hide those diagnostics.
+- `git diff --check`: exit 0.
+- Standard-library content assertions: **51/51 immutable source hashes**, all nine ordered steps, AA/grayscale/desktop/paid rules, **16/16 skills**, active caller names/Gotchas/relative links, generic memory save 3 and retained selected-adapter key/90-day/exposure rule PASS. Original source and Grok-review diff is empty.
+- Starting-code probes accept unitless dimension, bogus type and cross-type reference; corrected tests reject them. Two new Python regressions deliberately fail against starting launcher/parser bytes and pass against current bytes. An initial before-fix parser probe reached an old host-check loop; its real error is retained separately, then the probe was correctly bounded to parsing only.
+- Read-only native code review found ambiguous dot-path collisions and inherited allowlist names during validation, plus wrapper/pseudo focus coverage. They were corrected and regression-tested; narrow rereview found no remaining issue in those changes. This is not Amin's review or security approval.
+- `python3 -B scripts/package-r3.py self-test`, `build --start <starting SHA>` and `verify --start <starting SHA>` validate release hashes, exact file sets, all seven deliverables/16 full skills, changed-file coverage and ZIP bytes/CRC. The production GNU manifest command is attempted separately on Mac and is unavailable; portable package verification is not a Linux verifier PASS.
+
+No lint/typecheck/npm-test script, pytest configuration or further test suite is declared in the repository package manifests; the Node native and Python unittest suites above cover the supplied runnable tests. No new analyzer was installed. semgrep, shellcheck and gitleaks are absent; a redacting diff-pattern scan is a limited check, not a full secrets/security audit.
+
+The final response is committed last. All suites are rerun after that commit with fresh logs outside the frozen repository to preserve both the last-response-commit rule and clean status; the final chat reports those results and log location. Nothing in this document anticipates a successful post-commit run.
