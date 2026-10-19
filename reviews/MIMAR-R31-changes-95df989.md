@@ -1,8 +1,8 @@
 # Mi'mar R31 changes (head 95df989)
 
 **Branch:** `fannan/r31-reveal-fixes` (stacked on `fannan/r30-reveal-fixes` / b6edafb)
-**Registry:** `cb0ef5c0ed4fc2009a185a9036f444b6f46b87a5c7c1d857a15d9d4e91a29f64` (`trust/R3-CHANGES.sha256`)
-**Verify:** `python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3 --registry-sha256 cb0ef5c0ed4fc2009a185a9036f444b6f46b87a5c7c1d857a15d9d4e91a29f64`
+**Registry:** `e90012c11b9f36a97fb9ca54bc880b9a5538464b8f6f35a761357043f88223b8` (`trust/R3-CHANGES.sha256`)
+**Verify:** `python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3 --registry-sha256 e90012c11b9f36a97fb9ca54bc880b9a5538464b8f6f35a761357043f88223b8`
 
 ## Purpose
 Implement Sol's accepted R31 fix specs (M-01..M-13 except M-06 withdrawn by Mi'mar override: not reproduced in Chrome). Standing rejections unchanged (R27 ruling a, R30-M-10, R30-M-21).
