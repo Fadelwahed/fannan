@@ -99,13 +99,14 @@ test('R30-M-06: real Chrome: unchanged carousel first slide cannot cover hidden 
 
 test('R30-M-07: real Chrome: one physical Remove cannot cover two losses via nested regions or clip+loss (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
+  // R31-M-05: vertical nested clips need declarations (undeclared control-in-clip fallback retired)
   const E1bad = [
-    { state: 'default', html: P(`<section style="position:relative;width:200px;height:100px;overflow:hidden"><button data-item="a" style="position:absolute;top:120px">Remove</button><div style="height:0;overflow:hidden"><button data-item="b">Remove</button></div></section>`) },
-    { state: 'all-open', html: P(`<section style="position:relative;width:200px;height:100px;overflow:hidden"><div style="height:40px;overflow:hidden"><button data-item="b">Remove</button></div></section>`) },
+    { state: 'default', html: P(`<button id="m" aria-expanded="false">Open</button><section id="box" style="position:relative;width:200px;height:100px;overflow:hidden"><button data-item="a" style="position:absolute;top:120px">Remove</button><div style="height:0;overflow:hidden"><button data-item="b">Remove</button></div></section>`) },
+    { state: 'all-open', html: P(`<button id="m" aria-expanded="true">Open</button><section id="box" style="position:relative;width:200px;height:100px;overflow:hidden"><div style="height:40px;overflow:hidden"><button data-item="b">Remove</button></div></section>`), opener: '#m', reveals: '#box' },
   ];
   const E1ok = [
-    { state: 'default', html: P(`<section style="position:relative;width:200px;height:100px;overflow:hidden"><button data-item="a" style="position:absolute;top:120px">Remove</button><div style="height:0;overflow:hidden"><button data-item="b">Remove</button></div></section>`) },
-    { state: 'all-open', html: P(`<section style="position:relative;width:200px;height:100px;overflow:hidden"><button data-item="a">Remove</button><div style="height:40px;overflow:hidden"><button data-item="b">Remove</button></div></section>`) },
+    { state: 'default', html: P(`<button id="m" aria-expanded="false">Open</button><section id="box" style="position:relative;width:200px;height:100px;overflow:hidden"><button data-item="a" style="position:absolute;top:120px">Remove</button><div style="height:0;overflow:hidden"><button data-item="b">Remove</button></div></section>`) },
+    { state: 'all-open', html: P(`<button id="m" aria-expanded="true">Open</button><section id="box" style="position:relative;width:200px;height:100px;overflow:hidden"><button data-item="a">Remove</button><div style="height:40px;overflow:hidden"><button data-item="b">Remove</button></div></section>`), opener: '#m', reveals: '#box' },
   ];
   const E2 = (two) => ({
     default: P(`<button id="menu" aria-expanded="false">Items</button><button class="wide" data-item="a">Remove</button><div id="panel" style="height:0;overflow:hidden"><button data-item="b">Remove</button></div>`, narrow),
