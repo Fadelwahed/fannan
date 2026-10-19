@@ -1,4 +1,4 @@
-# Mi'mar R31 changes (head abf1cb9)
+# Mi'mar R31 changes (head 95df989)
 
 **Branch:** `fannan/r31-reveal-fixes` (stacked on `fannan/r30-reveal-fixes` / b6edafb)
 **Registry:** `cb0ef5c0ed4fc2009a185a9036f444b6f46b87a5c7c1d857a15d9d4e91a29f64` (`trust/R3-CHANGES.sha256`)
