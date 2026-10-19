@@ -283,6 +283,8 @@ test('R35-M-08: the finalized package passes its published anchored verification
   const digest = dig[1];
   const changes = readFileSync(join(root, 'trust/R3-CHANGES.sha256'), 'utf8');
   assert.ok(!changes.includes('MIMAR-R34-changes-PENDING.md'), 'PENDING record must not remain in the registry');
+  // release/PACKAGING.md: git does not preserve 0444; chmod before anchored verify
+  spawnSync('chmod', ['0444', 'trust/MANIFEST.sha256', 'trust/R3-CHANGES.sha256', 'trust/PINNED.sha256'], { cwd: root });
   const run = spawnSync('python3', ['-B', 'scripts/package-r3.py', 'verify',
     '--start', '9ee1ca6aaa4a257cb84fb7381056005f48554bf3',
     '--registry-sha256', digest], { cwd: root, encoding: 'utf8' });
