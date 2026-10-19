@@ -263,6 +263,40 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
   }
   const root = document.documentElement, body = document.body;
   const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
+  // R30-M-15 / R34: resolve selectors across the document and open shadow roots (also used before ledger build)
+  const queryAllDeep = sel => {
+    const out = [], seen = new Set();
+    const add = el => { if (el && !seen.has(el)) { seen.add(el); out.push(el); } };
+    const walk = root => { let list = []; try { list = [...root.querySelectorAll(sel)]; } catch { return; } for (const el of list) add(el); for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot); };
+    try { for (const el of document.querySelectorAll(sel)) add(el); } catch { return null; }
+    if (document.body) walk(document.body);
+    else if (document.documentElement) walk(document.documentElement);
+    return out;
+  };
+  // R34: mapped overflow:auto/scroll carousels — inactive registered slides are cut (declaration obligation), not scrolledText
+  const mappedScrollRoots = new Set();
+  {
+    const byRoot = new Map();
+    for (const pr of probes || []) {
+      const cm = pr.carousel;
+      if (!cm || typeof cm !== 'object' || !cm.root || !Array.isArray(cm.slides) || cm.slides.length < 2) continue;
+      const roots = queryAllDeep(cm.root); if (!roots || roots.length !== 1) continue;
+      const slides = cm.slides.map(sel => { const h = queryAllDeep(sel); return h && h.length === 1 ? h[0] : null; });
+      if (slides.filter(Boolean).length >= 2 && !byRoot.has(roots[0])) byRoot.set(roots[0], { root: roots[0], slides });
+    }
+    for (const mc of byRoot.values()) {
+      const ox = getComputedStyle(mc.root).overflowX, oy = getComputedStyle(mc.root).overflowY;
+      if (!['auto', 'scroll'].includes(ox) && !['auto', 'scroll'].includes(oy)) continue;
+      mappedScrollRoots.add(mc.root);
+      const cut = cutOf(mc.root, mc.root.getBoundingClientRect());
+      const slideEls = mc.slides.filter(Boolean);
+      const whole = cut.whole.filter(it => contentEls.some(d => pathOf(d) === it.path && slideEls.some(s => d === s || within(s, d))));
+      if (!whole.length) continue;
+      for (const it of whole) cutPaths.add(it.path);
+      const already = clipped.some(c => c.boxPath === pathOf(mc.root) && (c.whole || []).some(p => whole.some(w => w.print === p.print)));
+      if (!already) clipped.push({ tag: mc.root.tagName, sig: boxSig(mc.root), boxPath: pathOf(mc.root), slot: null, x: true, y: false, ellipsis: false, truncation: false, collapsed: false, whole, partial: [] });
+    }
+  }
   // R23-GPT-02: a control's print is listed once per control element (one-to-one matching); a text print once
   const shownEls = contentEls.filter(d => kindOf(d) !== 'media' && !cutPaths.has(pathOf(d)) && !offPaths.has(pathOf(d)));
   const seenControl = new Set(), seenText = new Set(), shownPrints = [];
@@ -302,16 +336,7 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
   // selectors, checked in this rendering: how many elements each matches, whether the opener is visible and operable
   // (a hit test at its centre), whether it shows it is open (aria-expanded=true, an open details, :popover-open, or a
   // selected, pressed or current control) and what the region shows. Opener names are never compared.
-  // R30-M-15: resolve declaration selectors across the document and open shadow roots (closed roots stay unscanned)
-  const queryAllDeep = sel => {
-    const out = [], seen = new Set();
-    const add = el => { if (el && !seen.has(el)) { seen.add(el); out.push(el); } };
-    const walk = root => { let list = []; try { list = [...root.querySelectorAll(sel)]; } catch { return; } for (const el of list) add(el); for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot); };
-    try { for (const el of document.querySelectorAll(sel)) add(el); } catch { return null; }
-    if (document.body) walk(document.body);
-    else if (document.documentElement) walk(document.documentElement);
-    return out;
-  };
+  // queryAllDeep defined above (before ledger) for mapped-carousel cuts and declaration probes
   const declared = (probes || []).map(pr => {
     let openersFound = [], regions = [];
     try {
@@ -330,7 +355,19 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
       const b0 = o.getBoundingClientRect(); visible = shown(o) && b0.width > 0 && b0.height > 0;
       // R30-M-03 / R31-M-07: use native :disabled (includes fieldset + first-legend exception); keep ARIA-disabled and inert
       const disabled = !!(control.disabled || (typeof control.matches === 'function' && control.matches(':disabled')) || control.getAttribute?.('aria-disabled') === 'true' || control.closest?.('[aria-disabled="true"]') || control.closest?.('[inert]') || o.closest?.('[inert]') || o.getAttribute?.('aria-disabled') === 'true');
-      if (visible && !disabled) { o.scrollIntoView({ block: 'center', inline: 'nearest' }); const b = o.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2; let t = document.elementFromPoint(x, y); for (let k = 0; t?.shadowRoot && k < 20; k++) { const d = t.shadowRoot.elementFromPoint(x, y); if (!d || d === t) break; t = d; } hit = !!t && (t === o || within(o, t)); scrollTo(0, 0); }
+      // R34: restore authored scroll positions after hit-test scrolling (carousel proof must use authored capture)
+      if (visible && !disabled) {
+        const scrollSnap = [];
+        for (let a = o; a; a = parentOf(a)) if (a.nodeType === 1) scrollSnap.push([a, a.scrollLeft, a.scrollTop]);
+        scrollSnap.push([document.documentElement, document.documentElement.scrollLeft, document.documentElement.scrollTop]);
+        if (document.body) scrollSnap.push([document.body, document.body.scrollLeft, document.body.scrollTop]);
+        o.scrollIntoView({ block: 'center', inline: 'nearest' });
+        const b = o.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2;
+        let t = document.elementFromPoint(x, y);
+        for (let k = 0; t?.shadowRoot && k < 20; k++) { const d = t.shadowRoot.elementFromPoint(x, y); if (!d || d === t) break; t = d; }
+        hit = !!t && (t === o || within(o, t));
+        for (const [el, sl, st] of scrollSnap) { try { el.scrollLeft = sl; el.scrollTop = st; } catch {} }
+      }
       if (disabled) hit = false;
       const popId = control.getAttribute?.('popovertarget') || o.getAttribute('popovertarget');
       const resolveId = id => control.getRootNode?.().getElementById?.(id) || o.getRootNode().getElementById?.(id) || document.getElementById(id);
@@ -349,73 +386,105 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
       // R32-M-10: expansion, selection and pressed are independent; only aria-expanded=false blocks popup/step shortcuts
       const expandedTrue = control.getAttribute?.('aria-expanded') === 'true' || o.getAttribute('aria-expanded') === 'true';
       const expandedFalse = control.getAttribute?.('aria-expanded') === 'false' || o.getAttribute('aria-expanded') === 'false';
-      // R33-M-01/M-02/M-03: sibling slides sharing a constraining viewport (any display); auxiliary panels under a carousel root do not qualify
-      const carouselRootOf = el => { for (let a = el; a; a = parentOf(a)) { if ((a.getAttribute?.('aria-roledescription') || '').trim()) return a; } return null; };
-      const multiSlideTrackOf = el => {
-        for (let a = parentOf(el); a; a = parentOf(a)) {
-          const kids = [...a.children].filter(ch => ch.nodeType === 1);
-          if (kids.length < 2) continue;
-          if (!kids.some(k => k === el || within(k, el))) continue;
-          // Bootstrap-style display:none/block peers under a carousel-described ancestor
-          const root = carouselRootOf(el);
-          if (root && (a === root || within(root, a))) {
-            const shownK = kids.filter(k => getComputedStyle(k).display !== 'none' && k.getBoundingClientRect().width > 0 && k.getBoundingClientRect().height > 0);
-            const hiddenK = kids.filter(k => getComputedStyle(k).display === 'none');
-            if (shownK.length >= 1 && hiddenK.length >= 1 && shownK.some(k => k === el || within(k, el))) return a;
-          }
-          // Constraining viewport that actually cuts side-by-side peer slides (not stacked menu/disclosure chrome)
-          let viewport = null;
-          for (let p = a; p; p = parentOf(p)) {
-            const pc = getComputedStyle(p);
-            if (['hidden', 'clip'].includes(pc.overflowX) || ['hidden', 'clip'].includes(pc.overflowY)) { viewport = p; break; }
-          }
-          if (!viewport) continue;
-          const vr = viewport.getBoundingClientRect();
-          const visiblePeers = kids.filter(k => { const kr = k.getBoundingClientRect(); return kr.width > 0 && kr.height > 0; });
-          if (visiblePeers.length < 2) continue;
-          // Peers must sit on the same row (carousel track), not a vertical stack with an overflowing spacer
-          const sideBySide = visiblePeers.some((k, i) => visiblePeers.some((o, j) => {
-            if (i >= j) return false;
-            const kr = k.getBoundingClientRect(), or = o.getBoundingClientRect();
-            const yOverlap = Math.min(kr.bottom, or.bottom) - Math.max(kr.top, or.top);
-            return yOverlap > Math.min(kr.height, or.height) * 0.3 && Math.abs(kr.left - or.left) > 1;
-          }));
-          if (!sideBySide) continue;
-          const anyOutside = visiblePeers.some(k => { const kr = k.getBoundingClientRect(); return kr.right > vr.right + 1 || kr.left < vr.left - 1 || kr.bottom > vr.bottom + 1 || kr.top < vr.top - 1; });
-          const anyInside = visiblePeers.some(k => { const kr = k.getBoundingClientRect(); return kr.left < vr.right - 1 && kr.right > vr.left + 1 && kr.top < vr.bottom - 1 && kr.bottom > vr.top + 1; });
-          if (anyOutside && anyInside) return a;
-        }
-        return null;
-      };
-      // Region must sit in a real multi-slide track; a carousel-described ancestor alone does not certify an aside/disclosure
-      const inGenuineCarousel = associatedRegions.some(r => !!multiSlideTrackOf(r));
-      const isBtn = !!(control.matches?.('button, [role="button"]') || o.matches?.('button, [role="button"]'));
-      const carouselStep = !expandedFalse && !hasPopup && !popId && regionShown && isBtn && inGenuineCarousel;
+      // R34: carousel step proof is cross-capture (declarationProblems); one-capture geometric inference deleted
       const open = expandedTrue
         || (o.matches('summary') && !!o.parentElement?.open) || (control.matches?.('summary') && !!control.parentElement?.open)
         || (!!popEl && isPopoverOpen(popEl)) || regions.some(r => isPopoverOpen(r) || isDialogOpen(r))
         || (hasPopup && regionShown && !expandedFalse)
         || checked
-        || carouselStep
         || control.getAttribute?.('aria-selected') === 'true' || o.getAttribute('aria-selected') === 'true'
         || control.getAttribute?.('aria-pressed') === 'true' || o.getAttribute('aria-pressed') === 'true'
         || ((control.hasAttribute?.('aria-current') && control.getAttribute('aria-current') !== 'false') || (o.hasAttribute('aria-current') && o.getAttribute('aria-current') !== 'false'));
       // R30-M-11 / R31-M-04 / R32-M-09: supplied targets must resolve when the region is mounted
       const targetOk = controlsIds.length === 0 || (unresolvedTargets.length === 0 && (regions.length === 0 || regions.every(r => controlled.some(t => t === r || within(t, r) || within(r, t)))));
-      return { visible, hit, open, targetOk, disabled, unresolvedTargets: unresolvedTargets.length > 0, unresolvedTargetIds: unresolvedTargets };
+      return { visible, hit, open, targetOk, disabled, expandedFalse, unresolvedTargets: unresolvedTargets.length > 0, unresolvedTargetIds: unresolvedTargets };
     };
     const checks = openersFound.map(check);
     const openerVisible = checks.length > 0 && checks.every(c => c.visible), openerHit = checks.length > 0 && checks.every(c => c.hit), openerOpen = checks.length > 0 && checks.every(c => c.open);
     const targetAgrees = checks.length === 0 || checks.every(c => c.targetOk);
     // R31-M-13: disabled/inert failures are distinct from hit-test obstruction
     const openerDisabled = checks.length > 0 && checks.some(c => c.disabled) && checks.filter(c => !c.hit).every(c => c.disabled);
+    const expandedFalse = checks.length > 0 && checks.some(c => c.expandedFalse);
     // R30-M-16: exclude the opener and its descendants from revealed-payload items
     const openerSet = new Set(openersFound);
     const inOpener = el => { for (let a = el; a; a = parentOf(a)) if (openerSet.has(a)) return true; return false; };
     const items = [...itemOfEl].filter(([el]) => regions.some(g => g === el || within(g, el)) && !inOpener(el)).map(([, it]) => it);
     const unresolvedTargetIds = [...new Set(checks.flatMap(c => c.unresolvedTargetIds || []))];
-    return { state: pr.state, openerCount: openersFound.length, regionCount: regions.length, openerVisible, openerHit, openerOpen, openerDisabled, regionVisible: items.length > 0, regionIndependentlyOpen, targetAgrees, unresolvedTargetIds, items };
+    // R34: record explicit carousel mapping proof inputs at authored scroll (before further probes)
+    let carousel = null;
+    if (pr.carousel && typeof pr.carousel === 'object') {
+      const cm = pr.carousel;
+      const err = (msg) => ({ valid: false, error: msg, root: cm.root || null, slides: Array.isArray(cm.slides) ? cm.slides : [], slideDisplayed: [], regionSlide: -1, regionInSlide: false, scrollLeft: 0, scrollTop: 0 });
+      try {
+        if (!cm.root || typeof cm.root !== 'string' || !cm.root.trim()) carousel = err('carousel.root must be a nonempty selector');
+        else if (!Array.isArray(cm.slides) || cm.slides.length < 2) carousel = err('carousel.slides needs at least two selectors');
+        else if (cm.slides.some(s => typeof s !== 'string' || !s.trim())) carousel = err('carousel.slides entries must be nonempty selectors');
+        else if (new Set(cm.slides).size !== cm.slides.length) carousel = err('carousel.slides selectors must be distinct');
+        else {
+          const roots = queryAllDeep(cm.root);
+          if (roots === null) carousel = err('invalid carousel.root selector');
+          else if (roots.length !== 1) carousel = err(roots.length === 0 ? 'carousel.root matches nothing' : 'carousel.root matches more than one element');
+          else {
+            const rootEl = roots[0];
+            const slideEls = [];
+            let bad = null;
+            for (const sel of cm.slides) {
+              const hits = queryAllDeep(sel);
+              if (hits === null) { bad = 'invalid carousel.slides selector'; break; }
+              if (hits.length === 0) { slideEls.push(null); continue; }
+              if (hits.length > 1) { bad = 'carousel.slides selector matches more than one element'; break; }
+              slideEls.push(hits[0]);
+            }
+            if (bad) carousel = err(bad);
+            else {
+              const present = slideEls.map((el, i) => ({ el, i })).filter(x => x.el);
+              if (present.some(({ el }) => !within(rootEl, el) && el !== rootEl)) carousel = err('carousel slide lies outside root');
+              else if (present.some(({ el }, a) => present.some(({ el: o }, b) => a < b && (el === o || within(el, o) || within(o, el))))) carousel = err('carousel slides overlap');
+              else {
+                const slideDisplayed = slideEls.map(el => {
+                  if (!el) return false;
+                  if (getComputedStyle(el).display === 'none') return false;
+                  if (!shown(el)) return false;
+                  const er = el.getBoundingClientRect();
+                  // Fully outside carousel viewport (authored scroll) counts as not displayed
+                  const rr = rootEl.getBoundingClientRect();
+                  const ox = getComputedStyle(rootEl).overflowX, oy = getComputedStyle(rootEl).overflowY;
+                  const clippedOut = (['hidden', 'clip', 'auto', 'scroll'].includes(ox) || ['hidden', 'clip', 'auto', 'scroll'].includes(oy))
+                    && (er.right <= rr.left + 1 || er.left >= rr.right - 1 || er.bottom <= rr.top + 1 || er.top >= rr.bottom - 1);
+                  if (clippedOut) return false;
+                  // Has observable payload (text/control) that is shown
+                  const payload = [...itemOfEl].filter(([node]) => node === el || within(el, node));
+                  return payload.some(([, it]) => true) || (er.width > 0 && er.height > 0 && (ownText(el) || [...el.querySelectorAll('*')].some(n => shown(n) && (ownText(n) || isControl(n)))));
+                });
+                let regionSlide = -1;
+                for (const r of regions) {
+                  const ix = slideEls.findIndex(s => s && (s === r || within(s, r)));
+                  if (ix >= 0) { regionSlide = ix; break; }
+                }
+                const regionInSlide = regionSlide >= 0;
+                carousel = {
+                  valid: true, error: null, root: cm.root, slides: [...cm.slides],
+                  slideDisplayed, regionSlide, regionInSlide,
+                  scrollLeft: rootEl.scrollLeft || 0, scrollTop: rootEl.scrollTop || 0,
+                  observedSlides: slideDisplayed.filter(Boolean).length,
+                };
+              }
+            }
+          }
+        }
+      } catch (e) { carousel = err('carousel mapping probe failed'); }
+    }
+    return { state: pr.state, openerCount: openersFound.length, regionCount: regions.length, openerVisible, openerHit, openerOpen, openerDisabled, expandedFalse, regionVisible: items.length > 0, regionIndependentlyOpen, targetAgrees, unresolvedTargetIds, items, carousel };
   });
+  // R34: mapped scroll carousels — strip scrolledText for roots already cut as inactive-slide reveals
+  if (mappedScrollRoots.size) {
+    for (let i = scrolledText.length - 1; i >= 0; i--) {
+      const st = scrolledText[i];
+      const sc = st.scroller ? all.find(e => label(e) === st.scroller) : null;
+      if ((sc && mappedScrollRoots.has(sc)) || [...mappedScrollRoots].some(root => ['auto', 'scroll'].includes(getComputedStyle(root).overflowX) && [...contentEls].some(d => (within(root, d) || d === root) && String(printOf(d) || '').includes((st.sample || '').slice(0, 24))))) scrolledText.splice(i, 1);
+    }
+  }
+
   // clipping boxes (overflow hidden or clip, holding shown content) with what they show uncut: the regions of reveals
   const boxes = all.filter(e => holds.has(e) && clipBox(e) && [getComputedStyle(e).overflowX, getComputedStyle(e).overflowY].some(o => ['hidden', 'clip'].includes(o))).map(e => ({ sig: boxSig(e), path: pathOf(e), items: insideItems([e]) }));
   return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, shownPrints, composites, disclosures, headings, ledgerItems, headingItems, disclosureItems, compositeItems, declared, boxes, clipped, mediaCrops, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
@@ -506,7 +575,22 @@ export function declarationProblems(inS, inR, opts = {}) {
     else why.push('opener not operable in the losing state (another element is on top of it)');
   }
   // R31-M-02: truncation verification may permit an already-visible introduction; ordinary losses keep the hidden-region rule
-  if (inS.regionVisible && !opts.allowVisibleRegion) why.push('region already visible in the losing state');
+  // R34: a verified carousel step proves a transition from hidden-in-source to shown-in-target; skip the ordinary hidden-region rule when that step holds
+  const cS = inS.carousel, cR = inR.carousel;
+  const mappingPresent = !!(cR && (cR.root || cR.error || cR.valid !== undefined));
+  let verifiedStep = false;
+  if (mappingPresent) {
+    if (!cR || cR.valid === false) why.push(cR?.error || 'missing/malformed carousel mapping');
+    else if (!cS || cS.valid === false) why.push(cS?.error || 'missing/malformed carousel mapping in the losing state');
+    else if (!cR.regionInSlide) why.push('revealed region is outside registered slide payload');
+    else if (cR.regionSlide >= 0 && cS.slideDisplayed?.[cR.regionSlide]) why.push('containing slide already displayed in the losing state');
+    else if (inR.expandedFalse) why.push('explicit aria-expanded=false blocks the carousel step');
+    else if ((cR.observedSlides || 0) < 1 || (cS.observedSlides || 0) + (cR.observedSlides || 0) < 2 && !(cS.slideDisplayed || []).some(Boolean) && !(cR.slideDisplayed || []).some(Boolean)) {
+      // at least two registered slides must show observable payload across the inventory; checked softly per pair
+    }
+    else verifiedStep = cR.regionInSlide && !cS.slideDisplayed[cR.regionSlide] && !inR.expandedFalse;
+  }
+  if (inS.regionVisible && !opts.allowVisibleRegion && !verifiedStep) why.push('region already visible in the losing state');
   // R30-M-11 / R31-M-04 / R32-M-09: reveals must agree; unresolved ids invalidate unless source region is wholly unmounted and the open rendering resolves cleanly
   if (inR.targetAgrees === false) why.push('reveals contradicts the opener\'s aria-controls or popovertarget (or a target id is unresolved)');
   else if (inS.targetAgrees === false) {
@@ -514,9 +598,10 @@ export function declarationProblems(inS, inR, opts = {}) {
     if (!unmountedOk) why.push('reveals contradicts the opener\'s aria-controls or popovertarget (or a target id is unresolved)');
   }
   // R30-M-17: a verified source trigger may disappear after opening an associated region whose open state is independent (dialog[open]/:modal/:popover-open)
+  // R34: verifiedStep is an alternative to an ordinary positive open signal; expansion-false veto already applied above
   if (inR.openerCount < 1) {
-    if (!(inS.openerCount >= 1 && inR.regionVisible && inR.regionIndependentlyOpen)) why.push('opener matches nothing in the declared state');
-  } else if (!inR.openerOpen) {
+    if (!(inS.openerCount >= 1 && inR.regionVisible && inR.regionIndependentlyOpen) && !verifiedStep) why.push('opener matches nothing in the declared state');
+  } else if (!inR.openerOpen && !verifiedStep) {
     why.push('opener does not show it is open in the declared state');
   }
   if (!inR.regionVisible) why.push('region not visible in the declared state');
@@ -529,7 +614,7 @@ const renderingKey = g => JSON.stringify((g.widths?.results || []).map(r => {
   const L = g.widths.ledgerByWidth?.[r.width] || {};
   // R32-M-01: include clipping identity, classification and cut contents so equivalent captures share clip decisions
   return [r.width, (L.items || []).map(i => i.print), (r.lostItems || []).map(i => i.print),
-    (L.declared || []).map(d => [d.state, d.openerCount, d.regionCount, d.openerVisible, d.openerHit, d.openerOpen, d.regionVisible, d.regionIndependentlyOpen, d.targetAgrees, (d.items || []).map(i => i.print)]),
+    (L.declared || []).map(d => [d.state, d.openerCount, d.regionCount, d.openerVisible, d.openerHit, d.openerOpen, d.regionVisible, d.regionIndependentlyOpen, d.targetAgrees, d.expandedFalse, d.carousel && [d.carousel.valid, d.carousel.error, d.carousel.root, d.carousel.slides, d.carousel.slideDisplayed, d.carousel.regionSlide, d.carousel.regionInSlide, d.carousel.scrollLeft, d.carousel.scrollTop], (d.items || []).map(i => i.print)]),
     (L.headings || []).map(h => [h.name, h.level, h.members]), (L.composites || []).map(c => [c.role, c.name, (c.items || []).map(i => [i.name, i.selected])]),
     (r.clipped || []).map(c => [c.rule, c.sig, c.boxPath, !!c.x, !!c.y, !!c.collapsed, !!c.truncation, (c.whole || []).map(p => p.print), (c.partial || []).map(p => p.print)])];
 }));
@@ -739,42 +824,24 @@ export function resolveReveals(scopes, phase = 'handoff') {
         for (const c of r.clipped.filter(resolvable)) {
           const raw = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
           const seenOwner = new Set(), items = raw.filter(p => { if (p.kind !== 'control' || !p.owner) return true; if (seenOwner.has(p.owner)) return false; seenOwner.add(p.owner); return true; });
-          const pool = o => at(o, width);
-          const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(pool(o), p); const k = printKey(p), n = (counts(pool(o)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
-          const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
-          const mine = w.ledgerByWidth?.[width] || {};
-          // R32-M-05 / R33-M-07: pure-horizontal overflow only; label/copy-slot/sig substrings never establish eligibility
-          const carouselLike = !!(c.x && !c.y && !c.collapsed);
+          // R34: undeclared cross-state box fallback deleted; only a valid declaration covers reveal/truncated clips
           const regionFor = (o, p) => {
-            const theirs = o.widths?.ledgerByWidth?.[width] || {};
-            if (o.declaration) {
-              const inR = probeOf(o, width, o.scope.state);
-              const inS = probeOf({ widths: w }, width, o.scope.state);
-              if (declarationProblems(inS, inR).length) return null;
-              // R33-M-04: at the graded width, check source-opener existence/visibility/enabled/hit only — not region visibility
-              if (width !== r.width) {
-                const inSg = probeOf({ widths: w }, r.width, o.scope.state);
-                if (!inSg || inSg.openerCount < 1 || !inSg.openerVisible || inSg.openerDisabled || !inSg.openerHit) return null;
-              }
-              return { key: `${o.scope.state}|declared`, items: inR.items, mineBox: null, theirsBox: null, declared: true };
+            if (!o.declaration) return null;
+            const inR = probeOf(o, width, o.scope.state);
+            const inS = probeOf({ widths: w }, width, o.scope.state);
+            if (declarationProblems(inS, inR).length) return null;
+            // R33-M-04: at the graded width, check source-opener existence/visibility/enabled/hit only — not region visibility
+            if (width !== r.width) {
+              const inSg = probeOf({ widths: w }, r.width, o.scope.state);
+              if (!inSg || inSg.openerCount < 1 || !inSg.openerVisible || inSg.openerDisabled || !inSg.openerHit) return null;
             }
-            if (!carouselLike) return null; // R30-M-19 / R32-M-05
-            const real = list => (list || []).filter(b => b.sig === c.sig && b.items.length);
-            const a = real(mine.boxes), b = real(theirs.boxes);
-            if (a.length <= 1 && b.length === 1) return { key: `${o.scope.state}|b:${c.sig}`, items: b[0].items, mineBox: a[0] || null, theirsBox: b[0], declared: false };
-            const atp = b.filter(x => x.path === c.boxPath);
-            return atp.length === 1 ? { key: `${o.scope.state}|b:${c.sig}|${c.boxPath}`, items: atp[0].items, mineBox: a.find(x => x.path === c.boxPath) || a[0] || null, theirsBox: atp[0], declared: false } : null;
+            return { key: `${o.scope.state}|declared`, items: inR.items, declared: true };
           };
           const asItem = p => { const k = String(p.print).indexOf(':'); return p.kind === 'control' ? { kind: 'control', role: p.print.slice(0, k), name: p.print.slice(k + 1), print: p.print } : { kind: 'text', print: p.print }; };
           const pick = (o, p) => {
             const key = p.kind === 'control' && p.owner ? `${width}|${p.owner}` : null; if (key && done.has(key)) return done.get(key) === o;
             const reg = regionFor(o, p); if (!reg) return false;
-            if (!reg.declared && reg.mineBox && reg.theirsBox) {
-              const srcPaths = new Set(reg.mineBox.items.map(i => i.path));
-              for (const e of reg.theirsBox.items) if (srcPaths.has(e.path)) { localUsed.add(`${o.scope.state}|${e.id}`); physical.add(`${o.scope.state}|${e.id}`); }
-            }
-            const pathAvailable = !reg.declared && !!p.path && (reg.theirsBox?.items || []).some(e => e.path === p.path);
-            const e = reg.items.find(e => !localUsed.has(`${o.scope.state}|${e.id}`) && sameItem(asItem(p), e) && (!pathAvailable || e.path === p.path)); if (!e) return false;
+            const e = reg.items.find(e => !localUsed.has(`${o.scope.state}|${e.id}`) && sameItem(asItem(p), e)); if (!e) return false;
             localUsed.add(`${o.scope.state}|${e.id}`); physical.add(`${o.scope.state}|${e.id}`); if (key) done.set(key, o); return true;
           };
           let full = null;

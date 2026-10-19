@@ -118,8 +118,8 @@ const reviewFor = scope => scope ? (handoff?.manualChecks || []).find(m => m.id 
 const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
 // R29 (Mi'mar's decision): a state that rescues hidden content declares `opener` and `reveals`; every rendering of the
 // screen and language probes those selectors at each width so the gate can verify the declaration
-const declarationOf = sc => { const st = sc && declaredStates.find(x => x.screen === sc.screen && x.lang === sc.lang && x.state === sc.state); return st && st.opener && st.reveals ? { opener: st.opener, reveals: st.reveals } : null; };
-const probesFor = sc => sc ? declaredStates.filter(x => x.screen === sc.screen && x.lang === sc.lang && x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals })) : [];
+const declarationOf = sc => { const st = sc && declaredStates.find(x => x.screen === sc.screen && x.lang === sc.lang && x.state === sc.state); return st && st.opener && st.reveals ? { opener: st.opener, reveals: st.reveals, ...(st.carousel ? { carousel: st.carousel } : {}) } : null; };
+const probesFor = sc => sc ? declaredStates.filter(x => x.screen === sc.screen && x.lang === sc.lang && x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) })) : [];
 const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
 ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
 const pagePaths = await contrastPaths(await isolatedPage(p), axe.incomplete); // R19-MIMAR-01, resolved after integrity

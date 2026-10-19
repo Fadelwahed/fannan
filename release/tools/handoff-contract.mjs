@@ -138,8 +138,28 @@ export function checkHandoff(h, phase = 'handoff') {
         if (st.requiresScript !== undefined) need(st.requiresScript === false || (st.requiresScript === true && st.state !== 'default' && nonempty(st.trigger)), `screen ${s.id}/${st.state}: requiresScript must be a boolean, only on a non-default state, with its trigger recorded`);
         // R29: a state that rescues hidden content declares the control that opens it and the region it reveals
         if (st.opener !== undefined || st.reveals !== undefined) need(st.state !== 'default' && nonempty(st.opener) && nonempty(st.reveals), `screen ${s.id}/${st.state}: opener and reveals are declared together, as selectors, on a non-default state`);
+        // R34: optional carousel:{root,slides} only with opener/reveals; validate shape and consistent mappings
+        if (st.carousel !== undefined) {
+          need(st.opener && st.reveals && st.state !== 'default', `screen ${s.id}/${st.state}: carousel mapping requires opener and reveals on a non-default state`);
+          const cm = st.carousel;
+          need(cm && typeof cm === 'object' && !Array.isArray(cm), `screen ${s.id}/${st.state}: carousel must be an object`);
+          need(nonempty(cm.root), `screen ${s.id}/${st.state}: carousel.root must be a nonempty selector`);
+          need(Array.isArray(cm.slides) && cm.slides.length >= 2 && cm.slides.every(nonempty), `screen ${s.id}/${st.state}: carousel.slides needs at least two nonempty selectors`);
+          if (Array.isArray(cm.slides)) need(new Set(cm.slides).size === cm.slides.length, `screen ${s.id}/${st.state}: carousel.slides selectors must be distinct`);
+        }
         if (st.applicable === false) need(nonempty(st.reason) && nonempty(st.reviewer) && file(st.evidence), `screen ${s.id}/${st.state}: N/A needs reason, reviewer, evidence`);
         else need(file(st.page) && st.frame?.width === 1440 && nonempty(st.frame.version) && file(st.frame.path) && /^[a-f0-9]{64}$/.test(st.frame.sha256 || '') && (file(st.frame?.path) ? sha(st.frame.path) === st.frame.sha256 && pngWidth(st.frame.path) === 1440 : false), `screen ${s.id}/${st.state}: page and hash-checked 1440px PNG required`);
+      }
+      // R34: declarations that share a carousel root on the same screen/language must use the same ordered slides
+      {
+        const byKey = new Map();
+        for (const st of s.states || []) {
+          if (!st.carousel || !st.carousel.root || !Array.isArray(st.carousel.slides)) continue;
+          const k = `${st.lang}|${st.carousel.root}`;
+          const sig = JSON.stringify(st.carousel.slides);
+          if (byKey.has(k) && byKey.get(k) !== sig) need(false, `screen ${s.id}: carousel slides for root ${st.carousel.root} must match across states in ${st.lang}`);
+          else byKey.set(k, sig);
+        }
       }
       const applicableHashes = (s.states || []).filter(st => st.applicable !== false).map(st => st.frame?.sha256);
       need(applicableHashes.length === new Set(applicableHashes).size, `screen ${s.id}: applicable states cannot reuse the same frame`);
