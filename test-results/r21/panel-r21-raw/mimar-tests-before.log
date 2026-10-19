@@ -1,0 +1,2272 @@
+TAP version 13
+# Subtest: R14-GPT-07 to 11: the exact process and contract text is in the plan, skills and references
+ok 1 - R14-GPT-07 to 11: the exact process and contract text is in the plan, skills and references
+  ---
+  duration_ms: 13.777812
+  type: 'test'
+  ...
+# Subtest: R14-GPT-07 to 11: each new step is a required manual check, documented in design-quality.md
+ok 2 - R14-GPT-07 to 11: each new step is a required manual check, documented in design-quality.md
+  ---
+  duration_ms: 11.402325
+  type: 'test'
+  ...
+# Subtest: R14-MIMAR-01 to 05: feedback loop, emphasis order, type measure, colour roles and per-width grid are required
+ok 3 - R14-MIMAR-01 to 05: feedback loop, emphasis order, type measure, colour roles and per-width grid are required
+  ---
+  duration_ms: 7.312529
+  type: 'test'
+  ...
+# Subtest: R14 Part B keeps the floors: desktop first at 1440, WCAG 2.2 AA, zero glass, spacing scale, 320 px reflow plus desktopWidths with 1440
+ok 4 - R14 Part B keeps the floors: desktop first at 1440, WCAG 2.2 AA, zero glass, spacing scale, 320 px reflow plus desktopWidths with 1440
+  ---
+  duration_ms: 9.600184
+  type: 'test'
+  ...
+# Subtest: R14 Part B text is generic and tool-agnostic: no client, country or design-tool vendor names in the new text
+ok 5 - R14 Part B text is generic and tool-agnostic: no client, country or design-tool vendor names in the new text
+  ---
+  duration_ms: 0.853958
+  type: 'test'
+  ...
+# Subtest: R15-B1: the complete wireframe gate runs inside Step 5 after the task and findability tests; nine steps unchanged
+ok 6 - R15-B1: the complete wireframe gate runs inside Step 5 after the task and findability tests; nine steps unchanged
+  ---
+  duration_ms: 9.477113
+  type: 'test'
+  ...
+# Subtest: R15-B2: column counts are unitless integers; gutters, margins and maximum widths are dimension tokens
+ok 7 - R15-B2: column counts are unitless integers; gutters, margins and maximum widths are dimension tokens
+  ---
+  duration_ms: 0.313
+  type: 'test'
+  ...
+# Subtest: R15-B3/B4: feedback-log and the four craft checks are manual IDs; critic checks are keyed to the eight rubric rows
+ok 8 - R15-B3/B4: feedback-log and the four craft checks are manual IDs; critic checks are keyed to the eight rubric rows
+  ---
+  duration_ms: 3.973574
+  type: 'test'
+  ...
+# Subtest: R16-GPT-03/04: wireframe coverage of every screen and locale; one shared component specification compared across screens
+ok 9 - R16-GPT-03/04: wireframe coverage of every screen and locale; one shared component specification compared across screens
+  ---
+  duration_ms: 3.304249
+  type: 'test'
+  ...
+# Subtest: R17: fail-closed compositing sentence, ENH backlog and the rendered-visibility backstop method are documented
+ok 10 - R17: fail-closed compositing sentence, ENH backlog and the rendered-visibility backstop method are documented
+  ---
+  duration_ms: 3.19196
+  type: 'test'
+  ...
+# Subtest: R18: the backstop role, its coverage, text that is not displayed and the approved accessible name are documented
+ok 11 - R18: the backstop role, its coverage, text that is not displayed and the approved accessible name are documented
+  ---
+  duration_ms: 0.810139
+  type: 'test'
+  ...
+# Subtest: R19: hidden layers, the top layer, inner scrollports, hidden content in the width screen and the contrast incomplete resolver are documented
+ok 12 - R19: hidden layers, the top layer, inner scrollports, hidden content in the width screen and the contrast incomplete resolver are documented
+  ---
+  duration_ms: 1.001143
+  type: 'test'
+  ...
+# Subtest: R19b: the requiresScript state, its trigger and the false-claim mismatch are documented
+ok 13 - R19b: the requiresScript state, its trigger and the false-claim mismatch are documented
+  ---
+  duration_ms: 9.173006
+  type: 'test'
+  ...
+# Subtest: R20: the clipping rule and reveal states, the faintest-text measure, the script-only baseline and screen types are documented
+not ok 14 - R20: the clipping rule and reveal states, the faintest-text measure, the script-only baseline and screen types are documented
+  ---
+  duration_ms: 1.979848
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/designer-process.test.mjs:195:1'
+  failureType: 'testCodeFailure'
+  error: 'design-quality.md: Clipping is one rule based on states and widths, whatever the CSS pattern:'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/panel-r21/testbefore/release/tests/designer-process.test.mjs:197:605)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+not ok 15 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 61.259533
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/handoff-contract.test.mjs:16:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    a functional Settings screen passes without generic-hero
+    + actual - expected
+    
+    + [
+    +   'manual home/en/default/generic-hero: required phase decision with reviewer/artifact/brief refs'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'manual home/en/default/generic-hero: required phase decision with reviewer/artifact/brief refs'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/panel-r21/testbefore/release/tests/handoff-contract.test.mjs:63:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+ok 16 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+  ---
+  duration_ms: 4.375993
+  type: 'test'
+  ...
+# Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+ok 17 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+  ---
+  duration_ms: 11.988603
+  type: 'test'
+  ...
+# Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+ok 18 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+  ---
+  duration_ms: 2.188984
+  type: 'test'
+  ...
+# Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+ok 19 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+  ---
+  duration_ms: 1.023947
+  type: 'test'
+  ...
+# Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
+ok 20 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
+  ---
+  duration_ms: 0.246135
+  type: 'test'
+  ...
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+not ok 21 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 1.180449
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/integrity.test.mjs:97:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /return \{ \.\.\.compareIntegrity\(\{ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope, baseline \}\), glyph \};/. Input:
+    
+    "// pre-handoff-check.mjs: Fannan's Harden gate (project arg, protected external dependencies and executables). Local files only; all network requests blocked.\n" +
+      '// Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>\n' +
+      '// Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.0/2.1/2.2 A and AA tags (axe-tags.mjs) with target-size ENABLED, 0 violations,\n' +
+      '// (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,\n' +
+      '// focus visible on every tab stop, every declared desktop width + 320 px reflow screened, (4) impeccable detect (advisory). Writes evidence.json + screenshot.\n' +
+      "import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';\n" +
+      "import { tmpdir } from 'node:os';\n" +
+      "import { createHash } from 'node:crypto';\n" +
+      "import { execFileSync } from 'node:child_process';\n" +
+      "import { pathToFileURL, fileURLToPath } from 'node:url';\n" +
+      "import { dirname, join, resolve } from 'node:path';\n" +
+      "import { checkHandoff, qualityChecks } from './handoff-contract.mjs';\n" +
+      "import { verifiedDeps } from './verify-deps.mjs';\n" +
+      "import { localAsset } from './local-file-boundary.mjs';\n" +
+      "import { copySignals } from './copy-signals.mjs';\n" +
+      "import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';\n" +
+      "import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';\n" +
+      "import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';\n" +
+      "import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';\n" +
+      "import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317\n" +
+      "import { axeOptions } from './axe-tags.mjs';\n" +
+      "import { isolatedPage } from './probe-world.mjs';\n" +
+      "import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';\n" +
+      "import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck } from './visibility.mjs'; // R17: the rendered-visibility backstop\n" +
+      "import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own\n" +
+      "import { scopeOf, resolveScoped } from './exceptions.mjs';\n" +
+      'const here = dirname(fileURLToPath(import.meta.url));\n' +
+      'const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;\n' +
+      "if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }\n" +
+      "const phase = phaseArg?.split('=')[1] || 'handoff';\n" +
+      'const q = qualityChecks.thresholds;\n' +
+      "const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);\n" +
+      "if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 12)) { console.error('pre-handoff-check: Node 22.12+ is required (package.json engines); found ' + process.versions.node); process.exit(2); }\n" +
+      '// npm deps live in protected storage OUTSIDE the manifest-covered tree (N2).\n' +
+      "const releaseRoot = realpathSync(join(here, '..'));\n" +
+      'let depsRoot;\n' +
+      'try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, releaseRoot); }\n' +
+      "catch (e) { console.error('pre-handoff-check: dependencies untrusted: ' + e.message); process.exit(2); }\n" +
+      'let chromium;\n' +
+      "try { ({ chromium } = await import(pathToFileURL(join(depsRoot, 'node_modules/playwright-core/index.mjs')).href)); }\n" +
+      "catch (e) { console.error('pre-handoff-check: playwright-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }\n" +
+      '// A fresh evidence directory prevents clobbering an earlier review; each output uses safe-write.\n' +
+      "if (existsSync(outDir)) { console.error('pre-handoff-check: evidence directory already exists; use a fresh versioned path'); process.exit(2); }\n" +
+      "const evidenceWrite = (name, value) => execFileSync(join(here, 'safe-write.sh'), [project, join(resolve(outDir), name)], { input: value });\n" +
+      "const digest = value => createHash('sha256').update(value).digest('hex');\n" +
+      "try { execFileSync(join(here, 'readonly-precheck.sh'), [resolve(outDir) + '/evidence.json', project], { encoding: 'utf8' }); }\n" +
+      "catch (e) { console.error('pre-handoff-check: readonly-precheck refused the evidence folder: ' + String(e.stderr || e.message).trim()); process.exit(2); }\n" +
+      'const ev = { when: new Date().toISOString(), designMd: resolve(designMd), page: resolve(page), checks: {} };\n' +
+      'let fail = false;\n' +
+      'let handoff;\n' +
+      "try { handoff = JSON.parse(readFileSync(handoffPath, 'utf8')); ev.checks.contract = { errors: checkHandoff(handoff, phase) }; }\n" +
+      'catch (e) { ev.checks.contract = { errors: [`handoff JSON cannot be read: ${e.message}`] }; }\n' +
+      'ev.checks.contract.pass = ev.checks.contract.errors.length === 0;\n' +
+      'if (!ev.checks.contract.pass) fail = true;\n' +
+      '// CODEX-R3-02: the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.\n' +
+      'const approvedScale = approvedSpacing(handoff);\n' +
+      'ev.checks.spacingTokens = { source: approvedScale.source ?? null, values: approvedScale.values, error: approvedScale.error, pass: !approvedScale.error };\n' +
+      "if (phase === 'handoff' && !ev.checks.spacingTokens.pass) fail = true;\n" +
+      '// R11 panel D1 (decision A): the accent must be the approved palette token; FAIL at handoff, DEFERRED in wireframes.\n' +
+      'const approvedAccentToken = approvedAccent(handoff);\n' +
+      'const accentFor = async (pg, d) => accentCheck({ design: d, approved: approvedAccentToken, pageColour: await pg.evaluate(normColour, d.accent), approvedColour: approvedAccentToken.value ? await pg.evaluate(normColour, approvedAccentToken.value) : null, phase });\n' +
+      '// 1 lint\n' +
+      'try {\n' +
+      "  const r = execFileSync(process.execPath, [join(depsRoot, 'node_modules/@google/design.md/dist/index.js'), 'lint', designMd], { encoding: 'utf8' });\n" +
+      "  const j = JSON.parse(r.slice(r.indexOf('{'))); const errors = j.summary?.errors ?? j.errors ?? null;\n" +
+      '  ev.checks.lint = { errors, pass: errors === 0 }; if (errors !== 0) fail = true;\n' +
+      '} catch (e) { ev.checks.lint = { pass: false, error: String(e.stdout || e.message).slice(0, 400) }; fail = true; }\n' +
+      '// 2-3 browser checks\n' +
+      'let axeSrc;\n' +
+      "try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }\n" +
+      "catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }\n" +
+      "const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // ARGON-R2-06: private HOME, removed on exit\n" +
+      "process.on('exit', () => rmSync(browserHome, { recursive: true, force: true }));\n" +
+      'let browserIdentity;\n' +
+      'try { browserIdentity = verifiedBrowser(); }\n' +
+      "catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }\n" +
+      'const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true, env: browserLaunchEnv(browserHome) });\n' +
+      'const runtimeVersion = b.version();\n' +
+      'if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4\n' +
+      'ev.browser = { ...browserIdentity, version: runtimeVersion };\n' +
+      "const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });\n" +
+      'await ctx.routeWebSocket(/.*/, ws => ws.close());\n' +
+      'const blocked = [];\n' +
+      "const OUTPUT_BASE = '/workspace/design-output';\n" +
+      'const projectRoot = join(OUTPUT_BASE, project);\n' +
+      'const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)\n' +
+      '// R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)\n' +
+      "const scanGlass = (path, contentType, body) => { if (/text\\/(css|html|javascript)|application\\/(javascript|ecmascript)|image\\/svg\\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG\n" +
+      'const served = new Set(); // R13 N07: URLs whose bytes the checker served and scanned\n' +
+      'const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); served.add(u); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };\n' +
+      "await ctx.route('**/*', routeLocal);\n" +
+      'const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world\n' +
+      "const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });\n" +
+      'await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });\n' +
+      'ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };\n' +
+      'if (!ev.checks.assets.pass) fail = true;\n' +
+      'const copyProbe = (page, st) => page.evaluate(copyDeckProbe, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });\n' +
+      'const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10\n' +
+      'Object.assign(design, copySignals(design.visibleText, design.headlines));\n' +
+      'delete design.visibleText; delete design.headlines;\n' +
+      "ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design"... 25307 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    // pre-handoff-check.mjs: Fannan's Harden gate (project arg, protected external dependencies and executables). Local files only; all network requests blocked.
+    // Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>
+    // Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.0/2.1/2.2 A and AA tags (axe-tags.mjs) with target-size ENABLED, 0 violations,
+    // (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,
+    // focus visible on every tab stop, every declared desktop width + 320 px reflow screened, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
+    import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';
+    import { tmpdir } from 'node:os';
+    import { createHash } from 'node:crypto';
+    import { execFileSync } from 'node:child_process';
+    import { pathToFileURL, fileURLToPath } from 'node:url';
+    import { dirname, join, resolve } from 'node:path';
+    import { checkHandoff, qualityChecks } from './handoff-contract.mjs';
+    import { verifiedDeps } from './verify-deps.mjs';
+    import { localAsset } from './local-file-boundary.mjs';
+    import { copySignals } from './copy-signals.mjs';
+    import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
+    import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
+    import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';
+    import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';
+    import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
+    import { axeOptions } from './axe-tags.mjs';
+    import { isolatedPage } from './probe-world.mjs';
+    import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
+    import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck } from './visibility.mjs'; // R17: the rendered-visibility backstop
+    import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own
+    import { scopeOf, resolveScoped } from './exceptions.mjs';
+    const here = dirname(fileURLToPath(import.meta.url));
+    const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
+    if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }
+    const phase = phaseArg?.split('=')[1] || 'handoff';
+    const q = qualityChecks.thresholds;
+    const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
+    if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 12)) { console.error('pre-handoff-check: Node 22.12+ is required (package.json engines); found ' + process.versions.node); process.exit(2); }
+    // npm deps live in protected storage OUTSIDE the manifest-covered tree (N2).
+    const releaseRoot = realpathSync(join(here, '..'));
+    let depsRoot;
+    try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, releaseRoot); }
+    catch (e) { console.error('pre-handoff-check: dependencies untrusted: ' + e.message); process.exit(2); }
+    let chromium;
+    try { ({ chromium } = await import(pathToFileURL(join(depsRoot, 'node_modules/playwright-core/index.mjs')).href)); }
+    catch (e) { console.error('pre-handoff-check: playwright-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
+    // A fresh evidence directory prevents clobbering an earlier review; each output uses safe-write.
+    if (existsSync(outDir)) { console.error('pre-handoff-check: evidence directory already exists; use a fresh versioned path'); process.exit(2); }
+    const evidenceWrite = (name, value) => execFileSync(join(here, 'safe-write.sh'), [project, join(resolve(outDir), name)], { input: value });
+    const digest = value => createHash('sha256').update(value).digest('hex');
+    try { execFileSync(join(here, 'readonly-precheck.sh'), [resolve(outDir) + '/evidence.json', project], { encoding: 'utf8' }); }
+    catch (e) { console.error('pre-handoff-check: readonly-precheck refused the evidence folder: ' + String(e.stderr || e.message).trim()); process.exit(2); }
+    const ev = { when: new Date().toISOString(), designMd: resolve(designMd), page: resolve(page), checks: {} };
+    let fail = false;
+    let handoff;
+    try { handoff = JSON.parse(readFileSync(handoffPath, 'utf8')); ev.checks.contract = { errors: checkHandoff(handoff, phase) }; }
+    catch (e) { ev.checks.contract = { errors: [`handoff JSON cannot be read: ${e.message}`] }; }
+    ev.checks.contract.pass = ev.checks.contract.errors.length === 0;
+    if (!ev.checks.contract.pass) fail = true;
+    // CODEX-R3-02: the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.
+    const approvedScale = approvedSpacing(handoff);
+    ev.checks.spacingTokens = { source: approvedScale.source ?? null, values: approvedScale.values, error: approvedScale.error, pass: !approvedScale.error };
+    if (phase === 'handoff' && !ev.checks.spacingTokens.pass) fail = true;
+    // R11 panel D1 (decision A): the accent must be the approved palette token; FAIL at handoff, DEFERRED in wireframes.
+    const approvedAccentToken = approvedAccent(handoff);
+    const accentFor = async (pg, d) => accentCheck({ design: d, approved: approvedAccentToken, pageColour: await pg.evaluate(normColour, d.accent), approvedColour: approvedAccentToken.value ? await pg.evaluate(normColour, approvedAccentToken.value) : null, phase });
+    // 1 lint
+    try {
+      const r = execFileSync(process.execPath, [join(depsRoot, 'node_modules/@google/design.md/dist/index.js'), 'lint', designMd], { encoding: 'utf8' });
+      const j = JSON.parse(r.slice(r.indexOf('{'))); const errors = j.summary?.errors ?? j.errors ?? null;
+      ev.checks.lint = { errors, pass: errors === 0 }; if (errors !== 0) fail = true;
+    } catch (e) { ev.checks.lint = { pass: false, error: String(e.stdout || e.message).slice(0, 400) }; fail = true; }
+    // 2-3 browser checks
+    let axeSrc;
+    try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }
+    catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
+    const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // ARGON-R2-06: private HOME, removed on exit
+    process.on('exit', () => rmSync(browserHome, { recursive: true, force: true }));
+    let browserIdentity;
+    try { browserIdentity = verifiedBrowser(); }
+    catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }
+    const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true, env: browserLaunchEnv(browserHome) });
+    const runtimeVersion = b.version();
+    if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4
+    ev.browser = { ...browserIdentity, version: runtimeVersion };
+    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
+    await ctx.routeWebSocket(/.*/, ws => ws.close());
+    const blocked = [];
+    const OUTPUT_BASE = '/workspace/design-output';
+    const projectRoot = join(OUTPUT_BASE, project);
+    const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
+    // R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)
+    const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG
+    const served = new Set(); // R13 N07: URLs whose bytes the checker served and scanned
+    const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); served.add(u); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
+    await ctx.route('**/*', routeLocal);
+    const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world
+    const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });
+    await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });
+    ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };
+    if (!ev.checks.assets.pass) fail = true;
+    const copyProbe = (page, st) => page.evaluate(copyDeckProbe, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });
+    const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
+    Object.assign(design, copySignals(design.visibleText, design.headlines));
+    delete design.visibleText; delete design.headlines;
+    ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design.typeSizes.length <= q.typeSizes && design.accentRatio !== null && design.accentRatio <= q.accentAreaRatioFullPage && design.accentViewportRatio !== null && design.accentViewportRatio <= q.accentAreaRatioViewport)) && !design.heroGradient && design.glass <= q.stockGlass && design.iconRows <= q.centeredThreeIconRows && !design.purpleBlue && !design.filler && !design.ruleOfThree && (phase === 'wireframe' || !design.placeholders) && (phase === 'wireframe' || design.spacingOffScale.length <= q.spacingOffScale) && design.h1 === 1 };
+    if (!ev.checks.design.pass) fail = true;
+    ev.checks.accent = await accentFor(p, design);
+    if (!ev.checks.accent.pass) fail = true;
+    // R12 M03: probes and axe run in the main frame only, so any frame (readable or not) blocks the final handoff.
+    const framesCheck = d => ({ frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, unscanned: d.glassScopes.unscannedFrames, status: phase === 'wireframe' ? 'DEFERRED' : d.glassScopes.frames + d.glassScopes.unscannedFrames.length ? 'FAIL' : 'PASS', note: 'axe and the probes do not run inside frames', pass: phase === 'wireframe' || d.glassScopes.frames + d.glassScopes.unscannedFrames.length === 0 });
+    ev.checks.frames = framesCheck(design);
+    if (!ev.checks.frames.pass) fail = true;
+    // R13 N07: data:/blob: stylesheets are refused, and a stylesheet whose rules could not be read and whose bytes the
+    // checker did not serve and scan is unscanned; both fail (glass is gated in both phases).
+    const sheetsCheck = d => { const list = d.stylesheets || [], refused = list.filter(x => /^(data|blob):/i.test(x.href || '')), unscanned = list.filter(x => !x.readable && !refused.includes(x) && !(x.href && served.has(x.href))); return { sheets: list.length, refused: refused.map(x => (x.href || '').slice(0, 80)), unscanned: unscanned.map(x => x.href || x.owner), pass: refused.length === 0 && unscanned.length === 0 }; };
+    ev.checks.stylesheets = sheetsCheck(design);
+    if (!ev.checks.stylesheets.pass) fail = true;
+    // R12 M07/M09/M20: the positional page is scoped by its declared state (screen, state, lang).
+    const declaredStates = (handoff?.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
+    // R19-MIMAR-01: the PASS wcag-review manual record for a scope (screen, language, state)
+    const reviewFor = scope => scope ? (handoff?.manualChecks || []).find(m => m.id === 'wcag-review' && m.screen === scope.screen && m.lang === scope.lang && m.state === scope.state && m.decision === 'PASS') ?? null : null;
+    const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
+    const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
+    ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
+    const pagePaths = await contrastPaths(await isolatedPage(p), axe.incomplete); // R19-MIMAR-01, resolved after integrity
+    const pageIncomplete = axe.incomplete;
+    if (axe.violations.length) fail = true;
+    // custom: tab through, check focus visible, not obscured by fixed/sticky elements, target size
+    await p.evaluate(() => { window.__fid = new WeakMap(); window.__fnext = 0; });
+    const stops = []; const seen = new Set();
+    await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05: one unfocused baseline
+    for (let i = 0; i < 200; i++) {
+      await p.keyboard.press('Tab');
+      await p.evaluate(focusSettle);
+      const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
+      const info = await p.evaluate(() => {
+        const el = document.activeElement; if (!el || el === document.body) return null;
+        if (!window.__fid.has(el)) window.__fid.set(el, ++window.__fnext);
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const top = document.elementFromPoint(Math.min(Math.max(cx, 0), innerWidth - 1), Math.min(Math.max(cy, 0), innerHeight - 1));
+        const obscured = top && top !== el && !el.contains(top) && !top.contains(el);
+        const inlineLink = el.tagName === 'A' && el.parentElement && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement.tagName) && (el.parentElement.textContent || '').trim().length > (el.textContent || '').trim().length;
+        return { id: window.__fid.get(el), tag: el.tagName, name: el.getAttribute('aria-label') || el.name || (el.textContent || '').trim().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height), obscured: !!obscured, inlineLink };
+      });
+      if (info) info.focusVisible = focusVisible;
+      if (!info) break;            // focus left the document (end of tab order)
+      if (seen.has(info.id)) break; // same ELEMENT again = wrapped around (identity, not name)
+      seen.add(info.id); stops.push(info);
+    }
+    const keyboardTrapSuspect = stops.length >= 200;
+    const small = stops.filter(s => (s.w < 24 || s.h < 24) && !s.inlineLink), noFocus = stops.filter(s => !s.focusVisible), obsc = stops.filter(s => s.obscured);
+    ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic (settled after transitions; colour-only changes under the configured focusStateContrast (3:1 floor) between states, indicators below it against their backdrop and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
+    if (!ev.checks.custom22.pass) fail = true;
+    evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
+    // R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
+    ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null);
+    if (!ev.checks.widths.pass) fail = true;
+    // R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
+    // measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
+    const integrityFor = async (pagePath, scope) => {
+      const contexts = [];
+      try {
+        const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
+        const widthsFor = validWidths(handoff?.settings?.desktopWidths) ? handoff.settings.desktopWidths : [1440];
+        // R13 N11/N12: the canonical gate result, per width where the gate is per width.
+        // R17: the rendered-visibility backstop runs once per rendering in the probe world (screenshots are shared by both
+        // worlds) and its counts enter both vectors; its items are kept as evidence.
+        const measure = async (pg, vis) => { try {
+          const d = await pg.evaluate(designProbe), sp = await pg.evaluate(spacingProbe, approvedScale.values), ct = await pg.evaluate(contrastProbe);
+          Object.assign(d, copySignals(d.visibleText, d.headlines));
+          const doc = await pg.evaluate(() => document.documentElement.scrollHeight), ratios = [];
+          for (let y = 0; y < doc; y += 900) { await pg.evaluate(y => scrollTo(0, y), y); ratios.push((await pg.evaluate(designProbe)).accentViewportRatio); }
+          await pg.evaluate(() => scrollTo(0, 0));
+          const rs = (await screenWidths(pg, widthsFor, null)).results, per = k => Object.fromEntries(rs.map(r => [r.width, k === 'horizontalOverflow' ? Number(r.horizontalOverflow) : r[k]?.length ?? 0])), r320 = rs.find(r => r.width === 320);
+          return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked, contrastEffects: ct.contrastEffects, textMeasured: vis?.textMeasured, textObscured: vis?.textObscured, textUnreadable: vis?.textUnreadable, textUnmeasured: vis?.textUnmeasured, textHidden: vis?.textHidden }, content: await pg.evaluate(contentProbe), visibility: vis ? { ...vis } : null };
+        } catch (e) { return { vector: null, content: null, error: e.message }; } };
+        const href = pathToFileURL(resolve(pagePath)).href;
+        const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);
+        await icProbe.goto(href); await ready(icProbe);
+        const scan = async pg => { try { return await visibilityScan(pg, { topLayer: !!scope?.state && scope.state !== 'default' }); } catch (e) { return { error: e.message }; } };
+        const vis = await scan(icProbe), probe = await measure(icProbe, vis), pageWorld = await measure(icMain, vis);
+        let tamperSigns = null; try { tamperSigns = await icMain.evaluate(nativeCheck); } catch {}
+        const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
+        await jsOffPage.goto(href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
+        const jsOff = await measure(jsOffPage, await scan(jsOffPage));
+        return compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope });
+      } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
+      finally { for (const c of contexts) await c.close().catch(() => {}); }
+    };
+    // R12 M13, R13 N18: one hardened reduced-motion routine for the positional page and every declared state: running Web
+    // Animations, moved elements, and the private rAF counter (rafCounterInit, read in the main world on purpose).
+    const motionFor = async pagePath => {
+      const c = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
+      try {
+        await c.routeWebSocket(/.*/, ws => ws.close());
+        await c.addInitScript(rafCounterInit);
+        await c.route('**/*', routeLocal);
+        const main = await c.newPage(), pg = await isolatedPage(main);
+        await pg.goto(pathToFileURL(resolve(pagePath)).href); await pg.waitForTimeout(300);
+        const snap = () => pg.evaluate(motionSnapshot); // R14-GPT-05: composed tree, stable composed-path keys (integrity.mjs)
+        const s1 = await snap(); const raf1 = await main.evaluate(() => window.__raf);
+        await pg.waitForTimeout(700);
+        const s2 = await snap(); const raf2 = await main.evaluate(() => window.__raf);
+        const waapi = await pg.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
+        const moved = motionChanges(s1, s2);
+        const rafLoop = rafLoopFrom(raf1, raf2); // a non-finite or decreasing reading counts as a loop
+        return { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: Number.isFinite(raf2 - raf1) ? raf2 - raf1 : null, rafLoop, pass: waapi === 0 && moved === 0 && !rafLoop };
+      } catch (e) { return { pass: false, error: `reduced-motion check could not run: ${e.message}` }; }
+      finally { await c.close().catch(() => {}); }
+    };
+    ev.checks.states = [];
+    // R16-GPT-03: the wireframe phase also renders every declared screen in every declared language (its default
+    // state), with phase-appropriate checks; a missing rendering or page fails instead of being skipped.
+    const wireframe = phase === 'wireframe';
+    if (handoff?.screens) {
+      const declared = wireframe
+        ? handoff.screens.flatMap(s => (handoff.languages || []).map(l => { const st = (s.states || []).find(v => v.state === 'default' && v.lang === l.lang && v.dir === l.dir && v.applicable !== false); return st ? { screen: s.id, ...st } : { screen: s.id, state: 'default', lang: l.lang, dir: l.dir, page: null }; }))
+        : handoff.screens.flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
+      if (!declared.some(st => st.page && resolve(st.page) === resolve(page))) { ev.checks.states.push({ pass: false, error: 'positional page absent from declared states' }); fail = true; }
+      for (const st of declared) {
+        if (!st.page || !existsSync(resolve(st.page))) { ev.checks.states.push({ screen: st.screen, lang: st.lang, state: st.state, pass: false, error: st.page ? 'declared page does not exist' : 'no rendering declared for this screen and language' }); fail = true; continue; }
+        try {
+          await p.goto(pathToFileURL(resolve(st.page)).href);
+          const assets = await ready(p);
+          const copy = await copyProbe(p, st);
+          const frameBytes = await p.screenshot({ fullPage: true });
+          const renderedSha256 = digest(frameBytes);
+          await p.addScriptTag({ content: axeSrc });
+          const a = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1
+          const paths = await contrastPaths(await isolatedPage(p), a.incomplete); // R19-MIMAR-01
+          const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
+          Object.assign(d, copySignals(d.visibleText, d.headlines));
+          const accent = await accentFor(p, d); // R11 panel A, every state
+          delete d.visibleText; delete d.headlines;
+          const doc = await p.evaluate(() => ({ lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction, height: document.documentElement.scrollHeight }));
+          const viewportRatios = [];
+          for (let y = 0; y < doc.height; y += 900) { await p.evaluate(y => scrollTo(0, y), y); viewportRatios.push((await p.evaluate(designProbe)).accentViewportRatio); }
+          await p.evaluate(() => scrollTo(0, 0));
+          const focus = [];
+          await p.evaluate(() => { window.__stateFocus = new WeakSet(); });
+          await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05
+          for (let i = 0; i < 200; i++) {
+            await p.keyboard.press('Tab');
+            await p.evaluate(focusSettle);
+            const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
+            const f = await p.evaluate(() => { const el = document.activeElement; if (!el || el === document.body || window.__stateFocus.has(el)) return null; window.__stateFocus.add(el); const r = el.getBoundingClientRect(), x = r.left+r.width/2, y = r.top+r.height/2, top = document.elementFromPoint(Math.max(0,Math.min(innerWidth-1,x)),Math.max(0,Math.min(innerHeight-1,y))); const inlineLink = el.tagName === 'A' && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement?.tagName || '') && el.parentElement.textContent.trim().length > el.textContent.trim().length; return { small: (r.width < 24 || r.height < 24) && !inlineLink, obscured: !!top && top !== el && !el.contains(top) && !top.contains(el) }; });
+            if (!f) break;
+            f.invisible = !focusVisible;
+            focus.push(f);
+          }
+          const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
+          const frames = framesCheck(d); // R12 M03
+          const integrity = await integrityFor(st.page, scopeOf(st)); // R12 M07: every declared state
+          const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
+          const scriptClaim = requiresScriptCheck({ declaration: st, integrity }); // R19b
+          if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { integrity.mismatches = [...(integrity.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; integrity.status = 'integrity mismatch'; integrity.pass = false; }
+          const contrastResolution = resolveContrastIncomplete({ incomplete: a.incomplete, paths, integrity, review: reviewFor(scopeOf(st)), shots: [st.frame?.path, filename], scriptOnly: scriptClaim.valid }); // R19-MIMAR-01
+          const stylesheets = sheetsCheck(d); // R13 N07
+          const reducedMotion = await motionFor(st.page); // R13 N18: the same hardened routine as the page
+          const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // ARGON-R5-01: Math.max(null) is 0
+          const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), axeIncompleteUnresolved: contrastResolution.unresolved, requiresScript: scriptClaim, axeContrastNodes: contrastResolution.contrastNodes, assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion, stylesheets, language: doc.lang, direction: doc.dir };
+          stateResult.pass = (wireframe || renderedSha256 === st.frame?.sha256) && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && contrastResolution.pass && d.centered <= q.centeredSectionsPerPage && (wireframe || (d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport)) && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && (wireframe || !d.placeholders) && (wireframe || d.spacingOffScale.length <= q.spacingOffScale) && d.h1 === 1 && accent.pass && frames.pass && stylesheets.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.pass && reducedMotion.pass && doc.lang === st.lang && doc.dir === st.dir;
+          if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
+          evidenceWrite(filename, frameBytes);
+          ev.checks.states.push(stateResult);
+          if (!stateResult.pass) fail = true;
+        } catch (e) { ev.checks.states.push({ screen: st.screen, state: st.state, pass: false, error: e.message }); fail = true; }
+      }
+    }
+    // R11 panel D1 (decisions B, T2): every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
+    ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // R12 M09: scoped
+    if (!ev.checks.reflowCandidates.pass) fail = true;
+    // R12 M20: every documented spacing exception needs a scoped handoff `spacingExceptions` entry naming the approver.
+    const spacingItems = [{ scope: pageScope, list: design.spacingExceptions }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), list: st.spacingExceptions }))].flatMap(({ scope, list }) => (list || []).map(x => ({ ...scopeOf(scope), ...x })));
+    const spacingResolved = resolveScoped({ items: spacingItems, entries: handoff?.spacingExceptions, roles: [handoff?.settings?.roles?.approver], phase, what: 'spacingExceptions' });
+    ev.checks.spacingExceptions = { exceptions: spacingResolved.items, unresolved: spacingResolved.unresolved, status: spacingResolved.status, pass: spacingResolved.pass };
+    if (!ev.checks.spacingExceptions.pass) fail = true;
+    ev.checks.reducedMotion = await motionFor(page); // R12 M13, R13 N18
+    if (!ev.checks.reducedMotion.pass) fail = true;
+    // R11 panel D1 (decisions C, T4), R12 M06-M08: integrity cross-checks on the positional page (and, above, every state).
+    ev.checks.integrity = await integrityFor(page, pageScope);
+    if (!ev.checks.integrity.pass) fail = true;
+    { // R19-MIMAR-01: the positional page's automated incomplete results, resolved against the backstop and the review
+      const st = declaredStates.find(x => x.page && resolve(x.page) === resolve(page));
+      const scriptClaim = requiresScriptCheck({ declaration: st, integrity: ev.checks.integrity }); // R19b
+      if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { const i = ev.checks.integrity; i.mismatches = [...(i.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; i.status = 'integrity mismatch'; i.pass = false; fail = true; }
+      ev.checks.axe.requiresScript = scriptClaim;
+      const r = resolveContrastIncomplete({ incomplete: pageIncomplete, paths: pagePaths, integrity: ev.checks.integrity, review: reviewFor(pageScope), shots: [st?.frame?.path, 'page-1440.png'], scriptOnly: scriptClaim.valid });
+      Object.assign(ev.checks.axe, { unresolvedIncomplete: r.unresolved, contrastNodes: r.contrastNodes, pass: ev.checks.axe.violations.length === 0 && r.pass });
+      if (!ev.checks.axe.pass) fail = true;
+    }
+    await b.close();
+    ev.externalRequestsBlocked = blocked;
+    ev.checks.resourceBoundary = { pass: blocked.length === 0, blockedRequests: blocked.length };
+    if (blocked.length) fail = true;
+    for (const file of [page, ...(handoff?.screens || []).flatMap(sc => (sc.states || []).map(st => st.page))].filter(Boolean)) { try { scanGlass(resolve(file), 'text/html', readFileSync(resolve(file))); } catch {} }
+    ev.checks.glassSource = { files: [...glassFiles], pass: glassFiles.size === 0 };
+    if (!ev.checks.glassSource.pass) fail = true;
+    // 4 impeccable detect: findings are advisory, but it MUST run and return parseable output
+    {
+      let out = '', status = 0;
+      try { out = execFileSync(join(here, 'launcher-impeccable.sh'), ['detect', '--json', page], { encoding: 'utf8', env: { PATH: '/usr/bin:/bin', FANNAN_PROJECT: project } }); }
+      catch (e) { out = String(e.stdout || ''); status = e.status; }
+      let findings = null; try { const j = JSON.parse(out); if (Array.isArray(j)) findings = j; } catch {}
+      if (findings === null || (status !== 0 && status !== 2)) { ev.checks.impeccable = { ran: false, exit: status, pass: false, note: 'detect did not run or gave no parseable output' }; fail = true; }
+      else ev.checks.impeccable = { ran: true, exit: status, advisory: true, findings: findings.map(f => f.antipattern || f.name), pass: true };
+    }
+    ev.phase = phase;
+    ev.pass = !fail;
+    ev.handoffReady = ev.pass && phase === 'handoff';
+    evidenceWrite('evidence.json', JSON.stringify(ev, null, 1));
+    if (ev.handoffReady) {
+      const rows = handoff.screens.flatMap(s => s.acceptance.map(a => `| ${s.id} | ${a.id} | ${a.severity} | ${a.decision} | ${a.check.replaceAll('|', '\\|')} | ${a.evidence} |`));
+      const frames = handoff.screens.flatMap(s => s.states.filter(st => st.applicable !== false).map(st => `| ${s.id} | ${st.lang} | ${st.state} | ${st.frame.version} | ${st.frame.sha256} | ${st.frame.path} |`));
+      const checklist = ['# Design and QA handoff', '', `Project: ${project}`, `Engineer: ${handoff.settings.roles.engineer}`, `QA gate: ${handoff.settings.roles.qaGate}`, `Writer: ${handoff.settings.roles.writer}`, `Approver: ${handoff.settings.roles.approver}`, `Approval record: ${handoff.approval.record}`, `Repository: ${handoff.settings.repository}`, `Stack: ${handoff.settings.stack}`, `Design link: ${handoff.designLink.url}`, `Token JSON: ${handoff.tokens.json.path}`, `Token CSS: ${handoff.tokens.css.path}`, `Build evidence: ${handoff.tokens.buildEvidence.path}`, 'Automated evidence: evidence.json', '', '## Screen and state frames', '', '| Screen | Language | State | Version | SHA-256 | Frame |', '|---|---|---|---|---|---|', ...frames, '', '## Acceptance and QA criteria', '', '| Screen | ID | Severity | Design decision | Check | Design evidence |', '|---|---|---|---|---|---|', ...rows, '', 'QA gate records build SHA, result and evidence against each criterion ID after implementation; design PASS is not QA PASS.', ''];
+      evidenceWrite('HANDOFF.md', checklist.join('\n'));
+    }
+    console.log(JSON.stringify({ pass: ev.pass, lint: ev.checks.lint.pass, axe: ev.checks.axe.violations, custom22: ev.checks.custom22.pass, reducedMotion: ev.checks.reducedMotion.pass, impeccable: ev.checks.impeccable }));
+    process.exit(ev.pass ? 0 : 1);
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/panel-r21/testbefore/release/tests/integrity.test.mjs:103:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+ok 22 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+  ---
+  duration_ms: 2255.201552
+  type: 'test'
+  ...
+# Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+ok 23 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+  ---
+  duration_ms: 1441.175606
+  type: 'test'
+  ...
+# Subtest: R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
+not ok 24 - R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
+  ---
+  duration_ms: 4521.17859
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:71:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        accordion: {
+    +     pass: true,
+    +     passExceptReveal: undefined,
+    -     pass: false,
+    -     passExceptReveal: true,
+          rules: [
+    +       '',
+    +       ''
+    -       'reveal',
+    -       'reveal'
+          ]
+        },
+        carousel: {
+    +     pass: true,
+    +     passExceptReveal: undefined,
+    -     pass: false,
+    -     passExceptReveal: true,
+          rules: [
+    +       '',
+    +       ''
+    -       'reveal',
+    -       'reveal'
+          ]
+        },
+        partly: {
+          pass: false,
+    +     passExceptReveal: undefined,
+    -     passExceptReveal: false,
+          rules: [
+    +       '',
+    +       ''
+    -       'partly clipped',
+    -       'partly clipped'
+          ]
+        },
+        pushedPastStart: {
+          pass: false,
+    +     passExceptReveal: undefined,
+    -     passExceptReveal: true,
+          rules: [
+    +       '',
+    +       ''
+    -       'reveal',
+    -       'reveal'
+          ]
+        },
+        rtlCarousel: {
+    +     pass: true,
+    +     passExceptReveal: undefined,
+    -     pass: false,
+    -     passExceptReveal: true,
+          rules: [
+    +       '',
+    +       ''
+    -       'reveal',
+    -       'reveal'
+          ]
+        },
+        straddlingSlide: {
+          pass: false,
+    +     passExceptReveal: undefined,
+    -     passExceptReveal: false,
+          rules: [
+    +       '',
+    +       ''
+    -       'partly clipped',
+    -       'partly clipped'
+          ]
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    accordion:
+      pass: false
+      passExceptReveal: true
+      rules:
+        0: 'reveal'
+        1: 'reveal'
+    carousel: <Circular>
+    rtlCarousel: <Circular>
+    pushedPastStart: <Circular>
+    partly:
+      pass: false
+      passExceptReveal: false
+      rules:
+        0: 'partly clipped'
+        1: 'partly clipped'
+    straddlingSlide: <Circular>
+  actual:
+    accordion:
+      pass: true
+      rules:
+        0: ''
+        1: ''
+    carousel:
+      pass: true
+      rules:
+        0: ''
+        1: ''
+    partly:
+      pass: false
+      rules:
+        0: ''
+        1: ''
+    rtlCarousel:
+      pass: true
+      rules:
+        0: ''
+        1: ''
+    pushedPastStart:
+      pass: false
+      rules:
+        0: ''
+        1: ''
+    straddlingSlide:
+      pass: false
+      rules:
+        0: ''
+        1: ''
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:82:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:46:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
+ok 25 - R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
+  ---
+  duration_ms: 16642.344849
+  type: 'test'
+  ...
+# Subtest: R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
+ok 26 - R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
+  ---
+  duration_ms: 4409.362804
+  type: 'test'
+  ...
+# Subtest: R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
+ok 27 - R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
+  ---
+  duration_ms: 4846.706481
+  type: 'test'
+  ...
+# Subtest: R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
+not ok 28 - R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
+  ---
+  duration_ms: 18751.193933
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:141:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        darkText: {
+          incomplete: [
+            'color-contrast'
+          ],
+          reasons: [
+    +       'measured 1.46:1, below 3:1',
+    +       'measured 1.57:1, below 4.5:1'
+    -       'below AA'
+          ],
+          unresolved: [
+            'color-contrast'
+          ]
+        },
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    scrim:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noReview:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    otherArtifact:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    noteCites: <Circular>
+    darkText:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'below AA'
+    scrimByScriptOnly:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: ~
+        1: 'measured 4.12:1, below 4.5:1'
+    otherRule:
+      incomplete:
+        0: 'color-contrast'
+        1: 'aria-valid-attr-value'
+      unresolved:
+        0: 'aria-valid-attr-value'
+      reasons:
+        0: ~
+  actual:
+    scrim:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noReview:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    otherArtifact:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    noteCites:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    darkText:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'measured 1.46:1, below 3:1'
+        1: 'measured 1.57:1, below 4.5:1'
+    scrimByScriptOnly:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: ~
+        1: 'measured 4.12:1, below 4.5:1'
+    otherRule:
+      incomplete:
+        0: 'color-contrast'
+        1: 'aria-valid-attr-value'
+      unresolved:
+        0: 'aria-valid-attr-value'
+      reasons:
+        0: ~
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:167:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:46:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
+ok 29 - R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
+  ---
+  duration_ms: 902.046897
+  type: 'test'
+  ...
+# Subtest: R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
+not ok 30 - R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
+  ---
+  duration_ms: 11679.66903
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:190:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        belowAA: {
+    +     reason: 'measured 2.8:1, below 4.5:1',
+    -     reason: 'faintest glyphs measured 2.8:1, below 4.5:1',
+          rendersWithoutScript: false,
+          unresolved: [
+            'color-contrast'
+          ],
+          valid: true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    notDeclared:
+      valid: false
+      rendersWithoutScript: ~
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    noTrigger:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    defaultState:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    belowAA:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'faintest glyphs measured 2.8:1, below 4.5:1'
+    noReview:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'no PASS wcag-review record citing the screenshot'
+    falseClaim:
+      valid: false
+      rendersWithoutScript: true
+      unresolved:
+      reason: ~
+  actual:
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    notDeclared:
+      valid: false
+      rendersWithoutScript: ~
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    noTrigger:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    defaultState:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    belowAA:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'measured 2.8:1, below 4.5:1'
+    noReview:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'no PASS wcag-review record citing the screenshot'
+    falseClaim:
+      valid: false
+      rendersWithoutScript: true
+      unresolved:
+      reason: ~
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:206:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r19.test.mjs:46:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and widths: content shown at 1440 must stay shown at every width (320 included); content cut wholly at 1440 counts as not displayed only when a declared state shows it; partial cuts and content cut in every state fail (test-only)
+not ok 31 - R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and widths: content shown at 1440 must stay shown at every width (320 included); content cut wholly at 1440 counts as not displayed only when a declared state shows it; partial cuts and content cut in every state fail (test-only)
+  ---
+  duration_ms: 8271.925402
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:64:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        accordionDeclared: {
+    +     pass: false,
+    +     rules: [
+    +       'no resolveReveals'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        accordionPartly: {
+          pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'partly clipped'
+          ]
+        },
+        accordionUndeclared: {
+          pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'reveal'
+          ]
+        },
+        cardBelowEdge: {
+    +     pass: true,
+    -     pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'reveal'
+          ]
+        },
+        carouselMiddle: {
+    +     pass: false,
+    +     rules: [
+    +       'no resolveReveals'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        carouselRtl: {
+    +     pass: false,
+    +     rules: [
+    +       'no resolveReveals'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        carouselUndeclared: {
+          pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'reveal'
+          ]
+        },
+        nav320: {
+          pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'lost or partly clipped'
+          ]
+        },
+        navRtl320: {
+          pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'lost or partly clipped'
+          ]
+        },
+        table320: {
+    +     pass: true,
+    -     pass: false,
+          rules: [
+    +       'no resolveReveals'
+    -       'shown at 1440, lost at this width'
+          ]
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    accordionDeclared:
+      pass: true
+      rules:
+    accordionUndeclared:
+      pass: false
+      rules:
+        0: 'reveal'
+    accordionPartly:
+      pass: false
+      rules:
+        0: 'partly clipped'
+    carouselMiddle:
+      pass: true
+      rules:
+    carouselUndeclared:
+      pass: false
+      rules:
+        0: 'reveal'
+    cardBelowEdge:
+      pass: false
+      rules:
+        0: 'reveal'
+    table320:
+      pass: false
+      rules:
+        0: 'shown at 1440, lost at this width'
+    nav320:
+      pass: false
+      rules:
+        0: 'lost or partly clipped'
+    navRtl320:
+      pass: false
+      rules:
+        0: 'lost or partly clipped'
+    carouselRtl:
+      pass: true
+      rules:
+  actual:
+    accordionDeclared:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    accordionUndeclared:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    accordionPartly:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    carouselMiddle:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    carouselUndeclared:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    cardBelowEdge:
+      pass: true
+      rules:
+        0: 'no resolveReveals'
+    table320:
+      pass: true
+      rules:
+        0: 'no resolveReveals'
+    nav320:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    navRtl320:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+    carouselRtl:
+      pass: false
+      rules:
+        0: 'no resolveReveals'
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:95:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:45:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
+not ok 32 - R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
+  ---
+  duration_ms: 4427.964349
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:102:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        darkOverGradient: {
+          faintBelowAA: false,
+          pass: true
+        },
+        paleOverLightPhoto: {
+    +     faintBelowAA: false,
+    +     pass: true
+    -     faintBelowAA: true,
+    -     pass: false
+        },
+        scrimHero: {
+          faintBelowAA: false,
+          pass: true
+        }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    paleOverLightPhoto:
+      pass: false
+      faintBelowAA: true
+    scrimHero:
+      pass: true
+      faintBelowAA: false
+    darkOverGradient:
+      pass: true
+      faintBelowAA: false
+  actual:
+    paleOverLightPhoto:
+      pass: true
+      faintBelowAA: false
+    scrimHero:
+      pass: true
+      faintBelowAA: false
+    darkOverGradient:
+      pass: true
+      faintBelowAA: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:123:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:45:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast decides; nothing separable is INCOMPLETE (null)
+not ok 33 - R20-GPT-03: glyphRatio: the 10th percentile of cluster contrast decides; nothing separable is INCOMPLETE (null)
+  ---
+  duration_ms: 0.721344
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:126:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    glyphRatio exported
+    + actual - expected
+    
+    + 'undefined'
+    - 'function'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'function'
+  actual: 'undefined'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:132:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state's JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)
+not ok 34 - R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state's JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)
+  ---
+  duration_ms: 2743.462415
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:138:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        slotNotPlaced: {
+          content: true,
+          status: 'INCOMPLETE'
+        },
+        slotted: {
+    +     content: true,
+    +     status: 'INCOMPLETE'
+    -     content: false,
+    -     status: 'PASS'
+        },
+        unslottedExtra: {
+          content: true,
+          status: 'INCOMPLETE'
+        }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    slotted:
+      status: 'PASS'
+      content: false
+    slotNotPlaced:
+      status: 'INCOMPLETE'
+      content: true
+    unslottedExtra:
+      status: 'INCOMPLETE'
+      content: true
+  actual:
+    slotted:
+      status: 'INCOMPLETE'
+      content: true
+    slotNotPlaced:
+      status: 'INCOMPLETE'
+      content: true
+    unslottedExtra:
+      status: 'INCOMPLETE'
+      content: true
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:147:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:45:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)
+not ok 35 - R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)
+  ---
+  duration_ms: 2907.348322
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:154:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        scripted: {
+          rendersWithoutScript: false,
+          valid: true
+        },
+        shifted: {
+    +     rendersWithoutScript: false,
+    +     valid: true
+    -     rendersWithoutScript: true,
+    -     valid: false
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    shifted:
+      valid: false
+      rendersWithoutScript: true
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+  actual:
+    shifted:
+      valid: true
+      rendersWithoutScript: false
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:160:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:45:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)
+not ok 36 - R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)
+  ---
+  duration_ms: 1463.363263
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:166:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        fade: {
+          flagged: false,
+          hidden: false
+        },
+        veil: {
+    +     flagged: false,
+    +     hidden: true
+    -     flagged: true,
+    -     hidden: false
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    veil:
+      hidden: false
+      flagged: true
+    fade:
+      hidden: false
+      flagged: false
+  actual:
+    veil:
+      hidden: true
+      flagged: false
+    fade:
+      hidden: false
+      flagged: false
+  operator: 'deepStrictEqual'
+  stack: |-
+    file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:168:10
+    async withBrowser (file:///workspace/panel-r21/testbefore/release/tests/panel-r20.test.mjs:45:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+not ok 37 - R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+  ---
+  duration_ms: 1.568469
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/width-screen.test.mjs:13:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /import \{ screenWidths, resolveReflowCandidates, validWidths, resolveReveals \} from '\.\/width-screen\.mjs';/. Input:
+    
+    "// pre-handoff-check.mjs: Fannan's Harden gate (project arg, protected external dependencies and executables). Local files only; all network requests blocked.\n" +
+      '// Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>\n' +
+      '// Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.0/2.1/2.2 A and AA tags (axe-tags.mjs) with target-size ENABLED, 0 violations,\n' +
+      '// (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,\n' +
+      '// focus visible on every tab stop, every declared desktop width + 320 px reflow screened, (4) impeccable detect (advisory). Writes evidence.json + screenshot.\n' +
+      "import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';\n" +
+      "import { tmpdir } from 'node:os';\n" +
+      "import { createHash } from 'node:crypto';\n" +
+      "import { execFileSync } from 'node:child_process';\n" +
+      "import { pathToFileURL, fileURLToPath } from 'node:url';\n" +
+      "import { dirname, join, resolve } from 'node:path';\n" +
+      "import { checkHandoff, qualityChecks } from './handoff-contract.mjs';\n" +
+      "import { verifiedDeps } from './verify-deps.mjs';\n" +
+      "import { localAsset } from './local-file-boundary.mjs';\n" +
+      "import { copySignals } from './copy-signals.mjs';\n" +
+      "import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';\n" +
+      "import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';\n" +
+      "import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';\n" +
+      "import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';\n" +
+      "import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317\n" +
+      "import { axeOptions } from './axe-tags.mjs';\n" +
+      "import { isolatedPage } from './probe-world.mjs';\n" +
+      "import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';\n" +
+      "import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck } from './visibility.mjs'; // R17: the rendered-visibility backstop\n" +
+      "import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own\n" +
+      "import { scopeOf, resolveScoped } from './exceptions.mjs';\n" +
+      'const here = dirname(fileURLToPath(import.meta.url));\n' +
+      'const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;\n' +
+      "if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }\n" +
+      "const phase = phaseArg?.split('=')[1] || 'handoff';\n" +
+      'const q = qualityChecks.thresholds;\n' +
+      "const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);\n" +
+      "if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 12)) { console.error('pre-handoff-check: Node 22.12+ is required (package.json engines); found ' + process.versions.node); process.exit(2); }\n" +
+      '// npm deps live in protected storage OUTSIDE the manifest-covered tree (N2).\n' +
+      "const releaseRoot = realpathSync(join(here, '..'));\n" +
+      'let depsRoot;\n' +
+      'try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, releaseRoot); }\n' +
+      "catch (e) { console.error('pre-handoff-check: dependencies untrusted: ' + e.message); process.exit(2); }\n" +
+      'let chromium;\n' +
+      "try { ({ chromium } = await import(pathToFileURL(join(depsRoot, 'node_modules/playwright-core/index.mjs')).href)); }\n" +
+      "catch (e) { console.error('pre-handoff-check: playwright-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }\n" +
+      '// A fresh evidence directory prevents clobbering an earlier review; each output uses safe-write.\n' +
+      "if (existsSync(outDir)) { console.error('pre-handoff-check: evidence directory already exists; use a fresh versioned path'); process.exit(2); }\n" +
+      "const evidenceWrite = (name, value) => execFileSync(join(here, 'safe-write.sh'), [project, join(resolve(outDir), name)], { input: value });\n" +
+      "const digest = value => createHash('sha256').update(value).digest('hex');\n" +
+      "try { execFileSync(join(here, 'readonly-precheck.sh'), [resolve(outDir) + '/evidence.json', project], { encoding: 'utf8' }); }\n" +
+      "catch (e) { console.error('pre-handoff-check: readonly-precheck refused the evidence folder: ' + String(e.stderr || e.message).trim()); process.exit(2); }\n" +
+      'const ev = { when: new Date().toISOString(), designMd: resolve(designMd), page: resolve(page), checks: {} };\n' +
+      'let fail = false;\n' +
+      'let handoff;\n' +
+      "try { handoff = JSON.parse(readFileSync(handoffPath, 'utf8')); ev.checks.contract = { errors: checkHandoff(handoff, phase) }; }\n" +
+      'catch (e) { ev.checks.contract = { errors: [`handoff JSON cannot be read: ${e.message}`] }; }\n' +
+      'ev.checks.contract.pass = ev.checks.contract.errors.length === 0;\n' +
+      'if (!ev.checks.contract.pass) fail = true;\n' +
+      '// CODEX-R3-02: the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.\n' +
+      'const approvedScale = approvedSpacing(handoff);\n' +
+      'ev.checks.spacingTokens = { source: approvedScale.source ?? null, values: approvedScale.values, error: approvedScale.error, pass: !approvedScale.error };\n' +
+      "if (phase === 'handoff' && !ev.checks.spacingTokens.pass) fail = true;\n" +
+      '// R11 panel D1 (decision A): the accent must be the approved palette token; FAIL at handoff, DEFERRED in wireframes.\n' +
+      'const approvedAccentToken = approvedAccent(handoff);\n' +
+      'const accentFor = async (pg, d) => accentCheck({ design: d, approved: approvedAccentToken, pageColour: await pg.evaluate(normColour, d.accent), approvedColour: approvedAccentToken.value ? await pg.evaluate(normColour, approvedAccentToken.value) : null, phase });\n' +
+      '// 1 lint\n' +
+      'try {\n' +
+      "  const r = execFileSync(process.execPath, [join(depsRoot, 'node_modules/@google/design.md/dist/index.js'), 'lint', designMd], { encoding: 'utf8' });\n" +
+      "  const j = JSON.parse(r.slice(r.indexOf('{'))); const errors = j.summary?.errors ?? j.errors ?? null;\n" +
+      '  ev.checks.lint = { errors, pass: errors === 0 }; if (errors !== 0) fail = true;\n' +
+      '} catch (e) { ev.checks.lint = { pass: false, error: String(e.stdout || e.message).slice(0, 400) }; fail = true; }\n' +
+      '// 2-3 browser checks\n' +
+      'let axeSrc;\n' +
+      "try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }\n" +
+      "catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }\n" +
+      "const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // ARGON-R2-06: private HOME, removed on exit\n" +
+      "process.on('exit', () => rmSync(browserHome, { recursive: true, force: true }));\n" +
+      'let browserIdentity;\n' +
+      'try { browserIdentity = verifiedBrowser(); }\n' +
+      "catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }\n" +
+      'const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true, env: browserLaunchEnv(browserHome) });\n' +
+      'const runtimeVersion = b.version();\n' +
+      'if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4\n' +
+      'ev.browser = { ...browserIdentity, version: runtimeVersion };\n' +
+      "const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });\n" +
+      'await ctx.routeWebSocket(/.*/, ws => ws.close());\n' +
+      'const blocked = [];\n' +
+      "const OUTPUT_BASE = '/workspace/design-output';\n" +
+      'const projectRoot = join(OUTPUT_BASE, project);\n' +
+      'const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)\n' +
+      '// R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)\n' +
+      "const scanGlass = (path, contentType, body) => { if (/text\\/(css|html|javascript)|application\\/(javascript|ecmascript)|image\\/svg\\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG\n" +
+      'const served = new Set(); // R13 N07: URLs whose bytes the checker served and scanned\n' +
+      'const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); served.add(u); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };\n' +
+      "await ctx.route('**/*', routeLocal);\n" +
+      'const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world\n' +
+      "const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });\n" +
+      'await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });\n' +
+      'ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };\n' +
+      'if (!ev.checks.assets.pass) fail = true;\n' +
+      'const copyProbe = (page, st) => page.evaluate(copyDeckProbe, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });\n' +
+      'const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10\n' +
+      'Object.assign(design, copySignals(design.visibleText, design.headlines));\n' +
+      'delete design.visibleText; delete design.headlines;\n' +
+      "ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design"... 25307 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    // pre-handoff-check.mjs: Fannan's Harden gate (project arg, protected external dependencies and executables). Local files only; all network requests blocked.
+    // Usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project>
+    // Checks: (1) design.md lint 0 errors, (2) axe-core WCAG 2.0/2.1/2.2 A and AA tags (axe-tags.mjs) with target-size ENABLED, 0 violations,
+    // (3) custom WCAG 2.2: 2.4.11 focus not obscured, 2.5.8 targets >= 24x24, reduced motion = no running animation,
+    // focus visible on every tab stop, every declared desktop width + 320 px reflow screened, (4) impeccable detect (advisory). Writes evidence.json + screenshot.
+    import { readFileSync, existsSync, realpathSync, mkdtempSync, rmSync } from 'node:fs';
+    import { tmpdir } from 'node:os';
+    import { createHash } from 'node:crypto';
+    import { execFileSync } from 'node:child_process';
+    import { pathToFileURL, fileURLToPath } from 'node:url';
+    import { dirname, join, resolve } from 'node:path';
+    import { checkHandoff, qualityChecks } from './handoff-contract.mjs';
+    import { verifiedDeps } from './verify-deps.mjs';
+    import { localAsset } from './local-file-boundary.mjs';
+    import { copySignals } from './copy-signals.mjs';
+    import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
+    import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
+    import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';
+    import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';
+    import { screenWidths, resolveReflowCandidates, validWidths } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
+    import { axeOptions } from './axe-tags.mjs';
+    import { isolatedPage } from './probe-world.mjs';
+    import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
+    import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck } from './visibility.mjs'; // R17: the rendered-visibility backstop
+    import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own
+    import { scopeOf, resolveScoped } from './exceptions.mjs';
+    const here = dirname(fileURLToPath(import.meta.url));
+    const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
+    if (!designMd || !page || !outDir || !project || !handoffPath || (phaseArg && !['--phase=wireframe', '--phase=handoff'].includes(phaseArg))) { console.error('usage: FANNAN_DEPS=<npm prefix> node pre-handoff-check.mjs <DESIGN.md> <page.html> <evidence-dir> <project> <handoff.json> [--phase=wireframe|handoff]'); process.exit(2); }
+    const phase = phaseArg?.split('=')[1] || 'handoff';
+    const q = qualityChecks.thresholds;
+    const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number);
+    if (nodeMajor < 22 || (nodeMajor === 22 && nodeMinor < 12)) { console.error('pre-handoff-check: Node 22.12+ is required (package.json engines); found ' + process.versions.node); process.exit(2); }
+    // npm deps live in protected storage OUTSIDE the manifest-covered tree (N2).
+    const releaseRoot = realpathSync(join(here, '..'));
+    let depsRoot;
+    try { depsRoot = verifiedDeps(process.env.FANNAN_DEPS, releaseRoot); }
+    catch (e) { console.error('pre-handoff-check: dependencies untrusted: ' + e.message); process.exit(2); }
+    let chromium;
+    try { ({ chromium } = await import(pathToFileURL(join(depsRoot, 'node_modules/playwright-core/index.mjs')).href)); }
+    catch (e) { console.error('pre-handoff-check: playwright-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
+    // A fresh evidence directory prevents clobbering an earlier review; each output uses safe-write.
+    if (existsSync(outDir)) { console.error('pre-handoff-check: evidence directory already exists; use a fresh versioned path'); process.exit(2); }
+    const evidenceWrite = (name, value) => execFileSync(join(here, 'safe-write.sh'), [project, join(resolve(outDir), name)], { input: value });
+    const digest = value => createHash('sha256').update(value).digest('hex');
+    try { execFileSync(join(here, 'readonly-precheck.sh'), [resolve(outDir) + '/evidence.json', project], { encoding: 'utf8' }); }
+    catch (e) { console.error('pre-handoff-check: readonly-precheck refused the evidence folder: ' + String(e.stderr || e.message).trim()); process.exit(2); }
+    const ev = { when: new Date().toISOString(), designMd: resolve(designMd), page: resolve(page), checks: {} };
+    let fail = false;
+    let handoff;
+    try { handoff = JSON.parse(readFileSync(handoffPath, 'utf8')); ev.checks.contract = { errors: checkHandoff(handoff, phase) }; }
+    catch (e) { ev.checks.contract = { errors: [`handoff JSON cannot be read: ${e.message}`] }; }
+    ev.checks.contract.pass = ev.checks.contract.errors.length === 0;
+    if (!ev.checks.contract.pass) fail = true;
+    // CODEX-R3-02: the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.
+    const approvedScale = approvedSpacing(handoff);
+    ev.checks.spacingTokens = { source: approvedScale.source ?? null, values: approvedScale.values, error: approvedScale.error, pass: !approvedScale.error };
+    if (phase === 'handoff' && !ev.checks.spacingTokens.pass) fail = true;
+    // R11 panel D1 (decision A): the accent must be the approved palette token; FAIL at handoff, DEFERRED in wireframes.
+    const approvedAccentToken = approvedAccent(handoff);
+    const accentFor = async (pg, d) => accentCheck({ design: d, approved: approvedAccentToken, pageColour: await pg.evaluate(normColour, d.accent), approvedColour: approvedAccentToken.value ? await pg.evaluate(normColour, approvedAccentToken.value) : null, phase });
+    // 1 lint
+    try {
+      const r = execFileSync(process.execPath, [join(depsRoot, 'node_modules/@google/design.md/dist/index.js'), 'lint', designMd], { encoding: 'utf8' });
+      const j = JSON.parse(r.slice(r.indexOf('{'))); const errors = j.summary?.errors ?? j.errors ?? null;
+      ev.checks.lint = { errors, pass: errors === 0 }; if (errors !== 0) fail = true;
+    } catch (e) { ev.checks.lint = { pass: false, error: String(e.stdout || e.message).slice(0, 400) }; fail = true; }
+    // 2-3 browser checks
+    let axeSrc;
+    try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }
+    catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
+    const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // ARGON-R2-06: private HOME, removed on exit
+    process.on('exit', () => rmSync(browserHome, { recursive: true, force: true }));
+    let browserIdentity;
+    try { browserIdentity = verifiedBrowser(); }
+    catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }
+    const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true, env: browserLaunchEnv(browserHome) });
+    const runtimeVersion = b.version();
+    if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4
+    ev.browser = { ...browserIdentity, version: runtimeVersion };
+    const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
+    await ctx.routeWebSocket(/.*/, ws => ws.close());
+    const blocked = [];
+    const OUTPUT_BASE = '/workspace/design-output';
+    const projectRoot = join(OUTPUT_BASE, project);
+    const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
+    // R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)
+    const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG
+    const served = new Set(); // R13 N07: URLs whose bytes the checker served and scanned
+    const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); served.add(u); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
+    await ctx.route('**/*', routeLocal);
+    const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world
+    const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });
+    await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });
+    ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };
+    if (!ev.checks.assets.pass) fail = true;
+    const copyProbe = (page, st) => page.evaluate(copyDeckProbe, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });
+    const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
+    Object.assign(design, copySignals(design.visibleText, design.headlines));
+    delete design.visibleText; delete design.headlines;
+    ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design.typeSizes.length <= q.typeSizes && design.accentRatio !== null && design.accentRatio <= q.accentAreaRatioFullPage && design.accentViewportRatio !== null && design.accentViewportRatio <= q.accentAreaRatioViewport)) && !design.heroGradient && design.glass <= q.stockGlass && design.iconRows <= q.centeredThreeIconRows && !design.purpleBlue && !design.filler && !design.ruleOfThree && (phase === 'wireframe' || !design.placeholders) && (phase === 'wireframe' || design.spacingOffScale.length <= q.spacingOffScale) && design.h1 === 1 };
+    if (!ev.checks.design.pass) fail = true;
+    ev.checks.accent = await accentFor(p, design);
+    if (!ev.checks.accent.pass) fail = true;
+    // R12 M03: probes and axe run in the main frame only, so any frame (readable or not) blocks the final handoff.
+    const framesCheck = d => ({ frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, unscanned: d.glassScopes.unscannedFrames, status: phase === 'wireframe' ? 'DEFERRED' : d.glassScopes.frames + d.glassScopes.unscannedFrames.length ? 'FAIL' : 'PASS', note: 'axe and the probes do not run inside frames', pass: phase === 'wireframe' || d.glassScopes.frames + d.glassScopes.unscannedFrames.length === 0 });
+    ev.checks.frames = framesCheck(design);
+    if (!ev.checks.frames.pass) fail = true;
+    // R13 N07: data:/blob: stylesheets are refused, and a stylesheet whose rules could not be read and whose bytes the
+    // checker did not serve and scan is unscanned; both fail (glass is gated in both phases).
+    const sheetsCheck = d => { const list = d.stylesheets || [], refused = list.filter(x => /^(data|blob):/i.test(x.href || '')), unscanned = list.filter(x => !x.readable && !refused.includes(x) && !(x.href && served.has(x.href))); return { sheets: list.length, refused: refused.map(x => (x.href || '').slice(0, 80)), unscanned: unscanned.map(x => x.href || x.owner), pass: refused.length === 0 && unscanned.length === 0 }; };
+    ev.checks.stylesheets = sheetsCheck(design);
+    if (!ev.checks.stylesheets.pass) fail = true;
+    // R12 M07/M09/M20: the positional page is scoped by its declared state (screen, state, lang).
+    const declaredStates = (handoff?.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
+    // R19-MIMAR-01: the PASS wcag-review manual record for a scope (screen, language, state)
+    const reviewFor = scope => scope ? (handoff?.manualChecks || []).find(m => m.id === 'wcag-review' && m.screen === scope.screen && m.lang === scope.lang && m.state === scope.state && m.decision === 'PASS') ?? null : null;
+    const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
+    const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
+    ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
+    const pagePaths = await contrastPaths(await isolatedPage(p), axe.incomplete); // R19-MIMAR-01, resolved after integrity
+    const pageIncomplete = axe.incomplete;
+    if (axe.violations.length) fail = true;
+    // custom: tab through, check focus visible, not obscured by fixed/sticky elements, target size
+    await p.evaluate(() => { window.__fid = new WeakMap(); window.__fnext = 0; });
+    const stops = []; const seen = new Set();
+    await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05: one unfocused baseline
+    for (let i = 0; i < 200; i++) {
+      await p.keyboard.press('Tab');
+      await p.evaluate(focusSettle);
+      const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
+      const info = await p.evaluate(() => {
+        const el = document.activeElement; if (!el || el === document.body) return null;
+        if (!window.__fid.has(el)) window.__fid.set(el, ++window.__fnext);
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const top = document.elementFromPoint(Math.min(Math.max(cx, 0), innerWidth - 1), Math.min(Math.max(cy, 0), innerHeight - 1));
+        const obscured = top && top !== el && !el.contains(top) && !top.contains(el);
+        const inlineLink = el.tagName === 'A' && el.parentElement && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement.tagName) && (el.parentElement.textContent || '').trim().length > (el.textContent || '').trim().length;
+        return { id: window.__fid.get(el), tag: el.tagName, name: el.getAttribute('aria-label') || el.name || (el.textContent || '').trim().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height), obscured: !!obscured, inlineLink };
+      });
+      if (info) info.focusVisible = focusVisible;
+      if (!info) break;            // focus left the document (end of tab order)
+      if (seen.has(info.id)) break; // same ELEMENT again = wrapped around (identity, not name)
+      seen.add(info.id); stops.push(info);
+    }
+    const keyboardTrapSuspect = stops.length >= 200;
+    const small = stops.filter(s => (s.w < 24 || s.h < 24) && !s.inlineLink), noFocus = stops.filter(s => !s.focusVisible), obsc = stops.filter(s => s.obscured);
+    ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic (settled after transitions; colour-only changes under the configured focusStateContrast (3:1 floor) between states, indicators below it against their backdrop and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
+    if (!ev.checks.custom22.pass) fail = true;
+    evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
+    // R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
+    ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null);
+    if (!ev.checks.widths.pass) fail = true;
+    // R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
+    // measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
+    const integrityFor = async (pagePath, scope) => {
+      const contexts = [];
+      try {
+        const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
+        const widthsFor = validWidths(handoff?.settings?.desktopWidths) ? handoff.settings.desktopWidths : [1440];
+        // R13 N11/N12: the canonical gate result, per width where the gate is per width.
+        // R17: the rendered-visibility backstop runs once per rendering in the probe world (screenshots are shared by both
+        // worlds) and its counts enter both vectors; its items are kept as evidence.
+        const measure = async (pg, vis) => { try {
+          const d = await pg.evaluate(designProbe), sp = await pg.evaluate(spacingProbe, approvedScale.values), ct = await pg.evaluate(contrastProbe);
+          Object.assign(d, copySignals(d.visibleText, d.headlines));
+          const doc = await pg.evaluate(() => document.documentElement.scrollHeight), ratios = [];
+          for (let y = 0; y < doc; y += 900) { await pg.evaluate(y => scrollTo(0, y), y); ratios.push((await pg.evaluate(designProbe)).accentViewportRatio); }
+          await pg.evaluate(() => scrollTo(0, 0));
+          const rs = (await screenWidths(pg, widthsFor, null)).results, per = k => Object.fromEntries(rs.map(r => [r.width, k === 'horizontalOverflow' ? Number(r.horizontalOverflow) : r[k]?.length ?? 0])), r320 = rs.find(r => r.width === 320);
+          return { vector: { glass: d.glass, h1: d.h1, placeholders: d.placeholders, centered: d.centered, typeSizes: d.typeSizes.length, heroGradient: d.heroGradient, purpleBlue: d.purpleBlue, iconRows: d.iconRows, accent: d.accent || null, accentRatio: d.accentRatio, maxViewportAccent: ratios.length && !ratios.includes(null) ? Math.max(...ratios) : null, filler: !!d.filler, ruleOfThree: !!d.ruleOfThree, frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, stylesheetsUnscanned: sheetsCheck(d).refused.length + sheetsCheck(d).unscanned.length, spacingOffScale: sp.spacingOffScale.length, horizontalOverflow: per('horizontalOverflow'), clipped: per('clipped'), offscreenLeft: per('offscreenLeft'), unreachable: per('unreachable'), scrolledText: per('scrolledText'), unmeasured: per('unmeasured'), unscannedScopes: per('unscannedScopes'), reflowFail: !r320?.pass, contrastFailures: ct.contrastFailures, contrastUnknown: ct.contrastUnknown, contrastChecked: ct.contrastChecked, contrastEffects: ct.contrastEffects, textMeasured: vis?.textMeasured, textObscured: vis?.textObscured, textUnreadable: vis?.textUnreadable, textUnmeasured: vis?.textUnmeasured, textHidden: vis?.textHidden }, content: await pg.evaluate(contentProbe), visibility: vis ? { ...vis } : null };
+        } catch (e) { return { vector: null, content: null, error: e.message }; } };
+        const href = pathToFileURL(resolve(pagePath)).href;
+        const ic = await contextFor(true), icMain = await ic.newPage(), icProbe = await isolatedPage(icMain);
+        await icProbe.goto(href); await ready(icProbe);
+        const scan = async pg => { try { return await visibilityScan(pg, { topLayer: !!scope?.state && scope.state !== 'default' }); } catch (e) { return { error: e.message }; } };
+        const vis = await scan(icProbe), probe = await measure(icProbe, vis), pageWorld = await measure(icMain, vis);
+        let tamperSigns = null; try { tamperSigns = await icMain.evaluate(nativeCheck); } catch {}
+        const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
+        await jsOffPage.goto(href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
+        const jsOff = await measure(jsOffPage, await scan(jsOffPage));
+        return compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope });
+      } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
+      finally { for (const c of contexts) await c.close().catch(() => {}); }
+    };
+    // R12 M13, R13 N18: one hardened reduced-motion routine for the positional page and every declared state: running Web
+    // Animations, moved elements, and the private rAF counter (rafCounterInit, read in the main world on purpose).
+    const motionFor = async pagePath => {
+      const c = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
+      try {
+        await c.routeWebSocket(/.*/, ws => ws.close());
+        await c.addInitScript(rafCounterInit);
+        await c.route('**/*', routeLocal);
+        const main = await c.newPage(), pg = await isolatedPage(main);
+        await pg.goto(pathToFileURL(resolve(pagePath)).href); await pg.waitForTimeout(300);
+        const snap = () => pg.evaluate(motionSnapshot); // R14-GPT-05: composed tree, stable composed-path keys (integrity.mjs)
+        const s1 = await snap(); const raf1 = await main.evaluate(() => window.__raf);
+        await pg.waitForTimeout(700);
+        const s2 = await snap(); const raf2 = await main.evaluate(() => window.__raf);
+        const waapi = await pg.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length);
+        const moved = motionChanges(s1, s2);
+        const rafLoop = rafLoopFrom(raf1, raf2); // a non-finite or decreasing reading counts as a loop
+        return { runningWebAnimations: waapi, elementsChangedOver700ms: moved, rafCallsOver700ms: Number.isFinite(raf2 - raf1) ? raf2 - raf1 : null, rafLoop, pass: waapi === 0 && moved === 0 && !rafLoop };
+      } catch (e) { return { pass: false, error: `reduced-motion check could not run: ${e.message}` }; }
+      finally { await c.close().catch(() => {}); }
+    };
+    ev.checks.states = [];
+    // R16-GPT-03: the wireframe phase also renders every declared screen in every declared language (its default
+    // state), with phase-appropriate checks; a missing rendering or page fails instead of being skipped.
+    const wireframe = phase === 'wireframe';
+    if (handoff?.screens) {
+      const declared = wireframe
+        ? handoff.screens.flatMap(s => (handoff.languages || []).map(l => { const st = (s.states || []).find(v => v.state === 'default' && v.lang === l.lang && v.dir === l.dir && v.applicable !== false); return st ? { screen: s.id, ...st } : { screen: s.id, state: 'default', lang: l.lang, dir: l.dir, page: null }; }))
+        : handoff.screens.flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
+      if (!declared.some(st => st.page && resolve(st.page) === resolve(page))) { ev.checks.states.push({ pass: false, error: 'positional page absent from declared states' }); fail = true; }
+      for (const st of declared) {
+        if (!st.page || !existsSync(resolve(st.page))) { ev.checks.states.push({ screen: st.screen, lang: st.lang, state: st.state, pass: false, error: st.page ? 'declared page does not exist' : 'no rendering declared for this screen and language' }); fail = true; continue; }
+        try {
+          await p.goto(pathToFileURL(resolve(st.page)).href);
+          const assets = await ready(p);
+          const copy = await copyProbe(p, st);
+          const frameBytes = await p.screenshot({ fullPage: true });
+          const renderedSha256 = digest(frameBytes);
+          await p.addScriptTag({ content: axeSrc });
+          const a = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1
+          const paths = await contrastPaths(await isolatedPage(p), a.incomplete); // R19-MIMAR-01
+          const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
+          Object.assign(d, copySignals(d.visibleText, d.headlines));
+          const accent = await accentFor(p, d); // R11 panel A, every state
+          delete d.visibleText; delete d.headlines;
+          const doc = await p.evaluate(() => ({ lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction, height: document.documentElement.scrollHeight }));
+          const viewportRatios = [];
+          for (let y = 0; y < doc.height; y += 900) { await p.evaluate(y => scrollTo(0, y), y); viewportRatios.push((await p.evaluate(designProbe)).accentViewportRatio); }
+          await p.evaluate(() => scrollTo(0, 0));
+          const focus = [];
+          await p.evaluate(() => { window.__stateFocus = new WeakSet(); });
+          await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05
+          for (let i = 0; i < 200; i++) {
+            await p.keyboard.press('Tab');
+            await p.evaluate(focusSettle);
+            const focusVisible = await p.evaluate(focusStyleProbe, { minContrast: q.focusStateContrast });
+            const f = await p.evaluate(() => { const el = document.activeElement; if (!el || el === document.body || window.__stateFocus.has(el)) return null; window.__stateFocus.add(el); const r = el.getBoundingClientRect(), x = r.left+r.width/2, y = r.top+r.height/2, top = document.elementFromPoint(Math.max(0,Math.min(innerWidth-1,x)),Math.max(0,Math.min(innerHeight-1,y))); const inlineLink = el.tagName === 'A' && /^(P|LI|SPAN|TD|DD)$/.test(el.parentElement?.tagName || '') && el.parentElement.textContent.trim().length > el.textContent.trim().length; return { small: (r.width < 24 || r.height < 24) && !inlineLink, obscured: !!top && top !== el && !el.contains(top) && !top.contains(el) }; });
+            if (!f) break;
+            f.invisible = !focusVisible;
+            focus.push(f);
+          }
+          const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }); // R8
+          const frames = framesCheck(d); // R12 M03
+          const integrity = await integrityFor(st.page, scopeOf(st)); // R12 M07: every declared state
+          const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
+          const scriptClaim = requiresScriptCheck({ declaration: st, integrity }); // R19b
+          if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { integrity.mismatches = [...(integrity.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; integrity.status = 'integrity mismatch'; integrity.pass = false; }
+          const contrastResolution = resolveContrastIncomplete({ incomplete: a.incomplete, paths, integrity, review: reviewFor(scopeOf(st)), shots: [st.frame?.path, filename], scriptOnly: scriptClaim.valid }); // R19-MIMAR-01
+          const stylesheets = sheetsCheck(d); // R13 N07
+          const reducedMotion = await motionFor(st.page); // R13 N18: the same hardened routine as the page
+          const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // ARGON-R5-01: Math.max(null) is 0
+          const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), axeIncompleteUnresolved: contrastResolution.unresolved, requiresScript: scriptClaim, axeContrastNodes: contrastResolution.contrastNodes, assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion, stylesheets, language: doc.lang, direction: doc.dir };
+          stateResult.pass = (wireframe || renderedSha256 === st.frame?.sha256) && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && contrastResolution.pass && d.centered <= q.centeredSectionsPerPage && (wireframe || (d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport)) && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && (wireframe || !d.placeholders) && (wireframe || d.spacingOffScale.length <= q.spacingOffScale) && d.h1 === 1 && accent.pass && frames.pass && stylesheets.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.pass && reducedMotion.pass && doc.lang === st.lang && doc.dir === st.dir;
+          if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
+          evidenceWrite(filename, frameBytes);
+          ev.checks.states.push(stateResult);
+          if (!stateResult.pass) fail = true;
+        } catch (e) { ev.checks.states.push({ screen: st.screen, state: st.state, pass: false, error: e.message }); fail = true; }
+      }
+    }
+    // R11 panel D1 (decisions B, T2): every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
+    ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // R12 M09: scoped
+    if (!ev.checks.reflowCandidates.pass) fail = true;
+    // R12 M20: every documented spacing exception needs a scoped handoff `spacingExceptions` entry naming the approver.
+    const spacingItems = [{ scope: pageScope, list: design.spacingExceptions }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), list: st.spacingExceptions }))].flatMap(({ scope, list }) => (list || []).map(x => ({ ...scopeOf(scope), ...x })));
+    const spacingResolved = resolveScoped({ items: spacingItems, entries: handoff?.spacingExceptions, roles: [handoff?.settings?.roles?.approver], phase, what: 'spacingExceptions' });
+    ev.checks.spacingExceptions = { exceptions: spacingResolved.items, unresolved: spacingResolved.unresolved, status: spacingResolved.status, pass: spacingResolved.pass };
+    if (!ev.checks.spacingExceptions.pass) fail = true;
+    ev.checks.reducedMotion = await motionFor(page); // R12 M13, R13 N18
+    if (!ev.checks.reducedMotion.pass) fail = true;
+    // R11 panel D1 (decisions C, T4), R12 M06-M08: integrity cross-checks on the positional page (and, above, every state).
+    ev.checks.integrity = await integrityFor(page, pageScope);
+    if (!ev.checks.integrity.pass) fail = true;
+    { // R19-MIMAR-01: the positional page's automated incomplete results, resolved against the backstop and the review
+      const st = declaredStates.find(x => x.page && resolve(x.page) === resolve(page));
+      const scriptClaim = requiresScriptCheck({ declaration: st, integrity: ev.checks.integrity }); // R19b
+      if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { const i = ev.checks.integrity; i.mismatches = [...(i.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; i.status = 'integrity mismatch'; i.pass = false; fail = true; }
+      ev.checks.axe.requiresScript = scriptClaim;
+      const r = resolveContrastIncomplete({ incomplete: pageIncomplete, paths: pagePaths, integrity: ev.checks.integrity, review: reviewFor(pageScope), shots: [st?.frame?.path, 'page-1440.png'], scriptOnly: scriptClaim.valid });
+      Object.assign(ev.checks.axe, { unresolvedIncomplete: r.unresolved, contrastNodes: r.contrastNodes, pass: ev.checks.axe.violations.length === 0 && r.pass });
+      if (!ev.checks.axe.pass) fail = true;
+    }
+    await b.close();
+    ev.externalRequestsBlocked = blocked;
+    ev.checks.resourceBoundary = { pass: blocked.length === 0, blockedRequests: blocked.length };
+    if (blocked.length) fail = true;
+    for (const file of [page, ...(handoff?.screens || []).flatMap(sc => (sc.states || []).map(st => st.page))].filter(Boolean)) { try { scanGlass(resolve(file), 'text/html', readFileSync(resolve(file))); } catch {} }
+    ev.checks.glassSource = { files: [...glassFiles], pass: glassFiles.size === 0 };
+    if (!ev.checks.glassSource.pass) fail = true;
+    // 4 impeccable detect: findings are advisory, but it MUST run and return parseable output
+    {
+      let out = '', status = 0;
+      try { out = execFileSync(join(here, 'launcher-impeccable.sh'), ['detect', '--json', page], { encoding: 'utf8', env: { PATH: '/usr/bin:/bin', FANNAN_PROJECT: project } }); }
+      catch (e) { out = String(e.stdout || ''); status = e.status; }
+      let findings = null; try { const j = JSON.parse(out); if (Array.isArray(j)) findings = j; } catch {}
+      if (findings === null || (status !== 0 && status !== 2)) { ev.checks.impeccable = { ran: false, exit: status, pass: false, note: 'detect did not run or gave no parseable output' }; fail = true; }
+      else ev.checks.impeccable = { ran: true, exit: status, advisory: true, findings: findings.map(f => f.antipattern || f.name), pass: true };
+    }
+    ev.phase = phase;
+    ev.pass = !fail;
+    ev.handoffReady = ev.pass && phase === 'handoff';
+    evidenceWrite('evidence.json', JSON.stringify(ev, null, 1));
+    if (ev.handoffReady) {
+      const rows = handoff.screens.flatMap(s => s.acceptance.map(a => `| ${s.id} | ${a.id} | ${a.severity} | ${a.decision} | ${a.check.replaceAll('|', '\\|')} | ${a.evidence} |`));
+      const frames = handoff.screens.flatMap(s => s.states.filter(st => st.applicable !== false).map(st => `| ${s.id} | ${st.lang} | ${st.state} | ${st.frame.version} | ${st.frame.sha256} | ${st.frame.path} |`));
+      const checklist = ['# Design and QA handoff', '', `Project: ${project}`, `Engineer: ${handoff.settings.roles.engineer}`, `QA gate: ${handoff.settings.roles.qaGate}`, `Writer: ${handoff.settings.roles.writer}`, `Approver: ${handoff.settings.roles.approver}`, `Approval record: ${handoff.approval.record}`, `Repository: ${handoff.settings.repository}`, `Stack: ${handoff.settings.stack}`, `Design link: ${handoff.designLink.url}`, `Token JSON: ${handoff.tokens.json.path}`, `Token CSS: ${handoff.tokens.css.path}`, `Build evidence: ${handoff.tokens.buildEvidence.path}`, 'Automated evidence: evidence.json', '', '## Screen and state frames', '', '| Screen | Language | State | Version | SHA-256 | Frame |', '|---|---|---|---|---|---|', ...frames, '', '## Acceptance and QA criteria', '', '| Screen | ID | Severity | Design decision | Check | Design evidence |', '|---|---|---|---|---|---|', ...rows, '', 'QA gate records build SHA, result and evidence against each criterion ID after implementation; design PASS is not QA PASS.', ''];
+      evidenceWrite('HANDOFF.md', checklist.join('\n'));
+    }
+    console.log(JSON.stringify({ pass: ev.pass, lint: ev.checks.lint.pass, axe: ev.checks.axe.violations, custom22: ev.checks.custom22.pass, reducedMotion: ev.checks.reducedMotion.pass, impeccable: ev.checks.impeccable }));
+    process.exit(ev.pass ? 0 : 1);
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/panel-r21/testbefore/release/tests/width-screen.test.mjs:15:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+ok 38 - R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+  ---
+  duration_ms: 5.822223
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
+ok 39 - R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
+  ---
+  duration_ms: 2866.476419
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
+ok 40 - CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
+  ---
+  duration_ms: 898.698987
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+ok 41 - ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+  ---
+  duration_ms: 1887.354032
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+ok 42 - ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+  ---
+  duration_ms: 570.550186
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: off-screen-left content fails the width screen
+not ok 43 - ARGON-R5-05: off-screen-left content fails the width screen
+  ---
+  duration_ms: 0.792788
+  type: 'test'
+  location: '/workspace/panel-r21/testbefore/release/tests/width-screen.test.mjs:126:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /rest: !result\.horizontalOverflow && result\.offscreenLeft\.length === 0 && result\.unreachable\.length === 0 && result\.scrolledText\.length === 0 && result\.unmeasured\.length === 0 && result\.unscannedScopes\.length === 0 && result\.reflowCandidates\.every\(c => c\.fits && c\.keyboard\) && language \}\);\n      results\.at\(-1\)\.pass = results\.at\(-1\)\.rest && result\.clipped\.length === 0;/. Input:
+    
+    "import { resolveScoped } from './exceptions.mjs';\n" +
+      '// width-screen.mjs: R8, ported from codex/fannan-r3-review 2733317 (release/tools/browser-probes.mjs screenWidths/inspectLayout).\n' +
+      '// Screening only: renders the page at every declared desktop width plus 320 CSS px (desktop 400% reflow equivalent) and\n' +
+      '// flags horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Actual zoom, text spacing,\n' +
+      '// WCAG reflow exceptions and layout quality still need manual evidence. 320 px is not a mobile design approval.\n' +
+      'export const REFLOW_WIDTH = 320;\n' +
+      '\n' +
+      '// R11 (Asad panel S3, panel D1 decision B): WCAG 1.4.10 excuses only the smallest region whose usage or meaning needs a\n' +
+      '// two-dimensional layout. At the 320 px reflow width, ordinary text or media that overflows a sideways scroller (left\n' +
+      '// or right) fails. A table, pre, code, role=grid/table with real rows, or an element marked data-fannan-2d="<reason>"\n' +
+      "// is only a CANDIDATE: it is recorded with its element and reason, never excused automatically. A candidate's\n" +
+      '// scroller must fit inside 320 px and be keyboard-usable (tabindex or a focusable child), and an unresolved candidate\n' +
+      '// blocks the final handoff (resolveReflowCandidates). Resizable media (img, svg, video, canvas, iframe) is not a\n' +
+      '// candidate unless it sits inside a marked data-fannan-2d region. No count caps.\n' +
+      `export const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';\n` +
+      '\n' +
+      'export function inspectLayout({ reflow = false } = {}) {\n' +
+      `  const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';\n` +
+      "  const MEDIA = 'img, svg, video, canvas, iframe, frame, object, embed, fencedframe, portal, input, select, textarea, button';\n" +
+      "  const NESTED = 'iframe, frame, object, embed, fencedframe, portal';\n" +
+      '  const clipped = [], offscreenLeft = [], unreachable = [], scrolledText = [], reflowCandidates = [], unmeasured = [], unscannedScopes = [];\n' +
+      '  // ARGON-R5-05: visually hidden (sr-only) content is not a clip: clip: rect(0...) / clip-path inset(50%), or a box of at\n' +
+      '  // most 1x1 px. R13 N02: the tiny box counts as sr-only only when it also clips (overflow hidden/clip); text that\n' +
+      '  // overflows a zero-size visible box is rendered and measured.\n' +
+      "  const srOnly = (r, c) => (r.width <= 1 && r.height <= 1 && (['hidden', 'clip'].includes(c.overflowX) || ['hidden', 'clip'].includes(c.overflowY))) || /^rect\\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\\)$/.test(c.clip) || c.clipPath === 'inset(50%)';\n" +
+      `  const focusable = e => e.matches('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');\n` +
+      "  const label = el => el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '');\n" +
+      "  // R12 M11: the composed tree. Open shadow roots are walked (they share the page's coordinates); parents follow slots\n" +
+      '  // and shadow hosts. Same-origin frames are measured as documents; a frame that cannot be read is an unscanned scope.\n' +
+      '  const parentOf = el => el.assignedSlot ?? el.parentElement ?? (el.getRootNode() instanceof ShadowRoot ? el.getRootNode().host : null);\n' +
+      '  const all = [];\n' +
+      "  const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } };\n" +
+      '  if (document.body) { all.push(document.body); walk(document.body); }\n' +
+      '  const within = (s, d) => { for (let a = d; a; a = parentOf(a)) if (a === s) return true; return false; };\n' +
+      '  const ownText = el => [...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim());\n' +
+      '  // the content itself is measured (text-node ranges, or the media box), so text overflowing its own box counts too\n' +
+      '  const textRects = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim()).map(n => { const range = document.createRange(); range.selectNodeContents(n); return range.getBoundingClientRect(); }).filter(b => b.width > 0 && b.height > 0);\n' +
+      '  const contentRects = el => el.matches(MEDIA) ? [el.getBoundingClientRect()] : textRects(el);\n' +
+      '  // R12 M14, R13 N02: hidden, undisplayed or sr-only content (on the element or a composed ancestor) is never\n' +
+      '  // measured. Visibility comes from computed style plus geometry: an element box, or (display:contents, zero-size\n' +
+      '  // boxes) its rendered text ranges.\n' +
+      '  const srHidden = new Map();\n' +
+      '  const inSrOnly = el => { if (!el) return false; if (srHidden.has(el)) return srHidden.get(el); const v = srOnly(el.getBoundingClientRect(), getComputedStyle(el)) || inSrOnly(parentOf(el)); srHidden.set(el, v); return v; };\n' +
+      "  const shown = el => { const c = getComputedStyle(el); if (c.display === 'none' || c.visibility !== 'visible' || inSrOnly(el)) return false; const r = el.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || textRects(el).length > 0; };\n" +
+      '  const isContent = el => el.matches(MEDIA) || ownText(el);\n' +
+      '  // R13 N03: composed content detection: an element holds content when it or any composed descendant (open shadow\n' +
+      '  // trees included) is shown text or media, so a shadow-only host is screened too.\n' +
+      '  const holds = new Set();\n' +
+      '  for (const d of all) if (isContent(d) && shown(d)) for (let a = d; a && !holds.has(a); a = parentOf(a)) holds.add(a);\n' +
+      "  // R13 N01: body's overflow propagates to the viewport when html's is visible; body is then not a scroll or clip box\n" +
+      '  // (the viewport is), so content pushed left of it is offscreenLeft.\n' +
+      '  const rootStyle = getComputedStyle(document.documentElement);\n' +
+      "  const bodyPropagates = rootStyle.overflowX === 'visible' && rootStyle.overflowY === 'visible';\n" +
+      '  const clipBox = a => a !== document.documentElement && !(a === document.body && bodyPropagates);\n' +
+      '  const overflowX = el => getComputedStyle(el).overflowX;\n' +
+      "  const scrollerOf = el => { for (let a = parentOf(el); a && a !== document.documentElement; a = parentOf(a)) if (clipBox(a) && overflowX(a) !== 'visible') return a; return null; };\n" +
+      '  // R12 M02: the horizontal range a scroller can show. scrollLeft runs 0..max (LTR) or -max..0 (RTL); hidden/clip boxes\n' +
+      '  // show only their inner box. Content outside this range is lost on either edge, whatever scrollWidth says.\n' +
+      '  const reach = s => {\n' +
+      '    const b = s.getBoundingClientRect(), left = b.left + s.clientLeft, right = left + s.clientWidth;\n' +
+      "    if (!['auto', 'scroll'].includes(overflowX(s))) return { left, right, inner: { left, right } };\n" +
+      "    const max = Math.max(0, s.scrollWidth - s.clientWidth), rtl = getComputedStyle(s).direction === 'rtl';\n" +
+      '    const min = rtl ? -max : 0, top = rtl ? 0 : max, cur = s.scrollLeft;\n' +
+      '    return { left: left + min - cur, right: right + top - cur, inner: { left, right } };\n' +
+      '  };\n' +
+      '  const beyond = (e, r) => all.some(d => d !== e && holds.has(d) && within(e, d) && [...(shown(d) && d.getBoundingClientRect().width > 0 ? [d.getBoundingClientRect()] : []), ...contentRects(d)].some(b => b.right > r.right + 1 || b.left < r.left - 1)); // R13 N03: composed ancestry and content\n' +
+      '  const nothingShownCut = (e, r) => {\n' +
+      '    const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;\n' +
+      '    const rects = all.filter(d => d !== e && within(e, d) && isContent(d) && shown(d)).flatMap(contentRects).filter(b => b.width > 0 && b.height > 0);\n' +
+      '    const out = rects.filter(b => b.left < left - 1 || b.right > right + 1 || b.top < top - 1 || b.bottom > bottom + 1);\n' +
+      '    // a collapsed box (no inner width or height) shows nothing; otherwise only content beyond the inline-end or block-end\n' +
+      '    // edge (the next carousel slides, the rest of a panel) is inactive. Content pushed wholly past the start edge (left in\n' +
+      '    // LTR, right in RTL, above the top) is a layout loss and stays a clip (R12 M02, R13 N03).\n' +
+      "    const collapsed = e.clientWidth <= 1 || e.clientHeight <= 1, rtl = getComputedStyle(e).direction === 'rtl';\n" +
+      '    return out.length > 0 && out.every(b => collapsed ? b.right <= left || b.left >= right || b.bottom <= top || b.top >= bottom : (rtl ? b.right <= left : b.left >= right) || b.top >= bottom);\n' +
+      '  };\n' +
+      '  // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.\n' +
+      '  for (const e of all) {\n' +
+      '    const c = getComputedStyle(e), r = e.getBoundingClientRect();\n' +
+      '    if (!holds.has(e)) continue; // R13 N02/N03: shown, and holds shown text or media (composed)\n' +
+      '    // overflow: clip makes no scroll container, so scrollWidth stays at clientWidth; measure what the box cuts off instead.\n' +
+      '    // R12 M02: hidden boxes are measured the same way, so content pushed past their LEFT edge is a clip too.\n' +
+      "    const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (clipBox(e) && ['hidden', 'clip'].includes(c.overflowX) && beyond(e, r));\n" +
+      "    const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);\n" +
+      '    // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.\n' +
+      '    // R19-GPT-01: content clipped to nothing by a hidden/clip box that cannot scroll (a collapsed max-height:0\n' +
+      '    // accordion panel, the inactive slides of an overflow:hidden carousel track) is not displayed, which is the\n' +
+      "    // backstop's textHidden rule, so it is not a clip; the JavaScript-off comparison catches content that only a\n" +
+      '    // script reveals. Displayed content the box cuts partly (a rect that straddles the inner box) still fails.\n' +
+      '    if ((x || y) && nothingShownCut(e, r)) continue;\n' +
+      "    if ((x || y)) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });\n" +
+      '    const s = scrollerOf(e);\n' +
+      '    // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the\n' +
+      '    // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on\n' +
+      '    // focus; the focus probe checks it is visible when focused). Inside a scroller, R12 M02 measures its range instead.\n' +
+      '    const left = Math.min(r.width > 0 ? r.left : Infinity, ...contentRects(e).map(b => b.left)); // R13 N02: zero-size boxes by their '... 11852 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    import { resolveScoped } from './exceptions.mjs';
+    // width-screen.mjs: R8, ported from codex/fannan-r3-review 2733317 (release/tools/browser-probes.mjs screenWidths/inspectLayout).
+    // Screening only: renders the page at every declared desktop width plus 320 CSS px (desktop 400% reflow equivalent) and
+    // flags horizontal overflow, clipped or ellipsised text, and a language/direction mismatch. Actual zoom, text spacing,
+    // WCAG reflow exceptions and layout quality still need manual evidence. 320 px is not a mobile design approval.
+    export const REFLOW_WIDTH = 320;
+    
+    // R11 (Asad panel S3, panel D1 decision B): WCAG 1.4.10 excuses only the smallest region whose usage or meaning needs a
+    // two-dimensional layout. At the 320 px reflow width, ordinary text or media that overflows a sideways scroller (left
+    // or right) fails. A table, pre, code, role=grid/table with real rows, or an element marked data-fannan-2d="<reason>"
+    // is only a CANDIDATE: it is recorded with its element and reason, never excused automatically. A candidate's
+    // scroller must fit inside 320 px and be keyboard-usable (tabindex or a focusable child), and an unresolved candidate
+    // blocks the final handoff (resolveReflowCandidates). Resizable media (img, svg, video, canvas, iframe) is not a
+    // candidate unless it sits inside a marked data-fannan-2d region. No count caps.
+    export const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
+    
+    export function inspectLayout({ reflow = false } = {}) {
+      const TWO_D = 'table, pre, code, [role="grid"], [role="table"], [data-fannan-2d]';
+      const MEDIA = 'img, svg, video, canvas, iframe, frame, object, embed, fencedframe, portal, input, select, textarea, button';
+      const NESTED = 'iframe, frame, object, embed, fencedframe, portal';
+      const clipped = [], offscreenLeft = [], unreachable = [], scrolledText = [], reflowCandidates = [], unmeasured = [], unscannedScopes = [];
+      // ARGON-R5-05: visually hidden (sr-only) content is not a clip: clip: rect(0...) / clip-path inset(50%), or a box of at
+      // most 1x1 px. R13 N02: the tiny box counts as sr-only only when it also clips (overflow hidden/clip); text that
+      // overflows a zero-size visible box is rendered and measured.
+      const srOnly = (r, c) => (r.width <= 1 && r.height <= 1 && (['hidden', 'clip'].includes(c.overflowX) || ['hidden', 'clip'].includes(c.overflowY))) || /^rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)$/.test(c.clip) || c.clipPath === 'inset(50%)';
+      const focusable = e => e.matches('a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])');
+      const label = el => el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '');
+      // R12 M11: the composed tree. Open shadow roots are walked (they share the page's coordinates); parents follow slots
+      // and shadow hosts. Same-origin frames are measured as documents; a frame that cannot be read is an unscanned scope.
+      const parentOf = el => el.assignedSlot ?? el.parentElement ?? (el.getRootNode() instanceof ShadowRoot ? el.getRootNode().host : null);
+      const all = [];
+      const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } };
+      if (document.body) { all.push(document.body); walk(document.body); }
+      const within = (s, d) => { for (let a = d; a; a = parentOf(a)) if (a === s) return true; return false; };
+      const ownText = el => [...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim());
+      // the content itself is measured (text-node ranges, or the media box), so text overflowing its own box counts too
+      const textRects = el => [...el.childNodes].filter(n => n.nodeType === 3 && n.nodeValue.trim()).map(n => { const range = document.createRange(); range.selectNodeContents(n); return range.getBoundingClientRect(); }).filter(b => b.width > 0 && b.height > 0);
+      const contentRects = el => el.matches(MEDIA) ? [el.getBoundingClientRect()] : textRects(el);
+      // R12 M14, R13 N02: hidden, undisplayed or sr-only content (on the element or a composed ancestor) is never
+      // measured. Visibility comes from computed style plus geometry: an element box, or (display:contents, zero-size
+      // boxes) its rendered text ranges.
+      const srHidden = new Map();
+      const inSrOnly = el => { if (!el) return false; if (srHidden.has(el)) return srHidden.get(el); const v = srOnly(el.getBoundingClientRect(), getComputedStyle(el)) || inSrOnly(parentOf(el)); srHidden.set(el, v); return v; };
+      const shown = el => { const c = getComputedStyle(el); if (c.display === 'none' || c.visibility !== 'visible' || inSrOnly(el)) return false; const r = el.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || textRects(el).length > 0; };
+      const isContent = el => el.matches(MEDIA) || ownText(el);
+      // R13 N03: composed content detection: an element holds content when it or any composed descendant (open shadow
+      // trees included) is shown text or media, so a shadow-only host is screened too.
+      const holds = new Set();
+      for (const d of all) if (isContent(d) && shown(d)) for (let a = d; a && !holds.has(a); a = parentOf(a)) holds.add(a);
+      // R13 N01: body's overflow propagates to the viewport when html's is visible; body is then not a scroll or clip box
+      // (the viewport is), so content pushed left of it is offscreenLeft.
+      const rootStyle = getComputedStyle(document.documentElement);
+      const bodyPropagates = rootStyle.overflowX === 'visible' && rootStyle.overflowY === 'visible';
+      const clipBox = a => a !== document.documentElement && !(a === document.body && bodyPropagates);
+      const overflowX = el => getComputedStyle(el).overflowX;
+      const scrollerOf = el => { for (let a = parentOf(el); a && a !== document.documentElement; a = parentOf(a)) if (clipBox(a) && overflowX(a) !== 'visible') return a; return null; };
+      // R12 M02: the horizontal range a scroller can show. scrollLeft runs 0..max (LTR) or -max..0 (RTL); hidden/clip boxes
+      // show only their inner box. Content outside this range is lost on either edge, whatever scrollWidth says.
+      const reach = s => {
+        const b = s.getBoundingClientRect(), left = b.left + s.clientLeft, right = left + s.clientWidth;
+        if (!['auto', 'scroll'].includes(overflowX(s))) return { left, right, inner: { left, right } };
+        const max = Math.max(0, s.scrollWidth - s.clientWidth), rtl = getComputedStyle(s).direction === 'rtl';
+        const min = rtl ? -max : 0, top = rtl ? 0 : max, cur = s.scrollLeft;
+        return { left: left + min - cur, right: right + top - cur, inner: { left, right } };
+      };
+      const beyond = (e, r) => all.some(d => d !== e && holds.has(d) && within(e, d) && [...(shown(d) && d.getBoundingClientRect().width > 0 ? [d.getBoundingClientRect()] : []), ...contentRects(d)].some(b => b.right > r.right + 1 || b.left < r.left - 1)); // R13 N03: composed ancestry and content
+      const nothingShownCut = (e, r) => {
+        const left = r.left + e.clientLeft, top = r.top + e.clientTop, right = left + e.clientWidth, bottom = top + e.clientHeight;
+        const rects = all.filter(d => d !== e && within(e, d) && isContent(d) && shown(d)).flatMap(contentRects).filter(b => b.width > 0 && b.height > 0);
+        const out = rects.filter(b => b.left < left - 1 || b.right > right + 1 || b.top < top - 1 || b.bottom > bottom + 1);
+        // a collapsed box (no inner width or height) shows nothing; otherwise only content beyond the inline-end or block-end
+        // edge (the next carousel slides, the rest of a panel) is inactive. Content pushed wholly past the start edge (left in
+        // LTR, right in RTL, above the top) is a layout loss and stays a clip (R12 M02, R13 N03).
+        const collapsed = e.clientWidth <= 1 || e.clientHeight <= 1, rtl = getComputedStyle(e).direction === 'rtl';
+        return out.length > 0 && out.every(b => collapsed ? b.right <= left || b.left >= right || b.bottom <= top || b.top >= bottom : (rtl ? b.right <= left : b.left >= right) || b.top >= bottom);
+      };
+      // ARGON-R5-02: body is screened too, so html + body overflow hidden/clip cannot hide a wide layout.
+      for (const e of all) {
+        const c = getComputedStyle(e), r = e.getBoundingClientRect();
+        if (!holds.has(e)) continue; // R13 N02/N03: shown, and holds shown text or media (composed)
+        // overflow: clip makes no scroll container, so scrollWidth stays at clientWidth; measure what the box cuts off instead.
+        // R12 M02: hidden boxes are measured the same way, so content pushed past their LEFT edge is a clip too.
+        const x = (e.scrollWidth > e.clientWidth + 1 && ['hidden', 'clip'].includes(c.overflowX)) || (clipBox(e) && ['hidden', 'clip'].includes(c.overflowX) && beyond(e, r));
+        const y = e.scrollHeight > e.clientHeight + 1 && ['hidden', 'clip'].includes(c.overflowY);
+        // CODEX-R4-04: ellipsis styling alone is not a clip; only text that actually overflows a hidden/clip box is recorded.
+        // R19-GPT-01: content clipped to nothing by a hidden/clip box that cannot scroll (a collapsed max-height:0
+        // accordion panel, the inactive slides of an overflow:hidden carousel track) is not displayed, which is the
+        // backstop's textHidden rule, so it is not a clip; the JavaScript-off comparison catches content that only a
+        // script reveals. Displayed content the box cuts partly (a rect that straddles the inner box) still fails.
+        if ((x || y) && nothingShownCut(e, r)) continue;
+        if ((x || y)) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x, y, ellipsis: x && c.textOverflow === 'ellipsis' });
+        const s = scrollerOf(e);
+        // ARGON-R5-05: text or media pushed past the left edge of the page is lost (no scrollbar reaches it). Exempt: the
+        // off-screen skip-link pattern (a focusable absolute/fixed element wholly left of the viewport that appears on
+        // focus; the focus probe checks it is visible when focused). Inside a scroller, R12 M02 measures its range instead.
+        const left = Math.min(r.width > 0 ? r.left : Infinity, ...contentRects(e).map(b => b.left)); // R13 N02: zero-size boxes by their text
+        if (!s && left < -1 && e !== document.body && !(focusable(e) && ['absolute', 'fixed'].includes(c.position) && r.right <= 0)) offscreenLeft.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), left: Math.round(left) });
+        if (s && ['auto', 'scroll'].includes(overflowX(s)) && (isContent(e) || ['auto', 'scroll'].includes(c.overflowX))) {
+          const range = reach(s), rects = isContent(e) ? contentRects(e) : [r];
+          const side = rects.some(b => b.left < range.left - 1) ? 'left' : rects.some(b => b.right > range.right + 1) ? 'right' : null;
+          if (side && !(focusable(e) && ['absolute', 'fixed'].includes(c.position))) unreachable.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), side, scroller: label(s) });
+        }
+        // R12 M11: a same-origin frame whose document scrolls sideways is screened at 320 px; an unreadable frame is unscanned.
+        // R13 N04: every element that can hold a nested document (object, embed, fencedframe, portal too).
+        if (e.matches(NESTED)) { let doc = null; try { doc = e.contentDocument; } catch {} if (!doc?.documentElement) unscannedScopes.push({ tag: e.tagName, src: e.getAttribute('src') || (e.hasAttribute('srcdoc') ? 'srcdoc' : '') }); else if (reflow && doc.documentElement.scrollWidth > doc.documentElement.clientWidth + 1) scrolledText.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), sample: 'frame document scrolls sideways' }); }
+      }
+      if (reflow) {
+        const candidateOf = (d, scroller) => { for (let t = d.closest(TWO_D); t; t = t.parentElement?.closest(TWO_D)) { if (t !== scroller && !scroller.contains(t)) return null; if (!t.matches('[role="grid"], [role="table"]') || t.querySelector('[role="row"]') || t.matches('[data-fannan-2d]')) return t; } return null; };
+        const usable = el => shown(el) && !el.disabled && !el.closest('[inert]') && el.tabIndex >= 0;
+        for (const e of all) {
+          const c = getComputedStyle(e);
+          if (!['auto', 'scroll'].includes(c.overflowX) || !holds.has(e)) continue; // R13 N02: a zero-size scroller holding shown text is screened
+          const box = reach(e).inner;
+          // R12 M01: the scroller's own text counts (bare text in a nowrap box, a directly scrollable pre), and so does
+          // content in its open shadow tree; nothing is skipped because scrollWidth did not grow.
+          const inside = all.filter(d => within(e, d) && shown(d) && isContent(d));
+          const over = inside.filter(d => contentRects(d).some(b => b.right > box.right + 1 || b.left < box.left - 1));
+          if (!over.length) {
+            // fail closed: the box scrolls and visible elements stick out, but no text or media was measured there
+            if (e.scrollWidth > e.clientWidth + 1 && all.some(d => d !== e && within(e, d) && shown(d) && (d.getBoundingClientRect().right > box.right + 1 || d.getBoundingClientRect().left < box.left - 1) && holds.has(d))) unmeasured.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), scroller: label(e) });
+            continue; // otherwise only padding or empty boxes overflow
+          }
+          const plain = over.filter(d => !candidateOf(d, e));
+          if (plain.length) { scrolledText.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), sample: ((ownText(plain[0]) ? [...plain[0].childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join('') : plain[0].tagName) || '').trim().slice(0, 60) }); continue; }
+          // R12 M10: keyboard use is the scroller itself in the tab order, or usable (shown, enabled, not inert) targets
+          // spaced so that tabbing through them scrolls across the whole overflowing extent. R13 N15: focusing a target
+          // scrolls it just into view, so the first and last targets must reach the content edges (1 px) and each next
+          // target must end within one box width of the previous one's end.
+          const extent = inside.flatMap(contentRects).reduce((x, b) => ({ left: Math.min(x.left, b.left), right: Math.max(x.right, b.right) }), { left: Infinity, right: -Infinity });
+          const targets = all.filter(d => d !== e && within(e, d) && focusable(d) && usable(d)).map(d => d.getBoundingClientRect()).sort((p, q) => p.left - q.left);
+          const span = box.right - box.left;
+          const stepped = targets.length > 0 && targets[0].left <= extent.left + 1 && targets.every((t, i) => i === 0 || t.right - targets[i - 1].right <= span) && Math.max(...targets.map(t => t.right)) >= extent.right - 1;
+          const keyboard = (e.hasAttribute('tabindex') && e.tabIndex >= 0 && !e.closest('[inert]')) || stepped;
+          for (const t of new Set(over.map(d => candidateOf(d, e)))) {
+            const marked = t.closest('[data-fannan-2d]');
+            const reason = marked ? (marked.getAttribute('data-fannan-2d') || '').trim() || null : (t.getAttribute('role') || t.tagName.toLowerCase());
+            const outer = e.getBoundingClientRect();
+            reflowCandidates.push({ element: label(t), id: t.id || null, reason, scroller: label(e), fits: outer.left >= -1 && outer.right <= innerWidth + 1, keyboard });
+          }
+        }
+      }
+      // R14-GPT-04: the viewport takes html's overflow (or body's, when html's is visible). A viewport that cannot scroll
+      // vertically (hidden/clip) loses every shown text or media box below its bottom edge unless a real inner scroller
+      // (not html, and not a propagated body) holds it. html's own fixed-height hidden box is the same case.
+      const viewportY = rootStyle.overflowY !== 'visible' ? rootStyle.overflowY : bodyPropagates && document.body ? getComputedStyle(document.body).overflowY : 'visible';
+      if (['hidden', 'clip'].includes(viewportY)) {
+        // R15 A1 (R15-GPT-01): an ancestor with overflow-y auto/scroll holds the box only when that scroller's scrollport
+        // lies inside the visible viewport (its bottom at or above innerHeight and above every clipping ancestor's bottom)
+        // and its scroll range reaches the box. An unbounded auto-height wrapper (an app shell missing its height) grows
+        // past the fold, cannot scroll, and holds nothing.
+        const visibleBottom = a => { let limit = innerHeight; for (let c = parentOf(a); c && c !== document.documentElement; c = parentOf(c)) if (clipBox(c) && getComputedStyle(c).overflowY !== 'visible') limit = Math.min(limit, c.getBoundingClientRect().bottom); return limit; };
+        const innerScroller = el => {
+          const lowest = Math.max(...contentRects(el).map(b => b.bottom));
+          for (let a = parentOf(el); a && a !== document.documentElement; a = parentOf(a)) {
+            if (!clipBox(a) || !['auto', 'scroll'].includes(getComputedStyle(a).overflowY)) continue;
+            const port = a.getBoundingClientRect();
+            if (port.bottom > visibleBottom(a) + 1) continue; // scrollport extends past the fold: its lower part is unreachable
+            if (lowest - port.top + a.scrollTop <= a.scrollHeight + 1) return true;
+          }
+          return false;
+        };
+        for (const e of all) {
+          if (!isContent(e) || !shown(e) || getComputedStyle(e).position === 'fixed' || innerScroller(e)) continue;
+          const below = contentRects(e).filter(b => b.bottom > innerHeight + 1);
+          if (below.length) clipped.push({ tag: e.tagName, slot: e.getAttribute('data-copy-slot'), x: false, y: true, viewport: true, top: Math.round(Math.min(...below.map(b => b.top))) });
+        }
+      }
+      const root = document.documentElement, body = document.body;
+      const documentWidth = Math.max(root.scrollWidth, body ? body.scrollWidth : 0);
+      return { width: innerWidth, documentWidth, horizontalOverflow: documentWidth > root.clientWidth + 1, clipped, offscreenLeft, unreachable, scrolledText, reflowCandidates, unmeasured, unscannedScopes, lang: root.lang, dir: getComputedStyle(root).direction };
+    }
+    
+    export const validWidths = widths => Array.isArray(widths) && widths.length > 0 && widths.includes(1440) && widths.every(w => Number.isInteger(w) && w > 0) && new Set(widths).size === widths.length;
+    
+    // R13 N16: closed shadow roots cannot be reached from page script, so they are counted through the DevTools protocol
+    // (DOM.getDocument with pierce). Each one is an unscanned scope and fails the width screen; if the count itself
+    // cannot be taken, the document is an unscanned scope (fail closed).
+    export async function closedShadowRoots(page) {
+      let session = null;
+      try {
+        session = await page.context().newCDPSession(page);
+        const { root } = await session.send('DOM.getDocument', { depth: -1, pierce: true });
+        const hosts = [];
+        const walk = n => { for (const r of n.shadowRoots || []) { if (r.shadowRootType === 'closed') hosts.push(n.localName); walk(r); } for (const c of n.children || []) walk(c); if (n.contentDocument) walk(n.contentDocument); if (n.templateContent) walk(n.templateContent); };
+        walk(root);
+        return hosts;
+      } catch { return null; } finally { if (session) await session.detach().catch(() => {}); }
+    }
+    
+    // expected: { lang, dir } for a declared state, or null for the positional page (language checked per state).
+    export async function screenWidths(page, widths, expected = null, height = 900) {
+      if (!validWidths(widths)) return { results: [], pass: false, error: 'settings.desktopWidths invalid; no width screened' };
+      const results = [];
+      try {
+        for (const width of [...widths, ...(widths.includes(REFLOW_WIDTH) ? [] : [REFLOW_WIDTH])]) {
+          await page.setViewportSize({ width, height });
+          await page.evaluate(() => { scrollTo(0, 0); return new Promise(done => { setTimeout(done, 250); requestAnimationFrame(() => requestAnimationFrame(done)); }); }); // settle resize handlers (bounded)
+          // R14-GPT-03: closed shadow roots are counted at each width, after the resize, so a root that exists only at
+          // one width is still an unscanned scope there.
+          const closed = await closedShadowRoots(page);
+          const closedScopes = closed === null ? [{ tag: 'DOCUMENT', src: 'closed shadow roots could not be counted' }] : closed.map(host => ({ tag: host.toUpperCase(), src: 'closed shadow root' }));
+          const result = await page.evaluate(inspectLayout, { reflow: width === REFLOW_WIDTH });
+          result.unscannedScopes.push(...closedScopes);
+          const language = !expected || (result.lang === expected.lang && result.dir === expected.dir);
+          results.push({ ...result, purpose: widths.includes(width) ? 'declared desktop width' : 'desktop accessibility reflow (400% of 1280); not mobile approval', pass: !result.horizontalOverflow && result.clipped.length === 0 && result.offscreenLeft.length === 0 && result.unreachable.length === 0 && result.scrolledText.length === 0 && result.unmeasured.length === 0 && result.unscannedScopes.length === 0 && result.reflowCandidates.every(c => c.fits && c.keyboard) && language });
+        }
+      } finally {
+        await page.setViewportSize({ width: 1440, height });
+      }
+      return { results, pass: results.every(r => r.pass), note: 'Automated width screen only; 320 CSS px approximates a 1280 px desktop at 400% zoom. Actual zoom, text spacing and WCAG reflow exceptions still require manual evidence; every reflow candidate needs a recorded decision.' };
+    }
+    
+    // R11 panel D1 (decisions B, T2), R12 M09: a candidate is resolved only by a handoff `reflowExceptions` entry naming
+    // the same screen, state, lang and element id, a non-empty reason and a reviewer who holds the qaGate or approver role
+    // (exceptions.mjs). Every occurrence keeps its scope; an unresolved candidate BLOCKS the final handoff.
+    export function resolveReflowCandidates(candidates, handoff, phase = 'handoff') {
+      const r = resolveScoped({ items: candidates.map(c => ({ screen: null, state: null, lang: null, ...c })), entries: handoff?.reflowExceptions, roles: [handoff?.settings?.roles?.qaGate, handoff?.settings?.roles?.approver], phase, what: 'reflowExceptions', shape: c => `${c.element}|${c.scroller}` });
+      return { candidates: r.items, unresolved: r.unresolved, status: r.status, pass: r.pass };
+    }
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/panel-r21/testbefore/release/tests/width-screen.test.mjs:128:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
+ok 44 - R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
+  ---
+  duration_ms: 1944.148044
+  type: 'test'
+  ...
+# Subtest: R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
+ok 45 - R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
+  ---
+  duration_ms: 1.892942
+  type: 'test'
+  ...
+# Subtest: R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
+ok 46 - R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
+  ---
+  duration_ms: 2146.673148
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 32
+# fail 14
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 61839.227495

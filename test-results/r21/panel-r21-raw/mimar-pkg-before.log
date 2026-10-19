@@ -1,0 +1,23 @@
+.........F.............................F..
+======================================================================
+FAIL: test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records (__main__.FinalRecordTests.test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r21/testpkgb/scripts/test_package_r3.py", line 148, in test_zip_carries_the_packaging_script_and_its_tests_but_no_review_records
+    self.assertTrue(any(n.startswith('test-results/r20/') for n in names), 'R20 evidence is archived like R4-R19')
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : R20 evidence is archived like R4-R19
+
+======================================================================
+FAIL: test_r20_sections (__main__.RequiredSectionTests.test_r20_sections)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/panel-r21/testpkgb/scripts/test_package_r3.py", line 371, in test_r20_sections
+    self.assertIn(m, required)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^
+AssertionError: 'Clipping is one rule based on states and widths, whatever the CSS pattern:' not found in ['The feedback-log artifact records each item', '`grid-per-width`', 'Unresolved compositing on displayed text in either rendering blocks handoff as INCOMPLETE.', 'ENH backlog: a future exception for an unresolved compositing effect', 'Rendered-visibility backstop:', 'Pixels decide visibility, not AA:', 'is not displayed: it is counted (`textHidden`)', 'Layers a hit test cannot see are possible covers too', 'the top layer is respected', 'Automated contrast incomplete results:']
+
+----------------------------------------------------------------------
+Ran 42 tests in 3.319s
+
+FAILED (failures=2)

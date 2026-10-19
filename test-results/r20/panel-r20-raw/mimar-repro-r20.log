@@ -1,0 +1,10 @@
+control       on  {"widthsPass":true,"perWidth":[[1440,0,true],[1280,0,true],[320,0,true]],"meas":2,"hidden":0,"unread":0,"unmeas":0}
+control       off {"widthsPass":true,"perWidth":[[1440,0,true],[1280,0,true],[320,0,true]],"meas":2,"hidden":0,"unread":0,"unmeas":0}
+navOverflow   on  {"widthsPass":true,"perWidth":[[1440,0,true],[1280,0,true],[320,0,true]],"meas":8,"hidden":0,"unread":0,"unmeas":0}
+navOverflow   off {"widthsPass":true,"perWidth":[[1440,0,true],[1280,0,true],[320,0,true]],"meas":8,"hidden":0,"unread":0,"unmeas":0}
+cardBlockEnd  on  {"widthsPass":false,"perWidth":[[1440,1,false],[1280,1,false],[320,1,false]],"meas":4,"hidden":0,"unread":0,"unmeas":0}
+cardBlockEnd  off {"widthsPass":false,"perWidth":[[1440,1,false],[1280,1,false],[320,1,false]],"meas":4,"hidden":0,"unread":0,"unmeas":0}
+cardPartial   on  {"widthsPass":false,"perWidth":[[1440,1,false],[1280,1,false],[320,1,false]],"meas":2,"hidden":0,"unread":0,"unmeas":0}
+cardPartial   off {"widthsPass":false,"perWidth":[[1440,1,false],[1280,1,false],[320,1,false]],"meas":2,"hidden":0,"unread":0,"unmeas":0}
+tableCut      on  {"widthsPass":true,"perWidth":[[1440,0,true],[1280,0,true],[320,0,true]],"meas":11,"hidden":0,"unread":0,"unmeas":0}
+tableCut      off {"widthsPass":true,"perWidth":[[1440,0,true],[1280,0,true],[320,0,true]],"meas":11,"hidden":0,"unread":0,"unmeas":0}

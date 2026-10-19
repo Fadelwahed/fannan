@@ -1,0 +1,1075 @@
+# R22 before: R22 tests against d9e1049 sources
+TAP version 13
+# Subtest: complete handoff passes; missing provenance, state or approval fails
+ok 1 - complete handoff passes; missing provenance, state or approval fails
+  ---
+  duration_ms: 146.362447
+  type: 'test'
+  ...
+# Subtest: R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+ok 2 - R11 panel C: identical worlds and JS-off pass; tampering and unexplained JS-off regressions fail as integrity mismatch
+  ---
+  duration_ms: 4.39106
+  type: 'test'
+  ...
+# Subtest: R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+ok 3 - R12 M06/M17, R13 N11/N12: every hard-fail input is cross-checked between worlds and with JavaScript off
+  ---
+  duration_ms: 16.259476
+  type: 'test'
+  ...
+# Subtest: R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+ok 4 - R12 M08, R13 N13: non-equivalent JavaScript-off content (slot or heading text too) and missing or malformed vectors are INCOMPLETE, never PASS
+  ---
+  duration_ms: 2.041835
+  type: 'test'
+  ...
+# Subtest: R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+ok 5 - R12 M21, R13 N14: a JavaScript-off difference is excused only by a reviewed entry; a content difference is never PASS
+  ---
+  duration_ms: 0.944948
+  type: 'test'
+  ...
+# Subtest: R12 M13: a non-finite or decreasing rAF reading counts as a loop
+ok 6 - R12 M13: a non-finite or decreasing rAF reading counts as a loop
+  ---
+  duration_ms: 0.201711
+  type: 'test'
+  ...
+# Subtest: R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+ok 7 - R11 panel C, R12 M06-M08/M13: the checker cross-checks the full vector on the positional page and on every declared state
+  ---
+  duration_ms: 1.248145
+  type: 'test'
+  ...
+# Subtest: R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+ok 8 - R11 panel C: real Chrome: nativeCheck flags patched functions; the JS-off isolated pass sees glass a script removes (test-only)
+  ---
+  duration_ms: 2194.990919
+  type: 'test'
+  ...
+# Subtest: R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+ok 9 - R12 M13: real Chrome: a page that resets __raf or replaces requestAnimationFrame cannot hide a rAF loop (test-only)
+  ---
+  duration_ms: 1698.949424
+  type: 'test'
+  ...
+# Subtest: R13 N08/N09: JavaScript escapes are decoded and comment markers inside strings cannot hide glass (cheap defence)
+ok 10 - R13 N08/N09: JavaScript escapes are decoded and comment markers inside strings cannot hide glass (cheap defence)
+  ---
+  duration_ms: 8.583642
+  type: 'test'
+  ...
+# Subtest: R13 N07: data: and blob: stylesheets are refused and unreadable unserved ones fail, on the page and on every state
+ok 11 - R13 N07: data: and blob: stylesheets are refused and unreadable unserved ones fail, on the page and on every state
+  ---
+  duration_ms: 0.365245
+  type: 'test'
+  ...
+# Subtest: R13 N04/q1: every nested-document element is a frame for the probes and the width screen
+ok 12 - R13 N04/q1: every nested-document element is a frame for the probes and the width screen
+  ---
+  duration_ms: 0.348494
+  type: 'test'
+  ...
+# Subtest: R13 N01/N02/N03/N04/N15/N16: real Chrome: the width screen sees body-clipped, zero-box, shadow-clipped and nested-scope content (test-only)
+ok 13 - R13 N01/N02/N03/N04/N15/N16: real Chrome: the width screen sees body-clipped, zero-box, shadow-clipped and nested-scope content (test-only)
+  ---
+  duration_ms: 4205.923382
+  type: 'test'
+  ...
+# Subtest: R13 N17: real Chrome: a page that patches Function.prototype.call cannot capture the native rAF; the patch is a tamper sign (test-only)
+ok 14 - R13 N17: real Chrome: a page that patches Function.prototype.call cannot capture the native rAF; the patch is a tamper sign (test-only)
+  ---
+  duration_ms: 1506.597009
+  type: 'test'
+  ...
+# Subtest: R13 N20/N13: real Chrome: spacing, placeholders, h1 and the content record include open shadow roots (test-only)
+ok 15 - R13 N20/N13: real Chrome: spacing, placeholders, h1 and the content record include open shadow roots (test-only)
+  ---
+  duration_ms: 764.41363
+  type: 'test'
+  ...
+# Subtest: R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
+ok 16 - R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
+  ---
+  duration_ms: 5207.498973
+  type: 'test'
+  ...
+# Subtest: R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
+ok 17 - R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
+  ---
+  duration_ms: 19484.138672
+  type: 'test'
+  ...
+# Subtest: R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
+ok 18 - R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
+  ---
+  duration_ms: 5272.714986
+  type: 'test'
+  ...
+# Subtest: R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
+ok 19 - R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
+  ---
+  duration_ms: 5055.40894
+  type: 'test'
+  ...
+# Subtest: R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
+not ok 20 - R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
+  ---
+  duration_ms: 27781.270995
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r19.test.mjs:141:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        darkText: {
+          incomplete: [
+            'color-contrast'
+          ],
+    ...
+          reasons: [
+    +       'no PASS wcag-review record citing the screenshot'
+    -       null
+          ],
+    +     unresolved: [
+    +       'color-contrast'
+    +     ]
+    -     unresolved: []
+        },
+        noteCites: {
+          incomplete: [
+            'color-contrast'
+          ],
+    ...
+          reasons: [
+    +       'no PASS wcag-review record citing the screenshot'
+    -       null
+          ],
+    +     unresolved: [
+    +       'color-contrast'
+    +     ]
+    -     unresolved: []
+        },
+        otherRule: {
+          incomplete: [
+            'color-contrast',
+            'aria-valid-attr-value'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    scrim:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noReview:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    otherArtifact:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noteCites: <Circular>
+    darkText:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'faintest glyphs measured 1.04:1, below 3:1'
+        1: 'faintest glyphs measured 1.17:1, below 4.5:1'
+    scrimByScriptOnly:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: ~
+        1: 'faintest glyphs measured 2.41:1, below 4.5:1'
+    otherRule:
+      incomplete:
+        0: 'color-contrast'
+        1: 'aria-valid-attr-value'
+      unresolved:
+        0: 'aria-valid-attr-value'
+      reasons:
+        0: ~
+  actual:
+    scrim:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    noReview:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    otherArtifact:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'no PASS wcag-review record citing the screenshot'
+    noteCites:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+      reasons:
+        0: ~
+    darkText:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: 'faintest glyphs measured 1.04:1, below 3:1'
+        1: 'faintest glyphs measured 1.17:1, below 4.5:1'
+    scrimByScriptOnly:
+      incomplete:
+        0: 'color-contrast'
+      unresolved:
+        0: 'color-contrast'
+      reasons:
+        0: ~
+        1: 'faintest glyphs measured 2.41:1, below 4.5:1'
+    otherRule:
+      incomplete:
+        0: 'color-contrast'
+        1: 'aria-valid-attr-value'
+      unresolved:
+        0: 'aria-valid-attr-value'
+      reasons:
+        0: ~
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r19.test.mjs:167:10
+    async withBrowser (file://<scratch>/release/tests/panel-r19.test.mjs:46:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
+ok 21 - R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
+  ---
+  duration_ms: 1234.72254
+  type: 'test'
+  ...
+# Subtest: R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
+not ok 22 - R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
+  ---
+  duration_ms: 14581.036079
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r19.test.mjs:191:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        belowAA: {
+    +     reason: 'faintest glyphs measured 2.8:1, below 4.5:1',
+    -     reason: 'faintest glyphs measured 2.8:1, between 3:1 and 4.5:1 (INCOMPLETE): the wcag-review does not name the worst region checked (worstRegion)',
+          rendersWithoutScript: false,
+          unresolved: [
+            'color-contrast'
+          ],
+          valid: true
+    ...
+        noReview: {
+    +     reason: 'no PASS wcag-review record citing the screenshot',
+    -     reason: null,
+          rendersWithoutScript: false,
+    +     unresolved: [
+    +       'color-contrast'
+    +     ],
+    -     unresolved: [],
+          valid: true
+        },
+        noTrigger: {
+          reason: 'not measured by the visibility backstop in both renderings',
+          rendersWithoutScript: false,
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    notDeclared:
+      valid: false
+      rendersWithoutScript: ~
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    noTrigger:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    defaultState:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    belowAA:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'faintest glyphs measured 2.8:1, between 3:1 and 4.5:1 (INCOMPLETE): the wcag-review does not name the worst region checked (worstRegion)'
+    noReview:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    falseClaim:
+      valid: false
+      rendersWithoutScript: true
+      unresolved:
+      reason: ~
+  actual:
+    scripted:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+      reason: ~
+    notDeclared:
+      valid: false
+      rendersWithoutScript: ~
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    noTrigger:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    defaultState:
+      valid: false
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'not measured by the visibility backstop in both renderings'
+    belowAA:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'faintest glyphs measured 2.8:1, below 4.5:1'
+    noReview:
+      valid: true
+      rendersWithoutScript: false
+      unresolved:
+        0: 'color-contrast'
+      reason: 'no PASS wcag-review record citing the screenshot'
+    falseClaim:
+      valid: false
+      rendersWithoutScript: true
+      unresolved:
+      reason: ~
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r19.test.mjs:207:10
+    async withBrowser (file://<scratch>/release/tests/panel-r19.test.mjs:46:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and widths: content shown at 1440 must stay shown at every width (320 included); content cut wholly at 1440 counts as not displayed only when a declared state shows it; partial cuts and content cut in every state fail (test-only)
+ok 23 - R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and widths: content shown at 1440 must stay shown at every width (320 included); content cut wholly at 1440 counts as not displayed only when a declared state shows it; partial cuts and content cut in every state fail (test-only)
+  ---
+  duration_ms: 9136.21545
+  type: 'test'
+  ...
+# Subtest: R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
+ok 24 - R20-GPT-03: real Chrome: the contrast resolver grades the faintest glyphs (p10 of glyph-cluster contrast against the local background): pale text over a light photo with one dark band stays blocked even with a PASS wcag-review; an honest scrim hero and dark text over a light gradient resolve (test-only)
+  ---
+  duration_ms: 6628.352436
+  type: 'test'
+  ...
+# Subtest: R20-GPT-03 (as amended by R21-GPT-02): glyphRatio: the faintest glyph cluster decides; no coverage is INCOMPLETE (null)
+ok 25 - R20-GPT-03 (as amended by R21-GPT-02): glyphRatio: the faintest glyph cluster decides; no coverage is INCOMPLETE (null)
+  ---
+  duration_ms: 1.928194
+  type: 'test'
+  ...
+# Subtest: R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state's JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)
+ok 26 - R20-GPT-05: real Chrome: a valid requiresScript state is compared with the default state's JavaScript-off rendering; content only the scripted state shows passes only as approved copy slots placed in that state (test-only)
+  ---
+  duration_ms: 3364.560576
+  type: 'test'
+  ...
+# Subtest: R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)
+ok 27 - R20-GPT-04 (P3): real Chrome: the requiresScript claim compares text fingerprints, so a script that only shifts element indices cannot make a static state look script-only (test-only)
+  ---
+  duration_ms: 3381.451347
+  type: 'test'
+  ...
+# Subtest: R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)
+ok 28 - R20-GPT-02 (P3): real Chrome: a gradient veil over a card whose text fits is a cover graded by its pixels, not a truncation fade; a fade at the cut edge of overflowing text is still the truncation fade (test-only)
+  ---
+  duration_ms: 1974.130799
+  type: 'test'
+  ...
+# Subtest: R21-MIMAR-01: real Chrome: cropped media is never clipped content (img, picture, hover zoom, avatar, video, decorative svg and blob, object-fit, backgrounds); text and controls stay checked, inside a media wrapper too, and a marquee still fails (test-only)
+ok 29 - R21-MIMAR-01: real Chrome: cropped media is never clipped content (img, picture, hover zoom, avatar, video, decorative svg and blob, object-fit, backgrounds); text and controls stay checked, inside a media wrapper too, and a marquee still fails (test-only)
+  ---
+  duration_ms: 7696.769545
+  type: 'test'
+  ...
+# Subtest: R21-MIMAR-02: real Chrome: the links of a closed <details> menu are not on screen at 320 (RTL and LTR), so they are not off-screen content; an open menu whose panel is really cut still fails (test-only)
+ok 30 - R21-MIMAR-02: real Chrome: the links of a closed <details> menu are not on screen at 320 (RTL and LTR), so they are not off-screen content; an open menu whose panel is really cut still fails (test-only)
+  ---
+  duration_ms: 2781.716993
+  type: 'test'
+  ...
+# Subtest: R21-GPT-04: real Chrome: text or a control shown at 1440 and display:none at 320 fails (WCAG 1.4.10) unless a declared state shows the same text or accessible name at 320; matched by text, not position (test-only)
+ok 31 - R21-GPT-04: real Chrome: text or a control shown at 1440 and display:none at 320 fails (WCAG 1.4.10) unless a declared state shows the same text or accessible name at 320; matched by text, not position (test-only)
+  ---
+  duration_ms: 2485.521028
+  type: 'test'
+  ...
+# Subtest: R21 read-more clamp: real Chrome: line-clamp or an ellipsis passes only when a declared state shows the full text; a fixed-height cut stays partly clipped even with an expanded state (test-only)
+ok 32 - R21 read-more clamp: real Chrome: line-clamp or an ellipsis passes only when a declared state shows the full text; a fixed-height cut stays partly clipped even with an expanded state (test-only)
+  ---
+  duration_ms: 2858.528646
+  type: 'test'
+  ...
+# Subtest: R21-GPT-03 (P3): real Chrome: a reveal is matched by text, not DOM position: an expanded state with an extra wrapper reveals the answer; an unrelated sentence at the same position does not (test-only)
+ok 33 - R21-GPT-03 (P3): real Chrome: a reveal is matched by text, not DOM position: an expanded state with an extra wrapper reveals the answer; an unrelated sentence at the same position does not (test-only)
+  ---
+  duration_ms: 1893.060719
+  type: 'test'
+  ...
+# Subtest: R21-GPT-02: glyphRatio: coverage comes from the black and white text shots, so a glyph on a patch of nearly its own colour is still measured, and the faintest cluster decides
+ok 34 - R21-GPT-02: glyphRatio: coverage comes from the black and white text shots, so a glyph on a patch of nearly its own colour is still measured, and the faintest cluster decides
+  ---
+  duration_ms: 8.425437
+  type: 'test'
+  ...
+# Subtest: R21-GPT-02: real Chrome: the contrast resolver grades every glyph against its own background: one word of a white caption over a light patch of a dark photo (1.67:1, and a near-white patch) stays blocked with a PASS wcag-review; the same caption without the patch, a scrim hero and small grey text resolve (test-only)
+ok 35 - R21-GPT-02: real Chrome: the contrast resolver grades every glyph against its own background: one word of a white caption over a light patch of a dark photo (1.67:1, and a near-white patch) stays blocked with a PASS wcag-review; the same caption without the patch, a scrim hero and small grey text resolve (test-only)
+  ---
+  duration_ms: 10720.141064
+  type: 'test'
+  ...
+# Subtest: R21-GPT-05: real Chrome: a script-only state may replace a default slot with an approved slot when the copy deck places the new slot in that state and not the old one; a replaced slot still placed there, changed shared copy and an unslotted replacement heading stay INCOMPLETE (N14 kept) (test-only)
+ok 36 - R21-GPT-05: real Chrome: a script-only state may replace a default slot with an approved slot when the copy deck places the new slot in that state and not the old one; a replaced slot still placed there, changed shared copy and an unslotted replacement heading stay INCOMPLETE (N14 kept) (test-only)
+  ---
+  duration_ms: 4265.626222
+  type: 'test'
+  ...
+# Subtest: R21-GPT-06 (P3): real Chrome: the requiresScript claim compares counted word tokens, so a script that splits a text run into inline elements cannot make a static state look script-only (test-only)
+ok 37 - R21-GPT-06 (P3): real Chrome: the requiresScript claim compares counted word tokens, so a script that splits a text run into inline elements cannot make a static state look script-only (test-only)
+  ---
+  duration_ms: 2715.111797
+  type: 'test'
+  ...
+# Subtest: R22-GPT-01, R22-MIMAR-01, R22-GPT-02: real Chrome: three zones on the faintest glyph cluster: a 70% opacity caption (on the text, a span or an ancestor) and a white hero with a strong dark halo pass; a weak shadow, a faint translucent caption and thin letters at 12 and 14 px over a light patch fail whatever the review; grey text just at AA needs a review naming the worst region (test-only)
+not ok 38 - R22-GPT-01, R22-MIMAR-01, R22-GPT-02: real Chrome: three zones on the faintest glyph cluster: a 70% opacity caption (on the text, a span or an ancestor) and a white hero with a strong dark halo pass; a weak shadow, a faint translucent caption and thin letters at 12 and 14 px over a light patch fail whatever the review; grey text just at AA needs a review naming the worst region (test-only)
+  ---
+  duration_ms: 21062.823518
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r22.test.mjs:99:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        faintOpacity: {
+          cited: false,
+          citedWithRegion: false,
+          noReview: false
+        },
+        greyAtAA: {
+    +     cited: true,
+    -     cited: false,
+          citedWithRegion: true,
+          noReview: false
+        },
+        haloHero: {
+    +     cited: false,
+    +     citedWithRegion: false,
+    +     noReview: false
+    -     cited: true,
+    -     citedWithRegion: true,
+    -     noReview: true
+        },
+        opacityAncestor: {
+    +     cited: false,
+    +     citedWithRegion: false,
+    +     noReview: false
+    -     cited: true,
+    -     citedWithRegion: true,
+    -     noReview: true
+        },
+        opacitySpan: {
+    +     cited: false,
+    +     citedWithRegion: false,
+    +     noReview: false
+    -     cited: true,
+    -     citedWithRegion: true,
+    -     noReview: true
+        },
+        opacityText: {
+    -     cited: true,
+    -     citedWithRegion: true,
+    -     noReview: true
+    -   },
+    -   thin12: {
+          cited: false,
+          citedWithRegion: false,
+          noReview: false
+        },
+    +   thin12: {
+    +     cited: true,
+    +     citedWithRegion: true,
+    +     noReview: false
+    +   },
+        thin14: {
+    +     cited: true,
+    +     citedWithRegion: true,
+    -     cited: false,
+    -     citedWithRegion: false,
+          noReview: false
+        },
+        weakShadow: {
+          cited: false,
+          citedWithRegion: false,
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    opacityText:
+      noReview: true
+      cited: true
+      citedWithRegion: true
+    opacitySpan: <Circular>
+    opacityAncestor: <Circular>
+    haloHero: <Circular>
+    weakShadow:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    faintOpacity: <Circular>
+    thin12: <Circular>
+    thin14: <Circular>
+    greyAtAA:
+      noReview: false
+      cited: false
+      citedWithRegion: true
+  actual:
+    opacityText:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    opacitySpan:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    opacityAncestor:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    haloHero:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    weakShadow:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    faintOpacity:
+      noReview: false
+      cited: false
+      citedWithRegion: false
+    thin12:
+      noReview: false
+      cited: true
+      citedWithRegion: true
+    thin14:
+      noReview: false
+      cited: true
+      citedWithRegion: true
+    greyAtAA:
+      noReview: false
+      cited: true
+      citedWithRegion: true
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r22.test.mjs:116:10
+    async withBrowser (file://<scratch>/release/tests/panel-r22.test.mjs:52:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R22-GPT-02: glyphRatio: punctuation size is relative to the font: a thin letter stem (1 px wide, tall) over a light patch is kept and fails, while dot-sized clusters on a solid background are dropped; zoneOf grades the three zones
+not ok 39 - R22-GPT-02: glyphRatio: punctuation size is relative to the font: a thin letter stem (1 px wide, tall) over a light patch is kept and fails, while dot-sized clusters on a solid background are dropped; zoneOf grades the three zones
+  ---
+  duration_ms: 6.25578
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r22.test.mjs:119:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {"ratio":1.25,"min":1.25,"max":15.91,"clusters":36,"dropped":0,"measure":"minimum glyph cluster (coverage from black/white text shots)"}
+    
+    36 !== 20
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 20
+  actual: 36
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file://<scratch>/release/tests/panel-r22.test.mjs:128:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass, and the visibility backstop does not count fallback text; a real caption cut by the same crop still fails (test-only)
+not ok 40 - R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass, and the visibility backstop does not count fallback text; a real caption cut by the same crop still fails (test-only)
+  ---
+  duration_ms: 2246.203604
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r22.test.mjs:133:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        audio: {
+          pass: true,
+          rules: []
+        },
+        canvas: {
+    +     pass: false,
+    +     rules: [
+    +       'partly clipped'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        captionCut: {
+          pass: false,
+          rules: [
+            'partly clipped'
+    ...
+        video: {
+    +     pass: false,
+    +     rules: [
+    +       'partly clipped'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        videoNested: {
+          pass: true,
+          rules: []
+        }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    video:
+      pass: true
+      rules:
+    videoNested:
+      pass: true
+      rules:
+    canvas:
+      pass: true
+      rules:
+    audio:
+      pass: true
+      rules:
+    captionCut:
+      pass: false
+      rules:
+        0: 'partly clipped'
+  actual:
+    video:
+      pass: false
+      rules:
+        0: 'partly clipped'
+    videoNested:
+      pass: true
+      rules:
+    canvas:
+      pass: false
+      rules:
+        0: 'partly clipped'
+    audio:
+      pass: true
+      rules:
+    captionCut:
+      pass: false
+      rules:
+        0: 'partly clipped'
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r22.test.mjs:136:10
+    async withBrowser (file://<scratch>/release/tests/panel-r22.test.mjs:52:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R22-GPT-04, R22-GPT-05: real Chrome: prints are typed: an icon-only link (aria-label), a checkbox named by aria-labelledby and a button hidden at 320 are lost even when the same words remain as text; a control shown at 320 under the same role and name passes (test-only)
+not ok 41 - R22-GPT-04, R22-GPT-05: real Chrome: prints are typed: an icon-only link (aria-label), a checkbox named by aria-labelledby and a button hidden at 320 are lost even when the same words remain as text; a control shown at 320 under the same role and name passes (test-only)
+  ---
+  duration_ms: 2256.822449
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r22.test.mjs:148:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        buttonMoved: {
+          pass: true,
+          rules: []
+        },
+        buttonUnderHeading: {
+    +     pass: true,
+    +     rules: []
+    -     pass: false,
+    -     rules: [
+    -       'not shown at this width'
+    -     ]
+        },
+        iconLink: {
+    +     pass: true,
+    +     rules: []
+    -     pass: false,
+    -     rules: [
+    -       'not shown at this width'
+    -     ]
+        },
+        iconLinkMoved: {
+          pass: true,
+          rules: []
+        },
+        labelledBy: {
+    +     pass: true,
+    +     rules: []
+    -     pass: false,
+    -     rules: [
+    -       'not shown at this width'
+    -     ]
+        },
+        linkText: {
+          pass: false,
+          rules: [
+            'not shown at this width'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    iconLink:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    iconLinkMoved:
+      pass: true
+      rules:
+    labelledBy:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    buttonUnderHeading:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    buttonMoved:
+      pass: true
+      rules:
+    linkText:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+  actual:
+    iconLink:
+      pass: true
+      rules:
+    iconLinkMoved:
+      pass: true
+      rules:
+    labelledBy:
+      pass: true
+      rules:
+    buttonUnderHeading:
+      pass: true
+      rules:
+    buttonMoved:
+      pass: true
+      rules:
+    linkText:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r22.test.mjs:151:10
+    async withBrowser (file://<scratch>/release/tests/panel-r22.test.mjs:52:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R22-MIMAR-02 (P3): real Chrome: a control is not lost when its shown label shortens at a width while its accessible name stays, or when its shown label is a prefix or abbreviation of its 1440 name; a wordmark link left with no name, a different label and a reworded heading still fail (test-only)
+not ok 42 - R22-MIMAR-02 (P3): real Chrome: a control is not lost when its shown label shortens at a width while its accessible name stays, or when its shown label is a prefix or abbreviation of its 1440 name; a wordmark link left with no name, a different label and a reworded heading still fail (test-only)
+  ---
+  duration_ms: 2252.342816
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r22.test.mjs:165:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    ... Skipped lines
+    
+      {
+        abbreviation: {
+    +     pass: false,
+    +     rules: [
+    +       'not shown at this width'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        otherLabel: {
+          pass: false,
+          rules: [
+            'not shown at this width'
+    ...
+        shortLabel: {
+    +     pass: false,
+    +     rules: [
+    +       'not shown at this width'
+    +     ]
+    -     pass: true,
+    -     rules: []
+        },
+        wordmark: {
+          pass: false,
+          rules: [
+            'not shown at this width'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    shortLabel:
+      pass: true
+      rules:
+    sameName:
+      pass: true
+      rules:
+    abbreviation:
+      pass: true
+      rules:
+    wordmark:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    otherLabel:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    rewordedHeading:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+  actual:
+    shortLabel:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    sameName:
+      pass: true
+      rules:
+    abbreviation:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    wordmark:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    otherLabel:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+    rewordedHeading:
+      pass: false
+      rules:
+        0: 'not shown at this width'
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r22.test.mjs:168:10
+    async withBrowser (file://<scratch>/release/tests/panel-r22.test.mjs:52:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R22-GPT-06: real Chrome: a read-more expanded state must show every text print of the clamped box: a clamp that cuts paragraph one and hides paragraph two fails when the expanded state shows only paragraph one, passes when it shows both; a control inside a clamp is never excused (test-only)
+not ok 43 - R22-GPT-06: real Chrome: a read-more expanded state must show every text print of the clamped box: a clamp that cuts paragraph one and hides paragraph two fails when the expanded state shows only paragraph one, passes when it shows both; a control inside a clamp is never excused (test-only)
+  ---
+  duration_ms: 2186.48732
+  type: 'test'
+  location: '<scratch>/release/tests/panel-r22.test.mjs:181:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      {
+        both: {
+          pass: true,
+          rules: []
+        },
+        controlInClamp: {
+    +     pass: true,
+    +     rules: []
+    -     pass: false,
+    -     rules: [
+    -       'partly clipped'
+    -     ]
+        },
+        onlyFirst: {
+    +     pass: true,
+    +     rules: []
+    -     pass: false,
+    -     rules: [
+    -       'truncated'
+    -     ]
+        }
+      }
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    onlyFirst:
+      pass: false
+      rules:
+        0: 'truncated'
+    both:
+      pass: true
+      rules:
+    controlInClamp:
+      pass: false
+      rules:
+        0: 'partly clipped'
+  actual:
+    onlyFirst:
+      pass: true
+      rules:
+    both:
+      pass: true
+      rules:
+    controlInClamp:
+      pass: true
+      rules:
+  operator: 'deepStrictEqual'
+  stack: |-
+    file://<scratch>/release/tests/panel-r22.test.mjs:187:10
+    async withBrowser (file://<scratch>/release/tests/panel-r22.test.mjs:52:9)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: R22-GPT-07 (R21-MIMAR-02 regressions): real Chrome: content inside content-visibility:hidden and a closed popover is not on screen, so it is not off-screen or clipped content at 320; the same panel shown and pushed past the edge fails (test-only)
+ok 44 - R22-GPT-07 (R21-MIMAR-02 regressions): real Chrome: content inside content-visibility:hidden and a closed popover is not on screen, so it is not off-screen or clipped content at 320; the same panel shown and pushed past the edge fails (test-only)
+  ---
+  duration_ms: 1647.566678
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+ok 45 - R8 PORT-02: the checker screens handoff.settings.desktopWidths next to the focus probe, on the page and on every declared state
+  ---
+  duration_ms: 1.088615
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+ok 46 - R8 PORT-02: screenWidths refuses an invalid width list instead of falling back
+  ---
+  duration_ms: 4.599661
+  type: 'test'
+  ...
+# Subtest: R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
+ok 47 - R8 PORT-02: every declared width and 320 px reflow are screened for overflow, clipping and language (real Chrome, test-only)
+  ---
+  duration_ms: 2301.958362
+  type: 'test'
+  ...
+# Subtest: CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
+ok 48 - CODEX-R4-04: ellipsis styling on text that fits is not a clip; overflowing ellipsised text is (real Chrome, test-only)
+  ---
+  duration_ms: 1393.739543
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+ok 49 - ARGON-R5-02: overflow hidden or clip on html and body together cannot hide a wide layout (real Chrome, test-only)
+  ---
+  duration_ms: 2290.788003
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+ok 50 - ARGON-R5-05: content pushed past the left edge fails; visually hidden and off-screen skip-link patterns do not (real Chrome, test-only)
+  ---
+  duration_ms: 595.796263
+  type: 'test'
+  ...
+# Subtest: ARGON-R5-05: off-screen-left content fails the width screen
+ok 51 - ARGON-R5-05: off-screen-left content fails the width screen
+  ---
+  duration_ms: 0.480681
+  type: 'test'
+  ...
+# Subtest: R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
+ok 52 - R11 S3 / panel B: at 320 px, ordinary text or media in a sideways scroller fails (left and right); 2D content is a recorded candidate, never excused automatically (real Chrome, test-only)
+  ---
+  duration_ms: 1933.973255
+  type: 'test'
+  ...
+# Subtest: R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
+ok 53 - R11 panel B/T2, R12 M09: an unresolved reflow candidate blocks the handoff; only a scope- and id-matched entry with a reason and a qaGate/approver reviewer resolves it
+  ---
+  duration_ms: 1.684637
+  type: 'test'
+  ...
+# Subtest: R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
+ok 54 - R12 M01/M02/M10/M11/M14: bare and direct text, content lost past either scroller edge, shadow scrollers, real keyboard reach and hidden content (real Chrome, test-only)
+  ---
+  duration_ms: 2072.29043
+  type: 'test'
+  ...
+1..54
+# tests 54
+# suites 0
+# pass 46
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 78700.097419

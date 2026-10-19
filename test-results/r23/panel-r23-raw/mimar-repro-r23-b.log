@@ -1,0 +1,9 @@
+opacity70          [{"ratio":7.93,"min":7.93,"clusters":35,"dropped":1}]
+opacity70ancestor  []
+thinLetters14      [{"ratio":1.25,"min":1.25,"clusters":44,"dropped":22}]
+thinLetters12      [{"ratio":1.25,"min":1.25,"clusters":46,"dropped":44}]
+videoFallback      [[1440,true,[],[]],[320,true,[],[]]]
+iconLinkHidden     [[1440,true,[],[]],[320,false,[],["link:Your profile"]]]
+buttonVsHeading    [[1440,true,[],[]],[320,false,[],["button:Subscribe"]]]
+labelledbyCheckbox [[1440,true,[],[]],[320,false,[],["checkbox:Email me offers"]]]
+clampOmits         {"pass":false,"unresolved":2,"default":[[1440,false,["truncated whole=1 partial=1"]],[320,false,["truncated whole=1 partial=1"]]]}

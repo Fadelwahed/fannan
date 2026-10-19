@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
+ok 1 - R19-GPT-01 (as amended by R20-GPT-01): real Chrome: content clipped to nothing by a box that cannot scroll (a collapsed accordion, inactive carousel slides, text pushed past the start) is a reveal clip, which fails one state alone and is resolved only by a declared state that shows it (panel-r20.test.mjs); partly clipped text fails outright (test-only)
+  ---
+  duration_ms: 2237.14386
+  type: 'test'
+  ...
+# Subtest: R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
+ok 2 - R19-GPT-02, R19-GPT-03: real Chrome: a pseudo-element veil and a pointer-events:none veil are possible covers graded by pixels; a fade on a truncated block (text that overflows; R20-GPT-02), a decorative SVG wave and the R19 honest patterns PASS (test-only)
+  ---
+  duration_ms: 16128.142068
+  type: 'test'
+  ...
+# Subtest: R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
+ok 3 - R19-GPT-04: real Chrome: content an IntersectionObserver adds at the end of an inner scrollport (an app panel) is collected and graded; honest lazy panel content PASS (test-only)
+  ---
+  duration_ms: 4627.524194
+  type: 'test'
+  ...
+# Subtest: R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
+ok 4 - R19-MIMAR-02: real Chrome: on a declared state, text made inert by a modal dialog or covered by an open popover is not graded and the dialog text is; a non-modal open dialog keeps covered text graded (test-only)
+  ---
+  duration_ms: 4773.86508
+  type: 'test'
+  ...
+# Subtest: R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
+ok 5 - R19-MIMAR-01: real Chrome: an automated colour-contrast incomplete result is resolved only for an element measured at AA in both renderings with a review record citing the screenshot (test-only)
+  ---
+  duration_ms: 27364.336257
+  type: 'test'
+  ...
+# Subtest: R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
+ok 6 - R19-GPT-05: real Chrome: an accessible name taken by aria-labelledby from a hidden element is an accessible name to approve (test-only)
+  ---
+  duration_ms: 893.053642
+  type: 'test'
+  ...
+# Subtest: R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
+ok 7 - R19b: real Chrome: a declared non-default state reachable only by script (requiresScript, trigger recorded) resolves a colour-contrast incomplete on the scripted rendering alone; the default state needs both renderings; a false claim is caught (test-only)
+  ---
+  duration_ms: 13970.572172
+  type: 'test'
+  ...
+# Subtest: R22-GPT-01, R22-MIMAR-01, R22-GPT-02: real Chrome: three zones on the faintest glyph cluster: a 70% opacity caption (on the text, a span or an ancestor) and a white hero with a strong dark halo pass; a weak shadow, a faint translucent caption and thin letters at 12 and 14 px over a light patch fail whatever the review; grey text just at AA needs a review naming the worst region (test-only)
+ok 8 - R22-GPT-01, R22-MIMAR-01, R22-GPT-02: real Chrome: three zones on the faintest glyph cluster: a 70% opacity caption (on the text, a span or an ancestor) and a white hero with a strong dark halo pass; a weak shadow, a faint translucent caption and thin letters at 12 and 14 px over a light patch fail whatever the review; grey text just at AA needs a review naming the worst region (test-only)
+  ---
+  duration_ms: 17159.958021
+  type: 'test'
+  ...
+# Subtest: R22-GPT-02: glyphRatio: punctuation size is relative to the font: a thin letter stem (1 px wide, tall) over a light patch is kept and fails, while dot-sized clusters on a solid background are dropped; zoneOf grades the three zones
+ok 9 - R22-GPT-02: glyphRatio: punctuation size is relative to the font: a thin letter stem (1 px wide, tall) over a light patch is kept and fails, while dot-sized clusters on a solid background are dropped; zoneOf grades the three zones
+  ---
+  duration_ms: 2.141132
+  type: 'test'
+  ...
+# Subtest: R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass, and the visibility backstop does not count fallback text; a real caption cut by the same crop still fails (test-only)
+ok 10 - R22-GPT-03: real Chrome: fallback content inside video, audio, object and canvas is not rendered, so a cropped video or canvas with fallback text and an audio element pass, and the visibility backstop does not count fallback text; a real caption cut by the same crop still fails (test-only)
+  ---
+  duration_ms: 2357.156223
+  type: 'test'
+  ...
+# Subtest: R22-GPT-04, R22-GPT-05: real Chrome: prints are typed: an icon-only link (aria-label), a checkbox named by aria-labelledby and a button hidden at 320 are lost even when the same words remain as text; a control shown at 320 under the same role and name passes (test-only)
+ok 11 - R22-GPT-04, R22-GPT-05: real Chrome: prints are typed: an icon-only link (aria-label), a checkbox named by aria-labelledby and a button hidden at 320 are lost even when the same words remain as text; a control shown at 320 under the same role and name passes (test-only)
+  ---
+  duration_ms: 1870.238679
+  type: 'test'
+  ...
+# Subtest: R22-MIMAR-02 (P3): real Chrome: a control is not lost when its shown label shortens at a width while its accessible name stays, or when its shown label is a prefix or abbreviation of its 1440 name; a wordmark link left with no name, a different label and a reworded heading still fail (test-only)
+ok 12 - R22-MIMAR-02 (P3): real Chrome: a control is not lost when its shown label shortens at a width while its accessible name stays, or when its shown label is a prefix or abbreviation of its 1440 name; a wordmark link left with no name, a different label and a reworded heading still fail (test-only)
+  ---
+  duration_ms: 1916.199849
+  type: 'test'
+  ...
+# Subtest: R22-GPT-06: real Chrome: a read-more expanded state must show every text print of the clamped box: a clamp that cuts paragraph one and hides paragraph two fails when the expanded state shows only paragraph one, passes when it shows both; a control inside a clamp is never excused (test-only)
+ok 13 - R22-GPT-06: real Chrome: a read-more expanded state must show every text print of the clamped box: a clamp that cuts paragraph one and hides paragraph two fails when the expanded state shows only paragraph one, passes when it shows both; a control inside a clamp is never excused (test-only)
+  ---
+  duration_ms: 1848.981456
+  type: 'test'
+  ...
+# Subtest: R22-GPT-07 (R21-MIMAR-02 regressions): real Chrome: content inside content-visibility:hidden and a closed popover is not on screen, so it is not off-screen or clipped content at 320; the same panel shown and pushed past the edge fails (test-only)
+ok 14 - R22-GPT-07 (R21-MIMAR-02 regressions): real Chrome: content inside content-visibility:hidden and a closed popover is not on screen, so it is not off-screen or clipped content at 320; the same panel shown and pushed past the edge fails (test-only)
+  ---
+  duration_ms: 1587.339709
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 70088.301794

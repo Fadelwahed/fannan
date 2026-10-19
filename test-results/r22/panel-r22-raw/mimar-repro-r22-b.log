@@ -1,0 +1,8 @@
+glyph-patch1word   {"pixelMin":[15.9],"glyph":{"body:1/main:0/div:1/p:0":{"ratio":1.23,"min":1.23,"max":15.91,"clusters":62,"dropped":3,"measure":"minimum glyph cluster (coverage from black/white text shots)"}}}
+glyph-patch3words  {"pixelMin":[15.9],"glyph":{"body:1/main:0/div:1/p:0":{"ratio":1.23,"min":1.23,"max":15.91,"clusters":62,"dropped":3,"measure":"minimum glyph cluster (coverage from black/white text shots)"}}}
+glyph-nopatch      {"pixelMin":[15.9],"glyph":{"body:1/main:0/div:1/p:0":{"ratio":15.91,"min":15.91,"max":15.91,"clusters":62,"dropped":3,"measure":"minimum glyph cluster (coverage from black/white text shots)"}}}
+reveal-same        {"pass":true,"unresolved":0,"defaultRules":[["reveal:expanded"],["reveal:expanded"]]}
+reveal-wrapper     {"pass":true,"unresolved":0,"defaultRules":[["reveal:expanded"],["reveal:expanded"]]}
+reveal-unrelated   {"pass":false,"unresolved":2,"defaultRules":[["reveal"],["reveal"]]}
+hiddenSubmit320    [[1440,true,0],[320,false,0]]
+inlineWrapClaim    {"claimed":true,"valid":false,"rendersWithoutScript":true,"onlyScripted":0,"reason":"the state renders with JavaScript off"}

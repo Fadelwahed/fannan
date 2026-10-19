@@ -1,0 +1,7 @@
+# R20 real site (built bilingual site served on 127.0.0.1 by my own server PID, stopped after): backstop + width screen
+http://127.0.0.1:8917/en/                    on  {"m":88,"o":0,"u":0,"un":0,"h":0,"widthsPassExceptReveal":true,"clips":[],"ms":11242}
+http://127.0.0.1:8917/en/                    off {"m":88,"o":0,"u":0,"un":0,"h":0,"widthsPassExceptReveal":true,"clips":[],"ms":6995}
+http://127.0.0.1:8917/ar/                    on  {"m":75,"o":0,"u":0,"un":0,"h":0,"widthsPassExceptReveal":false,"clips":[],"ms":6313}
+http://127.0.0.1:8917/ar/                    off {"m":75,"o":0,"u":0,"un":0,"h":0,"widthsPassExceptReveal":false,"clips":[],"ms":6430}
+EXIT 0
+killed 2555491
