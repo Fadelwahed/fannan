@@ -843,28 +843,36 @@ export async function screenWidths(page, widths, expected = null, height = 900, 
 // and `reveals` (with `revealedBy`). scopes: [{ scope: { screen, state, lang }, widths }].
 // R35 GROK-03 (Sol ruling C): a supplied carousel inventory is an independent acceptance condition, not only evidence
 // for cover. Evidence is scoped to screen + language + root + ordered slides, taken at 1440 from the declared states that
-// supply that exact mapping. Every member must resolve somewhere in the inventory and be observed in some declared state,
+// supply that exact mapping, witnessed by every capture of the group. Every member must resolve and be observed somewhere,
 // and at least two distinct members must be observed. Unused invalid comparisons (declarationProblems) stay harmless.
 export function carouselInventoryIntegrity(groupScopes) {
   const inv = new Map();
+  const keyOf = cm => JSON.stringify([cm.root, cm.slides]);
+  // the inventory: mappings supplied by declared states of this group
   for (const g of groupScopes) {
     const cm = g.declaration?.carousel;
     if (!cm || !g.scope) continue;
-    const key = JSON.stringify([cm.root, cm.slides]);
-    if (!inv.has(key)) inv.set(key, { screen: g.scope.screen, lang: g.scope.lang, root: cm.root, slides: Array.isArray(cm.slides) ? [...cm.slides] : [], resolved: new Set(), observed: new Set(), errors: new Set(), valid: 0 });
-    const e = inv.get(key);
-    const d = (ledgerOf(g, 1440).declared || []).find(x => x.state === g.scope.state);
-    const c = d?.carousel;
-    if (!c) { e.errors.add('declared state has no 1440 mapping probe'); continue; }
-    if (!c.valid) { e.errors.add(c.error || 'invalid mapping'); continue; }
-    e.valid++;
-    (c.slideResolved || []).forEach((v, i) => { if (v) e.resolved.add(i); });
-    (c.slideDisplayed || []).forEach((v, i) => { if (v) { e.observed.add(i); e.resolved.add(i); } });
+    if (!inv.has(keyOf(cm))) inv.set(keyOf(cm), { screen: g.scope.screen, lang: g.scope.lang, root: cm.root, slides: Array.isArray(cm.slides) ? [...cm.slides] : [], states: new Set(), resolved: new Set(), observed: new Set(), errors: new Set(), valid: 0 });
+    inv.get(keyOf(cm)).states.add(g.scope.state);
+  }
+  // witnesses: every capture of the group (default included) probes every declaration at 1440; a member observed in
+  // any capture of this screen/language counts (R34 rule 6: a member may be absent from some captures)
+  for (const g of groupScopes) {
+    for (const d of (ledgerOf(g, 1440).declared || [])) {
+      const c = d?.carousel;
+      if (!c) continue;
+      const e = inv.get(keyOf(c));
+      if (!e || !e.states.has(d.state)) continue;
+      if (!c.valid) { e.errors.add(c.error || 'invalid mapping'); continue; }
+      e.valid++;
+      (c.slideResolved || []).forEach((v, i) => { if (v) e.resolved.add(i); });
+      (c.slideDisplayed || []).forEach((v, i) => { if (v) { e.observed.add(i); e.resolved.add(i); } });
+    }
   }
   const problems = [];
   for (const e of inv.values()) {
     const why = [];
-    if (!e.valid) why.push(...[...e.errors].map(x => 'mapping invalid in every declared capture: ' + x));
+    if (!e.valid) why.push(...[...e.errors].map(x => 'mapping invalid in every capture: ' + x));
     else {
       e.slides.forEach((sel, i) => {
         if (!e.resolved.has(i)) why.push('registered member missing from the entire inventory: ' + sel);
