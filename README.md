@@ -4,7 +4,7 @@ Fannan is a UI/UX design bot. It holds two roles at once: **Lead of UI/UX** and 
 
 This branch, `main`, holds only the files that install and run Fannan. Reviews, plans, tests, fixtures, evidence logs and panel round records live on the [`workbench`](https://github.com/Fadelwahed/fannan/tree/workbench) branch.
 
-**Status: not installed.** The live bot still runs the older `proto-*` skills. Installing this release is blocked until the items in [Known limits](#known-limits-and-untested-items) are closed, Amin (the security reviewer) has reviewed the exact manifest digest, and the owner (Fadel) says yes in Fannan's own chat.
+**Status: not installed.** The live bot still runs the older `proto-*` skills. Installing this release is blocked until the items in [Known limits](#known-limits-and-untested-items) are closed, the security reviewer has reviewed the exact manifest digest, and the owner (Fadel) says yes in Fannan's own chat.
 
 ## Contents
 
@@ -50,7 +50,7 @@ These rules have no exceptions. A design that breaks one fails.
 4. Every spacing token has a unit, for example `16px` or `1rem`.
 5. `desktopWidths` must include 1440.
 6. Content that does not reflow at 320 CSS pixels is a hard fail.
-7. Fannan is read-only on code. He never branches, commits, pushes or opens pull requests. The engineer bot (Jabr) ships code. Prototypes are reference only.
+7. Fannan is read-only on code. He never branches, commits, pushes or opens pull requests. The project's engineer role ships code. Prototypes are reference only.
 8. Fannan asks the owner before anything that costs money, every time. There is no spend cap.
 9. Fix the root cause, never the symptom.
 10. Never guess. Label anything not checked as UNTESTED.
@@ -104,7 +104,7 @@ Every tool is a project setting, so a project can swap it without changing a ski
 | Library docs lookup | `docs-lookup` | Context7 |
 | Paid media generation | `media-gen` | Off by default |
 
-The gate scripts in `release/tools/` run on Node 22 (version, URL and checksum in `release/runtime/node-runtime.json`):
+The gate scripts in `release/tools/` run on Node 22 (version, URL and checksum in `release/runtime/node-runtime.json`; the current host runs Node 20, and the upgrade is an install step):
 
 | Tool | What it checks or does |
 |---|---|
@@ -130,12 +130,12 @@ The release skills run nine steps (1 to 9). Steps 0, 10 and 11 are proposed for 
 | 3 Information architecture and flows | Sitemap, task flows, one brief line per section | Every section names the brief line it serves | Panel, on request |
 | 4 Wireframes | Grayscale 1440px wireframes, at least two structures compared | Structure compared against alternatives | Critique checklist |
 | 5 Test and approve | Task-test findings and revisions | Owner approves the structure of each page | Owner |
-| 6 Desktop visual | Visual design, tokens, all states, motion notes | Hard rules 3 to 5; contrast at AA | Automated checks |
-| 7 Mobile and tablet | Reflow and touch specs | 320px reflow gate passes | Reflow gate |
+| 6 Desktop visual | Visual design, tokens, all states, motion notes | No glass, spacing units, 1440 in desktopWidths, 320px reflow; WCAG 2.2 AA | Automated checks |
+| 7 Mobile and tablet | Reflow and touch specs | 320px reflow gate passes; reflow is a hard fail at every step from 6 on | Reflow gate |
 | 8 Validate | Critique, accessibility and copy reports | 0 P0 and P1; every P2 fixed at the root or accepted by the owner | Panel and owner |
 | 9 Handoff to the engineer | Handoff package and one acceptance checklist | `pre-handoff-check.mjs` passes; an open question, placeholder or missing approval blocks sending | Automated gate, then owner |
-| 10 Design QA (proposed) | Typed defect list from the engineer's preview | No P0 to P2 before release | QA bot |
-| 11 Learn (proposed) | Root-cause fixes to the system and skills | Monthly report | Owner |
+| 10 Design QA (proposed, not in release skills) | Typed defect list from the engineer's preview | No P0 to P2 before release | QA bot |
+| 11 Learn (proposed, not in release skills) | Root-cause fixes to the system and skills | Monthly report | Owner |
 
 Severity: P0 is critical, P1 blocks release, P2 must be fixed, P3 is minor.
 
@@ -185,13 +185,13 @@ trust/
   PINNED.sha256     SHA-256 of MANIFEST.sha256
 ```
 
-Some release documents name test, review and evidence paths such as `release/tests/` or `test-results/`. Those paths are on `workbench`.
+Some release documents name paths that are not on `main`: `release/tests/`, `test-results/`, `reviews/`, `scripts/`, `release/REVIEW-RESPONSE.md` and `release/PACKAGING.md`. Those paths are on `workbench`.
 
 ## Install
 
 Installing is blocked today. When the blockers are closed, follow `release/references/security-and-install.md`. In short:
 
-1. Confirm Amin's review of the exact manifest digest and the owner's yes in Fannan's chat.
+1. Confirm the security reviewer's review of the exact manifest digest and the owner's yes in Fannan's chat.
 2. Stage the full release inactive, with dependencies in `/opt/fannan/deps` outside the hashed tree and the pinned Impeccable binary in `/opt/fannan/bin/`.
 3. Run the manifest check, the project prechecks, the token build and a full checker run on the target host.
 4. Activate the whole skill tree in one step, retire the eight `proto-*` skills, update every caller, and apply the approved memory saves.
@@ -234,7 +234,7 @@ chmod 0444 trust/MANIFEST.sha256
 release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$(cut -d' ' -f1 trust/PINNED.sha256)"
 ```
 
-Expected output: `MANIFEST OK (<n> files)`. The script fails on a changed, missing or extra file, a symlink, a writable manifest or a pin mismatch. A clone does not keep the 0444 mode, so set it first; this does not change any bytes. In production the pin comes from Amin's review record, not from `PINNED.sha256`. The script needs GNU `realpath`, `stat` and `sha256sum`.
+Expected output: `MANIFEST OK (<n> files)`. The script fails on a changed, missing or extra file, a symlink, a writable manifest or a pin mismatch. A clone does not keep the 0444 mode, so set it first; this does not change any bytes. In production the pin comes from the security reviewer's review record, not from `PINNED.sha256`. The script needs GNU `realpath`, `stat` and `sha256sum`.
 
 The older anchored verify (`scripts/package-r3.py verify`) hashes review records and evidence logs, so it runs on `workbench`. See the next section.
 
@@ -331,23 +331,26 @@ diff -r \
 ## Update and pinning policy
 
 - Every skill and tool is pinned to a commit or a SHA-256.
-- Amin reviews every new or changed skill, tool and pin before it is installed.
+- The security reviewer reviews every new or changed skill, tool and pin before it is installed.
 - Nothing is installed or updated without the owner's yes in Fannan's own chat.
 - Any change to `release/` changes the manifest pin, so it needs a new review.
 - Changes reach `main` through one focused pull request each. Review rounds and evidence go to `workbench`. Only the owner merges.
+- Sync is one way, from `main` to `workbench`, and covers only `release/`. Never merge `main` into `workbench`: that would delete the review records, tests and evidence that only `workbench` keeps. Bring a bot change to `workbench` by cherry-picking its commit or copying the changed `release/` files.
 
 ## Working with other bots
 
-| Bot | Fannan gives | Fannan gets |
+| Role | Fannan gives | Fannan gets |
 |---|---|---|
-| Chief of staff (Wazir) | Status, estimates, blockers | Assignments, project settings, priorities |
-| Engineer (Jabr) | Handoff package, QA defects | Preview builds, feasibility answers |
-| QA (Najm) | The QA checklist from the handoff | Preview check results |
-| Site operations (Rayyan) | Design fixes for audit findings | Site audits as inputs |
-| Security (Amin) | Skill and tool install requests | Reviews and conditions |
+| Chief of staff | Status, estimates, blockers | Assignments, project settings, priorities |
+| Engineer | Handoff package, QA defects | Preview builds, feasibility answers |
+| QA | The QA checklist from the handoff | Preview check results |
+| Site operations | Design fixes for audit findings | Site audits as inputs |
+| Security reviewer | Skill and tool install requests | Reviews and conditions |
 | Writer | Copy slots and placeholders | Final copy |
-| Prompt writer (Bayan) | Prompt requests | Model-specific prompts |
-| Bot designer (Mi'mar) | Findings about Fannan's own skills | Skill and workflow updates |
+| Prompt writer | Prompt requests | Model-specific prompts |
+| Bot designer | Findings about Fannan's own skills | Skill and workflow updates |
+
+Each project's settings map these roles to bots.
 
 When Fannan messages another bot, he passes every argument the messaging tool requires.
 
@@ -358,7 +361,7 @@ When Fannan messages another bot, he passes every argument the messaging tool re
 | Wireframe structure, final design, variant choice | Owner |
 | Sharing, publishing or sending outside the team | Owner |
 | Any spend, such as paid image generation | Owner, each time |
-| Installing or updating a skill or tool | Amin reviews, then the owner says yes |
+| Installing or updating a skill or tool | The security reviewer reviews, then the owner says yes |
 | Testing with real people | Owner |
 | A breaking change to the design system | Owner |
 | An exception to a hard rule | Not allowed |

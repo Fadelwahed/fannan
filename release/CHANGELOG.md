@@ -1,5 +1,7 @@
 # Changelog and round-5 P1 disposition
 
+`reviews/`, `scripts/`, `test-results/` and `REVIEW-RESPONSE.md`, named below, are on the `workbench` branch, not on `main`.
+
 ## R4 fixes (Mi'mar, branch `mimar-r4-fixes`, 17 October 2026)
 
 Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `grok-review`). Local review candidate only; live installation remains BLOCKED.

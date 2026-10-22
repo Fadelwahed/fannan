@@ -1,4 +1,14 @@
-# R3 checks not established
+# Checks not established
+
+## Current open items
+
+- **Not installed:** the security reviewer's review of the final digest, the owner's yes, host activation and rollback, and live callers and memory are OPEN or NOT RUN.
+- **Full gate blocked:** the pinned Impeccable binary and its support assets are absent, so the real detector and full pre-handoff gate have not passed.
+- **Target host:** protected storage, dedicated identity, the reviewed browser pin and dependency-backed builds on the target host are OPEN or BLOCKED.
+- **Engineer token:** the read-only token, branch and daily-task proof (B3) is NOT RUN.
+- **Reflow checker:** probe-induced scroll edge cases, author mis-mapping of ordinary content as slides, and live interaction proof are UNTESTED (R34 block below).
+
+Details by round follow. Rounds R19 and older are under History.
 
 ## R34 additions (Mi'mar, 19 October 2026, panel round 34)
 
@@ -67,7 +77,7 @@ Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cro
 - **Section-local actions (R27-GPT-02):** a section's actions are the action controls in the heading's nearest section or article (when the heading is its first heading), else the following siblings up to the next heading. UNTESTED: sections built from un-nested headings inside deep wrappers, and sections whose actions sit in a separate toolbar outside the section.
 - **Role changes within the action family (R27-GPT-03):** covered for the same nodes switching button → menuitem at 320. UNTESTED: menuitemcheckbox/menuitemradio, and a link becoming a button with a different target (the key includes the link target, so it is a different element and falls back to the swap list).
 - **Source-state reservation (R27-GPT-04):** names the source state already shows at that width are set aside. UNTESTED: a hidden item whose only legitimate cover is a same-named element the source state also shows elsewhere (fails closed).
-- **Real site:** Fannan baseline in English and Arabic, default-only and menu-open, JavaScript on and off; nothing else.
+- **Real site:** Fannan baseline in English and Arabic (example RTL fixture), default-only and menu-open, JavaScript on and off; nothing else.
 
 ## R26 additions (Mi'mar, 18 October 2026, panel round 26)
 
@@ -145,7 +155,29 @@ Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cro
 - **Truncation fade (R20-GPT-02, P3):** the label needs overflowing text and a fade at the cut edge that leaves the opposite edge uncovered. UNTESTED: inline-axis fades in vertical writing modes, fades drawn by a child element instead of a pseudo-element.
 - **Screen type (R20-GPT-06):** `screens[].type` is `marketing`, `landing` or `functional`; `generic-hero` is required for marketing and landing screens only. The type itself is the author's declaration and is not checked against the page.
 
-## R19 additions (Mi'mar, 18 October 2026, panel round 19)
+## Baseline (R3)
+
+Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs are historical, not R3 PASS. The final branch response quotes every command/count and each failure. Expected rejection, SKIP, blocked prerequisite and actual PASS are distinct.
+
+- **Dependency-backed converter/build success and browser fixture: BLOCKED.** No complete existing runtime-deps tree is available. Offline-only locked restore failed ENOTCACHED for zwitch-2.0.4; no network install ran. Pure validator and malformed-token build subprocess regressions run. Family-array/percentage line-height success through real Style Dictionary remains untested.
+- **Production GNU/Linux guard/launcher/manifest integration: SKIP/unsupported on Darwin.** Linux openat2, GNU stat/hash, environment sanitization and full detector execution require the target host. Exact argv and canonical parser behavior run using clearly isolated platform adapters; they do not prove Linux utilities. Negative root/shared-owner boundary unit tests do run.
+- **Actual browser focus rendering: NOT ESTABLISHED.** Chrome CLI attempt with an isolated temporary profile aborted with signal 6 in sandbox. Before/after computed-style logic is unit-tested; real browser/WCAG/manual focus, appearance contrast, overlays and screenshot behavior remain untested. No no-sandbox fallback was used.
+- **Browser identity: BLOCKED by missing reviewed pin.** No version/hash/path was invented. Protected ancestry and override/pin rejection tests run; target actual executable/support tree is not supplied.
+- **Protected storage, identity and same-uid exclusion: OPEN.** No user/service/permission/OS changes, root-owned deployment install or hostile same-identity race proof ran. Existing safe-writer security requirements remain mandatory. Dedicated user vs reviewed sandbox requires Fadel/system owner/Amin.
+- **Real detector/full gate/HANDOFF success: BLOCKED.** Original pinned binary/support assets are absent. No fake binary, stub or skipped test is counted as production success.
+- **Target Node history:** v22.23.3 installed on a review host and matching archive hash are reported in the supplied review; Amin's GPG result is reported-only and source absent. No live target access or redundant reinstall ran; package flags stay false.
+- **B3/Jabr token/branch/daily task: NOT RUN.** No credentials read, no mutation probe or other token tried. Need authoritative permission/repository-selection/safe-read method and actual original proof/task metadata; 403/422 inference is insufficient.
+- **Amin final review and Fadel yes: OPEN.** No sign-off, consent or approval on changed bytes was obtained or fabricated; approval remains in Fannan's own chat.
+- **Host hold/activation/rollback and live callers/memory: NOT RUN.** No host API supplied, no installer guessed, no memory or installed skills changed. Exact all-or-none fault recovery remains unproven.
+- **Paid runtime gate/provider operations/real pilot: NOT RUN.** No paid call, provider connection, live skill loading, signed project design/claim/licence validation, real assistive technology, RTL/long text, declared desktop width/reflow, engineer handoff or QA build ran. Text/DOM screening does not prove taste, truth or WCAG conformance.
+- **Missing historical sources:** original retired-routines, helper/13 tests, external register/full plan and Amin r7 record were not found by repository filename search. No external/Drive search or reconstruction was attempted.
+- **External static tools:** semgrep, shellcheck and gitleaks are unavailable. Syntax/diff checks and a redacting secret-pattern scan run; they are not a comprehensive secrets/security audit.
+- **Archived R2 suites:** executed separately unchanged; their Node and Python unit suites pass with the historical Linux skip; their browser fixture fails from absent dependencies, recorded as an actual blocked command rather than an R3 regression or pass.
+
+
+## History
+
+### R19 additions (Mi'mar, 18 October 2026, panel round 19)
 
 All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and device scale one. Panel round 19 had one reviewer (GPT), cross-checked by Mi'mar. Scope follows the threat model in `FANNAN-PLAN.md`.
 
@@ -157,7 +189,7 @@ All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and dev
 - **Top layer on declared states (R19-MIMAR-02; Fadel's tiebreak):** on a state other than `default`, page text outside an open `:modal` dialog (or a shown `aria-modal="true"` element) is counted as not displayed, page text an open popover covers is not graded, the dialog's and popover's own text are graded; a non-modal open dialog keeps covered text graded (obscured). UNTESTED: nested modals, `inert` set by script without a modal, fullscreen elements, customisable select pickers and other UA top-layer surfaces, aria-modal elements that do not cover the page.
 - **Copy deck (R19-GPT-05/06 P3):** an `aria-labelledby` name with a hidden or undisplayed reference is an accessible name to approve; an approved `ariaLabel` must appear in its cited source. UNTESTED: `aria-labelledby` across shadow roots, `aria-description`, names from `<label>` elements that are hidden.
 
-## R18 additions (Mi'mar, 18 October 2026, panel round 18)
+### R18 additions (Mi'mar, 18 October 2026, panel round 18)
 
 All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and device scale one. Panel round 18 had one reviewer (GPT), cross-checked by Mi'mar. Scope follows the threat model in `FANNAN-PLAN.md`.
 
@@ -167,7 +199,7 @@ All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and dev
 - **Coverage (R18-GPT-06):** target-directed scan, at most 300 steps and four passes; early stop or growth after the last pass is INCOMPLETE. Executed: a 40,000 px page, an IntersectionObserver footer, an endless list (INCOMPLETE at a 25-step bound), the real built site (12 and 8 steps). UNTESTED: virtualised lists that remove earlier rows (targets no longer in the document are not graded), pages where every step adds content (they stop at the bound; estimated under a minute per rendering from the 25-step run), content that appears only after a timer with page scripts on and no scrolling.
 - **Copy deck (R18-GPT-01, R18-GPT-02 P3):** a slot's optional `ariaLabel` (or a variant's) approves the accessible name separately; a name identical to the displayed value counts once; option labels are screened. UNTESTED: `aria-labelledby` names (not matched to the deck), `aria-description`, accessible names on display:contents elements.
 
-## R17 additions (Mi'mar, 18 October 2026, panel round 17)
+### R17 additions (Mi'mar, 18 October 2026, panel round 17)
 
 All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and device scale one. Panel round 17 had one reviewer (GPT), cross-checked by Mi'mar. Scope follows the threat model in `FANNAN-PLAN.md`.
 
@@ -177,7 +209,7 @@ All browser checks below ran in Chrome 155 headless only, at 1440 × 900 and dev
 - **Native copy (R17-GPT-03):** button-type input values, placeholders, every option label of a shown select, datalist options, `aria-label`, image `alt` and `title` are screened for placeholders and filler; values, placeholders, option labels and `aria-label` must sit in a copy slot whose deck text contains them. Typed or fixture values of text fields are user data and are not matched. UNTESTED: `aria-description`, `aria-placeholder`, live-region text and text that script writes after load into native attributes only.
 - **Filter decision:** unchanged and fail-closed: unresolved compositing on text is INCOMPLETE in either rendering; the pixel-measured exception is ENH backlog, not built.
 
-## R16 additions (Mi'mar, 18 October 2026, panel round 16)
+### R16 additions (Mi'mar, 18 October 2026, panel round 16)
 
 All browser checks below ran in Chrome 155 headless only. Panel round 16 had one reviewer (GPT), cross-checked by Mi'mar. Scope follows the threat model in `FANNAN-PLAN.md`.
 
@@ -186,7 +218,7 @@ All browser checks below ran in Chrome 155 headless only. Panel round 16 had one
 - **Wireframe coverage (R16-GPT-03):** the wireframe phase requires each screen's page to exist, an applicable default rendering per declared language, manual records per screen and language, and renders each declared screen/language with phase-appropriate checks (no frame hash, type, accent, spacing or placeholder thresholds yet). Links inside the pages (navigation between screens) are not followed.
 - **Component inventory (R16-GPT-04):** the contract enforces one shared definition per component, references by id, declared variants and states, and equality of any repeated specification field; the critic records a component comparison covering every screen. Whether two instances that do not repeat a field are visually consistent is a reviewer judgment (`component-consistency`), not machine-checked.
 
-## R15 additions (Mi'mar, 18 October 2026, panel round 15)
+### R15 additions (Mi'mar, 18 October 2026, panel round 15)
 
 All browser checks below ran in Chrome 155 headless only. Panel round 15 had one reviewer (GPT); B4 was found by Mi'mar alone. Scope follows the threat model in `FANNAN-PLAN.md`.
 
@@ -195,7 +227,7 @@ All browser checks below ran in Chrome 155 headless only. Panel round 15 had one
 - **Contrast (A3):** CSS `opacity` on the text and its composed ancestors is composited (premultiplied groups); a `mix-blend-mode` on the chain is counted unknown. UNTESTED: `filter: opacity()`/`brightness()`, opacity set through the Web Animations API mid-animation, `mask`, and colour-mix or relative colours that compute to non-`rgb()` strings (counted unknown, not measured).
 - **Designer process (B1-B4):** the complete wireframe gate now runs inside Step 5 after the task and findability tests; column counts are unitless; `feedback-log`, `emphasis-order`, `type-measure`, `colour-roles` and `grid-per-width` are manual IDs (the last four PASS or DEFERRED in the wireframe phase); every critic check names a rubric row and the final round needs a passing check per row. The contract checks that the records exist with evidence; whether the feedback log, emphasis check, type measure, colour matrix, grid and critic judgments are good is a reviewer judgment, not machine-checked. No real project was run through the new Step 5 order.
 
-## R14 additions (Mi'mar, 18 October 2026, panel round 14)
+### R14 additions (Mi'mar, 18 October 2026, panel round 14)
 
 All browser checks below ran in Chrome 155 headless only. Panel round 14 had one reviewer (GPT) and no cross-check; Mi'mar acted as the second Part B reviewer. Scope follows the threat model in `FANNAN-PLAN.md`.
 
@@ -205,7 +237,7 @@ All browser checks below ran in Chrome 155 headless only. Panel round 14 had one
 - **Package (R14-GPT-06):** credential keys anywhere in `tokens.json` (every dict and list) are refused, and the content screen refuses JSON credential keys with real-looking values (8+ characters). Known limit: credentials under keys the list does not name, or values shorter than 8 characters.
 - **Designer process (R14-GPT-07 to 11, R14-MIMAR-01 to 05):** the text and manual-check IDs are present and enforced by tests and the package build; whether a real project's ledger, navigation model, task tests, state and form specifications, feedback log, emphasis check, type measure, colour matrix and per-width grid are good is a reviewer judgment, not machine-checked. No real project was run through them.
 
-## R13 additions (Mi'mar, 18 October 2026, panel round 13)
+### R13 additions (Mi'mar, 18 October 2026, panel round 13)
 
 All browser checks below ran in Chrome 155 headless only. Scope follows the threat model in `FANNAN-PLAN.md` (honest but possibly sloppy authors; fail closed on what cannot be measured; deliberate obfuscation is a known limit, ENH in future rounds).
 
@@ -218,7 +250,7 @@ All browser checks below ran in Chrome 155 headless only. Scope follows the thre
 - **Shadow DOM (N20):** spacing, design counters, placeholders, h1 and the copy walker use the composed tree including open shadow roots. UNTESTED: slotted light-DOM content assigned to named slots in nested shadow trees.
 - **Package (N10, q2):** a credential word anywhere in a path part is refused (except three reviewed tool, test and evidence names); `tokens.json` passes only where the `handoff.json` beside it declares that path and hash and the content is design tokens; a stdlib content screen refuses obvious secrets (private-key blocks, cloud and chat tokens, OAuth secret values) in every packaged or hashed file. Known limit: secrets in formats the screen does not know, and binary files.
 
-## R12 additions (Mi'mar, 18 October 2026, panel round 12)
+### R12 additions (Mi'mar, 18 October 2026, panel round 12)
 
 All browser checks below ran in Chrome 155 headless only.
 
@@ -231,7 +263,7 @@ All browser checks below ran in Chrome 155 headless only.
 - **Spacing (M15, M20):** `html` and `body` margins are screened; every `data-fannan-spacing-exception` needs a scoped handoff `spacingExceptions` entry naming the approver. UNTESTED: exceptions on pseudo-elements.
 - **Package (M12):** environment files (`.env*`), editor locks (`.#*`), credential folders (`.ssh`, `.gnupg`, `.aws`) and credential names (`credentials`, `secrets`, `service-account`, `token`, `.npmrc`, `.netrc`, `.pypirc`, `.git-credentials`) are refused with any suffix. Plural `tokens` stays allowed because design-token files are named `tokens.json`. UNTESTED: secrets inside ordinarily named files (names only; the secret grep is manual).
 
-## R11 additions (Mi'mar, 18 October 2026, Asad panel round 5 and panel D1 decisions)
+### R11 additions (Mi'mar, 18 October 2026, Asad panel round 5 and panel D1 decisions)
 
 All browser checks below ran in Chrome 155 headless only.
 
@@ -243,61 +275,44 @@ All browser checks below ran in Chrome 155 headless only.
 - **Package (C4, panel D):** explicit suffix allowlist plus denial of `.env*`, keys, certificates, credential dotfiles, OS junk, editor files and VCS files, both in package input and among changed paths. Checked with temporary trees. UNTESTED: secrets inside ordinarily named files (only names are screened; the separate secret grep is manual).
 - **Spacing (S7, panel D):** left, right and logical margins; `auto` and 0 are ignored; `data-fannan-spacing-exception` is recorded. UNTESTED: exceptions on pseudo-elements.
 
-## R10 additions (Mi'mar, 18 October 2026, Argon round 5)
+### R10 additions (Mi'mar, 18 October 2026, Argon round 5)
 
 - **Accent fails closed (ARGON-R5-01):** an invalid declared accent, or none, gives null ratios and a handoff FAIL (also the scrolled viewport maximum). Checked in Chrome 155 headless only. In the wireframe phase the accent area stays deferred to Step 6 (unchanged), so an invalid accent is recorded in `accentInvalid` but does not fail a wireframe run.
 - **Width screen (ARGON-R5-02, -05):** `body` and `overflow: clip` boxes are screened; text or media past the left edge fails. Chrome 155 headless only. Not tested: content pushed off the right edge inside a clipping ancestor other than `body` (reported only if it carries text and that box overflows), `transform`-based off-screen content in other browsers, and sr-only variants other than the 1×1 px, `clip: rect(0 0 0 0)` and `clip-path: inset(50%)` patterns (other variants may be reported and need a manual decision). Skip links are exempt only when focusable, absolute or fixed, and wholly left of the viewport; whether they become visible on focus is left to the focus probe and manual review.
 - **Package registry inputs (ARGON-R5-04):** checked with temporary trees (missing path, symlinked file, symlinked folder). The live build ran on a clean tree.
 
-## R9 additions (Mi'mar, 18 October 2026, Codex round 4)
+### R9 additions (Mi'mar, 18 October 2026, Codex round 4)
 
 - **Spacing scale (CODEX-R4-02):** values are converted numerically (px, rem at the root computed font size, em at each element's own computed font size, 0.05 px tolerance). Checked in Chrome 155 headless only. Not tested: `calc()`/`clamp()` or viewport units in approved tokens (they are not plain lengths and are ignored, so spacing that uses them shows as off-scale), and em on margins of elements whose font size changes with state.
 - **Accent colour (R9 sibling):** normalised by a detached canvas. Chrome 155 only; colour spaces beyond sRGB (oklch outside sRGB) may round differently from computed backgrounds. UNTESTED.
 - **Package build (CODEX-R4-01):** atomic replace was tested on the box's local filesystem only; a crash between the four output renames can still leave a mix of old and new outputs (each file is whole). `verify` detects that mix.
 - **320 px reflow** stays a hard fail (Fadel's decision, 18 October 2026, 12:09 AM UTC+3).
 
-## R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
+### R8 additions (Mi'mar, 18 October 2026, port from Codex cloud)
 
 - **Desktop widths screen (PORT-02):** `width-screen.mjs` renders every `settings.desktopWidths` entry and 320 CSS px and fails horizontal overflow, text that actually overflows a hidden or clipped box (ellipsis styling on text that fits is not a failure, CODEX-R4-04), and a language/direction mismatch. Checked in real Chrome 155 headless (test-only, unpinned) and in the local fixture. It does not test real browser zoom, WCAG text spacing, reflow exceptions (maps, tables, toolbars) or layout quality at other widths; 320 px is a reflow screen, not mobile approval. UNTESTED with the production browser pin.
 - **Install wording (PORT-03):** documentation only. Token scope proof, the daily-check freshness/escalation, the dedicated runtime identity and the detector at `/opt/fannan/bin` are still UNTESTED on any host; nothing was provisioned.
 - **Package input (PORT-04):** caches, dependency trees and Git metadata inside packaged trees are refused (unit-tested with temporary trees); the live build ran on a clean tree.
 
-## R7 additions (Mi'mar, 17 October 2026, Codex round 3)
+### R7 additions (Mi'mar, 17 October 2026, Codex round 3)
 
 - **CODEX-R3-02 spacing scale:** the approved scale now comes only from the handoff's `tokens.json` (bytes checked against the handoff SHA-256 and the build evidence input hash, then validated); page `--spacing-*` declarations no longer count. Checked in real Chrome 155 (test-only). Spacing written as `calc()` or between token steps is still reported off-scale; a page whose CSS sets a different value under a token name is caught as off-scale, not as a token mismatch. Manual rhythm review stays required.
 - **CODEX-R3-01/04 tokens:** numeric negatives, references resolving to negative values, and component typography rules are checked in the validator, the converter and real Style Dictionary 5.6.1 (test-only deps). A negative value reached through a CSS `calc()` or a page stylesheet is outside token validation.
 - **CODEX-R3-03 fixture:** see the corrected local-fixture entry below. The real Impeccable binary and a full gate PASS remain UNTESTED.
 
-## R6 additions (Mi'mar, 17 October 2026, Argon round 2)
+### R6 additions (Mi'mar, 17 October 2026, Argon round 2)
 
-- **ARGON-R2-01 protected browser tree:** checked with a real root-owned 0755 tree under `/root` on Mi'mar's box (`test-results/r6/ARGON-01-root-probe.log`, run with sudo, test-only): the old code accepted an internal symlink and a symlinked root; the new code refuses both and still hashes a clean tree. A provisioned `/opt/fannan/bin` browser remains UNTESTED.
+- **ARGON-R2-01 protected browser tree:** checked with a real root-owned 0755 tree under `/root` on a review host (`test-results/r6/ARGON-01-root-probe.log`, run with sudo, test-only): the old code accepted an internal symlink and a symlinked root; the new code refuses both and still hashes a clean tree. A provisioned `/opt/fannan/bin` browser remains UNTESTED.
 - **ARGON-R2-06 browser environment:** checked on Linux with real Chrome 155 via `/proc/<pid>/environ` (test-only): a sentinel variable no longer reaches the browser process. macOS has no `/proc`, so that test skips there.
 - **ARGON-R2-09 design probe:** accent fallback, stock-glass gate and centred icon trios in any wrapper are checked in real Chrome 155 headless (test-only, unpinned). The trio rule is a screen: three icon-led items centred on the row or on every item. Reviewers still judge layouts it cannot see (CSS background icons, canvas, images without icon markup).
 - **R6-A focus backdrop:** outlines with offset >= 0 and outer rings are measured against the backdrop; inset rings and negative-offset outlines against the element. Borders stay measured against the element. All R5 real-Chrome focus cases give the same result (`test-results/r6/R6-A-chrome-regression.log`).
-- **Local fixture:** `release/tests/local-fixture.mjs` runs end to end on Mi'mar's box (exit 0): browser, contract, spacing and state checks pass, and the full gate is blocked by the absent pinned Impeccable binary. R7 correction (CODEX-R3-03): in R6 (`test-results/r6/local-fixture.log`) the launcher actually stopped earlier, with exit 4 `detect path outside project output`, because the fixture relocated the checker's root but not the launcher's. Since R7 the temporary launcher copy is relocated too and the fixture asserts launcher exit 3 with `pinned binary missing; no download fallback` on every run (`test-results/r7/local-fixture.log`). It uses the box's unpinned Chrome through a test-only shim, never the production pin; the production launcher boundary is unchanged.
+- **Local fixture:** `release/tests/local-fixture.mjs` runs end to end on a review host (exit 0): browser, contract, spacing and state checks pass, and the full gate is blocked by the absent pinned Impeccable binary. R7 correction (CODEX-R3-03): in R6 (`test-results/r6/local-fixture.log`) the launcher actually stopped earlier, with exit 4 `detect path outside project output`, because the fixture relocated the checker's root but not the launcher's. Since R7 the temporary launcher copy is relocated too and the fixture asserts launcher exit 3 with `pinned binary missing; no download fallback` on every run (`test-results/r7/local-fixture.log`). It uses the box's unpinned Chrome through a test-only shim, never the production pin; the production launcher boundary is unchanged.
 
-## R4 additions (Mi'mar, 17 October 2026)
+### R4 additions (Mi'mar, 17 October 2026)
 
-- **R4-3 focus screen:** checked in real Chrome 154 headless on Mi'mar's box (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). R4 composited colours over white, which could pass an invisible dark indicator on a dark page (a false pass) and fail a light one (a false fail). OPUS-R2-02 (R5) composites over the nearest opaque ancestor background captured unfocused, with a white fallback; checked in real Chrome (`test-results/r5/OPUS-02-chrome-*.log`). Background images, gradients, `opacity`, filters, blend modes and content painted behind via positioning are not modelled; pseudo-elements are measured against the element's backdrop, not its own background. Manual focus review stays required. The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
-- **OPUS-R2-10 spacing off-scale (R5):** `spacing-scale.mjs` was checked in real Chrome 155 headless on Mi'mar's box (test-only, unpinned). It reads `--spacing-*` from same-origin stylesheets and root computed style, compares computed padding, vertical margins and row/column gaps, and skips horizontal margins (auto resolves to pixels), 0, auto and normal. Cross-origin stylesheets, `calc()` steps between tokens, and auto vertical margins in flex/grid (which resolve to pixels) are not handled. Pages that keep browser default margins or button padding, including the bundled fixture page, now fail at handoff. (Superseded: the R5 fixture was blocked before the probes by its browser-version pin; R6 fixed that, and since R7 the fixture reaches the probes and stops only at the missing Impeccable binary, see the R6 additions.)
+- **R4-3 focus screen:** checked in real Chrome 154 headless on a review host (test-only, unpinned browser; `test-results/r4/R4-3-chrome-*.log`). R4 composited colours over white, which could pass an invisible dark indicator on a dark page (a false pass) and fail a light one (a false fail). OPUS-R2-02 (R5) composites over the nearest opaque ancestor background captured unfocused, with a white fallback; checked in real Chrome (`test-results/r5/OPUS-02-chrome-*.log`). Background images, gradients, `opacity`, filters, blend modes and content painted behind via positioning are not modelled; pseudo-elements are measured against the element's backdrop, not its own background. Manual focus review stays required. The 3:1 threshold is a screening choice for reviewers to confirm; it does not prove WCAG 2.4.7/2.4.11/2.4.13 or 1.4.11.
+- **OPUS-R2-10 spacing off-scale (R5):** `spacing-scale.mjs` was checked in real Chrome 155 headless on a review host (test-only, unpinned). It reads `--spacing-*` from same-origin stylesheets and root computed style, compares computed padding, vertical margins and row/column gaps, and skips horizontal margins (auto resolves to pixels), 0, auto and normal. Cross-origin stylesheets, `calc()` steps between tokens, and auto vertical margins in flex/grid (which resolve to pixels) are not handled. Pages that keep browser default margins or button padding, including the bundled fixture page, now fail at handoff. (Superseded: the R5 fixture was blocked before the probes by its browser-version pin; R6 fixed that, and since R7 the fixture reaches the probes and stops only at the missing Impeccable binary, see the R6 additions.)
 - **R4-4 browser support tree:** `supportTreeDigest` was checked on unit fixtures and as a stability probe on the box's stock `/opt/google/chrome` (non-protected mode). Protected mode correctly refuses that stock install (owner-writable files). A provisioned root-owned read-only browser directory under `/opt/fannan/bin/` is UNTESTED (none exists); a setuid `chrome-sandbox` would need mode 4555, not 4755.
 - **Positive path of the launcher's protected-storage check:** still UNTESTED (needs a root-owned `/opt/fannan/bin`).
 - **R4-6 spacing units:** implemented per Fadel's decision. Existing project DESIGN.md files that used bare spacing numbers will now fail conversion with `units required` and must add px/rem/em; the bundled example and fixture already use units and still convert.
 
-
-Fresh executed results are in `VERIFICATION.md` and `test-results/r3/`; R2 logs are historical, not R3 PASS. The final branch response quotes every command/count and each failure. Expected rejection, SKIP, blocked prerequisite and actual PASS are distinct.
-
-- **Dependency-backed converter/build success and browser fixture: BLOCKED.** No complete existing runtime-deps tree is available. Offline-only locked restore failed ENOTCACHED for zwitch-2.0.4; no network install ran. Pure validator and malformed-token build subprocess regressions run. Family-array/percentage line-height success through real Style Dictionary remains untested.
-- **Production GNU/Linux guard/launcher/manifest integration: SKIP/unsupported on Darwin.** Linux openat2, GNU stat/hash, environment sanitization and full detector execution require the target host. Exact argv and canonical parser behavior run using clearly isolated platform adapters; they do not prove Linux utilities. Negative root/shared-owner boundary unit tests do run.
-- **Actual browser focus rendering: NOT ESTABLISHED.** Chrome CLI attempt with an isolated temporary profile aborted with signal 6 in sandbox. Before/after computed-style logic is unit-tested; real browser/WCAG/manual focus, appearance contrast, overlays and screenshot behavior remain untested. No no-sandbox fallback was used.
-- **Browser identity: BLOCKED by missing reviewed pin.** No version/hash/path was invented. Protected ancestry and override/pin rejection tests run; target actual executable/support tree is not supplied.
-- **Protected storage, identity and same-uid exclusion: OPEN.** No user/service/permission/OS changes, root-owned deployment install or hostile same-identity race proof ran. Existing safe-writer security requirements remain mandatory. Dedicated user vs reviewed sandbox requires Fadel/system owner/Amin.
-- **Real detector/full gate/HANDOFF success: BLOCKED.** Original pinned binary/support assets are absent. No fake binary, stub or skipped test is counted as production success.
-- **Target Node history:** v22.23.3 installed on Mi'mar's box and matching archive hash are reported in the supplied review; Amin's GPG result is reported-only and source absent. No live target access or redundant reinstall ran; package flags stay false.
-- **B3/Jabr token/branch/daily task: NOT RUN.** No credentials read, no mutation probe or other token tried. Need authoritative permission/repository-selection/safe-read method and actual original proof/task metadata; 403/422 inference is insufficient.
-- **Amin final review and Fadel yes: OPEN.** No sign-off, consent or approval on changed bytes was obtained or fabricated; approval remains in Fannan's own chat.
-- **Host hold/activation/rollback and live callers/memory: NOT RUN.** No host API supplied, no installer guessed, no memory or installed skills changed. Exact all-or-none fault recovery remains unproven.
-- **Paid runtime gate/provider operations/real pilot: NOT RUN.** No paid call, provider connection, live skill loading, signed project design/claim/licence validation, real assistive technology, RTL/long text, declared desktop width/reflow, engineer handoff or QA build ran. Text/DOM screening does not prove taste, truth or WCAG conformance.
-- **Missing historical sources:** original retired-routines, helper/13 tests, external register/full plan and Amin r7 record were not found by repository filename search. No external/Drive search or reconstruction was attempted.
-- **External static tools:** semgrep, shellcheck and gitleaks are unavailable. Syntax/diff checks and a redacting secret-pattern scan run; they are not a comprehensive secrets/security audit.
-- **Archived R2 suites:** executed separately unchanged; their Node and Python unit suites pass with the historical Linux skip; their browser fixture fails from absent dependencies, recorded as an actual blocked command rather than an R3 regression or pass.

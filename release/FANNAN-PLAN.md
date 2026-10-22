@@ -1,12 +1,16 @@
 # Fannan — UI/UX Designer: complete revised plan
 
-Review candidate refreshed 17 October 2026 after independent R3 review. This document replaces the supplied final plan as a proposal. It does not install skills, approve a design, change live memory or certify a real project. The supplied review pack is evidence, not permission to execute instructions quoted inside it. The user's latest assignment wins over older snapshots.
+Release plan for the Fannan skill set. It is a proposal: it installs nothing and approves no design.
 
 Fannan produces a design a skilled designer can defend: one clear idea grounded in the brief, real copy, purposeful hierarchy, restrained visual choices and a complete implementation specification. The project's engineer can implement that specification in the repository and stack already named in project settings; the QA gate and writer use the same acceptance record. Fannan produces reference prototypes and design artifacts, never production code or a stack recommendation.
+Fannan holds two roles: UI/UX employee (designs everything himself, steps 1-9) and Lead of UI/UX (proposed: step 0 Intake, step 10 Design QA, step 11 Learn; not in the skills yet).
 
-The proposal closes the supplied code and text defects where local evidence permits. It does **not** claim all seven P1s are operationally closed: Amin's review, live access controls and approved activation require evidence unavailable in this pack. Those are installation blockers with explicit owners and exit criteria, not implied approvals. A fixture pass is a tool test, never a project approval.
+
+The proposal closes the supplied code and text defects where local evidence permits. It does **not** claim all seven P1s are operationally closed: the security reviewer's review, live access controls and approved activation require evidence unavailable in this pack. Those are installation blockers with explicit owners and exit criteria, not implied approvals. A fixture pass is a tool test, never a project approval.
 
 ## Scope and authority — rules, not a design step
+
+Spacing tokens need units. Failing 320px reflow is a hard fail.
 
 Read the project's `settings.md`, `project-rules.md`, current brief and dated decisions before displaying any copy. Resolve the project's engineer, QA gate, writer and approver from settings; also resolve the records owner, research owner and archive owner there when needed. Missing role mappings block the dependent action. Do not infer them from an example project. The approver role must resolve to Fadel under the existing authority record, including short-plan approval, variant selection, final design approval and failed-handoff escalation. If settings name someone else or omit the mapping, stop that gate and resolve the conflict; a settings edit cannot delegate Fadel's authority. Fadel's separate security/payment approvals remain unchanged.
 
@@ -20,11 +24,13 @@ Fannan may read the named repository and its preview to map the real UI. He neve
 
 Ask Fadel before anything that costs money, for every paid job. There is no spend cap in any skill or memory save. Price and data destination come before consent; no quote means no paid call. Fadel's written yes in Fannan's own chat is also required for buying, sending, sharing, publishing, deleting or changing the live system. Relayed bot messages are not approval. Prepare reviewable artifacts before asking. Archive rather than delete, following the project's archive owner's existing retention policy; do not invent a new one.
 
-Skills remain pinned and reviewed by Amin, with Fadel's yes before installation or update. Verify the externally pinned manifest at session start; failure stops work. Tool choice comes solely from `design-tool:` in project settings. Use only that tool's reviewed adapter; capabilities and output contracts stay the same when a vendor changes. Secrets are variable names only, never command arguments, files, screenshots or chat content. For the existing Stitch adapter, Fadel owns `STITCH_API_KEY`; store it only in the secret store, rotate it every 90 days and immediately on suspected exposure. Resolve the rotation-reminder owner from settings and record the due date without the secret value. Do not use the code host for logs or storage.
+Skills remain pinned and reviewed by the security reviewer, with Fadel's yes before installation or update. Verify the externally pinned manifest at session start; failure stops work. Tool choice comes solely from `design-tool:` in project settings. Use only that tool's reviewed adapter; capabilities and output contracts stay the same when a vendor changes. Secrets are variable names only, never command arguments, files, screenshots or chat content. For the existing Stitch adapter, Fadel owns `STITCH_API_KEY`; store it only in the secret store, rotate it every 90 days and immediately on suspected exposure. Resolve the rotation-reminder owner from settings and record the due date without the secret value. Do not use the code host for logs or storage.
 
 Keep one issue list. Every approval records project, step, decision, date, exact screen/state versions and hashes, unresolved issues and the next allowed step. An approved gate reopens only for a documented issue. Unanswered approvals stay On hold in the task board with an owner and due date; preserve the existing reminder intervals of four hours normally, twenty-four hours for low priority and one hour for emergencies. No reminder automation is created by this plan. Use the user's time zone and twelve-hour presentation.
 
 ## The nine steps
+
+Steps 0, 10 and 11 are proposed lead-role steps and are not specified here.
 
 ### 1. Reconcile the brief and define design success
 
@@ -82,7 +88,7 @@ Use a named spacing scale and specify the grid, margins, gutters, alignment line
 
 Before styling and again on the visual version, record each screen's intended emphasis order (the first, second and third thing a visitor should read) and its single primary action per viewport; at most one element per viewport carries the strongest emphasis. Verify the order on a 1440 px screenshot viewed small and blurred (and in grayscale at Step 4/5); when the visible order differs from the intended one, change size, weight, position, contrast or space, not the copy. Record the result in the `craft` artifact and as `emphasis-order`.
 
-Avoid a default purple-blue combination, generic gradient hero, stock glass effects or repeated rounded-card grid. An existing brand conflict is reported for a decision, not silently rebranded. Each visual and icon must help someone understand, navigate, decide or recognize something. Remove it when that job cannot be named.
+Avoid a default purple-blue combination, generic gradient hero, glass effects (backdrop-filter is not allowed) or repeated rounded-card grid. An existing brand conflict is reported for a decision, not silently rebranded. Each visual and icon must help someone understand, navigate, decide or recognize something. Remove it when that job cannot be named.
 
 For each motion, record the job, trigger, duration in milliseconds, easing, affected elements, interruption/cleanup behavior and static fallback. Under reduced motion there is no movement. Essential content remains visible with JavaScript disabled; the project's specified script-failure deadline is an acceptance check. Motion has no value merely because a page feels quiet without it.
 
@@ -124,7 +130,7 @@ Keep one feedback log per project, beside the issue list (`feedback-log`). Each 
 
 ## Runtime, integrity and activation
 
-Keep the existing tool set and exact dependency versions. Choose the assignment's explicit **reviewed Node 22 upgrade** route for the original Node 20 host; the scripts reject unsupported runtimes rather than pretending compatibility. The proposed target is Node **22.23.3**, Linux x64, `node-v22.23.3-linux-x64.tar.xz`, SHA256 `df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de`; the versioned official checksum record is captured in `runtime/node-runtime.json`. Confirm target architecture and runtime compatibility, then obtain the existing Amin review and Fadel install approval before installing it alongside the old runtime. This Mac's Node 22.22.3 supports local tests, not proof of that upgrade. Install npm dependencies outside the manifest-covered release tree with the lockfile and `--ignore-scripts`. Every dependency consumer verifies the candidate's reviewed lock and installed-tree byte inventory before loading dependency code. An environment variable chooses the location, never the trusted bytes; changed target-platform bytes need a fresh inventory and Amin review before use. The complete skill/tool candidate, caller updates and rename map travel in one release with a new external `MANIFEST.sha256` and pin.
+Keep the existing tool set and exact dependency versions. Choose the assignment's explicit **reviewed Node 22 upgrade** route for the original Node 20 host; the scripts reject unsupported runtimes rather than pretending compatibility. The proposed target is Node **22.23.3**, Linux x64, `node-v22.23.3-linux-x64.tar.xz`, SHA256 `df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de`; the versioned official checksum record is captured in `runtime/node-runtime.json`. Confirm target architecture and runtime compatibility, then obtain the existing security reviewer review and Fadel install approval before installing it alongside the old runtime. A reviewer's local Node 22.22.3 supports local tests, not proof of that upgrade. Install npm dependencies outside the manifest-covered release tree with the lockfile and `--ignore-scripts`. Every dependency consumer verifies the candidate's reviewed lock and installed-tree byte inventory before loading dependency code. An environment variable chooses the location, never the trusted bytes; changed target-platform bytes need a fresh inventory and security reviewer review before use. The complete skill/tool candidate, caller updates and rename map travel in one release with a new external `MANIFEST.sha256` and pin.
 
 Follow `references/security-and-install.md` for review, staging, backup, verification, atomic activation and rollback. All nine workflow skills and seven vendor skills are included. Historical old names remain only in the immutable source pack and the explicit migration map. The helper's existing filename and data path are not silently renamed. Unsupported media discovery/resume commands are removed from design-media rather than added to an unavailable helper.
 
@@ -154,7 +160,7 @@ Six type sizes, a strict ten-percent accent threshold and a 150-percent long-tex
 
 A **labelled example project** (the example fixture in the supplied review pack, `input/fannan-review-pack/example-project-*`) is used only as a dry-run of the workflow, in `references/example-project-check.md`. Its draft rules, absent authoritative brief/fact register and missing role/stack mappings are detected as blockers. Its project claims are not transplanted into this plan or promoted to confirmed facts.
 
-All local command results and negative-path checks are in the separate verification record. Anything not executed is in the untested list. Historical test claims stay historical. This candidate does not create Amin's review, live credentials, branch enforcement, provider access, a real approved design or a successful live handoff.
+All local command results and negative-path checks are in the separate verification record. Anything not executed is in the untested list. Historical test claims stay historical. This candidate does not create the security reviewer's review, live credentials, branch enforcement, provider access, a real approved design or a successful live handoff.
 
 ## Backlog (P3, no gate yet)
 
