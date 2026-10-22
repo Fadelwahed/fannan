@@ -2,7 +2,7 @@
 
 Fannan is a UI/UX design bot. It holds two roles at once: **Lead of UI/UX** and **UI/UX employee**. As the employee, Fannan makes every design himself, from research to the engineering handoff. As the lead, he also takes in and ranks design requests, critiques other people's design work, runs the design system and the accessibility program, and checks built previews with the QA bot.
 
-This repository holds the files that install and run Fannan. Install only after the [install prerequisites](#install-prerequisites) are met, Amin (the security reviewer) has reviewed the exact manifest digest, and the owner says yes in Fannan's own chat.
+This repository holds the files that install and run Fannan. Install only after the [install prerequisites](#install-prerequisites) are met, the security reviewer has reviewed the exact manifest digest, and the owner says yes in Fannan's own chat.
 
 ## Contents
 
@@ -42,7 +42,7 @@ There are no style bans. Type scale, colour and accent use, centring, layout pat
 1. WCAG 2.2 AA is the minimum. This includes reflow at 320 CSS pixels (WCAG 1.4.10).
 2. Facts and claims are confirmed; nothing is invented.
 3. Every spacing token has a unit, for example `16px` or `1rem`, and tokens are valid.
-4. Fannan is read-only on code. He never branches, commits, pushes or opens pull requests. The engineer bot (Jabr) ships code. Prototypes are reference only.
+4. Fannan is read-only on code. He never branches, commits, pushes or opens pull requests. The project's engineer role ships code. Prototypes are reference only.
 5. Fannan asks the owner before anything that costs money, every time. There is no spend cap.
 6. Fix the root cause, never the symptom.
 7. Never guess. Label anything not checked as UNTESTED.
@@ -172,7 +172,7 @@ trust/
 
 Follow `release/references/security-and-install.md`. In short:
 
-1. Confirm Amin's review of the exact manifest digest and the owner's yes in Fannan's chat.
+1. Confirm the security reviewer's review of the exact manifest digest and the owner's yes in Fannan's chat.
 2. Stage the full release inactive, with dependencies in `/opt/fannan/deps` outside the hashed tree and the pinned Impeccable binary in `/opt/fannan/bin/`.
 3. Run the manifest check, the project prechecks, the token build and a full checker run on the target host.
 4. Activate the whole skill tree in one step, retire the eight `proto-*` skills (the rename table is in `security-and-install.md`), update every caller, and apply only the memory saves the owner approved.
@@ -215,28 +215,30 @@ chmod 0444 trust/MANIFEST.sha256
 release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$(cut -d' ' -f1 trust/PINNED.sha256)"
 ```
 
-Expected output: `MANIFEST OK (<n> files)`. The script fails on a changed, missing or extra file, a symlink, a writable manifest or a pin mismatch. A clone does not keep the 0444 mode, so set it first; this does not change any bytes. In production the pin comes from Amin's review record, not from `PINNED.sha256`. The script needs GNU `realpath`, `stat` and `sha256sum`.
+Expected output: `MANIFEST OK (<n> files)`. The script fails on a changed, missing or extra file, a symlink, a writable manifest or a pin mismatch. A clone does not keep the 0444 mode, so set it first; this does not change any bytes. In production the pin comes from the security reviewer's review record, not from `PINNED.sha256`. The script needs GNU `realpath`, `stat` and `sha256sum`.
 
 ## Update and pinning policy
 
 - Every skill and tool is pinned to a commit or a SHA-256.
-- Amin reviews every new or changed skill, tool and pin before it is installed.
+- The security reviewer reviews every new or changed skill, tool and pin before it is installed.
 - Nothing is installed or updated without the owner's yes in Fannan's own chat.
 - Any change to `release/` changes the manifest pin, so it needs a new review.
 - Changes reach `main` through one focused pull request each. Only the owner merges.
 
 ## Working with other bots
 
-| Bot | Fannan gives | Fannan gets |
+| Role | Fannan gives | Fannan gets |
 |---|---|---|
-| Chief of staff (Wazir) | Status, estimates, blockers | Assignments, project settings, priorities |
-| Engineer (Jabr) | Handoff package, QA defects | Preview builds, feasibility answers |
-| QA (Najm) | The QA checklist from the handoff | Preview check results |
-| Site operations (Rayyan) | Design fixes for audit findings | Site audits as inputs |
-| Security (Amin) | Skill and tool install requests | Reviews and conditions |
+| Chief of staff | Status, estimates, blockers | Assignments, project settings, priorities |
+| Engineer | Handoff package, QA defects | Preview builds, feasibility answers |
+| QA | The QA checklist from the handoff | Preview check results |
+| Site operations | Design fixes for audit findings | Site audits as inputs |
+| Security reviewer | Skill and tool install requests | Reviews and conditions |
 | Writer | Copy slots and placeholders | Final copy |
-| Prompt writer (Bayan) | Prompt requests | Model-specific prompts |
-| Bot designer (Mi'mar) | Findings about Fannan's own skills | Skill and workflow updates |
+| Prompt writer | Prompt requests | Model-specific prompts |
+| Bot designer | Findings about Fannan's own skills | Skill and workflow updates |
+
+Each project's settings map these roles to bots.
 
 When Fannan messages another bot, he passes every argument the messaging tool requires.
 
@@ -247,7 +249,7 @@ When Fannan messages another bot, he passes every argument the messaging tool re
 | Wireframe structure, final design, variant choice | Owner |
 | Sharing, publishing or sending outside the team | Owner |
 | Any spend, such as paid image generation | Owner, each time |
-| Installing or updating a skill or tool | Amin reviews, then the owner says yes |
+| Installing or updating a skill or tool | The security reviewer reviews, then the owner says yes |
 | Testing with real people | Owner |
 | A breaking change to the design system | Owner |
 | Code changes | The engineer builds, QA passes, the owner merges |
@@ -260,7 +262,7 @@ These must be in place on the target host before activation. The full list, with
 
 - **Writer host.** `release/tools/safe-write.py` needs Linux x86_64 or aarch64 with `openat2`, and `/workspace` and `/workspace/design-output` owned by root without group or other write. It refuses to write anywhere else.
 - **Impeccable binary.** Stage the binary with SHA-256 `3d31ec1a664ac35c815ea1d7c10abad1155ce364d0f461157eb837a34368efb6` (engine v0.1.14) at `/opt/fannan/bin/impeccable-linux-x64`. Without it the full pre-handoff gate stops by design.
-- **Browser pin.** `release/runtime/browser-trust.json` stays `blocked` until Amin reviews the real browser path, version and SHA-256.
+- **Browser pin.** `release/runtime/browser-trust.json` stays `blocked` until the security reviewer reviews the real browser path, version and SHA-256.
 - **Read-only code token.** The engineer proves the code-read token is limited to Contents: read on the one project repository.
 - **Branch protection.** The only-the-owner-merges rule must be enforced on `main` or covered by the daily engineer check.
 - **Carousel markup.** Check the declared-carousel contract against the carousel library a project actually uses before relying on it.
