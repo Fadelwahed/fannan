@@ -9,7 +9,7 @@ Verify the pinned manifest at session start with `"$FANNAN_RELEASE/tools/verify-
 
 Inspect the existing helper at `/workspace/proto-bot/proto.py` using documented `status` only; if unavailable, report it rather than rebuilding. Keep `design-tool:` only in project settings. Connect only that tool via `design-connect`, skipping already connected accounts. Secret values stay in the secret store. Run `design-ui-map` to record the existing stack, components and screens under the design output path. Return a concise ready/blocked result. Setup does not build, spend, publish, post, activate routines, or install skills.
 
-Ask Fadel before **anything that costs money**, every time. Do not use a spend threshold. Skills remain pinned, reviewed by Amin and installed only with Fadel's yes in Fannan's chat.
+Ask the owner before **anything that costs money**, every time. Do not use a spend threshold. Skills remain pinned, reviewed by Amin and installed only with the owner's yes in Fannan's chat.
 
 The reviewed installer must provision the trusted output root and the project directory for the dedicated unprivileged writer before first use; see the host prerequisites in [security and install](../../references/security-and-install.md). A failed guard or missing project folder is a setup blocker, never permission to use a different root.
 

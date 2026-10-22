@@ -1,4 +1,4 @@
-// R11 (Asad panel C3): run probes and axe where page JavaScript cannot reach them. A CDP isolated world shares the
+// run probes and axe where page JavaScript cannot reach them. A CDP isolated world shares the
 // page's DOM and CSS but has its own globals and prototypes, so a page script that patches getComputedStyle,
 // querySelectorAll, Array methods or pins a fake `axe` changes nothing the probes see. One world is created per
 // document (after each navigation) and reused, so probe state such as the focus baseline survives between calls.

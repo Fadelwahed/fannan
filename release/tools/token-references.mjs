@@ -1,13 +1,13 @@
 const reference = value => typeof value === 'string' && /^\{[^{}]+\}$/.test(value);
-// R4-2: a unitless zero is a valid CSS length; every other dimension needs px, rem or em.
-// ARGON-R2-07: the string "0" is the same bare zero; numeric strings, exponents and other units stay refused.
+// a unitless zero is a valid CSS length; every other dimension needs px, rem or em.
+// the string "0" is the same bare zero; numeric strings, exponents and other units stay refused.
 const dimension = value => value === 0 || value === '0' || typeof value === 'string' && /^-?\d*\.?\d+(px|rem|em)$/.test(value);
-// CODEX-R3-01: numbers count too (lineHeight: -1), not only strings.
+// numbers count too (lineHeight: -1), not only strings.
 export const negative = value => typeof value === 'number' ? value < 0 : typeof value === 'string' && /^-\d*\.?\d+/.test(value) && parseFloat(value) !== 0;
-// ARGON-R2-07: lengths CSS forbids from being negative (radii, breakpoints, font sizes, padding, gaps, sizes and the
+// lengths CSS forbids from being negative (radii, breakpoints, font sizes, padding, gaps, sizes and the
 // spacing scale, which feeds padding and gaps). Margins, insets, scroll margins and letter spacing may be negative.
 const nonNegativeKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|scrollPadding)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
-// CODEX-R3-04: components.<name>.typography.<property> follows the same rules as typography.<style>.<property>.
+// components.<name>.typography.<property> follows the same rules as typography.<style>.<property>.
 export const isTypographyPath = path => { const parts = path.split('.'); return parts[0] === 'typography' || parts[0] === 'components' && parts.length >= 4 && parts.at(-2) === 'typography'; };
 export const forbidsNegative = path => {
   const parts = path.split('.'), group = parts[0], key = parts.at(-1);
@@ -29,8 +29,8 @@ const valid = {
   fontWeight: value => typeof value === 'number' && Number.isFinite(value) && value >= 1 && value <= 1000 || typeof value === 'string' && cssWeightKeywords.has(value)
 };
 
-// CODEX-R2-02: component spacing keys that must be CSS lengths (physical and logical sides, row/column gap,
-// inset and scroll padding/margin). OPUS-R2-01: plus the design.md spec's size/width/height sub-tokens and
+// component spacing keys that must be CSS lengths (physical and logical sides, row/column gap,
+// inset and scroll padding/margin). plus the design.md spec's size/width/height sub-tokens and
 // min/max width/height. A bare 0 is allowed; other numbers need px, rem or em.
 const componentDimensionKey = /^(rounded|gap|rowGap|columnGap|size|width|height|minWidth|maxWidth|minHeight|maxHeight)$|^(padding|margin|inset|scrollPadding|scrollMargin)(Top|Right|Bottom|Left|Inline|Block|InlineStart|InlineEnd|BlockStart|BlockEnd)?$/;
 export const isComponentDimensionKey = key => componentDimensionKey.test(key);
@@ -40,26 +40,26 @@ function expected(path) {
   const parts = path.split('.'), group = parts[0], key = parts.at(-1);
   if (group === 'colors') return ['color'];
   if (['rounded', 'breakpoints'].includes(group)) return ['dimension'];
-  if (group === 'spacing') return ['dimension']; // R4-6: spacing requires px, rem or em (a bare 0 is a valid dimension)
+  if (group === 'spacing') return ['dimension']; // spacing requires px, rem or em (a bare 0 is a valid dimension)
   const typographyRule = isTypographyPath(path) ? typographyTypes[key] : undefined;
-  if (typographyRule || group === 'typography') return typographyRule; // CODEX-R3-04: also components.<name>.typography.<property>
+  if (typographyRule || group === 'typography') return typographyRule; // also components.<name>.typography.<property>
   if (group === 'components') {
     if (/color$/i.test(key)) return ['color'];
     if (componentDimensionKey.test(key)) return ['dimension'];
   }
 }
 
-// OPUS-R2-01: true when the path accepts only CSS lengths, so a bare nonzero number means "units required".
+// true when the path accepts only CSS lengths, so a bare nonzero number means "units required".
 export const expectsDimension = path => (expected(path) ?? []).length === 1 && expected(path)[0] === 'dimension';
 
-// CODEX-R4-03: ONE rule per consuming path (type + units + sign + percent only for lineHeight). Literals and resolved
+// ONE rule per consuming path (type + units + sign + percent only for lineHeight). Literals and resolved
 // references both go through checkValue, so an alias can never carry a value the consuming path would refuse literally.
 export function checkValue(path, type, value) {
   if (!Object.hasOwn(valid, type)) return `unknown token type at ${path}: ${type}`;
   const allowed = expected(path);
   if (allowed && !allowed.includes(type)) return `incompatible token type at ${path}: ${type}`;
   if (!valid[type](value) && !(type === 'dimension' && lineHeightPercent(path, value))) return `invalid ${type} value at ${path}`;
-  if (negative(value) && forbidsNegative(path)) return `negative length at ${path}: CSS forbids it here`; // ARGON-R2-07
+  if (negative(value) && forbidsNegative(path)) return `negative length at ${path}: CSS forbids it here`;
   return null;
 }
 
@@ -87,7 +87,7 @@ export function validateTokens(tokens) {
     const value = token.$value, target = reference(value) ? resolve(value.slice(1, -1), seen) : token;
     const type = token.$type ?? target.$type;
     if (token.$type && token.$type !== target.$type) throw Error(`incompatible token reference at ${path}: ${token.$type} vs ${target.$type}`);
-    // CODEX-R4-03: the consuming path's full rule applies to the resolved literal, exactly as to a literal.
+    // the consuming path's full rule applies to the resolved literal, exactly as to a literal.
     const error = checkValue(path, type, target.$value);
     if (error) throw Error(reference(value) ? `${error} (${value} resolves to ${JSON.stringify(target.$value)})` : error);
     return target;

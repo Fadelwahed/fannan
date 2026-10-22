@@ -2,9 +2,7 @@
 
 Fannan is a UI/UX design bot. It holds two roles at once: **Lead of UI/UX** and **UI/UX employee**. As the employee, Fannan makes every design himself, from research to the engineering handoff. As the lead, he also takes in and ranks design requests, critiques other people's design work, runs the design system and the accessibility program, and checks built previews with the QA bot.
 
-This branch, `main`, holds only the files that install and run Fannan. Reviews, plans, tests, fixtures, evidence logs and panel round records live on the [`workbench`](https://github.com/Fadelwahed/fannan/tree/workbench) branch.
-
-**Status: not installed.** The live bot still runs the older `proto-*` skills. Installing this release is blocked until the items in [Known limits](#known-limits-and-untested-items) are closed, Amin (the security reviewer) has reviewed the exact manifest digest, and the owner (Fadel) says yes in Fannan's own chat.
+This repository holds the files that install and run Fannan. Install only after the [install prerequisites](#install-prerequisites) are met, Amin (the security reviewer) has reviewed the exact manifest digest, and the owner says yes in Fannan's own chat.
 
 ## Contents
 
@@ -18,13 +16,10 @@ This branch, `main`, holds only the files that install and run Fannan. Reviews, 
 - [Install](#install)
 - [Configure a project](#configure-a-project)
 - [Verify the release](#verify-the-release)
-- [Run the tests](#run-the-tests)
-- [Sync release/ from workbench to main](#sync-release-from-workbench-to-main)
 - [Update and pinning policy](#update-and-pinning-policy)
 - [Working with other bots](#working-with-other-bots)
 - [Approvals](#approvals)
-- [Known limits and untested items](#known-limits-and-untested-items)
-- [Changelog summary](#changelog-summary)
+- [Install prerequisites](#install-prerequisites)
 - [License](#license)
 
 ## The two roles
@@ -36,9 +31,9 @@ Fannan does the design work first and leads on top of it. Leading never replaces
 | UI/UX employee | Research, user flows and information architecture, 1440px grayscale wireframes, visual and UI design, clickable reference prototypes, design tokens, and the handoff package for the engineer. He takes briefs, gives estimates and status, owns his deadlines, presents designs with the reason for each choice, revises after feedback, and keeps a decision log. |
 | Lead of UI/UX | Takes in and ranks design requests, critiques other people's design work with the same rubric he uses on his own, owns the design system, runs the accessibility program, checks built previews with the QA bot, and reports to the owner. |
 
-Fannan never passes a gate on his own review. Every gate needs his critique checklist plus an independent check from the review panel, the QA bot or the owner.
+Fannan never passes a gate on his own review. Every gate needs his critique checklist plus an independent check from a separate critic, the QA bot or the owner.
 
-The lead duties are a proposal. Only the employee skills exist in this release.
+The skills in this release cover the employee role (steps 1 to 9). The lead duties have no skills yet.
 
 ## Hard rules
 
@@ -86,7 +81,7 @@ The release has 16 skills in `release/skills/`. Nine are Fannan's own workflow s
 | `generate-design` | Generates, edits or varies Stitch screens | Only when `design-tool:` is Stitch and the stage allows it |
 | `manage-design-system` | Reads, creates or updates a Stitch design system | Only when `design-tool:` is Stitch, after step 5 approval |
 
-`release/references/` holds the shared rules the skills link to: `critic-rubric.md`, `design-quality.md`, `handoff-contract.md`, `security-and-install.md` and `example-project-check.md`.
+`release/references/` holds the shared rules the skills link to: `design-method.md` (the authority rules, the nine steps, the screen loop and feedback handling), `critic-rubric.md`, `design-quality.md`, `handoff-contract.md` and `security-and-install.md`.
 
 ## Tools and connectors
 
@@ -120,22 +115,19 @@ The gate scripts in `release/tools/` run on Node 22 (version, URL and checksum i
 
 ## Workflow
 
-The release skills run nine steps (1 to 9). Steps 0, 10 and 11 are proposed for the lead role and are not in the skills yet.
+The skills run nine steps (1 to 9). The full rules for each step are in `release/references/design-method.md`.
 
 | Step | Output | Gate | Independent check |
 |---|---|---|---|
-| 0 Intake (proposed) | Classified request, estimate, priority, owner | The brief exists and the approver role resolves | Owner, on a priority conflict |
 | 1 Brief and success | Success criteria, page inventory | Conflicts in the brief are resolved | Owner confirms |
 | 2 Content and evidence | Content inventory; missing text shown as `[placeholder]` with an owner | No invented facts | Critique checklist |
-| 3 Information architecture and flows | Sitemap, task flows, one brief line per section | Every section names the brief line it serves | Panel, on request |
+| 3 Information architecture and flows | Sitemap, task flows, one brief line per section | Every section names the brief line it serves | Independent critic, on request |
 | 4 Wireframes | Grayscale 1440px wireframes, at least two structures compared | Structure compared against alternatives | Critique checklist |
 | 5 Test and approve | Task-test findings and revisions | Owner approves the structure of each page | Owner |
 | 6 Desktop visual | Visual design, tokens, all states, motion notes | Hard rules 3 to 5; contrast at AA | Automated checks |
 | 7 Mobile and tablet | Reflow and touch specs | 320px reflow gate passes | Reflow gate |
-| 8 Validate | Critique, accessibility and copy reports | 0 P0 and P1; every P2 fixed at the root or accepted by the owner | Panel and owner |
+| 8 Validate | Critique, accessibility and copy reports | 0 P0 and P1; every P2 fixed at the root or accepted by the owner | Independent critic and owner |
 | 9 Handoff to the engineer | Handoff package and one acceptance checklist | `pre-handoff-check.mjs` passes; an open question, placeholder or missing approval blocks sending | Automated gate, then owner |
-| 10 Design QA (proposed) | Typed defect list from the engineer's preview | No P0 to P2 before release | QA bot |
-| 11 Learn (proposed) | Root-cause fixes to the system and skills | Monthly report | Owner |
 
 Severity: P0 is critical, P1 blocks release, P2 must be fixed, P3 is minor.
 
@@ -174,30 +166,22 @@ release/
   references/    rules the skills link to
   tools/         gate scripts and guarded helpers
   runtime/       Node runtime pin, package.json, package-lock.json, dependency and browser trust, quality checks, Style Dictionary config
-  memory/        FANNAN-MEMORY-PROPOSED.md, the proposed memory saves
-  migrations/    rename-map.json, the proto-* to design-* rename used at install
-  FANNAN-PLAN.md          the full design plan the skills link to
-  INSTALL-ACCEPTANCE.md   the install checklist; every row is OPEN
-  UNTESTED.md             what each round could not establish
-  OPEN-QUESTIONS.md, PROVENANCE.md, CHANGELOG.md
 trust/
   MANIFEST.sha256   SHA-256 of every file in release/
   PINNED.sha256     SHA-256 of MANIFEST.sha256
 ```
 
-Some release documents name test, review and evidence paths such as `release/tests/` or `test-results/`. Those paths are on `workbench`.
-
 ## Install
 
-Installing is blocked today. When the blockers are closed, follow `release/references/security-and-install.md`. In short:
+Follow `release/references/security-and-install.md`. In short:
 
 1. Confirm Amin's review of the exact manifest digest and the owner's yes in Fannan's chat.
 2. Stage the full release inactive, with dependencies in `/opt/fannan/deps` outside the hashed tree and the pinned Impeccable binary in `/opt/fannan/bin/`.
 3. Run the manifest check, the project prechecks, the token build and a full checker run on the target host.
-4. Activate the whole skill tree in one step, retire the eight `proto-*` skills, update every caller, and apply the approved memory saves.
+4. Activate the whole skill tree in one step, retire the eight `proto-*` skills (the rename table is in `security-and-install.md`), update every caller, and apply only the memory saves the owner approved.
 5. Read back names, memory, hashes and paths. If anything fails, restore the full snapshot.
 
-`release/INSTALL-ACCEPTANCE.md` lists the evidence each step needs.
+The acceptance checklist in `security-and-install.md` lists the evidence each step needs.
 
 ## Configure a project
 
@@ -229,104 +213,12 @@ A missing role blocks the step that needs it. The approver role always resolves 
 Fannan runs this check at every session start (`design-setup`). Run it the same way on a fresh clone of `main`:
 
 ```bash
-git clone https://github.com/Fadelwahed/fannan fannan && cd fannan
+git clone https://github.com/the ownerwahed/fannan fannan && cd fannan
 chmod 0444 trust/MANIFEST.sha256
 release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$(cut -d' ' -f1 trust/PINNED.sha256)"
 ```
 
 Expected output: `MANIFEST OK (<n> files)`. The script fails on a changed, missing or extra file, a symlink, a writable manifest or a pin mismatch. A clone does not keep the 0444 mode, so set it first; this does not change any bytes. In production the pin comes from Amin's review record, not from `PINNED.sha256`. The script needs GNU `realpath`, `stat` and `sha256sum`.
-
-The older anchored verify (`scripts/package-r3.py verify`) hashes review records and evidence logs, so it runs on `workbench`. See the next section.
-
-## Run the tests
-
-The tests and fixtures are on `workbench`. Its `release/` files other than `release/tests/` are the same bytes as on `main`, so a test run there tests the bot on `main`.
-
-```bash
-git clone -b workbench https://github.com/Fadelwahed/fannan fannan-wb && cd fannan-wb
-export PATH=/path/to/node-v22/bin:$PATH
-for t in release/tests/*.test.mjs; do node --test --test-concurrency=1 "$t" || echo "FAIL $t"; done
-python3 -B release/tests/test_guard_tools.py
-python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f48554bf3 --registry-sha256 <digest from the latest reviews/MIMAR-R*-changes-*.md>
-```
-
-Run one test file at a time. The full pre-handoff gate stops at the missing pinned Impeccable binary; that is expected until the binary is staged.
-
-## Sync release/ from workbench to main
-
-`release/` syncs one way, from `workbench` to `main`. Never merge either branch into the other.
-
-`trust/MANIFEST.sha256` on `main` starts with the paths this branch covers:
-
-```
-# covers: CHANGELOG.md FANNAN-PLAN.md INSTALL-ACCEPTANCE.md OPEN-QUESTIONS.md PROVENANCE.md UNTESTED.md memory migrations references runtime skills tools
-```
-
-Those paths are `main`'s `release/`. `workbench` also has `release/tests/`, `release/VERIFICATION.md`, `release/PACKAGING.md` and `release/REVIEW-RESPONSE.md`. Leave those four on `workbench`.
-
-After the covers line, `trust/MANIFEST.sha256` has one sorted line per file: `<sha256>  <path relative to release/>`, two spaces, the text form GNU `sha256sum` prints. `trust/PINNED.sha256` is one line: `<sha256 of MANIFEST.sha256>  MANIFEST.sha256`.
-
-1. Land the work on `workbench` first, including round records and tests.
-
-2. From a fresh clone, branch off `main`. Replace `<round>` with the round you are syncing.
-
-```bash
-git clone https://github.com/Fadelwahed/fannan fannan && cd fannan
-git switch -c sync/<round> origin/main
-```
-
-3. Copy only the covered paths from `workbench`. Check out each covered path. Do not check out `release` as a whole.
-
-```bash
-git fetch origin workbench
-git checkout origin/workbench -- \
-  release/CHANGELOG.md \
-  release/FANNAN-PLAN.md \
-  release/INSTALL-ACCEPTANCE.md \
-  release/OPEN-QUESTIONS.md \
-  release/PROVENANCE.md \
-  release/UNTESTED.md \
-  release/memory \
-  release/migrations \
-  release/references \
-  release/runtime \
-  release/skills \
-  release/tools
-```
-
-Never copy `release/tests`, `release/VERIFICATION.md`, `release/PACKAGING.md` or `release/REVIEW-RESPONSE.md`.
-
-4. Regenerate the manifest and the pin from inside `release/`, make the manifest read-only, and run the checker. A fresh clone leaves `trust/MANIFEST.sha256` writable; `chmod` runs after the new bytes are written. The checker prints `MANIFEST OK (<n> files)` when the bytes, the covers list and the pin agree.
-
-```bash
-cd release
-{
-  echo '# covers: CHANGELOG.md FANNAN-PLAN.md INSTALL-ACCEPTANCE.md OPEN-QUESTIONS.md PROVENANCE.md UNTESTED.md memory migrations references runtime skills tools'
-  find CHANGELOG.md FANNAN-PLAN.md INSTALL-ACCEPTANCE.md OPEN-QUESTIONS.md PROVENANCE.md UNTESTED.md memory migrations references runtime skills tools -type f | LC_ALL=C sort | xargs sha256sum
-} > ../trust/MANIFEST.sha256
-( cd ../trust && sha256sum MANIFEST.sha256 > PINNED.sha256 )
-chmod 0444 ../trust/MANIFEST.sha256
-cd ..
-release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$(cut -d' ' -f1 trust/PINNED.sha256)"
-```
-
-Checked on 22 October 2026 on a clean clone of main at 4ac681a: the snippet rewrote `trust/MANIFEST.sha256` and `trust/PINNED.sha256` byte for byte (empty `git diff -- trust/`), `verify-manifest.sh` printed MANIFEST OK (62 files), and the step 5 diff against workbench at cecf229 printed nothing. A second run in the same tree needs `chmod u+w trust/MANIFEST.sha256` before the redirect.
-
-5. From the clone root, check `release/` against a `workbench` checkout. Exclude the four workbench-only paths. No output means the covered trees match.
-
-```bash
-git clone -b workbench https://github.com/Fadelwahed/fannan ../fannan-wb
-diff -r \
-  --exclude=tests \
-  --exclude=VERIFICATION.md \
-  --exclude=PACKAGING.md \
-  --exclude=REVIEW-RESPONSE.md \
-  release ../fannan-wb/release
-```
-
-6. Open one focused pull request to `main`. The new pin needs Amin's review before any install. Only Fadel merges.
-
-7. Nothing flows from `main` to `workbench`. If a change was made on `main` by mistake, redo it on `workbench` first, then repeat this sync.
 
 ## Update and pinning policy
 
@@ -334,7 +226,7 @@ diff -r \
 - Amin reviews every new or changed skill, tool and pin before it is installed.
 - Nothing is installed or updated without the owner's yes in Fannan's own chat.
 - Any change to `release/` changes the manifest pin, so it needs a new review.
-- Changes reach `main` through one focused pull request each. Review rounds and evidence go to `workbench`. Only the owner merges.
+- Changes reach `main` through one focused pull request each. Only the owner merges.
 
 ## Working with other bots
 
@@ -366,32 +258,16 @@ When Fannan messages another bot, he passes every argument the messaging tool re
 
 Fannan acts only on approvals the owner gives in Fannan's own chat.
 
-## Known limits and untested items
+## Install prerequisites
 
-- **Not installed.** Every row in `release/INSTALL-ACCEPTANCE.md` is OPEN.
-- **Safe writer refuses writes on hosts where `/workspace` is not owned by root.** `release/tools/safe-write.py` requires root ownership of the output root.
-- **Impeccable pin mismatch.** The launcher pins SHA-256 `3d31ec1a664ac35c815ea1d7c10abad1155ce364d0f461157eb837a34368efb6` (engine v0.1.14). No staged binary matches it, so the full gate stops there by design.
-- **Engineer's read-only token not proven.** No proof that the code-read token is read-only has been recorded.
-- **Carousel libraries untested.** The declared-carousel contract has not been tested against Swiper, Splide, Embla, Slick or Flickity markup.
-- **No CI yet.** There is no `.github/workflows/` on this branch; every test is run by hand. CI workflows are proposed in separate pull requests.
-- **No branch protection on `main`.** The only-the-owner-merges rule is a team rule, not a GitHub setting.
-- **Repository visibility.** The repository is public. Earlier versions of this README called it private. The owner has not yet confirmed which is intended.
-- `release/UNTESTED.md` lists every item each review round could not establish.
+These must be in place on the target host before activation. The full list, with owners and evidence, is the acceptance checklist in `release/references/security-and-install.md`.
 
-## Changelog summary
-
-Rounds R18 to R35 hardened the 320px reflow checker. Full records are on `workbench` in `reviews/` and `release/CHANGELOG.md`.
-
-| Round | Change |
-|---|---|
-| R18 to R28 | Visibility rules, loss accounting by DOM node, role swaps at narrow widths, and 582 real-world-style test runs whose results (223 pass) stayed the same from R28 on |
-| R29 | States declare `opener` and `reveals`; the checker verifies them instead of guessing |
-| R30 | 18 P2 and 1 P3 fixed: an open dialog counts as open, disabled or inert openers fail, opacity 0 counts as not visible |
-| R31 | 8 P2 and 4 P3 fixed |
-| R32 | 9 P2 and 2 P3 fixed, including structural-only carousel detection |
-| R33 | 8 carousel fixes |
-| R34 | Carousels must be declared with `carousel:{root,slides}`; the guessing code was deleted |
-| R35 | Fixes for the R35 findings (8 P2, 1 P3), including inner clipping viewports, broad reveal selectors, non-button carousel controls, desktop cards that become a mobile carousel, and the anchored verify on a clean clone |
+- **Writer host.** `release/tools/safe-write.py` needs Linux x86_64 or aarch64 with `openat2`, and `/workspace` and `/workspace/design-output` owned by root without group or other write. It refuses to write anywhere else.
+- **Impeccable binary.** Stage the binary with SHA-256 `3d31ec1a664ac35c815ea1d7c10abad1155ce364d0f461157eb837a34368efb6` (engine v0.1.14) at `/opt/fannan/bin/impeccable-linux-x64`. Without it the full pre-handoff gate stops by design.
+- **Browser pin.** `release/runtime/browser-trust.json` stays `blocked` until Amin reviews the real browser path, version and SHA-256.
+- **Read-only code token.** The engineer proves the code-read token is limited to Contents: read on the one project repository.
+- **Branch protection.** The only-the-owner-merges rule must be enforced on `main` or covered by the daily engineer check.
+- **Carousel markup.** Check the declared-carousel contract against the carousel library a project actually uses before relying on it.
 
 ## License
 

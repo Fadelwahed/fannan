@@ -1,4 +1,4 @@
-// designmd-to-sd.mjs: DESIGN.md YAML frontmatter -> Style Dictionary DTCG source (X3 fix, round-1 hardened).
+// designmd-to-sd.mjs: DESIGN.md YAML frontmatter -> Style Dictionary DTCG source.
 // Usage: node designmd-to-sd.mjs <DESIGN.md> <out.json>
 // Keeps lineHeight, letterSpacing and the components block (references like {colors.primary} kept as-is).
 // Local file in, local file out: no network, no exec, no env.
@@ -29,14 +29,14 @@ const warnings = [];
 const errors = [];
 const color = v => typeof v === 'string' && (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(v) || /^(rgb|hsl|oklch|oklab)a?\(/i.test(v));
 function token(group, key, v, path) {
-  if (isTypographyPath(path) && key === 'fontWeight' && typeof v === 'string' && Object.hasOwn(fontWeightAliases, v)) v = fontWeightAliases[v]; // R4-1: CSS-valid number; CODEX-R3-04: component typography too
+  if (isTypographyPath(path) && key === 'fontWeight' && typeof v === 'string' && Object.hasOwn(fontWeightAliases, v)) v = fontWeightAliases[v]; // CSS-valid number; component typography too
   const t = { $value: v };
   const ref = typeof v === 'string' && /^\{[^{}]+\}$/.test(v);
   const ty = ref ? undefined : inferTokenType(path, v);
   if (ty) t.$type = ty;
   else if (!ref) {
-    if (typeof v === 'number' && Number.isFinite(v) && expectsDimension(path)) errors.push(`units required at ${path}: use px, rem or em`); // R4-6 spacing; CODEX-R2-02/OPUS-R2-01: rounded, breakpoints, font sizes and every component dimension
-    else if ((typeof v === 'number' && Number.isFinite(v) || typeof v === 'string' && /^-\d*\.?\d+(px|rem|em)$/.test(v)) && negative(v) && forbidsNegative(path)) errors.push(`negative length at ${path}: CSS forbids it here`); // ARGON-R2-07; CODEX-R3-01: numbers too
+    if (typeof v === 'number' && Number.isFinite(v) && expectsDimension(path)) errors.push(`units required at ${path}: use px, rem or em`); // spacing; rounded, breakpoints, font sizes and every component dimension
+    else if ((typeof v === 'number' && Number.isFinite(v) || typeof v === 'string' && /^-\d*\.?\d+(px|rem|em)$/.test(v)) && negative(v) && forbidsNegative(path)) errors.push(`negative length at ${path}: CSS forbids it here`); // numbers too
     else errors.push(`unknown token type at ${path}`);
   }
   return t;
@@ -54,7 +54,7 @@ function wrap(group, obj, path) {
     const target = typeof v === 'string' && /^\{[^{}]+\}$/.test(v) ? v.slice(1, -1) : null;
     const node = target && target.split('.').reduce((at, part) => at && typeof at === 'object' && !Array.isArray(at) ? at[part] : undefined, fm);
     const groupTarget = !!node && typeof node === 'object' && !Array.isArray(node);
-    // OPUS-R2-04: the design.md spec permits composite references only inside components; Fannan accepts them for
+    // the design.md spec permits composite references only inside components; Fannan accepts them for
     // the typography sub-token, pointing at a typography group, and expands them to per-property references.
     if (group === 'components' && k === 'typography' && target) {
       if (!groupTarget || !target.startsWith('typography.') || !Object.values(node).length || Object.values(node).some(x => x !== null && typeof x === 'object')) { errors.push(`${p} must reference a typography group, e.g. "{typography.label}"`); continue; }

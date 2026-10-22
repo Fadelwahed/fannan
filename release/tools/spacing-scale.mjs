@@ -1,15 +1,15 @@
-// OPUS-R2-10: browser-side screen for spacing outside the approved spacing scale. Playwright serialises spacingProbe
+// browser-side screen for spacing outside the approved spacing scale. Playwright serialises spacingProbe
 // into the page, so it must stay self-contained. Screening only; reviewers still judge rhythm.
-// CODEX-R3-02: the approved scale is passed in from the hash-checked handoff token JSON (approvedSpacing below);
+// the approved scale is passed in from the hash-checked handoff token JSON (approvedSpacing below);
 // it is never read from the page's own --spacing-* declarations, so a page cannot add a variable to legitimise a value.
-// R11: horizontal margins are screened too. getComputedStyle resolves `auto` margins to used pixels, so a margin whose
+// horizontal margins are screened too. getComputedStyle resolves `auto` margins to used pixels, so a margin whose
 // computed value (computedStyleMap) is the `auto` keyword is skipped; 0, auto and normal are skipped.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { validateTokens } from './token-references.mjs';
 
-// CODEX-R4-02: no measuring element. Page CSS (including !important rules) cannot reach the scale: approved values are
+// no measuring element. Page CSS (including !important rules) cannot reach the scale: approved values are
 // converted numerically. px is used directly, rem via the root element's computed font size, and em via each inspected
 // element's own computed font size (CSS resolves padding, margin and gap em against the element itself).
 export function spacingProbe(approved = []) {
@@ -24,13 +24,13 @@ export function spacingProbe(approved = []) {
   const keys = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'rowGap', 'columnGap'];
   const cssName = { marginLeft: 'margin-left', marginRight: 'margin-right', marginTop: 'margin-top', marginBottom: 'margin-bottom' };
   const off = new Map(), exceptions = [];
-  const composed = [document.documentElement, document.body].filter(Boolean); // R12 M15: html and body margins too
+  const composed = [document.documentElement, document.body].filter(Boolean); // html and body margins too
   const walkComposed = root => { for (const el of root.querySelectorAll('*')) { composed.push(el); if (el.shadowRoot) walkComposed(el.shadowRoot); } };
-  if (document.body) walkComposed(document.body); // R13 N20: open shadow roots too (spacing and exceptions)
+  if (document.body) walkComposed(document.body); // open shadow roots too (spacing and exceptions)
   for (const el of composed) {
     const r = el.getBoundingClientRect(), c = getComputedStyle(el);
     if (!(r.width > 0 && r.height > 0) || c.visibility === 'hidden' || c.display === 'none') continue;
-    // R11 panel D1: a documented exception (data-fannan-spacing-exception="<reason>") excuses this element's own
+    // a documented exception (data-fannan-spacing-exception="<reason>") excuses this element's own
     // off-scale values; each is recorded in the evidence for review. A blank reason excuses nothing.
     const excuse = (el.getAttribute('data-fannan-spacing-exception') || '').trim();
     const offHere = [];
@@ -45,12 +45,12 @@ export function spacingProbe(approved = []) {
       if (excuse) { offHere.push(value); continue; }
       if (!off.has(value)) off.set(value, { value, property: key, example: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : '') });
     }
-    if (offHere.length) exceptions.push({ element: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : ''), id: el.id || null, reason: excuse, values: [...new Set(offHere)] }); // R12 M20: the id resolves it
+    if (offHere.length) exceptions.push({ element: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : ''), id: el.id || null, reason: excuse, values: [...new Set(offHere)] }); // the id resolves it
   }
   return { spacingScale: [...scale].sort(), spacingScaleEm: units.em.map(n => n + 'em'), rootFontSize: rootPx + 'px', spacingOffScale: [...off.values()], spacingExceptions: exceptions };
 }
 
-// CODEX-R3-02: node side. Reads the handoff's token JSON once, checks those exact bytes against the handoff SHA-256
+// node side. Reads the handoff's token JSON once, checks those exact bytes against the handoff SHA-256
 // and the Style Dictionary build evidence input hash, validates the tokens and returns every spacing.* value
 // (references resolved). On any failure it returns no values and an error, so every nonzero spacing is off-scale.
 export function approvedSpacing(handoff) {
@@ -63,7 +63,7 @@ export function approvedSpacing(handoff) {
   return { values: [...values].sort(), source };
 }
 
-// R11 panel D1 (decision A): the accent is bound to the approved palette token, not to whatever the page declares.
+// the accent is bound to the approved palette token, not to whatever the page declares.
 // colors.accent wins, then colors.primary (the names Style Dictionary emits as --colors-accent / --colors-primary).
 export function approvedAccent(handoff) {
   const loaded = approvedTokens(handoff);
