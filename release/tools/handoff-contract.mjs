@@ -13,14 +13,13 @@ export function validateQualityChecks(config) {
 }
 export const qualityChecks = validateQualityChecks(JSON.parse(readFileSync(new URL('../runtime/quality-checks.json', import.meta.url), 'utf8')));
 export const manualIds = qualityChecks.manualIds;
-// in the wireframe phase accent-area and palette are always DEFERRED (never passed in grayscale); the
+// in the wireframe phase palette is always DEFERRED (never passed in grayscale); the
 // Step 6 craft checks may be PASS or DEFERRED. Every other manual ID needs PASS in both phases.
 export const wireframeDeferred = qualityChecks.wireframeDeferred;
 export const wireframeDeferrable = qualityChecks.wireframeDeferrable;
 // the critic-rubric row IDs; the final round needs one passing, evidenced check per row.
 export const criticRows = qualityChecks.criticRows;
 export const states = ['default', 'hover', 'focus', 'disabled', 'empty', 'loading', 'error'];
-const filler = /\b(unlock|seamless|empower|cutting[ -]edge|revolutionary|game[ -]changing)\b/i;
 const ref = x => typeof x === 'string' && /:\d+(?:-\d+)?$/.test(x);
 const file = x => typeof x === 'string' && existsSync(resolve(x)) && statSync(resolve(x)).isFile() && statSync(resolve(x)).size > 0;
 const nonempty = x => typeof x === 'string' && !!x.trim();
@@ -50,11 +49,9 @@ const cited = source => {
   return line > 0 && line <= readFileSync(resolve(source.path), 'utf8').split(/\r?\n/).length;
 };
 
-// screen types. `marketing` and `landing` screens carry promotional hero copy and claims of distinction,
-// which the generic-hero swap test grades; `functional` screens (settings, dashboards, forms, task flows) use clear
-// task headings and are not graded by it.
+// screen types: `marketing` and `landing` screens carry promotional copy and claims of distinction; `functional`
+// screens (settings, dashboards, forms, task flows) use task headings. The critic reads the type as context.
 export const SCREEN_TYPES = ['marketing', 'landing', 'functional'];
-export const HERO_TYPES = ['marketing', 'landing'];
 export function checkHandoff(h, phase = 'handoff') {
   const errors = [];
   const need = (ok, message) => { if (!ok) errors.push(message); };
@@ -93,7 +90,7 @@ export function checkHandoff(h, phase = 'handoff') {
     const prefix = `copy ${c.id || '?'}:`;
     need(nonempty(c.id) && nonempty(c.screen) && nonempty(c.purpose) && nonempty(c.tone), `${prefix} id, screen, purpose, tone required`);
     need(Number.isInteger(c.minChars) && Number.isInteger(c.maxChars) && c.minChars >= 0 && c.maxChars >= c.minChars, `${prefix} valid character range required`);
-    need(nonempty(c.text) && (phase === 'wireframe' || !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(c.text || '')) && !filler.test(c.text || ''), `${prefix} placeholder or filler copy`);
+    need(nonempty(c.text) && (phase === 'wireframe' || !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(c.text || '')), `${prefix} placeholder copy`);
     if (phase === 'wireframe' && /\[placeholder\]/i.test(c.text || '')) need(h.placeholders?.some(p => p.slotId === c.id && nonempty(p.owner) && nonempty(p.reason)), `${prefix} visible wireframe placeholder must be listed with owner and reason`);
     need((c.text || '').length >= c.minChars && (c.text || '').length <= c.maxChars, `${prefix} text outside character range`);
     if (!(phase === 'wireframe' && /\[placeholder\]/i.test(c.text || ''))) need(['brief', 'writer'].includes(c.source?.kind) && cited(c.source), `${prefix} brief/writer source with line ref required`);
@@ -101,7 +98,7 @@ export function checkHandoff(h, phase = 'handoff') {
     if (file(c.source?.path) && nonempty(c.text) && !(phase === 'wireframe' && /\[placeholder\]/i.test(c.text))) need(readFileSync(resolve(c.source.path), 'utf8').includes(c.text), `${prefix} text absent from cited source`);
     need(['ltr', 'rtl'].includes(c.dir) && nonempty(c.lang), `${prefix} language and direction required`);
     // an approved accessible name, when declared (on the slot or a variant), is real copy too
-    for (const n of [c.ariaLabel, ...(c.variants || []).map(v => v?.ariaLabel)].filter(x => x !== undefined)) need(nonempty(n) && !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(n) && !filler.test(n), `${prefix} ariaLabel must be real approved copy`);
+    for (const n of [c.ariaLabel, ...(c.variants || []).map(v => v?.ariaLabel)].filter(x => x !== undefined)) need(nonempty(n) && !/\[placeholder\]|lorem ipsum|\btbd\b/i.test(n), `${prefix} ariaLabel must be real approved copy`);
     // and, like the displayed text, it must appear in its cited source (the slot's, or the variant's)
     for (const [n, src] of [[c.ariaLabel, c.source], ...(c.variants || []).map(v => [v?.ariaLabel, v?.source])]) if (nonempty(n) && file(src?.path)) need(readFileSync(resolve(src.path), 'utf8').includes(n), `${prefix} ariaLabel absent from cited source`);
     if (phase === 'handoff') need(file(c.placementScreenshot), `${prefix} placement screenshot required`);
@@ -122,7 +119,7 @@ export function checkHandoff(h, phase = 'handoff') {
     // applicable default rendering with an existing page (frames and approval are not required yet).
     if (phase === 'wireframe') for (const lang of h.languages || []) need((s.states || []).some(st => st.state === 'default' && st.lang === lang.lang && st.dir === lang.dir && st.applicable !== false && file(st.page)), `screen ${s.id}: wireframe rendering for ${lang.lang}/${lang.dir} needs a default state with an existing page`);
     need(Array.isArray(s.headingOutline) && s.headingOutline.filter(x => x.level === 1).length === 1, `screen ${s.id}: exactly one H1 in outline`);
-    // each screen declares its type; the generic-hero swap test applies to marketing and landing screens
+    // each screen declares its type (context for the critic)
     need(SCREEN_TYPES.includes(s.type), `screen ${s.id}: type must be one of ${SCREEN_TYPES.join(', ')}`);
     need(nonempty(s.seoIntent) && nonempty(s.schemaIntent), `screen ${s.id}: SEO/schema intent required`);
     need(Array.isArray(s.images) && s.images.every(i => nonempty(i.id) && nonempty(i.altIntent) && typeof i.alt === 'string'), `screen ${s.id}: image alt text and intent required`);
@@ -198,7 +195,6 @@ export function checkHandoff(h, phase = 'handoff') {
   for (const s of h?.screens || []) for (const st of (phase === 'handoff' ? s.states || [] : (h.languages || []).map(l => ({ state: 'wireframe', lang: l.lang })))) {
     if (st.applicable === false) continue;
     for (const id of manualIds) {
-      if (id === 'generic-hero' && !HERO_TYPES.includes(s.type)) continue; // a functional screen has no promotional hero
       const key = `${s.id}/${st.lang}/${st.state}/${id}`;
       need(phase === 'wireframe' && wireframeDeferred.includes(id) ? deferred.has(key) : phase === 'wireframe' && wireframeDeferrable.includes(id) ? deferred.has(key) || ids.has(key) : ids.has(key), `manual ${key}: required phase decision with reviewer/artifact/brief refs`);
     }

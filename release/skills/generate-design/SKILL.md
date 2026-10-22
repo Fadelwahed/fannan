@@ -13,5 +13,5 @@ Read the brief, approved screen structure, project rules, writer copy and curren
 
 ## Gotchas
 
-- Vendor sample prompts such as glassmorphism or generic card grids are not project direction.
+- Vendor sample prompts are not project direction; every style choice comes from the brief.
 - Copy, claims, numbers and logos must be confirmed in project files; missing text stays `[placeholder]` and blocks handoff.
