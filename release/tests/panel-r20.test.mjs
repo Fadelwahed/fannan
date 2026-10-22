@@ -65,8 +65,11 @@ test('R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and wid
   const ws = await import('../tools/width-screen.mjs');
   const shot = async html => ws.screenWidths((await open(html)).main, [1440], null);
   // states: { stateName: html }; returns the overall result after resolving reveals across the declared states
+  const D = (html, opener, reveals) => ({ html, opener, reveals });
   const gate = async (states, dir = 'ltr') => {
-    const scopes = []; for (const [state, html] of Object.entries(states)) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await shot(html) });
+    const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
+    const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
+    const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
     if (typeof ws.resolveReveals !== 'function') return { pass: scopes.every(s => s.widths.pass), rules: ['no resolveReveals'] };
     const r = ws.resolveReveals(scopes);
     return { pass: r.pass && scopes.every(s => s.widths.pass), rules: [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => x.clipped.filter(c => !c.revealedBy).map(c => c.rule))))].sort(), ...(process.env.DUMP ? { d: scopes.map(s => [s.widths.shownAt1440, s.widths.results.map(x => [x.width, x.clipped])]) } : {}) };
@@ -77,7 +80,7 @@ test('R20-GPT-01, R20-MIMAR-01: real Chrome: one clipping rule by states and wid
   const table = W('<div style="overflow:hidden;width:100%"><table style="width:900px"><tr><th>Plan</th><th>Price</th><th>Seats</th><th>Support</th><th>Storage</th></tr><tr><td>Basic</td><td>$10</td><td>1</td><td>Email</td><td>10 GB</td></tr></table></div>');
   const nav = dir => W(`<nav style="overflow:hidden;white-space:nowrap;border:1px solid #ccc">${(dir === 'rtl' ? ['الرئيسية', 'الخدمات', 'الأسعار', 'دراسات الحالة', 'من نحن', 'الوظائف', 'اتصل بنا'] : ['Home', 'Services', 'Pricing', 'Case studies', 'About us', 'Careers', 'Contact']).map(t => `<a href="#x" style="display:inline-block;padding:8px 16px">${t}</a>`).join('')}</nav>`, '', dir);
   const out = {
-    accordionDeclared: await gate({ default: acc(false), expanded: acc(true) }),
+    accordionDeclared: await gate({ default: acc(false), expanded: D(acc(true), 'button[aria-expanded]', 'button[aria-expanded] + div') }),
     accordionUndeclared: await gate({ default: acc(false) }),
     accordionPartly: await gate({ default: W('<div style="max-height:2em;overflow:hidden"><p style="margin:0">Line one<br>Line two<br>Line three</p></div>'), expanded: W('<div><p style="margin:0">Line one<br>Line two<br>Line three</p></div>') }),
     carouselMiddle: await gate({ default: slides(1), 'slide-1': slides(0), 'slide-3': slides(2) }),

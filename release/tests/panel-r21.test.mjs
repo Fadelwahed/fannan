@@ -65,6 +65,7 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
+const D = (html, opener, reveals) => ({ html, opener, reveals });
 const gateOf = open => async (states, dir = 'ltr') => {
   // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
@@ -151,13 +152,13 @@ test('R21 read-more clamp: real Chrome: line-clamp or an ellipsis passes only wh
   const story = 'A long customer story that runs for several lines in the card, about the team, the rollout across forty offices, the training and the results after the first year.';
   const clamp = W(`<p style="max-width:300px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden">${story}</p><button aria-expanded="false">Read more</button>`);
   const full = W(`<p style="max-width:300px">${story}</p><button aria-expanded="true">Read less</button>`);
-  const ell = W('<p style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Quarterly report for the regional offices, final version</p>');
-  const ellFull = W('<p style="max-width:240px">Quarterly report for the regional offices, final version</p>');
+  const ell = W('<p style="max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Quarterly report for the regional offices, final version</p><button aria-expanded="false">Read more</button>');
+  const ellFull = W('<p style="max-width:240px">Quarterly report for the regional offices, final version</p><button aria-expanded="true">Read less</button>');
   const box = W(`<div style="max-width:300px;max-height:3em;overflow:hidden"><p style="margin:0">${story}</p></div><button aria-expanded="false">Read more</button>`);
   assert.deepEqual({
-    clampDeclared: await gate({ default: clamp, expanded: full }),
+    clampDeclared: await gate({ default: clamp, expanded: D(full, 'button[aria-expanded]', 'p') }),
     clampUndeclared: await gate({ default: clamp }),
-    ellipsisDeclared: await gate({ default: ell, expanded: ellFull }),
+    ellipsisDeclared: await gate({ default: ell, expanded: D(ellFull, 'button[aria-expanded]', 'p') }),
     fixedHeightCut: await gate({ default: box, expanded: full }),
   }, {
     clampDeclared: { pass: true, rules: [] }, clampUndeclared: { pass: false, rules: ['truncated'] }, ellipsisDeclared: { pass: true, rules: [] },

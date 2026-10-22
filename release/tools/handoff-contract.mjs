@@ -131,6 +131,8 @@ export function checkHandoff(h, phase = 'handoff') {
       need(Array.isArray(s.states) && (h.languages || []).every(lang => states.every(state => s.states.some(v => v.state === state && v.lang === lang.lang && v.dir === lang.dir))), `screen ${s.id}: seven screen states required in every language/direction`);
       need(s.states?.find(st => st.state === 'default')?.applicable !== false, `screen ${s.id}: default state must be applicable`);
       for (const st of s.states || []) {
+        // R30-M-12: every applicable state record needs a nonempty string state name (not an id alias)
+        need(nonempty(st.state), `screen ${s.id}: every state needs a nonempty state name`);
         need((h.languages || []).some(lang => st.lang === lang.lang && st.dir === lang.dir), `screen ${s.id}/${st.state}: undeclared language/direction`);
         // R19b: `requiresScript: true` is for a non-default state reachable only by script, with its trigger recorded
         if (st.requiresScript !== undefined) need(st.requiresScript === false || (st.requiresScript === true && st.state !== 'default' && nonempty(st.trigger)), `screen ${s.id}/${st.state}: requiresScript must be a boolean, only on a non-default state, with its trigger recorded`);

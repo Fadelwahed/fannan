@@ -70,6 +70,7 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
+const D = (html, opener, reveals) => ({ html, opener, reveals });
 const gateOf = open => async (states, dir = 'ltr') => {
   // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
@@ -189,9 +190,9 @@ test('R22-GPT-06: real Chrome: a read-more expanded state must show every text p
   const clampLink = W(`<div style="max-width:260px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"><p style="margin:0">${p1} <a href="/story">Open the story</a></p></div><button aria-expanded="false">Read more</button>`);
   const exp = (...ps) => W(`<div style="max-width:260px">${ps.map(p => `<p style="margin:0">${p}</p>`).join('')}</div><button aria-expanded="true">Read less</button>`);
   assert.deepEqual({
-    onlyFirst: await gate({ default: clamp, expanded: exp(p1) }),
-    both: await gate({ default: clamp, expanded: exp(p1, p2) }),
-    controlInClamp: await gate({ default: clampLink, expanded: W(`<div style="max-width:260px"><p style="margin:0">${p1} <a href="/story">Open the story</a></p></div><button aria-expanded="true">Read less</button>`) }),
+    onlyFirst: await gate({ default: clamp, expanded: D(exp(p1), 'button[aria-expanded]', 'div') }),
+    both: await gate({ default: clamp, expanded: D(exp(p1, p2), 'button[aria-expanded]', 'div') }),
+    controlInClamp: await gate({ default: clampLink, expanded: D(W(`<div style="max-width:260px"><p style="margin:0">${p1} <a href="/story">Open the story</a></p></div><button aria-expanded="true">Read less</button>`), 'button[aria-expanded]', 'div') }),
   }, { onlyFirst: { pass: false, rules: ['truncated'] }, both: { pass: true, rules: [] }, controlInClamp: { pass: false, rules: ['partly clipped'] } });
 }));
 
