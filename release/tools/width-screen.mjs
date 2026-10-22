@@ -65,7 +65,27 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
   const rendered = el => { let a = el; while (a && getComputedStyle(a).display === 'contents') a = parentOf(a); return !a || typeof a.checkVisibility !== 'function' || a.checkVisibility(); };
   // R30-M-04: effective zero opacity (inherited through composed ancestors) is not visible; translucent nonzero stays.
   // R30-M-20: content behind a real active :modal is inactive (same as visibility.mjs); aria-modal alone does not count.
-  let activeModal = null; try { activeModal = document.querySelector(':modal'); } catch { activeModal = null; }
+  // R31-M-08/M-09: discover :modal across open shadow roots; pick the topmost via hit-test (not document order)
+  let activeModal = null;
+  try {
+    const modals = [];
+    const walkModal = root => {
+      let list = []; try { list = [...root.querySelectorAll('dialog')]; } catch { list = []; }
+      for (const d of list) { try { if (d.matches(':modal')) modals.push(d); } catch {} }
+      for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walkModal(el.shadowRoot);
+    };
+    if (document.documentElement) walkModal(document);
+    const selfHit = [];
+    for (const d of modals) {
+      const r = d.getBoundingClientRect(); if (!(r.width > 0 && r.height > 0)) continue;
+      const x = r.left + r.width / 2, y = r.top + r.height / 2;
+      let t = document.elementFromPoint(x, y);
+      for (let k = 0; t?.shadowRoot && k < 20; k++) { const n = t.shadowRoot.elementFromPoint(x, y); if (!n || n === t) break; t = n; }
+      let inside = false; for (let a = t; a; a = parentOf(a)) if (a === d) { inside = true; break; }
+      if (inside) selfHit.push(d);
+    }
+    activeModal = selfHit.length ? selfHit[selfHit.length - 1] : (modals.length ? modals[modals.length - 1] : null);
+  } catch { activeModal = null; }
   const behindModal = el => { if (!activeModal) return false; for (let a = el; a; a = parentOf(a)) { if (a === activeModal) return false; } return true; };
   const effectiveOpaque = el => { let p = 1; for (let a = el; a && a.nodeType === 1; a = parentOf(a)) { p *= Number(getComputedStyle(a).opacity); if (!(p > 0)) return false; } return true; };
   const shown = el => { if (behindModal(el)) return false; const c = getComputedStyle(el); if (c.display === 'none' || c.visibility !== 'visible' || inSrOnly(el) || !rendered(el) || !effectiveOpaque(el)) return false; const r = el.getBoundingClientRect(); return (r.width > 0 && r.height > 0) || textRects(el).length > 0; };
@@ -304,44 +324,57 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
       // R30-M-13: a <label for> opener resolves to its control for open-state
       const control = (o.matches('label') && o.control) ? o.control : o;
       const b0 = o.getBoundingClientRect(); visible = shown(o) && b0.width > 0 && b0.height > 0;
-      // R30-M-03: native :disabled, disabled fieldset, aria-disabled, inert — geometry cannot override
-      const disabled = !!(control.disabled || (typeof control.matches === 'function' && control.matches(':disabled')) || control.getAttribute?.('aria-disabled') === 'true' || control.closest?.('[aria-disabled="true"]') || control.closest?.('fieldset[disabled]') || control.closest?.('[inert]') || o.closest?.('[inert]') || o.getAttribute?.('aria-disabled') === 'true');
+      // R30-M-03 / R31-M-07: use native :disabled (includes fieldset + first-legend exception); keep ARIA-disabled and inert
+      const disabled = !!(control.disabled || (typeof control.matches === 'function' && control.matches(':disabled')) || control.getAttribute?.('aria-disabled') === 'true' || control.closest?.('[aria-disabled="true"]') || control.closest?.('[inert]') || o.closest?.('[inert]') || o.getAttribute?.('aria-disabled') === 'true');
       if (visible && !disabled) { o.scrollIntoView({ block: 'center', inline: 'nearest' }); const b = o.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2; let t = document.elementFromPoint(x, y); for (let k = 0; t?.shadowRoot && k < 20; k++) { const d = t.shadowRoot.elementFromPoint(x, y); if (!d || d === t) break; t = d; } hit = !!t && (t === o || within(o, t)); scrollTo(0, 0); }
       if (disabled) hit = false;
       const popId = control.getAttribute?.('popovertarget') || o.getAttribute('popovertarget');
-      const popEl = popId ? (control.getRootNode?.().getElementById?.(popId) || o.getRootNode().getElementById?.(popId) || document.getElementById(popId)) : null;
+      const resolveId = id => control.getRootNode?.().getElementById?.(id) || o.getRootNode().getElementById?.(id) || document.getElementById(id);
+      const popEl = popId ? resolveId(popId) : null;
       const controlsIds = ((control.getAttribute?.('aria-controls') || o.getAttribute('aria-controls') || '') + (popId ? ' ' + popId : '')).trim().split(/\s+/).filter(Boolean);
-      const controlled = controlsIds.map(id => control.getRootNode?.().getElementById?.(id) || o.getRootNode().getElementById?.(id) || document.getElementById(id)).filter(Boolean);
+      // R31-M-04: every supplied target id must resolve
+      const unresolvedTargets = controlsIds.filter(id => !resolveId(id));
+      const controlled = controlsIds.map(resolveId).filter(Boolean);
       const associatedRegions = regions.filter(r => !controlled.length || controlled.some(t => t === r || within(t, r) || within(r, t)));
       const regionShown = associatedRegions.some(r => shown(r) || isDialogOpen(r) || isPopoverOpen(r));
-      const hasPopup = control.hasAttribute?.('aria-haspopup') || o.hasAttribute('aria-haspopup');
+      // R31-M-12: only supported non-false popup tokens establish haspopup
+      const POPUP = new Set(['true', 'menu', 'listbox', 'tree', 'grid', 'dialog']);
+      const rawPopup = control.hasAttribute?.('aria-haspopup') ? control.getAttribute('aria-haspopup') : (o.hasAttribute('aria-haspopup') ? o.getAttribute('aria-haspopup') : null);
+      const hasPopup = rawPopup !== null && POPUP.has(String(rawPopup).toLowerCase());
       const checked = !!(control.checked || control.getAttribute?.('aria-checked') === 'true' || o.getAttribute('aria-checked') === 'true');
-      // R30-M-18: Prev/Next carousel buttons need no persistent selected/expanded state when the declared slide is shown
+      // R31-M-12 extra / M-03: an explicit false open-state attribute blocks haspopup and step shortcuts
+      const explicitlyClosed = ['aria-expanded', 'aria-pressed', 'aria-selected'].some(a => control.getAttribute?.(a) === 'false' || o.getAttribute(a) === 'false');
       const nm = nameOf(control.matches?.('button, [role="button"]') ? control : o).toLowerCase();
-      const carouselStep = !control.hasAttribute?.('aria-expanded') && !o.hasAttribute('aria-expanded') && !hasPopup && !popId && /^(next|previous|prev)$/i.test(nm) && regionShown;
-      const open = control.getAttribute?.('aria-expanded') === 'true' || o.getAttribute('aria-expanded') === 'true'
+      const inHorizTrack = el => { for (let a = parentOf(el); a; a = parentOf(a)) { const c = getComputedStyle(a); if (['hidden', 'clip'].includes(c.overflowX) && a.scrollWidth > a.clientWidth + 1) return true; } return false; };
+      // R31-M-03: carousel step via transition evidence (horizontal track), not English-only names
+      const isBtn = !!(control.matches?.('button, [role="button"]') || o.matches?.('button, [role="button"]'));
+      const carouselStep = !explicitlyClosed && !hasPopup && !popId && regionShown && isBtn &&
+        (/\b(next|previous|prev|التالي|السابق)\b/i.test(nm) || associatedRegions.some(inHorizTrack));
+      const open = explicitlyClosed ? false : (
+        control.getAttribute?.('aria-expanded') === 'true' || o.getAttribute('aria-expanded') === 'true'
         || (o.matches('summary') && !!o.parentElement?.open) || (control.matches?.('summary') && !!control.parentElement?.open)
         || (!!popEl && isPopoverOpen(popEl)) || regions.some(r => isPopoverOpen(r) || isDialogOpen(r))
-        // R30-M-02: aria-haspopup whose associated declared popup is shown, without requiring aria-expanded
         || (hasPopup && regionShown)
-        // R30-M-13: native/ARIA checked checkbox/radio/switch
         || checked
         || carouselStep
         || control.getAttribute?.('aria-selected') === 'true' || o.getAttribute('aria-selected') === 'true'
         || control.getAttribute?.('aria-pressed') === 'true' || o.getAttribute('aria-pressed') === 'true'
-        || ((control.hasAttribute?.('aria-current') && control.getAttribute('aria-current') !== 'false') || (o.hasAttribute('aria-current') && o.getAttribute('aria-current') !== 'false'));
-      // R30-M-11: when native/ARIA targeting exists, record whether reveals agree with it
-      const targetOk = !controlled.length || regions.every(r => controlled.some(t => t === r || within(t, r) || within(r, t)));
-      return { visible, hit, open, targetOk, disabled };
+        || ((control.hasAttribute?.('aria-current') && control.getAttribute('aria-current') !== 'false') || (o.hasAttribute('aria-current') && o.getAttribute('aria-current') !== 'false'))
+      );
+      // R30-M-11 / R31-M-04: supplied targets must resolve and agree with reveals
+      const targetOk = controlsIds.length === 0 || (unresolvedTargets.length === 0 && regions.every(r => controlled.some(t => t === r || within(t, r) || within(r, t))));
+      return { visible, hit, open, targetOk, disabled, unresolvedTargets: unresolvedTargets.length > 0 };
     };
     const checks = openersFound.map(check);
     const openerVisible = checks.length > 0 && checks.every(c => c.visible), openerHit = checks.length > 0 && checks.every(c => c.hit), openerOpen = checks.length > 0 && checks.every(c => c.open);
     const targetAgrees = checks.length === 0 || checks.every(c => c.targetOk);
+    // R31-M-13: disabled/inert failures are distinct from hit-test obstruction
+    const openerDisabled = checks.length > 0 && checks.some(c => c.disabled) && checks.filter(c => !c.hit).every(c => c.disabled);
     // R30-M-16: exclude the opener and its descendants from revealed-payload items
     const openerSet = new Set(openersFound);
     const inOpener = el => { for (let a = el; a; a = parentOf(a)) if (openerSet.has(a)) return true; return false; };
     const items = [...itemOfEl].filter(([el]) => regions.some(g => g === el || within(g, el)) && !inOpener(el)).map(([, it]) => it);
-    return { state: pr.state, openerCount: openersFound.length, regionCount: regions.length, openerVisible, openerHit, openerOpen, regionVisible: items.length > 0, regionIndependentlyOpen, targetAgrees, items };
+    return { state: pr.state, openerCount: openersFound.length, regionCount: regions.length, openerVisible, openerHit, openerOpen, openerDisabled, regionVisible: items.length > 0, regionIndependentlyOpen, targetAgrees, items };
   });
   // clipping boxes (overflow hidden or clip, holding shown content) with what they show uncut: the regions of reveals
   const boxes = all.filter(e => holds.has(e) && clipBox(e) && [getComputedStyle(e).overflowX, getComputedStyle(e).overflowY].some(o => ['hidden', 'clip'].includes(o))).map(e => ({ sig: boxSig(e), path: pathOf(e), items: insideItems([e]) }));
@@ -421,16 +454,21 @@ const ledgerOf = (g, width) => ({ ...EMPTY_LEDGER, ...(g.widths?.ledgerByWidth?.
 // R29: a declaration of state R is valid at a width only when, in the losing state S, every element the opener
 // selector matches is visible and operable (hit test) and the region is hidden; and in R the opener shows it is open and
 // the region is visible. Returns the reasons it is invalid (empty when valid).
-export function declarationProblems(inS, inR) {
+export function declarationProblems(inS, inR, opts = {}) {
   if (!inS || !inR) return ['the declaration was not probed in both renderings'];
   if (inS.error || inR.error) return [inS.error || inR.error];
   const why = [];
   if (inS.openerCount < 1) why.push('opener matches nothing in the losing state');
   else if (!inS.openerVisible) why.push('opener not visible in the losing state');
-  else if (!inS.openerHit) why.push('opener not operable in the losing state (another element is on top of it)');
-  if (inS.regionVisible) why.push('region already visible in the losing state');
-  // R30-M-11: reveals must agree with aria-controls / popovertarget when present
-  if (inS.targetAgrees === false || inR.targetAgrees === false) why.push('reveals contradicts the opener\'s aria-controls or popovertarget');
+  else if (!inS.openerHit) {
+    // R31-M-13: preserve disabled/inert vs obstruction
+    if (inS.openerDisabled) why.push('opener is disabled or inert in the losing state');
+    else why.push('opener not operable in the losing state (another element is on top of it)');
+  }
+  // R31-M-02: truncation verification may permit an already-visible introduction; ordinary losses keep the hidden-region rule
+  if (inS.regionVisible && !opts.allowVisibleRegion) why.push('region already visible in the losing state');
+  // R30-M-11 / R31-M-04: reveals must agree; unresolved supplied target ids invalidate
+  if (inS.targetAgrees === false || inR.targetAgrees === false) why.push('reveals contradicts the opener\'s aria-controls or popovertarget (or a target id is unresolved)');
   // R30-M-17: a verified source trigger may disappear after opening an associated region whose open state is independent (dialog[open]/:modal/:popover-open)
   if (inR.openerCount < 1) {
     if (!(inS.openerCount >= 1 && inR.regionVisible && inR.regionIndependentlyOpen)) why.push('opener matches nothing in the declared state');
@@ -490,8 +528,8 @@ export function accountLosses(all, phase = 'handoff', sharedSpent = null) {
       // same role family and name (or text), one to one from one pool per screen and width (nested regions never
       // count twice). Nothing visible in S takes part (a valid declaration has S's region hidden). No declaration, no cover.
       r.declarations = [];
-      // R30-M-09: distinct source renderings get independent cover pools; R30-M-07: one ledger across widths and clip/loss paths
-      const pk = `${stateOf(S)}|${renderingKey(S)}`; if (!spent.has(pk)) spent.set(pk, new Set()); const pool = spent.get(pk);
+      // R30-M-09 / R31-M-01: pools keyed by losing state, rendering and evaluation width (independent capacity per width)
+      const pk = `${stateOf(S)}|${renderingKey(S)}|${W}`; if (!spent.has(pk)) spent.set(pk, new Set()); const pool = spent.get(pk);
       for (const R of group.filter(R => R !== S && R.declaration && stateOf(R) !== stateOf(S))) {
         const inR = probeOf(R, W, stateOf(R)), why = declarationProblems(probeOf(S, W, stateOf(R)), inR);
         r.declarations.push({ state: stateOf(R), opener: R.declaration.opener, reveals: R.declaration.reveals, valid: !why.length, why });
@@ -639,12 +677,13 @@ export function resolveReveals(scopes, phase = 'handoff') {
         const usedBy = new Map(others.map(o => [o, new Map()]));
         const usedAt = (o, width) => { const m = usedBy.get(o); if (!m.has(width)) m.set(width, new Map()); return m.get(width); };
         const done = new Map();
-        const clipSpentFor = () => {
-          const k = `${scope.state}|${renderingKey({ scope, widths: w })}`;
+        // R31-M-01: shared allocations keyed by losing state, rendering and evaluation width
+        const clipSpentFor = evalW => {
+          const k = `${scope.state}|${renderingKey({ scope, widths: w })}|${evalW}`;
           if (!sharedSpent.has(k)) sharedSpent.set(k, new Set());
           return sharedSpent.get(k);
         };
-        const physical = clipSpentFor();
+        const physical = clipSpentFor(r.width);
         const localUsed = new Set(); // R30-M-07: one spend ledger across all clips of this rendering/width
         for (const c of r.clipped.filter(resolvable)) {
           const raw = c.rule === 'reveal' ? c.whole : [...c.whole, ...c.partial], width = c.rule === 'reveal' ? 1440 : r.width;
@@ -653,10 +692,8 @@ export function resolveReveals(scopes, phase = 'handoff') {
           const capacity = (o, used, p) => { if (!isControlPrint(p)) return printShown(pool(o), p); const k = printKey(p), n = (counts(pool(o)).get(k) || 0) - (used.get(k) || 0); return n > 0; };
           const assign = (o, used, p) => { if (!capacity(o, used, p)) return false; if (isControlPrint(p)) used.set(printKey(p), (used.get(printKey(p)) || 0) + 1); return true; };
           const mine = w.ledgerByWidth?.[width] || {};
-          // R30-M-19: undeclared box fallback for carousels/horizontal tracks and clipped controls (E1 nested boxes);
-          // a generic vertical text-only collapse (FAQ) still requires an explicit declaration.
-          const carouselLike = !!(c.x || (c.sig || '').toLowerCase().includes('carousel') ||
-            [...(c.whole || []), ...(c.partial || [])].some(p => p.kind === 'control'));
+          // R31-M-05: undeclared fallback requires horizontal-track/carousel evidence; a control inside a vertical clip does not qualify
+          const carouselLike = !!(c.x || (c.sig || '').toLowerCase().includes('carousel'));
           const regionFor = (o, p) => {
             const theirs = o.widths?.ledgerByWidth?.[width] || {};
             if (o.declaration) {
@@ -689,14 +726,25 @@ export function resolveReveals(scopes, phase = 'handoff') {
             localUsed.add(`${o.scope.state}|${e.id}`); physical.add(`${o.scope.state}|${e.id}`); if (key) done.set(key, o); return true;
           };
           let full = null;
-          // R30-M-05: truncation passes only via a verified expanded declaration whose revealed payload shows every cut text item
+          // R30-M-05 / R31-M-02 / R31-M-10: truncation via verified declaration; allow visible intro; spend targets in the shared ledger
           if (c.rule === 'truncated') {
             for (const o of others) {
               if (!o.declaration) continue;
               const inR = probeOf(o, width, o.scope.state);
-              if (declarationProblems(probeOf({ widths: w }, width, o.scope.state), inR).length) continue;
+              if (declarationProblems(probeOf({ widths: w }, width, o.scope.state), inR, { allowVisibleRegion: true }).length) continue;
               if (!items.every(p => inR.items.some(e => e.kind === 'text' && e.print === p.print) || (isControlPrint(p.print) && inR.items.some(e => sameItem(asItem(p), e))))) continue;
-              // also require the opener to show expanded (declarationProblems already checks openerOpen / transition)
+              const spentKeys = [];
+              let okSpend = true;
+              for (const p of items) {
+                const e = inR.items.find(e => !physical.has(`${o.scope.state}|${e.id}`) && !localUsed.has(`${o.scope.state}|${e.id}`) && (
+                  (p.kind !== 'control' && e.kind === 'text' && e.print === p.print) ||
+                  (isControlPrint(p.print) && sameItem(asItem(p), e))
+                ));
+                if (!e) { okSpend = false; break; }
+                spentKeys.push(`${o.scope.state}|${e.id}`);
+              }
+              if (!okSpend) continue;
+              for (const k of spentKeys) { localUsed.add(k); physical.add(k); }
               full = o.scope.state; break;
             }
           }

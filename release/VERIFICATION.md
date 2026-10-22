@@ -1,5 +1,11 @@
 # R3 executed verification — 17 October 2026
 
+## R31 (panel round 31, 19 October 2026)
+
+- Accepted R31-M-01..M-05, M-07..M-13 in `release/tools/width-screen.mjs` and docs (M-06 withdrawn: not reproduced in Chrome). Cover pools are per losing state, rendering and evaluation width; truncation allows a visible introduction; carousel steps are language-independent; supplied aria-controls ids must resolve; undeclared fallback is horizontal-only; first-legend fieldset openers use native `:disabled`; modals are discovered across open shadow roots and the topmost `:modal` is active; truncation spends into the shared ledger; haspopup requires a supported non-false token and an explicit false open-state attribute fails; disabled openers report disabled/inert rather than obstruction.
+- Guidance in design-quality.md, handoff-contract.md, UNTESTED.md and VERIFICATION.md updated so published open signals and allocation scope match the gate (R31-M-11).
+
+
 ## R29 (panel round 29, 19 October 2026)
 
 - Mi'mar's decision applied in `release/tools/width-screen.mjs`, `pre-handoff-check.mjs` and `handoff-contract.mjs`: reveals are declared (`opener` + `reveals` on a non-default state) and verified by the gate (losing state: region hidden, every matched opener visible and operable by a hit test; declared state: region visible, opener open), invalid declarations rescue nothing and report why; opener inference deleted; identical renderings of a state accounted once; sections bounded by their sectioning ancestor; the cover pool is one per losing state and width, shared across every declared state and region (ruling, for the round 30 panel).
