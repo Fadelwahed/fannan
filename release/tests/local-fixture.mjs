@@ -264,8 +264,9 @@ const r19Run = (name, extraHtml, script = '', head = '', handoffJson = authored,
   writeFileSync(html, pageBase.replace('</head>', `${head}</head>`).replace('</main>', `${extraHtml}</main>${script ? `<script>${script}</script>` : ''}`));
   let extraState = null;
   // R20: statePageHtml may also be a list of [state, html] pairs (reveal states: an accordion's open state, each slide)
+  // R29: a third element declares the state's { opener, reveals } selectors (a state that rescues hidden content)
   const extra = !statePageHtml ? [] : Array.isArray(statePageHtml) ? statePageHtml : [['dialog-open', statePageHtml]];
-  if (extra.length) { const h = JSON.parse(JSON.stringify(handoffJson)); for (const [stName, stHtml] of extra) { const sp = join(output, `r19-${name}-${stName}.html`); writeFileSync(sp, stHtml); extraState = stName; h.screens[0].states.push({ state: stName, lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: stName, ...(stateExtra.frame ? { artifact: stateExtra.frame.path } : {}) }))]; } handoffJson = h; } // R20: a state with its own approved frame is reviewed on that frame
+  if (extra.length) { const h = JSON.parse(JSON.stringify(handoffJson)); for (const [stName, stHtml, stDecl] of extra) { const sp = join(output, `r19-${name}-${stName}.html`); writeFileSync(sp, stHtml); extraState = stName; h.screens[0].states.push({ state: stName, lang: 'en', dir: 'ltr', page: sp, frame: { path: shot, width: 1440, version: 'v1', sha256: hash }, ...stateExtra, ...(stDecl || {}) }); h.manualChecks = [...h.manualChecks, ...h.manualChecks.filter(m => m.state === 'default').map(m => ({ ...m, state: stName, ...(stateExtra.frame ? { artifact: stateExtra.frame.path } : {}) }))]; } handoffJson = h; } // R20: a state with its own approved frame is reviewed on that frame
   writeFileSync(handoff, JSON.stringify(handoffJson));
   const { result } = runChecker(join(output, `evidence-r19-${name}`), true);
   const st = result.checks.states.find(x => x.state === (extraState || 'default'));
@@ -314,7 +315,7 @@ const r20 = {};
 const acc20 = open1 => `<button aria-expanded="${open1}">Questions</button><div style="${open1 ? '' : 'max-height:0;'}overflow:hidden">Bare collapsed answer</div>`;
 const car20 = n => `<div style="overflow:hidden;max-width:600px"><div style="display:flex;width:300%;transform:translateX(-${n * 100 / 3}%)"><p style="flex:1 0 0;margin:0">Slide one</p><p style="flex:1 0 0;margin:0">Slide two</p><p style="flex:1 0 0;margin:0">Slide three</p></div></div>`;
 const at20 = body => original.replace('</main>', `${body}</main>`);
-r20.revealDeclared = r19Run('reveal-declared', acc20(false) + car20(1), '', '', authored, [['faq-open', at20(acc20(true) + car20(1))], ['slide-1', at20(acc20(false) + car20(0))], ['slide-3', at20(acc20(false) + car20(2))]]);
+r20.revealDeclared = r19Run('reveal-declared', acc20(false) + car20(1), '', '', authored, [['faq-open', at20(acc20(true) + car20(1)), { opener: 'button[aria-expanded]', reveals: 'button[aria-expanded] + div' }], ['slide-1', at20(acc20(false) + car20(0))], ['slide-3', at20(acc20(false) + car20(2))]]);
 r20.revealUndeclared = r19Run('reveal-undeclared', acc20(false) + car20(1));
 const card20 = '<div style="max-width:320px;height:90px;overflow:hidden;padding:8px;box-sizing:border-box"><h2 style="margin:0 0 8px;font-size:20px">Card title</h2><p style="margin:0 0 40px">Short line.</p><p style="margin:0">Last paragraph below the edge.</p></div>';
 r20.cardBelow = r19Run('card-below', card20, '', '', authored, [['hover', at20(card20)]]);
@@ -359,7 +360,7 @@ const r21 = {};
 r21.imageCrop = r19Run('image-crop', '<div style="overflow:hidden;height:200px;width:100%;max-width:900px"><img src="r19-photo.png" alt="" style="display:block;width:100%;min-width:600px;height:auto"></div>');
 r21.hiddenCta = r19Run('hidden-cta', '<p class="r21cta">Terms apply to all plans.</p>', '', '<style>@media (max-width:600px){.r21cta{display:none}}</style>');
 const menu21 = isOpen => `<style>.r21d a{display:inline-block;padding:8px}.r21m{display:none;position:relative}.r21m .panel{position:absolute;top:40px;left:-134px;width:240px;background:#fff}.r21m[open] .panel{left:20px}@media (max-width:700px){.r21d{display:none}.r21m{display:block}}</style><nav class="r21d"><a href="#a">Products</a><a href="#b">Contact</a></nav><details class="r21m"${isOpen ? ' open' : ''}><summary>Menu</summary><div class="panel"><a href="#a" style="display:block">Products</a><a href="#b" style="display:block">Contact</a></div></details><div style="height:120px"></div>`;
-r21.menuDeclared = r19Run('menu-declared', menu21(false), '', '', authored, [['menu-open', at20(menu21(true))]]);
+r21.menuDeclared = r19Run('menu-declared', menu21(false), '', '', authored, [['menu-open', at20(menu21(true)), { opener: '.r21m summary', reveals: '.r21m .panel' }]]);
 r21.menuUndeclared = r19Run('menu-undeclared', menu21(false));
 const patch21 = fill => '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200"><rect width="1200" height="200" fill="#222"/>' + (fill ? `<rect width="70" height="200" fill="${fill}"/>` : '') + '</svg>';
 writeFileSync(join(output, 'r21-patch.svg'), patch21('#c8c8c8')); writeFileSync(join(output, 'r21-nopatch.svg'), patch21(null));
@@ -425,7 +426,7 @@ const r23 = {};
 const ls23 = '<style>@media (max-width:600px){.r23l{display:none}}@media (min-width:601px){.r23s{display:none}}</style>';
 r23.saveAs = r19Run('save-as', '<div><button>Save</button> <button class="r23l">Save as</button></div>', '', ls23);
 const more23 = isOpen => `${ls23}<div role="toolbar" aria-label="Report"><button>Print</button> <button class="r23l">Export report</button> <button class="r23s" aria-expanded="${isOpen}">More</button>${isOpen ? '<div role="menu" class="r23s"><div role="menuitem" tabindex="-1">Export report</div></div>' : ''}</div>`;
-r23.exportMenu = r19Run('export-menu', more23(false), '', '', authored, [['more-open', at20(more23(true))]]);
+r23.exportMenu = r19Run('export-menu', more23(false), '', '', authored, [['more-open', at20(more23(true)), { opener: 'button.r23s[aria-expanded]', reveals: 'div.r23s[role="menu"]' }]]);
 r23.shortLabel = r19Run('short-label', '<button><span class="r23l">Request a demo</span><span class="r23s">Demo</span></button>', '', ls23);
 r23.shortLabelAria = r19Run('short-label-aria', '<button aria-label="Request a demo"><span class="r23l">Request a demo</span><span class="r23s">Demo</span></button>', '', ls23);
 r23.labelCut = r19Run('label-cut', '<div style="width:100px;overflow:hidden"><a href="#r" style="display:inline-block;width:100px;white-space:nowrap">Download the annual report</a></div>');
@@ -450,8 +451,8 @@ if (Object.values(r23Want).some(v => !v)) throw Error('R23 full-run expectations
 const nav25 = (how, isOpen) => `<style>.r25nav{margin:0;padding:0;list-style:none}@media (max-width:600px){.r25nav{${isOpen ? '' : how}}}@media (min-width:601px){.r25menu{display:none}}</style><nav aria-label="Sections"><button class="r25menu" aria-expanded="${isOpen}">Menu</button><ul class="r25nav"><li><a href="#about">About us</a></li><li><a href="#team">Our team</a></li></ul></nav>`;
 const r25 = {};
 r25.navAlone = r19Run('nav-collapsed-alone', nav25('max-height:0;overflow:hidden', false));
-r25.navMenuOpen = r19Run('nav-collapsed-menu-open', nav25('max-height:0;overflow:hidden', false), '', '', authored, [['menu-open', at20(nav25('max-height:0;overflow:hidden', true))]]);
-r25.navPartial = r19Run('nav-partial-menu-open', nav25('max-height:1.2em;overflow:hidden', false), '', '', authored, [['menu-open', at20(nav25('max-height:1.2em;overflow:hidden', true))]]);
+r25.navMenuOpen = r19Run('nav-collapsed-menu-open', nav25('max-height:0;overflow:hidden', false), '', '', authored, [['menu-open', at20(nav25('max-height:0;overflow:hidden', true)), { opener: '.r25menu', reveals: '.r25nav' }]]);
+r25.navPartial = r19Run('nav-partial-menu-open', nav25('max-height:1.2em;overflow:hidden', false), '', '', authored, [['menu-open', at20(nav25('max-height:1.2em;overflow:hidden', true)), { opener: '.r25menu', reveals: '.r25nav' }]]);
 writeFileSync(html, original);
 writeFileSync(handoff, JSON.stringify(authored));
 console.log('R25 fixture runs: ' + JSON.stringify(r25));

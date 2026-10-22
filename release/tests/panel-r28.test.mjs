@@ -66,7 +66,10 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
 const gateOf = open => async (states, dir = 'ltr') => {
-  const scopes = []; for (const [state, html] of Object.entries(states)) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(html)).main, [1440], null) });
+  // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
+  const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -85,6 +88,9 @@ const P = x => W(LS + x);
 
 
 const mq = 'matchMedia("(max-width:600px)")';
+// R29: a declared state that rescues hidden content names its opener and the region it reveals
+const D = (html, opener, reveals) => ({ html, opener, reveals });
+
 test('R28-GPT-01: real Chrome: identity within a state is the node: a heading or button with an id that a script rewords at 320 fails; unchanged it passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const page = (id, change) => W(`<h2${id ? ' id="headline"' : ''}>Everything you need to run payroll</h2><button${id ? ' id="save"' : ''}>Save draft</button>`, change ? `const m = ${mq}, h = document.querySelector('h2'), b = document.querySelector('button'); const f = () => { h.textContent = m.matches ? 'Payroll, simply' : 'Everything you need to run payroll'; b.textContent = m.matches ? 'Keep' : 'Save draft'; }; f(); m.addEventListener('change', f);` : '');
@@ -116,7 +122,7 @@ test('R28-GPT-04: real Chrome: tabs into one flat article of headed sections: a 
 test('R28-GPT-05: real Chrome: default and menu-open pages with regenerated ids on the same nav links pass; a menu-open that stays closed fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const nav = (opened, seed) => W(`<style>@media (max-width:600px){.nav{${opened ? '' : 'display:none'}}}@media (min-width:601px){.menu{display:none}}</style><header><nav aria-label="Main"><button class="menu" aria-expanded="${opened}">Menu</button><ul class="nav">${['About', 'Work'].map((t, i) => `<li><a id="nav-${seed}-${i}" href="/${t.toLowerCase()}">${t}</a></li>`).join('')}</ul></nav></header><p>Body copy.</p>`);
-  assert.deepEqual({ regenerated: await gate({ default: nav(false, 'a1'), 'menu-open': nav(true, 'z9') }), stillClosed: (await gate({ default: nav(false, 'a1'), 'menu-open': nav(false, 'z9') })).pass }, { regenerated: { pass: true, rules: [] }, stillClosed: false });
+  assert.deepEqual({ regenerated: await gate({ default: nav(false, 'a1'), 'menu-open': D(nav(true, 'z9'), '.menu', '.nav') }), stillClosed: (await gate({ default: nav(false, 'a1'), 'menu-open': D(nav(false, 'z9'), '.menu', '.nav') })).pass }, { regenerated: { pass: true, rules: [] }, stillClosed: false });
 }));
 
 test('R28-MIMAR-01: real Chrome: two independent tabsets into headed sections, every panel declared and every Download kept, pass; one Download dropped in either fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -134,5 +140,5 @@ test('R28-MIMAR-02: real Chrome: an error state whose Save is hidden at 320 fail
   const gate = gateOf(open);
   const form = err => W(`<style>@media (max-width:600px){.err .save{display:none}}</style><form class="${err ? 'err' : ''}"><label>Name <input></label>${err ? '<p role="alert">Enter a name.</p>' : ''}<button class="save">Save</button></form>`);
   const det = opened => W(`<style>@media (max-width:600px){.dnav{display:none}}@media (min-width:601px){details{display:none}}</style><header><nav class="dnav"><a href="/a">About</a> <a href="/w">Work</a></nav><details${opened ? ' open' : ''}><summary>Menu</summary><a href="/a">About</a> <a href="/w">Work</a></details></header><p>Copy.</p><footer><a href="/a">About</a></footer>`);
-  assert.deepEqual({ errorHidesSave: (await gate({ default: form(false), error: form(true) })).pass, detailsMenuOpen: await gate({ default: det(false), 'menu-open': det(true) }), detailsUndeclared: (await gate({ default: det(false) })).pass }, { errorHidesSave: false, detailsMenuOpen: { pass: true, rules: [] }, detailsUndeclared: false });
+  assert.deepEqual({ errorHidesSave: (await gate({ default: form(false), error: form(true) })).pass, detailsMenuOpen: await gate({ default: det(false), 'menu-open': D(det(true), 'details > summary', 'details > a') }), detailsUndeclared: (await gate({ default: det(false) })).pass }, { errorHidesSave: false, detailsMenuOpen: { pass: true, rules: [] }, detailsUndeclared: false });
 }));

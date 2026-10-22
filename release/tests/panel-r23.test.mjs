@@ -68,7 +68,10 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
 const gateOf = open => async (states, dir = 'ltr') => {
-  const scopes = []; for (const [state, html] of Object.entries(states)) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(html)).main, [1440], null) });
+  // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
+  const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -81,6 +84,10 @@ const LS = '<style>@media (max-width:600px){.l{display:none}}@media (min-width:6
 const svgBand = (fill, patch, width) => `background:url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="200"><rect width="1200" height="200" fill="${fill}"/>${patch ? `<rect width="${width}" height="200" fill="${patch}"/>` : ''}</svg>`)}')`;
 const P = x => W(LS + x);
 
+// R29: a declared state that rescues hidden content names its opener and the region it reveals
+const D = (html, opener, reveals) => ({ html, opener, reveals });
+const ACC = html => D(html, 'button[aria-expanded]', 'button[aria-expanded] + div');
+
 test('R23-GPT-02, R23-MIMAR-01: real Chrome: a control matches only by the same accessible name, one to one, within an action family: Save as hidden next to Save, Cancel subscription next to Cancel, Compare all plans next to Compare, a second Remove button and a shortened label fail; Export report moved into a declared More menu as a menuitem, a link becoming a button and a shortened label keeping its aria-label pass (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const toolbar = open => P(`<div role="toolbar"><button>Print</button> <button class="l">Export report</button> <button class="s" aria-expanded="${open}">More</button>${open ? '<div role="menu" class="s"><div role="menuitem" tabindex="-1">Export report</div></div>' : ''}</div>`);
@@ -90,7 +97,7 @@ test('R23-GPT-02, R23-MIMAR-01: real Chrome: a control matches only by the same 
     compareAllPlans: await gate({ default: P('<a href="/plans" class="l">Compare all plans</a> <a href="/compare">Compare</a>') }),
     secondRemove: await gate({ default: P('<button>Remove</button> <button class="l">Remove</button>') }),
     shortLabel: await gate({ default: P('<button><span class="l">Request a demo</span><span class="s">Demo</span></button>') }),
-    exportToMenuitem: await gate({ default: toolbar(false), 'more-open': toolbar(true) }),
+    exportToMenuitem: await gate({ default: toolbar(false), 'more-open': D(toolbar(true), '[aria-expanded]', '[role="menu"]') }),
     linkToButton: await gate({ default: P('<a href="/sales" class="l">Contact sales</a><button class="s">Contact sales</button>') }),
     shortLabelAria: await gate({ default: P('<button aria-label="Request a demo"><span class="l">Request a demo</span><span class="s">Demo</span></button>') }),
   }, {
@@ -138,7 +145,7 @@ test('R23-GPT-05: real Chrome: a clamp may only hide text: a control cut wholly 
   const acc = exp => W(`<button aria-expanded="${exp}">Billing</button><div style="${exp ? '' : 'max-height:0;overflow:hidden'}"><p>Invoices are sent monthly.</p><a href="/invoices">See invoices</a></div>`);
   assert.deepEqual({
     controlWhollyClamped: await gate({ default: clamp, expanded }),
-    accordionWithControl: await gate({ default: acc(false), expanded: acc(true) }),
+    accordionWithControl: await gate({ default: acc(false), expanded: ACC(acc(true)) }),
   }, { controlWhollyClamped: { pass: false, rules: ['partly clipped'] }, accordionWithControl: { pass: true, rules: [] } });
 }));
 

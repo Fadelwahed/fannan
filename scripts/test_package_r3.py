@@ -157,6 +157,7 @@ class FinalRecordTests(unittest.TestCase):
             self.assertTrue(any(n.startswith('test-results/r26/') for n in names), 'R26 evidence is archived like R4-R25')
             self.assertTrue(any(n.startswith('test-results/r27/') for n in names), 'R27 evidence is archived like R4-R26')
             self.assertTrue(any(n.startswith('test-results/r28/') for n in names), 'R28 evidence is archived like R4-R27')
+            self.assertTrue(any(n.startswith('test-results/r29/') for n in names), 'R29 evidence is archived like R4-R28')
         self.assertNotIn('reviews/ARGON-R5-b24fd1f.md', names)
         self.assertIn('scripts/test_package_r3.py', (ROOT / 'release/PACKAGING.md').read_text())
 
@@ -430,6 +431,13 @@ class RequiredSectionTests(unittest.TestCase):
         required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
         self.assertIn('R28 loss accounting has two steps', required)
         self.assertNotIn('R27 makes element identity a stable key, not position', required)
+        self.assertEqual(package.missing_sections(), [])
+
+    def test_r29_sections(self):
+        # R29: declared reveals (opener + reveals, verified by the gate) are required in design-quality.md.
+        required = getattr(package, 'REQUIRED_SECTIONS', {}).get('release/references/design-quality.md', [])
+        self.assertIn('R29 declared reveals replace (B)', required)
+        self.assertIn('R28 loss accounting has two steps', required)
         self.assertEqual(package.missing_sections(), [])
 
     def test_r14_build_checks_sections_before_any_output(self):

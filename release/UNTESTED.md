@@ -1,5 +1,18 @@
 # R3 checks not established
 
+## R29 additions (Mi'mar, 19 October 2026, panel round 29)
+
+Chrome headless only, 1440 × 900, device scale one. Mi'mar's decision applied: reveals are declared (`opener` + `reveals`) and verified by the gate; opener inference deleted.
+
+- **Cover pool (ruling, for the round 30 panel):** one pool per losing state and width, shared across every declared state and region. The literal "global across all states" reading was not used: it fails an honest page with two menus (default spends help-open's FAQ, then main-open needs the same item). Covered: two menus, nested regions, two regions in one state. UNTESTED: three or more losing states drawing on one region in ways that would double count across losing states (allowed by design).
+- **Opener checks:** visible and operable by a hit test at the centre of each matched opener (all matches must pass); open = aria-expanded=true, an open details, popovertarget to a `:popover-open` element or a region that is `:popover-open`, aria-selected, aria-pressed or aria-current. UNTESTED: an opener operable only off-centre; an opener whose open state is shown only visually (no ARIA, no details, no popover): the declaration is invalid by design; aria-haspopup with no open state is invalid by design.
+- **Twins:** default (or any state) renderings are accounted once only when their prints and losses are identical at every width; near-identical renderings are accounted separately.
+- **Undeclared carousels:** a slide clipped at 1440 whose revealing state declares nothing falls back to the same clipping box (one box with the signature, or the box at the same structural path). UNTESTED: carousels restructured between states (different structural paths) without a declaration fail closed.
+- **Sections:** a section ends at the next heading of equal or higher rank or at the end of its sectioning ancestor (article, section, main, aside), whichever comes first.
+- **Real site with JavaScript off:** run in the checker's shape in the isolated world (VERIFICATION R29).
+- **Honest sets R18-R29 old against new: UNTESTED this round** (stopped at the time cap under box load 90-155); false positives on them are not established for R29.
+- **Superseded doc assertions:** the R28 doc test no longer requires "Another declared state covers a lost item only through a reveal", "An ambiguous opener-to-region link fails closed", "nothing outside the revealed region" or "covers a lost item only through the region a visible opener reveals"; the R29 doc test requires the declared-reveal wording instead.
+
 ## R28 additions (Mi'mar, 19 October 2026, panel round 28)
 
 Chrome 155 headless only, 1440 × 900, device scale one. One reviewer (GPT), cross-checked by Mi'mar; Mi'mar's decision (two-step loss accounting) applied, R26/R27 key code deleted.

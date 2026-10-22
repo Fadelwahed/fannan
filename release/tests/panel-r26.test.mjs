@@ -67,7 +67,10 @@ const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir 
 const ws = await import('../tools/width-screen.mjs');
 // states: { stateName: html }; the overall result after resolving reveals, truncations and losses across the declared states
 const gateOf = open => async (states, dir = 'ltr') => {
-  const scopes = []; for (const [state, html] of Object.entries(states)) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(html)).main, [1440], null) });
+  // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
+  const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -85,14 +88,17 @@ const P = x => W(LS + x);
 
 const ws26 = await import('../tools/width-screen.mjs');
 
+// R29: a declared state that rescues hidden content names its opener and the region it reveals
+const D = (html, opener, reveals) => ({ html, opener, reveals });
+
 test('R26-GPT-01: real Chrome: footer copies never cover nav items: a declared menu-open that does not open fails (max-height:0 or display:none, with or without footer copies); a menu-open that opens passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
   const nav = (how, opened, footer) => W(`<style>.nav{margin:0;padding:0;list-style:none}@media (max-width:600px){.nav{${opened ? '' : how}}}@media (min-width:601px){.menu{display:none}}</style><header><nav aria-label="Main"><button class="menu" aria-expanded="${opened}">Menu</button><ul class="nav"><li><a href="/about">About</a></li><li><a href="/team">Team</a></li></ul></nav></header><p>Body copy.</p>${footer ? '<footer><a href="/about">About</a> <a href="/team">Team</a></footer>' : ''}`);
   const mh = 'max-height:0;overflow:hidden', dn = 'display:none';
   const r = {};
   for (const [n, how] of [['maxHeight', mh], ['displayNone', dn]]) for (const footer of [true, false]) {
-    r[`${n}${footer ? 'Footer' : ''}Sloppy`] = (await gate({ default: nav(how, false, footer), 'menu-open': nav(how, false, footer) })).pass;
-    r[`${n}${footer ? 'Footer' : ''}Real`] = (await gate({ default: nav(how, false, footer), 'menu-open': nav(how, true, footer) })).pass;
+    r[`${n}${footer ? 'Footer' : ''}Sloppy`] = (await gate({ default: nav(how, false, footer), 'menu-open': D(nav(how, false, footer), '.menu', '.nav') })).pass;
+    r[`${n}${footer ? 'Footer' : ''}Real`] = (await gate({ default: nav(how, false, footer), 'menu-open': D(nav(how, true, footer), '.menu', '.nav') })).pass;
   }
   assert.deepEqual(r, { maxHeightFooterSloppy: false, maxHeightFooterReal: true, maxHeightSloppy: false, maxHeightReal: true, displayNoneFooterSloppy: false, displayNoneFooterReal: true, displayNoneSloppy: false, displayNoneReal: true });
 }));

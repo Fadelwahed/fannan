@@ -1,0 +1,6 @@
+{"note":"R29 real-site handoff fragment (screens/states only): the menu-open state declares its opener and the region it reveals",
+ "screens":[{"id":"home","states":[
+  {"id":"default","lang":"en","page":"en/index.html"},
+  {"id":"menu-open","lang":"en","page":"en/index.html","opener":"details.mnav > summary","reveals":"details.mnav .panel"},
+  {"id":"default","lang":"ar","page":"ar/index.html"},
+  {"id":"menu-open","lang":"ar","page":"ar/index.html","opener":"details.mnav > summary","reveals":"details.mnav .panel"}]}]}

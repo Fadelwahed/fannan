@@ -1,5 +1,13 @@
 # R3 executed verification — 17 October 2026
 
+## R29 (panel round 29, 19 October 2026)
+
+- Mi'mar's decision applied in `release/tools/width-screen.mjs`, `pre-handoff-check.mjs` and `handoff-contract.mjs`: reveals are declared (`opener` + `reveals` on a non-default state) and verified by the gate (losing state: region hidden, every matched opener visible and operable by a hit test; declared state: region visible, opener open), invalid declarations rescue nothing and report why; opener inference deleted; identical renderings of a state accounted once; sections bounded by their sectioning ancestor; the cover pool is one per losing state and width, shared across every declared state and region (ruling, for the round 30 panel).
+- Before (R29 tests against 564e31b sources): `test-results/r29/R29-chrome-before.log` 9/20 (all ten R29 tests and the R8 PORT-02 source check fail on their assertions), docs 21/22, package 2 failures. After: 20/20, 22/22, package OK.
+- Full Node suite, one file at a time: `test-results/r29/node.log` 203/203. Full fixture: `R29-full-run-after.log` passes (the R23 export-menu fixture state now declares its reveal).
+- Real site (`site29.mjs`, the checker's shape with `site-handoff.json`; en/ar, JS on and off, default-only and declared menu-open): `site-old-new.log`. Default-only fails in both codes (mobile links need menu-open); with the declared menu-open state the old code fails (the doubled default spent the links twice) and the new code passes with the declaration valid.
+- Honest sets R18-R29 old against new: NOT rerun this round (time cap under high box load); see UNTESTED.
+
 ## R28 (panel round 28, 19 October 2026)
 
 - Mi'mar's decision applied in `release/tools/width-screen.mjs`: (A) same-state identity is the DOM node, tagged at 1440 in the session; (B) cross-state cover only through a visible opener's revealed region, one to one per region; sections end at the next heading of the same or higher rank; panels without an aria link belong to the nearest tablist before them. The R26/R27 key code (landmark keys, stable-key memo, source-state reservation, cross-state identity matches) is deleted. R28-GPT-06: design-quality.md and handoff-contract.md.
