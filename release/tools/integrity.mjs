@@ -2,7 +2,7 @@
 // The authoritative probes and axe run in the isolated probe world (probe-world.mjs: a CDP isolated world with its
 // own globals and prototypes; Playwright has no public isolated-world evaluate, so CDP Page.createIsolatedWorld is
 // used directly, Chromium only). On the positional page and on every declared state, three cross-checks run:
-// 1. page world vs probe world: the full hard-fail vector (VECTOR) evaluated in the page's own world. A page that
+// 1. page world vs probe world: the full gate vector (VECTOR) evaluated in the page's own world. A page that
 // patches the browser functions changes only its own world, so any difference is a tampering sign.
 // 2. native functions: the page world's probe functions must still be native code (heuristic; a page can hide a
 // patch from Function.prototype.toString, which is why check 1 exists).
@@ -13,7 +13,7 @@
 // A vector that is missing a field or holds a non-finite or negative count is INCOMPLETE (never PASS). Contrast is a
 // diagnostic computed by contrastProbe (axe does not complete with page scripts disabled in Chrome 155).
 // the vector is the canonical gate result (N11: every
-// hard-fail input, per-width maps, ratios and scrolled-viewport accent; N12: contrast unknown and coverage), the
+// gate input, per-width maps; N12: contrast unknown and coverage), the
 // content record carries slot and heading text (N13), a content difference is never PASS even with a reviewed
 // waiver (N14: INCOMPLETE), tamperSigns is required (N19) and call/apply/bind/Reflect.apply are native-checked (N17).
 // Browser side, page world: returns the names of probe functions that are no longer native.
@@ -242,7 +242,7 @@ export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Numbe
 // (string or null), ratio (finite non-negative number or null; null means the gate could not measure it), widths
 // (per-width counts keyed by CSS width, so {1440:1, 320:0} and {1440:0, 320:1} differ) and coverage (a count that
 // must match between worlds but is never "worse"; zero JavaScript-off contrast coverage makes the run INCOMPLETE).
-export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count', textMeasured: 'coverage', textObscured: 'count', textUnreadable: 'count', textUnmeasured: 'count', textHidden: 'count' };
+export const VECTOR = { h1: 'count', placeholders: 'flag', accent: 'text', frames: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count', textMeasured: 'coverage', textObscured: 'count', textUnreadable: 'count', textUnmeasured: 'count', textHidden: 'count' };
 // the rendered-visibility backstop (visibility.mjs) supplies textMeasured, textObscured, textUnreadable and
 // textUnmeasured for each rendering; adds textHidden (text clipped to nothing by an ancestor that cannot be scrolled,
 // such as an inactive carousel slide or a collapsed accordion: not displayed, graded through the declared states; more of
@@ -294,7 +294,7 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   // JavaScript-off text that could not be contrast-checked at all, where the scripted page could, proves nothing.
   if (jsOff.vector.contrastChecked === 0 && probe.vector.contrastChecked > 0) notes.push('JavaScript-off contrast coverage is zero; its contrast diagnostic proves nothing');
   // text under a filter, blend mode, backdrop filter or mask that the probe cannot resolve, in either
-  // rendering, is never a silent pass; the cross-check is INCOMPLETE (the main gates still fail glass).
+  // rendering, is never a silent pass; the cross-check is INCOMPLETE.
   for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.contrastEffects > 0) notes.push(`${where}: ${run.vector.contrastEffects} text element(s) under compositing effects the contrast probe cannot resolve`);
   // the rendered-visibility backstop. Text the scripted page paints but leaves covered by another layer or below
   // the pixel readability floor fails outright; JavaScript-off text that is worse (obscured, unreadable or

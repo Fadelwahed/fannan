@@ -5,33 +5,20 @@
     "handoff"
   ],
   "thresholds": {
-    "centeredSectionsPerPage": 1,
-    "accentAreaRatioFullPage": 0.1,
-    "accentAreaRatioViewport": 0.1,
-    "typeSizes": 6,
-    "centeredThreeIconRows": 0,
-    "genericHeroGradients": 0,
-    "fillerMatches": 0,
     "placeholdersAtHandoff": 0,
     "focusStateContrast": 3,
-    "spacingOffScale": 0,
-    "stockGlass": 0
+    "spacingOffScale": 0
   },
-  "reason": "Six font sizes cover display, title, section, body, secondary and label roles without ad hoc steps. DOM area estimates are proxies and require state-bound screenshot review. Non-hero gradients are signals for the critic, not automatic fails. Backdrop filters (stock glassmorphism) are gated at zero in both phases (design-quality.md, Default effects).",
+  "reason": "Only floors and validity checks are automated: no placeholders at final handoff, the focus-state contrast screen (WCAG floor) and spacing values that resolve to the approved token scale. Visual style (type sizes, accent area, centring, gradients, glass, colour pairings, layout patterns, word choice) is a design judgment for the designer and the critic, not an automatic fail.",
   "focusStateContrastReason": "Screening threshold for the focus heuristic: a focus indicator (outline, border, underline, ring, or background/text change) counts only when it reaches this contrast against the unfocused state or its backdrop. 3:1 is derived from WCAG 2.2 SC 2.4.13 Focus Appearance (AAA) and matches the SC 1.4.11 Non-text Contrast (AA) minimum, which is the floor: the checker refuses a value below 3. It is a screen, not proof of 2.4.7/2.4.13; manual focus review stays mandatory.",
   "spacingOffScaleReason": "At handoff every visible padding, margin (left, right, top and bottom, on html and body too) and row/column gap must resolve to a value on the built --spacing-* scale (0 always allowed). Auto margins are skipped because they resolve to used pixels; a value excused by data-fannan-spacing-exception needs a matching scoped handoff spacingExceptions entry that names the approver. Wireframes are not gated. A screen, not proof of good rhythm.",
   "manualIds": [
     "point-of-view",
     "brief-trace",
-    "generic-hero",
     "decoration-job",
-    "card-grid",
-    "dashboard-tropes",
-    "rule-of-three",
     "reference-work",
     "craft",
     "wcag-review",
-    "accent-area",
     "palette",
     "rules-copy",
     "language-overflow",
@@ -48,7 +35,6 @@
     "component-consistency"
   ],
   "wireframeDeferred": [
-    "accent-area",
     "palette"
   ],
   "wireframeDeferrable": [

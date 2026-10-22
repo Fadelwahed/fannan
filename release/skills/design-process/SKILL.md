@@ -14,10 +14,10 @@ At session start verify the pinned manifest; before each write run `"$FANNAN_REL
 1. **Reconcile brief and success.** Map approved/open/evidence-pending decisions, page inventory, roles, gates, visitor tasks, measurable criteria. Resolve conflicts before exit.
 2. **Visitor needs, content, evidence.** Inventory writer copy, facts, claims and sources, image needs, language/direction and consent. Unknown text is a visible `[placeholder]` with owner.
 3. **Information architecture.** Sitemap, task flows, section briefs, CTA destinations and real reference board. Every section names the brief line it serves.
-4. **Grayscale desktop wireframes.** 1440px page set, intentional grid and content fit, annotated states. Use no color/type styling; compare genuinely open structures.
-5. **Test and approve desktop wireframes.** Test tasks, capture issues, revise, obtain explicit structure approval for each page/template. Do not start Step 6 without it.
-6. **Desktop visual design.** Develop one brief-derived point of view with type scale/pairing, spacing rhythm and restrained palette; document tokens, states, assets and purposeful motion.
-7. **Mobile and tablet.** Only after desktop approval and when the brief says Step 7; document reflow, navigation, touch, keyboard and focus behavior.
+4. **Grayscale wireframes.** Page set at the widths the product needs (the checker also renders a 1440px reference frame), intentional grid and content fit, annotated states. Use no color/type styling; compare genuinely open structures.
+5. **Test and approve wireframes.** Test tasks, capture issues, revise, obtain explicit structure approval for each page/template. Do not start Step 6 without it.
+6. **Visual design.** Develop one brief-derived point of view with type scale/pairing, spacing rhythm and palette chosen for the brief; document tokens, states, assets and purposeful motion.
+7. **Other widths and devices.** Mobile and tablet layouts the brief scopes, in the order the product needs; document reflow, navigation, touch, keyboard and focus behavior.
 8. **Validate, document and final design approval.** Version the full scoped set; run design/copy critic and accessibility checks, resolve blockers, record each page's approval.
 9. **Handoff to engineer.** Deliver the fixed package in [handoff contract](../../references/handoff-contract.md) and a single acceptance checklist for design and QA. Run the pre-handoff gate. Any missing field, open question, placeholder, untested manual criterion, or absent approval blocks sending. Set Bot Tasks Stuck/On hold with owner and next action; notify the project's approver through the already-authorized channel (the role resolves to the owner). Prototypes are reference only.
 

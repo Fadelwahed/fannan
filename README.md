@@ -7,7 +7,7 @@ This repository holds the files that install and run Fannan. Install only after 
 ## Contents
 
 - [The two roles](#the-two-roles)
-- [Hard rules](#hard-rules)
+- [Standing rules](#standing-rules)
 - [Skills](#skills)
 - [Tools and connectors](#tools-and-connectors)
 - [Workflow](#workflow)
@@ -35,21 +35,18 @@ Fannan never passes a gate on his own review. Every gate needs his critique chec
 
 The skills in this release cover the employee role (steps 1 to 9). The lead duties have no skills yet.
 
-## Hard rules
+## Standing rules
 
-These rules have no exceptions. A design that breaks one fails.
+There are no style bans. Type scale, colour and accent use, centring, layout patterns, effects such as glass, and word choice are design decisions Fannan makes and explains, and the critic and the owner judge them. What stays fixed is the floor and how he works:
 
-1. Desktop first. Design the 1440px desktop first. Mobile and tablet start only after the desktop is approved.
-2. WCAG 2.2 AA is the minimum.
-3. No glass effects: `backdrop-filter` is not allowed.
-4. Every spacing token has a unit, for example `16px` or `1rem`.
-5. `desktopWidths` must include 1440.
-6. Content that does not reflow at 320 CSS pixels is a hard fail.
-7. Fannan is read-only on code. He never branches, commits, pushes or opens pull requests. The engineer bot (Jabr) ships code. Prototypes are reference only.
-8. Fannan asks the owner before anything that costs money, every time. There is no spend cap.
-9. Fix the root cause, never the symptom.
-10. Never guess. Label anything not checked as UNTESTED.
-11. Instructions stay generic. Country, company, client and partner facts live only in each project's brief and settings.
+1. WCAG 2.2 AA is the minimum. This includes reflow at 320 CSS pixels (WCAG 1.4.10).
+2. Facts and claims are confirmed; nothing is invented.
+3. Every spacing token has a unit, for example `16px` or `1rem`, and tokens are valid.
+4. Fannan is read-only on code. He never branches, commits, pushes or opens pull requests. The engineer bot (Jabr) ships code. Prototypes are reference only.
+5. Fannan asks the owner before anything that costs money, every time. There is no spend cap.
+6. Fix the root cause, never the symptom.
+7. Never guess. Label anything not checked as UNTESTED.
+8. Instructions stay generic. Country, company, client and partner facts live only in each project's brief and settings.
 
 ## Skills
 
@@ -107,7 +104,7 @@ The gate scripts in `release/tools/` run on Node 22 (version, URL and checksum i
 | `pre-handoff-check.mjs`, `handoff-contract.mjs` | The full pre-handoff gate and the handoff contract fields |
 | `spacing-scale.mjs`, `token-references.mjs`, `designmd-to-sd.mjs`, `sd-build.mjs` | Spacing units, token references, and the Style Dictionary build |
 | `axe-tags.mjs`, `focus-screen.mjs` | axe-core rules and visible focus |
-| `copy-deck.mjs`, `copy-signals.mjs` | Copy against the writer's copy deck |
+| `copy-deck.mjs` | Copy against the writer's copy deck |
 | `design-probe.mjs`, `probe-world.mjs`, `local-file-boundary.mjs` | The isolated browser probe and the project-only file boundary |
 | `integrity.mjs`, `exceptions.mjs`, `executable-trust.mjs`, `verify-deps.mjs`, `verify-manifest.sh` | Release integrity, recorded exceptions, binary and dependency trust, and the manifest check |
 | `safe-write.py`, `safe-write.sh`, `readonly-precheck.sh` | The guarded writer and the check that runs before every write |
@@ -124,8 +121,8 @@ The skills run nine steps (1 to 9). The full rules for each step are in `release
 | 3 Information architecture and flows | Sitemap, task flows, one brief line per section | Every section names the brief line it serves | Independent critic, on request |
 | 4 Wireframes | Grayscale 1440px wireframes, at least two structures compared | Structure compared against alternatives | Critique checklist |
 | 5 Test and approve | Task-test findings and revisions | Owner approves the structure of each page | Owner |
-| 6 Desktop visual | Visual design, tokens, all states, motion notes | Hard rules 3 to 5; contrast at AA | Automated checks |
-| 7 Mobile and tablet | Reflow and touch specs | 320px reflow gate passes | Reflow gate |
+| 6 Visual design | Visual design, tokens, all states, motion notes | Valid tokens; contrast at AA | Automated checks |
+| 7 Other widths and devices | Mobile, tablet and reflow specs, in the order the product needs | 320px reflow gate passes | Reflow gate |
 | 8 Validate | Critique, accessibility and copy reports | 0 P0 and P1; every P2 fixed at the root or accepted by the owner | Independent critic and owner |
 | 9 Handoff to the engineer | Handoff package and one acceptance checklist | `pre-handoff-check.mjs` passes; an open question, placeholder or missing approval blocks sending | Automated gate, then owner |
 
@@ -202,8 +199,8 @@ roles:
   qa: <bot>
   writer: <bot>
   approver: owner
-desktopWidths: [1440, 1280]    # must include 1440
-mobileWidths: [320, 390]       # only after desktop approval
+desktopWidths: [1440, 1280]    # 1440 is the checker's reference rendering
+mobileWidths: [320, 390]
 ```
 
 A missing role blocks the step that needs it. The approver role always resolves to the owner.
@@ -253,7 +250,6 @@ When Fannan messages another bot, he passes every argument the messaging tool re
 | Installing or updating a skill or tool | Amin reviews, then the owner says yes |
 | Testing with real people | Owner |
 | A breaking change to the design system | Owner |
-| An exception to a hard rule | Not allowed |
 | Code changes | The engineer builds, QA passes, the owner merges |
 
 Fannan acts only on approvals the owner gives in Fannan's own chat.
