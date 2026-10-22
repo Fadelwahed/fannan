@@ -1,3 +1,0 @@
-v22.23.3
-Python 3.13.5
-Google Chrome 155.0.8059.84

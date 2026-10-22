@@ -1,8 +1,0 @@
-glyph-patch1word   {"pixelMin":[15.9],"glyph":{"body:1/main:0/div:1/p:0":{"ratio":15.91,"min":15.91,"max":15.91,"clusters":54}}}
-glyph-patch3words  {"pixelMin":[15.9],"glyph":{"body:1/main:0/div:1/p:0":{"ratio":15.91,"min":15.91,"max":15.91,"clusters":41}}}
-glyph-nopatch      {"pixelMin":[15.9],"glyph":{"body:1/main:0/div:1/p:0":{"ratio":15.91,"min":15.91,"max":15.91,"clusters":58}}}
-reveal-same        {"pass":true,"unresolved":0,"defaultRules":[["reveal:expanded"],["reveal:expanded"]]}
-reveal-wrapper     {"pass":false,"unresolved":2,"defaultRules":[["reveal"],["reveal"]]}
-reveal-unrelated   {"pass":true,"unresolved":0,"defaultRules":[["reveal:expanded"],["reveal:expanded"]]}
-hiddenSubmit320    [[1440,true,0],[320,true,0]]
-inlineWrapClaim    {"claimed":true,"valid":true,"rendersWithoutScript":false,"onlyScripted":3,"reason":null}

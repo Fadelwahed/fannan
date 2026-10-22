@@ -1,9 +1,0 @@
-test_build_computes_registry_names_once_before_writing (test_package_r3.RegistryInputTests.test_build_computes_registry_names_once_before_writing) ... ok
-test_changed_path_under_a_symlinked_folder_fails_before_any_write (test_package_r3.RegistryInputTests.test_changed_path_under_a_symlinked_folder_fails_before_any_write) ... ok
-test_missing_changed_path_fails_before_any_write (test_package_r3.RegistryInputTests.test_missing_changed_path_fails_before_any_write) ... ok
-test_symlinked_changed_path_fails_before_any_write (test_package_r3.RegistryInputTests.test_symlinked_changed_path_fails_before_any_write) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 0.007s
-
-OK

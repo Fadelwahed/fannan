@@ -1,3 +1,0 @@
-START 07:59:59 AM Gaza
-PID 1441032
-END 08:00:09 AM Gaza rc=1 secs=10
