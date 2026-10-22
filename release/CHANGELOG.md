@@ -1,5 +1,7 @@
 # Changelog and round-5 P1 disposition
 
+`reviews/`, `scripts/`, `test-results/` and `REVIEW-RESPONSE.md`, named below, are on the `workbench` branch, not on `main`.
+
 ## R4 fixes (Mi'mar, branch `mimar-r4-fixes`, 17 October 2026)
 
 Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `grok-review`). Local review candidate only; live installation remains BLOCKED.
@@ -11,7 +13,7 @@ Implemented from the independent review `reviews/GROK-R4-eb2d540.md` (branch `gr
 | R4-3 | New `focusSettle` waits (capped 1 s) for finite transitions on the focused element and ancestors before reading; `focusStyleProbe` ignores colour-only changes below 3:1 between states and changes to unrendered outline/border/decoration/pseudo-elements. Both checker tab loops call it. Manual focus evidence stays mandatory. | `tests/focus-screen.test.mjs`; real-Chrome probe in `test-results/r4/` |
 | R4-4 | The checker refuses a browser whose `Browser.version()` differs from the reviewed pin; `runtime/browser-trust.json` now requires `supportTreeSha256`, verified over the executable's own directory by `tools/executable-trust.mjs`. The pin stays BLOCKED. | `tests/host-trust.test.mjs`, `tests/checker-boundaries.test.mjs` |
 | R4-5 | `scripts/package-r3.py verify --registry-sha256 <digest>` anchors the changed-file registry externally (checked first); `PACKAGING.md` documents `chmod 0444` for both trust files. | `scripts/test_package_r3.py` |
-| R4-6 | Fadel's decision (17 Oct 2026, 6:18 AM UTC+3): spacing requires units. The converter's units-required check now covers `spacing` (`spacing: 8` fails; `8px` and a bare `0` pass), and shared validation types spacing as dimension only, so hand-edited `number` spacing is rejected by `sd-build.mjs` too. | `tests/token-validation.test.mjs` |
+| R4-6 | The owner's decision (17 Oct 2026, 6:18 AM UTC+3): spacing requires units. The converter's units-required check now covers `spacing` (`spacing: 8` fails; `8px` and a bare `0` pass), and shared validation types spacing as dimension only, so hand-edited `number` spacing is rejected by `sd-build.mjs` too. | `tests/token-validation.test.mjs` |
 
 
 The requested design/text rewrite is supplied. **“All seven P1s closed” is not a truthful live-state claim from these inputs.** Five have candidate fixes or preserved fixes with local evidence; actual reviewer approval, live access controls and deployment-dependent verification remain blocked. The table keeps code/text completion separate from operational closure.
@@ -21,8 +23,8 @@ The requested design/text rewrite is supplied. **“All seven P1s closed” is n
 | N1 — setup prechecks the output root and stops | Project selection precedes the project-specific path; setup and all workflow callers supply both target and project | `skills/design-setup/SKILL.md`; explicit usage/precheck tests and full caller scan in verification record | Candidate caller defect fixed; live skill execution untested |
 | N2 — npm dependencies conflict with the hashed tree | Exact package and lock stay in `runtime/`; actual npm install is outside `release/`; all three dependency consumers verify lock and installed-tree hashes before loading through `FANNAN_DEPS`, and reject an in-tree prefix | Local `npm ci --ignore-scripts`, token/browser fixture execution, release inventory contains no node_modules; external manifest generated after edits | Candidate layout/runtime defect fixed; target-host install untested |
 | N5 — launcher has no explicit pinned-binary path | Checker invokes the protected launcher with only PATH and the selected project; the launcher owns the fixed `/opt/fannan/bin/impeccable-linux-x64` selection | Missing binary produces a failing evidence record; supplied launcher hash pin retained; negative path executed | Caller fixed; successful real binary execution remains BLOCKED because the binary is absent |
-| R3-2 — Amin's review is not recorded | Add `INSTALL-ACCEPTANCE.md` with per-file/digest review requirement and blocked status; do not reuse an old review for rewritten files | Candidate review by a native reviewer is documented separately and is **not Amin's review** | **OPEN** until Amin actually reviews and records the candidate hashes |
-| R3-3 — paid threshold remains in skills/memory | All candidate skills require approval for every paid job; proposed memory save 8 says exactly “Ask Fadel before anything that costs money” | Search active skills and proposed memory for old threshold wording; no threshold widget or unsupported paid command introduced | Candidate text fixed; live skill/memory activation remains pending approval |
+| R3-2 — the security reviewer's review is not recorded | Add `INSTALL-ACCEPTANCE.md` with per-file/digest review requirement and blocked status; do not reuse an old review for rewritten files | Candidate review by a native reviewer is documented separately and is **not the security reviewer's review** | **OPEN** until the security reviewer actually reviews and records the candidate hashes |
+| R3-3 — paid threshold remains in skills/memory | All candidate skills require approval for every paid job; proposed memory save 8 says exactly “Ask the owner before anything that costs money” | Search active skills and proposed memory for old threshold wording; no threshold widget or unsupported paid command introduced | Candidate text fixed; live skill/memory activation remains pending approval |
 | R3-4 — read-only token and branch checks approved but not implemented | Preserve exact one-repository Contents:read control and branch/daily-check fallback; specify secret-safe proof and task ownership | `references/security-and-install.md`, `INSTALL-ACCEPTANCE.md`; no credential or branch mutation attempted | **OPEN** until real permissions, read access and branch/task evidence exist |
 | R3-5 — project omitted / unsafe writes | Keep exactly two arguments in guard; every caller supplies project; evidence output is fresh/versioned and uses guarded no-clobber writes | Guard/negative-path tests, contract checks and caller review; descriptor-relative exclusive writer and same-identity host boundary documented | Candidate caller/output defects fixed; descriptor regression tests required; actual Linux host enforcement remains untested |
 
@@ -36,7 +38,7 @@ The requested design/text rewrite is supplied. **“All seven P1s closed” is n
 - Defined the canonical handoff record and generated checklist, scoped to every screen/state/language, with real copy, source/rights records, artifact hashes, tokens/CSS/build inputs, audit intent and no open questions.
 - Supplied the token conversion/build path and config using the existing pinned dependency. Selected the permitted reviewed Node 22 installation route for the original Node20 host; this Mac's Node22 evidence is separately labelled.
 - Supplied the complete rename map and a single release manifest/pin. No active skill caller retains an obsolete skill name; migration/history/helper-path mentions are explicitly classified.
-- Removed unsupported media search/resume instructions. Matching avatars become a reference-backed acceptance process requiring real references and Fadel's approval before paid generation.
+- Removed unsupported media search/resume instructions. Matching avatars become a reference-backed acceptance process requiring real references and the owner's approval before paid generation.
 
 ## Closed historical findings preserved
 
@@ -48,7 +50,7 @@ An independent read-only reviewer identified and the implementation addressed ph
 
 ## Grok review revision — 16 October 2026
 
-The complete finding-by-finding disposition is in `REVIEW-RESPONSE.md`. This revision pins a proposed Node distribution/checksum, verifies dependency bytes before imports, narrows detector/browser access, replaces pathname writes with a descriptor-based writer, adds Arabic and tagline screening, and makes authority, key rotation, avatar uniqueness and engineer ownership explicit. It preserves the existing approval gates, tools and exact npm versions. No review finding is closed by inventing Amin's approval, a missing binary, a target-host run or a live atomic transaction.
+The complete finding-by-finding disposition is in `REVIEW-RESPONSE.md`. This revision pins a proposed Node distribution/checksum, verifies dependency bytes before imports, narrows detector/browser access, replaces pathname writes with a descriptor-based writer, adds Arabic and tagline screening, and makes authority, key rotation, avatar uniqueness and engineer ownership explicit. It preserves the existing approval gates, tools and exact npm versions. No review finding is closed by inventing the security reviewer's approval, a missing binary, a target-host run or a live atomic transaction.
 
 ## Independent R3 correction — 17 October 2026
 
