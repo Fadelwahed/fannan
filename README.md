@@ -324,7 +324,7 @@ diff -r \
   release ../fannan-wb/release
 ```
 
-6. Open one focused pull request to `main`. The new pin needs Amin's review before any install. Only Fadel merges.
+6. Open one focused pull request to `main`. The new pin needs the security reviewer's review before any install. Only the owner merges.
 
 7. Nothing flows from `main` to `workbench`. If a change was made on `main` by mistake, redo it on `workbench` first, then repeat this sync.
 
@@ -335,7 +335,6 @@ diff -r \
 - Nothing is installed or updated without the owner's yes in Fannan's own chat.
 - Any change to `release/` changes the manifest pin, so it needs a new review.
 - Changes reach `main` through one focused pull request each. Review rounds and evidence go to `workbench`. Only the owner merges.
-- Sync is one way, from `main` to `workbench`, and covers only `release/`. Never merge `main` into `workbench`: that would delete the review records, tests and evidence that only `workbench` keeps. Bring a bot change to `workbench` by cherry-picking its commit or copying the changed `release/` files.
 
 ## Working with other bots
 
