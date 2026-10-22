@@ -1,10 +1,19 @@
 # R3 checks not established
 
+## R32 additions (Mi'mar, 19 October 2026, panel round 32)
+
+- **Equivalent captures (R32-M-01):** duplicate identical defaults share one truncation/clip allocation.
+- **Carousel eligibility (R32-M-03/M-04):** structural carousel semantics or multi-slide tracks with verified transitions; no name-word lists and no bare overflow-x ancestors.
+- **Undeclared fallback (R32-M-05):** pure horizontal (not mixed-axis) or carousel signature only.
+- **Graded-width operability (R32-M-06):** 1440 remains the reveal-content baseline; opener operability is checked at the evaluated width.
+- **Unmounted panels (R32-M-09):** closed-state absence is allowed only when open-rendering targets resolve cleanly.
+- **Expansion vs selection (R32-M-10):** aria-expanded true remains valid with aria-selected/pressed false.
+
 ## R31 additions (Mi'mar, 19 October 2026, panel round 31)
 
 - **Per-width cover pools (R31-M-01):** allocations are keyed by losing state, source rendering and evaluation width; capacity at 1280 is independent of 320.
 - **Truncation with visible intro (R31-M-02):** a declared read-more may keep an already-visible introduction; ordinary cross-state losses still require the region hidden in the losing state.
-- **Carousel steps (R31-M-03):** verified by horizontal-track transition evidence, not English-only control names.
+- **Carousel steps (R31-M-03):** verified by carousel semantics or a multi-slide track with a hidden-to-shown transition (R32-M-03/M-04; name tokens never decide eligibility).
 - **Undeclared fallback (R31-M-05):** limited to horizontal tracks/carousels; a link or control inside a vertical clip does not exempt an undeclared FAQ.
 - **Haspopup tokens (R31-M-12):** only true/menu/listbox/tree/grid/dialog certify popup capability; explicit aria-expanded/pressed/selected="false" blocks the haspopup shortcut.
 
@@ -14,7 +23,7 @@
 Chrome headless only, 1440 × 900, device scale one. Mi'mar's decision applied: reveals are declared (`opener` + `reveals`) and verified by the gate; opener inference deleted.
 
 - **Cover pool (ruling, for the round 30 panel):** one pool per losing state and width, shared across every declared state and region. The literal "global across all states" reading was not used: it fails an honest page with two menus (default spends help-open's FAQ, then main-open needs the same item). Covered: two menus, nested regions, two regions in one state. UNTESTED: three or more losing states drawing on one region in ways that would double count across losing states (allowed by design).
-- **Opener checks:** visible and operable by a hit test at the centre of each matched opener (all matches must pass); open = aria-expanded=true, an open details, popovertarget to a `:popover-open` element or a region that is `:popover-open`, dialog[open]/:modal, checked checkbox/radio, a supported non-false aria-haspopup whose declared panel is shown, a language-independent verified carousel step, aria-selected, aria-pressed or aria-current. SUPERSEDED (R31-M-11/M-12): the old claim "aria-haspopup with no open state is invalid by design" — a supported haspopup token with a shown declared panel is valid; "false"/empty/invalid tokens are not. UNTESTED: an opener operable only off-centre; an opener whose open state is shown only visually (no ARIA, no details, no popover, no checked/haspopup/step): the declaration is invalid by design.
+- **Opener checks:** visible and operable by a hit test at the centre of each matched opener (all matches must pass); open = aria-expanded=true, an open details, popovertarget to a `:popover-open` element or a region that is `:popover-open`, dialog[open]/:modal, checked checkbox/radio, a supported non-false aria-haspopup whose declared panel is shown, a verified carousel step (semantics/track transition; not name tokens), aria-selected, aria-pressed or aria-current. SUPERSEDED (R31-M-11/M-12): the old claim "aria-haspopup with no open state is invalid by design" — a supported haspopup token with a shown declared panel is valid; "false"/empty/invalid tokens are not. UNTESTED: an opener operable only off-centre; an opener whose open state is shown only visually (no ARIA, no details, no popover, no checked/haspopup/step): the declaration is invalid by design.
 - **Twins:** default (or any state) renderings are accounted once only when their prints and losses are identical at every width; near-identical renderings are accounted separately.
 - **Undeclared carousels:** a slide clipped at 1440 whose revealing state declares nothing falls back to the same clipping box (one box with the signature, or the box at the same structural path). UNTESTED: carousels restructured between states (different structural paths) without a declaration fail closed.
 - **Sections:** a section ends at the next heading of equal or higher rank or at the end of its sectioning ancestor (article, section, main, aside), whichever comes first.
