@@ -812,6 +812,15 @@ Source: `release/UNTESTED.md`
 
 # R3 checks not established
 
+## R33 additions (Mi'mar, 19 October 2026, panel round 33)
+
+- **Carousel tracks (R33-M-01..M-03):** sibling slides must share a constraining viewport (or display:none/block peers under a carousel-described root); ordinary flex/grid under a distant overflow ancestor and auxiliary panels do not qualify.
+- **Graded-width operability (R33-M-04):** teaser visibility at the graded width does not invalidate a desktop-baseline reveal.
+- **Expansion-only veto (R33-M-05):** pressed/selected false no longer documented as blocking haspopup.
+- **Twin pass (R33-M-06):** equivalent captures share clip decisions without copying independent width failures.
+- **Fallback signature (R33-M-07):** accessible-name / copy-slot substrings never establish undeclared carousel eligibility.
+- **Sole transparent modal (R33-M-08):** a single native :modal remains active even when pointer hit-testing misses.
+
 ## R32 additions (Mi'mar, 19 October 2026, panel round 32)
 
 - **Equivalent captures (R32-M-01):** duplicate identical defaults share one truncation/clip allocation.
@@ -827,7 +836,7 @@ Source: `release/UNTESTED.md`
 - **Truncation with visible intro (R31-M-02):** a declared read-more may keep an already-visible introduction; ordinary cross-state losses still require the region hidden in the losing state.
 - **Carousel steps (R31-M-03):** verified by carousel semantics or a multi-slide track with a hidden-to-shown transition (R32-M-03/M-04; name tokens never decide eligibility).
 - **Undeclared fallback (R31-M-05):** limited to horizontal tracks/carousels; a link or control inside a vertical clip does not exempt an undeclared FAQ.
-- **Haspopup tokens (R31-M-12):** only true/menu/listbox/tree/grid/dialog certify popup capability; explicit aria-expanded/pressed/selected="false" blocks the haspopup shortcut.
+- **Haspopup tokens (R31-M-12 / R33-M-05):** only true/menu/listbox/tree/grid/dialog certify popup capability; only explicit aria-expanded="false" blocks the haspopup/step shortcut (selection or pressed false does not).
 
 
 ## R29 additions (Mi'mar, 19 October 2026, panel round 29)

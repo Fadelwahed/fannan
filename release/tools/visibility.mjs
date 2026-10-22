@@ -262,7 +262,8 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
         let inside = false; for (let a = hit; a; a = up(a)) if (a === d) { inside = true; break; }
         if (inside) selfHit.push(d);
       }
-      modal = selfHit.length ? selfHit[selfHit.length - 1] : null;
+      // R33-M-08: sole :modal remains active without a self-hit; multiple still need hit-test
+      modal = selfHit.length ? selfHit[selfHit.length - 1] : (modals.length === 1 ? modals[0] : null);
     }
     if (!modal) modal = [...document.querySelectorAll('[aria-modal="true"]')].find(e => e.checkVisibility()) || null;
   }
