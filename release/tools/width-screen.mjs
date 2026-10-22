@@ -159,7 +159,15 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
     for (const d of contentEls) {
       if (!(d === e || within(e, d))) continue;
       if (kindOf(d) === 'media') continue; // R21-MIMAR-01: a media crop is not a content cut
-      const rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
+      // R35 sibling (nested clip layers): first intersect with clipping boxes strictly between d and e; what an inner
+      // box already cuts is that box's cut (reported there), not a partial cut of e
+      let rects = contentRects(d).filter(b => b.width > 0 && b.height > 0);
+      for (let a = parentOf(d); rects.length && a && a !== e; a = parentOf(a)) {
+        const ac = getComputedStyle(a), cx = ac.overflowX !== 'visible', cy = ac.overflowY !== 'visible';
+        if (!(cx || cy) || !clipBox(a)) continue;
+        const ar = a.getBoundingClientRect(), l = ar.left + a.clientLeft, t = ar.top + a.clientTop, rr = l + a.clientWidth, bb = t + a.clientHeight;
+        rects = rects.map(b => { const L = cx ? Math.max(b.left, l) : b.left, R = cx ? Math.min(b.right, rr) : b.right, T = cy ? Math.max(b.top, t) : b.top, B = cy ? Math.min(b.bottom, bb) : b.bottom; return { left: L, right: R, top: T, bottom: B, width: R - L, height: B - T }; }).filter(b => b.width > 1 && b.height > 1);
+      }
       if (!rects.length || rects.every(inside)) continue;
       const item = { path: pathOf(d), owner: kindOf(d) === 'control' ? pathOf(controlOf(d) || d) : null, id: idOf(kindOf(d) === 'control' ? controlOf(d) || d : d), tag: d.tagName, kind: kindOf(d), print: printOf(d), text: (d.matches(MEDIA) ? d.getAttribute('alt') || d.getAttribute('aria-label') || d.value || d.tagName : [...d.childNodes].filter(n => n.nodeType === 3).map(n => n.nodeValue).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 60) };
       (rects.every(outside) ? whole : partial).push(item);
@@ -400,9 +408,9 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
       // R35-M-06: carousel-control alternative is limited to native buttons, button roles, and slide-picker tabs
       const role = (control.getAttribute?.('role') || o.getAttribute('role') || '').toLowerCase();
       const tag = (control.tagName || o.tagName || '').toLowerCase();
-      const carouselEligible = tag === 'button' || tag === 'summary'
-        || role === 'button' || role === 'tab'
-        || (tag === 'input' && ['button', 'submit', 'reset'].includes(String(control.type || '').toLowerCase()));
+      // explicit non-button roles (link, menuitem, …) on a <button> also lose eligibility; <summary>, submit/reset are disclosure/form actions
+      const carouselEligible = role ? (role === 'button' || role === 'tab')
+        : (tag === 'button' && String(control.type || 'submit').toLowerCase() !== 'reset') || (tag === 'input' && String(control.type || '').toLowerCase() === 'button');
       return { visible, hit, open, targetOk, disabled, expandedFalse, carouselEligible, unresolvedTargets: unresolvedTargets.length > 0, unresolvedTargetIds: unresolvedTargets };
     };
     const checks = openersFound.map(check);

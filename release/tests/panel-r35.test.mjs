@@ -308,8 +308,67 @@ test('R35-M-09: active carousel guidance teaches the mapped declaration contract
   assert.match(harden, /first slide|complete inventory|including the first/i);
   assert.match(harden, /no extra positive open|need no additional positive open|no additional positive open/i);
   assert.match(harden, /aria-expanded=false/);
+  assert.match(harden, /role=tab/);
+  assert.match(harden, /never a link/);
+  assert.match(harden, /must still exist in the declared state/);
+  assert.match(readFileSync(join(release, 'references/handoff-contract.md'), 'utf8'), /Carousel declarations \(R35\)/);
   const ver = readFileSync(join(release, 'VERIFICATION.md'), 'utf8');
   const r31 = ver.split(/\n(?=## )/).find(s => s.startsWith('## R31')) || ver;
   assert.match(r31, /horizontal-only/);
   assert.match(r31, /SUPERSEDED by R34/i);
 });
+
+// R35 siblings (fixer, full-effort pass)
+const eligibilityWhy = result => result.scopes.some(s => s.widths.results.some(r =>
+  r.declarations?.some(d => d.state === 'slide-b' && d.why.some(w => w.includes('eligible carousel control')))));
+
+test('R35-M-06 sibling: summary, reset and role-overridden buttons are not carousel controls', { skip }, async () => withBrowser(async ({ open }) => {
+  openPage = open;
+  for (const next of [
+    '<details><summary id="next">Next</summary></details>',
+    '<button id="next" type="reset">Next</button>',
+    '<button id="next" role="link">Next</button>',
+    '<span id="next" role="menuitem" tabindex="0" style="display:inline-block;width:64px;height:32px">Next</span>'
+  ]) {
+    const result = await G(states(state => unrolledTarget(state, '<button id="prev">Previous</button>' + next)));
+    assert.equal(result.pass, false, next);
+    assert.ok(eligibilityWhy(result), next);
+  }
+}));
+
+test('R35-M-06 sibling: input[type=button], role=button and slide-picker tabs stay eligible', { skip }, async () => withBrowser(async ({ open }) => {
+  openPage = open;
+  for (const next of [
+    '<input id="next" type="button" value="Next">',
+    '<span id="next" role="button" tabindex="0" style="display:inline-block;width:64px;height:32px">Next</span>',
+    '<div role="tablist"><span id="next" role="tab" tabindex="0" aria-selected="false" style="display:inline-block;width:64px;height:32px">2</span></div>'
+  ]) {
+    const result = await G(states(state => unrolledTarget(state, '<button id="prev">Previous</button>' + next)));
+    assert.ok(!eligibilityWhy(result), next);
+  }
+}));
+
+test('R35-M-01 sibling: two nested clipping layers under the root still certify', { skip }, async () => withBrowser(async ({ open }) => {
+  openPage = open;
+  const page = state => P(`
+  <section id="g"><div class="outer"><div class="viewport"><div class="track">${slides}</div></div></div></section>${controls}`, `
+  #g{width:260px}
+  .outer{width:250px;overflow:hidden;padding:5px}
+  .viewport{width:240px;height:80px;overflow:hidden}
+  .track{display:flex;width:480px;transform:translateX(${state === 'slide-b' ? -240 : 0}px)}
+  #a,#b{flex:0 0 240px;height:80px}`);
+  const res12 = await G(states(page));
+  assert.equal(res12.pass, true);
+}));
+
+test('R35-M-03 sibling: three registered slides with two never observable cannot certify', { skip }, async () => withBrowser(async ({ open }) => {
+  openPage = open;
+  const M3 = { root: '#g', slides: ['#a', '#b', '#c'] };
+  const page = state => P(`${controls}
+  <div id="g"><div id="a" hidden><p>Ghost A.</p></div><div id="b"><p>Real payload.</p></div><div id="c" style="display:none"><p>Ghost C.</p></div></div>`,
+  state === 'slide-b' ? '' : '@media(max-width:600px){#b{display:none}}');
+  const list = [S('default', page('default')),
+    S('slide-a', page('slide-a'), { opener: '#prev', reveals: '#a', carousel: M3 }),
+    S('slide-b', page('slide-b'), { opener: '#next', reveals: '#b', carousel: M3 })];
+  assert.equal((await G(list)).pass, false);
+}));
