@@ -1,18 +1,18 @@
-// R11 panel D1 (decisions C and T4), R12 M06-M08/M13/M17/M21: probe-integrity cross-checks for pre-handoff-check.mjs.
+// probe-integrity cross-checks for pre-handoff-check.mjs.
 // The authoritative probes and axe run in the isolated probe world (probe-world.mjs: a CDP isolated world with its
 // own globals and prototypes; Playwright has no public isolated-world evaluate, so CDP Page.createIsolatedWorld is
 // used directly, Chromium only). On the positional page and on every declared state, three cross-checks run:
-//  1. page world vs probe world: the full hard-fail vector (VECTOR) evaluated in the page's own world. A page that
-//     patches the browser functions changes only its own world, so any difference is a tampering sign.
-//  2. native functions: the page world's probe functions must still be native code (heuristic; a page can hide a
-//     patch from Function.prototype.toString, which is why check 1 exists).
-//  3. a JavaScript-off pass (javaScriptEnabled: false), diagnostic. First the content must be equivalent (the same
-//     visible copy slots, h1 count, lang and dir); otherwise the diagnostic is INCOMPLETE and fails. Then every field
-//     of the vector where the page with scripts off is worse fails, unless the handoff's `jsOffDifferences` records
-//     that check for this screen, state and lang with a reason and a qaGate/approver reviewer.
+// 1. page world vs probe world: the full hard-fail vector (VECTOR) evaluated in the page's own world. A page that
+// patches the browser functions changes only its own world, so any difference is a tampering sign.
+// 2. native functions: the page world's probe functions must still be native code (heuristic; a page can hide a
+// patch from Function.prototype.toString, which is why check 1 exists).
+// 3. a JavaScript-off pass (javaScriptEnabled: false), diagnostic. First the content must be equivalent (the same
+// visible copy slots, h1 count, lang and dir); otherwise the diagnostic is INCOMPLETE and fails. Then every field
+// of the vector where the page with scripts off is worse fails, unless the handoff's `jsOffDifferences` records
+// that check for this screen, state and lang with a reason and a qaGate/approver reviewer.
 // A vector that is missing a field or holds a non-finite or negative count is INCOMPLETE (never PASS). Contrast is a
 // diagnostic computed by contrastProbe (axe does not complete with page scripts disabled in Chrome 155).
-// R13 (panel round 13, threat model in release/FANNAN-PLAN.md): the vector is the canonical gate result (N11: every
+// the vector is the canonical gate result (N11: every
 // hard-fail input, per-width maps, ratios and scrolled-viewport accent; N12: contrast unknown and coverage), the
 // content record carries slot and heading text (N13), a content difference is never PASS even with a reviewed
 // waiver (N14: INCOMPLETE), tamperSigns is required (N19) and call/apply/bind/Reflect.apply are native-checked (N17).
@@ -35,7 +35,7 @@ export function nativeCheck() {
     'Element.prototype.scrollWidth (get)': desc(Element.prototype, 'scrollWidth')?.get,
     'CanvasRenderingContext2D.prototype.fillStyle (set)': desc(CanvasRenderingContext2D.prototype, 'fillStyle')?.set,
     'Array.prototype.filter': Array.prototype.filter,
-    // R13 N17: the rAF wrapper binds call at install time; patched invocation helpers are a tamper sign as well.
+    // the rAF wrapper binds call at install time; patched invocation helpers are a tamper sign as well.
     'Function.prototype.call': Function.prototype.call,
     'Function.prototype.apply': Function.prototype.apply,
     'Function.prototype.bind': Function.prototype.bind,
@@ -46,15 +46,15 @@ export function nativeCheck() {
 
 // Browser side (probe world): text whose colour against its resolved solid background falls below 4.5:1 (3:1 for
 // large text). Backgrounds with images or non-sRGB colours are counted as unknown, not as passes.
-// R16-GPT-01: compositing effects anywhere on the composed ancestor chain (above an opaque background too) are read:
+// compositing effects anywhere on the composed ancestor chain (above an opaque background too) are read:
 // filter opacity() is composited like opacity; any other non-identity filter, a blend mode, a backdrop filter or a
 // mask cannot be resolved, so the text is unknown and counted in contrastEffects (integrity is then INCOMPLETE).
-// R16-GPT-02: native control text (input and textarea values or placeholders, button-type input labels, the
+// native control text (input and textarea values or placeholders, button-type input labels, the
 // selected option of a select) is measured too, with the placeholder colour where the placeholder shows.
-// R17-GPT-02: a shown placeholder is measured with its own computed opacity composited onto its colour and with its
-// own font size and weight. R17-MIMAR-02: the text colour is the computed -webkit-text-fill-color (it computes to
+// a shown placeholder is measured with its own computed opacity composited onto its colour and with its
+// own font size and weight. the text colour is the computed -webkit-text-fill-color (it computes to
 // the color value unless set). Anything this CSS pass misses is caught by the pixel backstop (visibility.mjs).
-// R18: contrastProbe({ record: true }) also keeps its verdict per element ({ known, ratio, large }) in a WeakMap on the
+// contrastProbe({ record: true }) also keeps its verdict per element ({ known, ratio, large }) in a WeakMap on the
 // world's global (globalThis.__fannanContrast) for the rendered-visibility backstop, which grades by pixels only the
 // text this pass could not resolve. Called without arguments it records nothing.
 export function contrastProbe(opts) {
@@ -62,7 +62,7 @@ export function contrastProbe(opts) {
   const parse = v => { const m = /^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/.exec(v || ''); return m ? [Number(m[1]), Number(m[2]), Number(m[3]), m[4] === undefined ? 1 : Number(m[4])] : null; };
   const lum = ([r, g, b]) => [r, g, b].map(c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }).reduce((s, c, i) => s + c * [0.2126, 0.7152, 0.0722][i], 0);
   let failures = 0, unknown = 0, checked = 0, effects = 0;
-  // R14-GPT-02: the composed tree (open shadow roots); backgrounds resolve through slots and shadow hosts; text is
+  // the composed tree (open shadow roots); backgrounds resolve through slots and shadow hosts; text is
   // rendered when its own text ranges have area (display:contents and zero-size boxes included).
   const up = a => a.assignedSlot ?? a.parentElement ?? (a.getRootNode() instanceof ShadowRoot ? a.getRootNode().host : null);
   const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
@@ -115,10 +115,10 @@ export function contrastProbe(opts) {
       if (c.visibility !== 'visible' || c.display === 'none' || !textArea(el)) continue;
       colour = c.webkitTextFillColor || c.color;
     }
-    // R15 A3: CSS opacity on the element and its composed ancestors is composited (premultiplied groups). The walk
+    // CSS opacity on the element and its composed ancestors is composited (premultiplied groups). The walk
     // over backgrounds stops at an opaque one only when no node from there up is translucent.
     const chain = []; for (let a = el; a; a = up(a)) { const s = getComputedStyle(a), [mult, ok] = effect(s); chain.push([s, Number(s.opacity) * mult, ok]); }
-    if (chain.some(([, , ok]) => !ok)) { effects++; unknown++; record?.set(el, { known: false }); continue; } // R16-GPT-01: never a silent pass
+    if (chain.some(([, , ok]) => !ok)) { effects++; unknown++; record?.set(el, { known: false }); continue; } // never a silent pass
     const opaqueFrom = []; for (let i = chain.length - 1, all = true; i >= 0; i--) { all = all && chain[i][1] >= 1; opaqueFrom[i] = all ? 1 : 0; }
     const levels = []; let known = true;
     for (let i = 0; i < chain.length; i++) { const [s, op] = chain[i]; if (s.backgroundImage !== 'none') { known = false; break; } const bg = parse(s.backgroundColor); if (!bg || !(op >= 0 && op <= 1)) { known = false; break; } levels.push([bg, op]); if (bg[3] >= 1 && opaqueFrom[i] === 1) break; }
@@ -136,10 +136,10 @@ export function contrastProbe(opts) {
   return { contrastFailures: failures, contrastUnknown: unknown, contrastChecked: checked, contrastEffects: effects };
 }
 
-// Browser side: what makes two renderings equivalent content. R13 N13: each visible copy slot with its normalised
+// Browser side: what makes two renderings equivalent content. each visible copy slot with its normalised
 // visible text, every visible heading with its level and text (open shadow roots included), the h1 count, lang and
 // dir; a JavaScript-off skeleton with empty fixed-size slots is therefore not equivalent.
-// R14-GPT-01: an element is rendered when its computed style shows it and it has a box with area or rendered text
+// an element is rendered when its computed style shows it and it has a box with area or rendered text
 // ranges, so a display:contents or zero-size slot is compared by its text too (empty without JavaScript = differs).
 export function contentProbe() {
   const rangeArea = e => { const range = document.createRange(); range.selectNodeContents(e); return [...range.getClientRects()].some(b => b.width > 0 && b.height > 0); };
@@ -149,7 +149,7 @@ export function contentProbe() {
   const all = []; const walk = root => { for (const el of root.querySelectorAll('*')) { all.push(el); if (el.shadowRoot) walk(el.shadowRoot); } }; if (document.body) walk(document.body);
   const slots = all.filter(e => e.hasAttribute('data-copy-slot') && shown(e)).map(e => [e.getAttribute('data-copy-slot'), text(e)]).sort((a, b) => (a[0] + '\u0000' + a[1]).localeCompare(b[0] + '\u0000' + b[1]));
   const headings = all.filter(e => /^H[1-6]$/.test(e.tagName) && shown(e)).map(e => [Number(e.tagName[1]), text(e)]);
-  // R16-GPT-02: controls and named elements without text of their own: each shown form control, button, link,
+  // controls and named elements without text of their own: each shown form control, button, link,
   // image or element with an ARIA role or label is recorded with its accessible name (aria-labelledby, aria-label,
   // label elements, button value, alt, own text, title, placeholder) and its displayed value, placeholder or
   // selected option, so a label or value that only script fills makes the JavaScript-off content differ.
@@ -164,7 +164,7 @@ export function contentProbe() {
     if (!/^(INPUT|TEXTAREA|SELECT|IMG)$/.test(e.tagName)) { const t = text(e); if (t) return t; }
     return norm(e.getAttribute('title')) || norm(e.getAttribute('placeholder'));
   };
-  // R17-GPT-01: the displayed value is recorded separately from the accessible name: a button-type input shows its
+  // the displayed value is recorded separately from the accessible name: a button-type input shows its
   // value (the browser's default label for submit and reset without one), so a value that only script supplies
   // differs with JavaScript off even when an aria-label keeps the name the same.
   const shownValue = e => {
@@ -174,16 +174,16 @@ export function contentProbe() {
   };
   const named = e => /^(INPUT|TEXTAREA|SELECT|BUTTON|IMG)$/.test(e.tagName) || (e.tagName === 'A' && e.hasAttribute('href')) || e.hasAttribute('role') || e.hasAttribute('aria-label') || e.hasAttribute('aria-labelledby');
   const controls = all.filter(e => named(e) && !(e.tagName === 'INPUT' && e.type === 'hidden') && shown(e)).map(e => [e.tagName.toLowerCase() + (e.tagName === 'INPUT' ? ':' + e.type : '') + (e.getAttribute('role') ? '[' + e.getAttribute('role') + ']' : ''), nameOf(e), shownValue(e)]);
-  // R20-GPT-05: the copy slot that owns each heading and control (closest data-copy-slot, across shadow roots), so
+  // the copy slot that owns each heading and control (closest data-copy-slot, across shadow roots), so
   // content placed only in a script-only state can be matched to the approved slots placed in that state
   const ownerOf = e => { for (let a = e; a; a = a.parentElement || a.getRootNode().host) { if (a.hasAttribute?.('data-copy-slot')) return a.getAttribute('data-copy-slot'); } return ''; };
   const owners = { headings: all.filter(e => /^H[1-6]$/.test(e.tagName) && shown(e)).map(ownerOf), controls: all.filter(e => named(e) && !(e.tagName === 'INPUT' && e.type === 'hidden') && shown(e)).map(ownerOf) };
   return { slots, headings, controls, owners, h1: all.filter(e => e.tagName === 'H1').length, lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction };
 }
-// R20-GPT-05: a valid requiresScript state is compared with the default state's JavaScript-off rendering. Content the
+// a valid requiresScript state is compared with the default state's JavaScript-off rendering. Content the
 // scripted state shows that the baseline lacks is removed only when it belongs to an approved copy slot placed in this
 // state (slot text, and headings and controls owned by such a slot) that the baseline does not show at all; anything
-// else still makes the content differ. R21-GPT-05 (Fadel's tiebreak, N14 kept): a default slot the scripted state no
+// else still makes the content differ. a default slot the scripted state no
 // longer shows is removed from the baseline only when the copy deck does NOT place it in this state (the state replaces
 // it with an approved slot of its own); a default slot placed in this state, and any change to copy both renderings
 // show, still differ (INCOMPLETE).
@@ -209,7 +209,7 @@ export function stateOnlyContent(probe, baseline, allowed = []) {
   return { content: { slots, headings, controls, h1, lang: probe.lang, dir: probe.dir }, baseline: { ...base, h1: bh1, lang: baseline.lang, dir: baseline.dir }, removed, replaced };
 }
 
-// R12 M13: the reduced-motion rAF counter, installed by addInitScript in every frame. The counter is private (a
+// the reduced-motion rAF counter, installed by addInitScript in every frame. The counter is private (a
 // closure), exposed only through a non-writable, non-configurable getter, and requestAnimationFrame is replaced by a
 // non-writable, non-configurable wrapper, so page scripts cannot reset, freeze or bypass it. Child frames report to
 // the top window through a non-configurable function.
@@ -218,12 +218,12 @@ export function rafCounterInit() {
   const lock = (o, k, d) => { try { Object.defineProperty(o, k, { configurable: false, enumerable: false, ...d }); } catch {} };
   if (window === window.top) { lock(window, '__fannanRafTick', { value: () => { count++; }, writable: false }); lock(window, '__raf', { get: () => count }); }
   let tick = () => {}; try { tick = window.top.__fannanRafTick || tick; } catch {}
-  // R13 N17: the native rAF is bound at install time, so no later lookup of Function.prototype.call can capture it.
+  // the native rAF is bound at install time, so no later lookup of Function.prototype.call can capture it.
   const callNative = Function.prototype.call.bind(window.requestAnimationFrame);
   lock(window, 'requestAnimationFrame', { value: function requestAnimationFrame(cb) { try { tick(); } catch {} return callNative(window, cb); }, writable: false });
 }
 
-// R14-GPT-05: browser side, the reduced-motion snapshot. Every element of the composed tree (open shadow roots
+// browser side, the reduced-motion snapshot. Every element of the composed tree (open shadow roots
 // included), keyed by its composed path (tag:index at each level, '#shadow' into a shadow root), with its rounded box,
 // transform and opacity, so two snapshots compare the same elements.
 export function motionSnapshot() {
@@ -232,19 +232,19 @@ export function motionSnapshot() {
   if (document.body) walk(document.body, 'body');
   return out;
 }
-// R14-GPT-05: elements whose entry changed between two snapshots, plus elements that disappeared.
+// elements whose entry changed between two snapshots, plus elements that disappeared.
 export const motionChanges = (s1, s2) => { const before = new Set(s1); return s2.filter(v => !before.has(v)).length + Math.max(0, s1.length - s2.length); };
 
-// R12 M13: a rAF reading that is not a finite non-negative number (tampering or a missing counter) counts as a loop.
+// a rAF reading that is not a finite non-negative number (tampering or a missing counter) counts as a loop.
 export const rafLoopFrom = (before, after) => !(Number.isFinite(before) && Number.isFinite(after) && after >= before) || after - before > 10;
 
-// R13 N11/N12: the vector is the canonical gate result. Types: count (non-negative integer), flag (boolean), text
+// the vector is the canonical gate result. Types: count (non-negative integer), flag (boolean), text
 // (string or null), ratio (finite non-negative number or null; null means the gate could not measure it), widths
 // (per-width counts keyed by CSS width, so {1440:1, 320:0} and {1440:0, 320:1} differ) and coverage (a count that
 // must match between worlds but is never "worse"; zero JavaScript-off contrast coverage makes the run INCOMPLETE).
 export const VECTOR = { glass: 'count', h1: 'count', placeholders: 'flag', centered: 'count', typeSizes: 'count', heroGradient: 'flag', purpleBlue: 'flag', iconRows: 'count', accent: 'text', accentRatio: 'ratio', maxViewportAccent: 'ratio', filler: 'flag', ruleOfThree: 'flag', frames: 'count', stylesheetsUnscanned: 'count', spacingOffScale: 'count', horizontalOverflow: 'widths', clipped: 'widths', offscreenLeft: 'widths', unreachable: 'widths', scrolledText: 'widths', unmeasured: 'widths', unscannedScopes: 'widths', reflowFail: 'flag', contrastFailures: 'count', contrastUnknown: 'count', contrastChecked: 'coverage', contrastEffects: 'count', textMeasured: 'coverage', textObscured: 'count', textUnreadable: 'count', textUnmeasured: 'count', textHidden: 'count' };
-// R17: the rendered-visibility backstop (visibility.mjs) supplies textMeasured, textObscured, textUnreadable and
-// textUnmeasured for each rendering; R18 adds textHidden (text clipped to nothing by an ancestor that cannot be scrolled,
+// the rendered-visibility backstop (visibility.mjs) supplies textMeasured, textObscured, textUnreadable and
+// textUnmeasured for each rendering; adds textHidden (text clipped to nothing by an ancestor that cannot be scrolled,
 // such as an inactive carousel slide or a collapsed accordion: not displayed, graded through the declared states; more of
 // it with JavaScript off than on is a js-off mismatch).
 export { visibilityScan, VISIBILITY } from './visibility.mjs';
@@ -267,7 +267,7 @@ const worseOff = (k, on, off) => {
 const nonempty = x => typeof x === 'string' && !!x.trim();
 
 // Node side. probe = isolated world, page = page world, jsOff = isolated world with page scripts disabled; each is
-// { vector, content }. tamperSigns from nativeCheck (R13 N19: required; omitted, undefined or null is INCOMPLETE);
+// { vector, content }. tamperSigns from nativeCheck required; omitted, undefined or null is INCOMPLETE);
 // scope = { screen, state, lang } of the rendering.
 export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, scope = { screen: null, state: null, lang: null }, baseline = null }) {
   const base = { scope, probeWorld: probe, pageWorld: page, jsOff, tamperSigns: tamperSigns ?? null, ...(baseline ? { jsOffBaseline: baseline } : {}) };
@@ -281,7 +281,7 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   const roles = [handoff?.settings?.roles?.qaGate, handoff?.settings?.roles?.approver].filter(nonempty);
   const explain = check => (Array.isArray(handoff?.jsOffDifferences) ? handoff.jsOffDifferences : []).find(d => d?.check === check && d.screen === scope.screen && d.state === scope.state && d.lang === scope.lang && nonempty(d.reason) && roles.includes(d.reviewer));
   const differences = [];
-  // R20-GPT-05: baseline = { page, allowedSlots } when jsOff is the default state's JavaScript-off rendering
+  // baseline = { page, allowedSlots } when jsOff is the default state's JavaScript-off rendering
   const strip = c => ({ slots: c.slots, headings: c.headings, controls: c.controls || [], h1: c.h1, lang: c.lang, dir: c.dir });
   const reduced = baseline ? stateOnlyContent(probe.content, jsOff.content, baseline.allowedSlots) : null;
   if (reduced) { base.stateOnlyContent = reduced.removed; base.replacedDefaultContent = reduced.replaced; }
@@ -291,12 +291,12 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
     if (worseOff(k, probe.vector, jsOff.vector)) differences.push({ check: k, detail: `with JavaScript off ${k} is ${canon(jsOff.vector[k])} vs ${canon(probe.vector[k])}` });
     else if (worseOff(k, jsOff.vector, probe.vector)) recorded.push({ check: k, detail: `the scripted page is worse than JavaScript off (${k}); failed by the main check` });
   }
-  // R13 N12: JavaScript-off text that could not be contrast-checked at all, where the scripted page could, proves nothing.
+  // JavaScript-off text that could not be contrast-checked at all, where the scripted page could, proves nothing.
   if (jsOff.vector.contrastChecked === 0 && probe.vector.contrastChecked > 0) notes.push('JavaScript-off contrast coverage is zero; its contrast diagnostic proves nothing');
-  // R16-GPT-01: text under a filter, blend mode, backdrop filter or mask that the probe cannot resolve, in either
+  // text under a filter, blend mode, backdrop filter or mask that the probe cannot resolve, in either
   // rendering, is never a silent pass; the cross-check is INCOMPLETE (the main gates still fail glass).
   for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.contrastEffects > 0) notes.push(`${where}: ${run.vector.contrastEffects} text element(s) under compositing effects the contrast probe cannot resolve`);
-  // R17: the rendered-visibility backstop. Text the scripted page paints but leaves covered by another layer or below
+  // the rendered-visibility backstop. Text the scripted page paints but leaves covered by another layer or below
   // the pixel readability floor fails outright; JavaScript-off text that is worse (obscured, unreadable or
   // unmeasurable where the scripted page painted it) is an integrity mismatch through the vector comparison above,
   // and a reviewed jsOffDifferences entry for it keeps the evidence but never makes it PASS (INCOMPLETE). Text that
@@ -304,7 +304,7 @@ export function compareIntegrity({ probe, page, jsOff, tamperSigns, handoff, sco
   for (const k of ['textObscured', 'textUnreadable']) if (probe.vector[k] > 0) mismatches.push({ check: k, source: 'rendered', detail: `the scripted page paints ${probe.vector[k]} text element(s) ${k === 'textObscured' ? 'covered by an opaque layer' : 'not painted, or below the pixel readability floor where the CSS pass could not resolve the colours'}` });
   for (const [run, where] of [[probe, 'scripted page'], [jsOff, 'JavaScript-off page']]) if (run.vector.textUnmeasured > 0) notes.push(`${where}: ${run.vector.textUnmeasured} text element(s) the visibility backstop cannot measure (no box, outside the document, too few pixels, not reachable by scrolling, or not reached before the scan bound)`);
   for (const d of differences) { const e = explain(d.check); if (e) { expected.push({ ...d, reason: e.reason.trim(), reviewer: e.reviewer }); if (['textObscured', 'textUnreadable', 'textUnmeasured', 'textHidden'].includes(d.check)) notes.push(`JavaScript-off ${d.check} differs (reviewed waiver recorded); text visible only with JavaScript is never PASS`); } else mismatches.push({ ...d, source: 'js-off' }); }
-  // R12 M08, R13 N14: non-equivalent JavaScript-off content is never PASS. An unexplained difference is a mismatch;
+  // non-equivalent JavaScript-off content is never PASS. An unexplained difference is a mismatch;
   // a reviewed `content` entry is kept as evidence, but the JavaScript-off metrics stay unverified (INCOMPLETE).
   if (!sameContent) notes.push(explain('content') ? 'JavaScript-off content differs (reviewed waiver recorded); its metrics are unverified' : 'JavaScript-off content is not equivalent; its metrics prove nothing');
   // A between-world or native mismatch (a tampering sign) outranks INCOMPLETE; both fail.

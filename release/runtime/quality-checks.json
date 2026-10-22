@@ -17,7 +17,7 @@
     "spacingOffScale": 0,
     "stockGlass": 0
   },
-  "reason": "Six font sizes cover display, title, section, body, secondary and label roles without ad hoc steps. DOM area estimates are proxies and require state-bound screenshot review. Non-hero gradients are signals for the critic, not automatic fails. Backdrop filters (stock glassmorphism) are gated at zero in both phases (design-quality.md, Default effects; ARGON-R2-09).",
+  "reason": "Six font sizes cover display, title, section, body, secondary and label roles without ad hoc steps. DOM area estimates are proxies and require state-bound screenshot review. Non-hero gradients are signals for the critic, not automatic fails. Backdrop filters (stock glassmorphism) are gated at zero in both phases (design-quality.md, Default effects).",
   "focusStateContrastReason": "Screening threshold for the focus heuristic: a focus indicator (outline, border, underline, ring, or background/text change) counts only when it reaches this contrast against the unfocused state or its backdrop. 3:1 is derived from WCAG 2.2 SC 2.4.13 Focus Appearance (AAA) and matches the SC 1.4.11 Non-text Contrast (AA) minimum, which is the floor: the checker refuses a value below 3. It is a screen, not proof of 2.4.7/2.4.13; manual focus review stays mandatory.",
   "spacingOffScaleReason": "At handoff every visible padding, margin (left, right, top and bottom, on html and body too) and row/column gap must resolve to a value on the built --spacing-* scale (0 always allowed). Auto margins are skipped because they resolve to used pixels; a value excused by data-fannan-spacing-exception needs a matching scoped handoff spacingExceptions entry that names the approver. Wireframes are not gated. A screen, not proof of good rhythm.",
   "manualIds": [
@@ -67,5 +67,5 @@
     "interaction-states-motion",
     "accessibility-handoff"
   ],
-  "criticRowsReason": "R15 B4: one ID per critic-rubric row (references/critic-rubric.md). The final critic round carries at least one passing, evidenced copy or design check for every row, so no rubric row (emphasis order, type measure, colour roles, the per-width grid) can be skipped silently."
+  "criticRowsReason": "One ID per critic-rubric row (references/critic-rubric.md). The final critic round carries at least one passing, evidenced copy or design check for every row, so no rubric row (emphasis order, type measure, colour roles, the per-width grid) can be skipped silently."
 }

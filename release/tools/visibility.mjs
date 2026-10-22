@@ -1,54 +1,53 @@
-// R17 (panel round 17: R17-MIMAR-01, R17-GPT-02, R17-MIMAR-02), revised in R18 (panel round 18: R18-GPT-03 to 07,
-// R18-MIMAR-01/02): the rendered-visibility backstop of the integrity cross-check. Rounds 15-17 each found one more
+// The rendered-visibility backstop of the integrity cross-check. It catches these known
 // CSS way to hide text (opacity, filter, placeholder opacity, clip-path, transform, an overlaying preloader, text-fill
 // colour, a gradient overlay). The CSS computation in contrastProbe stays the first pass and keeps AA; this backstop
 // decides VISIBILITY (is the text actually painted, uncovered and readable at all) from what the browser painted, in
 // each rendering (JavaScript on and off):
-//  - targets: every rendered text node (display:contents wrappers included), every native control showing text (its
-//    value, placeholder or selected option, measured in its content box) and every named element without painted
-//    text of its own (an accessible name only, such as an icon button: hit test only, it has no text pixels).
-//  - lines: a text node is measured line by line. Its words' text ranges are grouped into line boxes, so a line hidden
-//    while another line of the same element is visible is caught (R18-GPT-07).
-//  - clipping: a line clipped to nothing by a clipping ancestor (overflow other than visible) that cannot be scrolled
-//    (an inactive carousel slide, an accordion collapsed with max-height:0) is not displayed: counted in textHidden,
-//    like display:none, and graded through the declared states. More hidden text with JavaScript off than on is a
-//    js-off mismatch. A line outside the scrollport of a scrollable ancestor (an app shell's main, a tab strip) is
-//    reached by scrolling that ancestor (R18-GPT-05, R18-MIMAR-01). Absolute and fixed descendants escape the
-//    clippers they escape in CSS.
-//  - coverage: the scan visits targets, not bands. After a first look at the top of the page every line that is not yet
-//    measured is scrolled into view (its scrollable ancestors first, then the document, the line at a quarter of the
-//    viewport) and measured once the page has settled; a line that measured covered or unpainted gets one retry
-//    centred. The page bottom is then collected again, so content added while scrolling is found; this repeats for at
-//    most VISIBILITY.maxPasses passes. A line still unmeasured at VISIBILITY.maxSteps, or content still added after the
-//    last pass, is INCOMPLETE (R18-GPT-06); there is no band cap.
-//  - settle: after each scroll the finite running animations are allowed to finish and then the painted state of
-//    every element (opacity, transform, filter, clip-path, colours, position) must be unchanged about 100 ms apart, so
-//    a normal CSS or script-driven entrance or scroll reveal is measured at rest (bounded by
-//    VISIBILITY.animationWaitMs; elements under infinite animations are left out; other continuous motion ends the
-//    wait at the bound and is counted in unsettledSteps).
-//  - (a) hit test: at three points across each line (elementsFromPoint in the document and in every shadow root on the
-//    way), the first element in the stack must be the target, its own subtree or an ancestor. An OPAQUE cover (a
-//    replaced element, or a background colour whose alpha times the opacity is at least VISIBILITY.opaqueCover) at
-//    more than half the points obscures the line. A translucent cover (a lighter background colour, a background
-//    image or gradient, a backdrop filter or other text) is compositing the CSS pass cannot see: that line is graded
-//    by its pixels (R18-GPT-04).
-//  - (b) pixels: a viewport screenshot is taken after the page settles. Over the middle 60% of the line box (so the
-//    descenders of a neighbouring line do not count) the background is the modal colour (5 bits per channel); ink
-//    pixels differ from it by more than VISIBILITY.inkDelta in a channel. ratio = the 90th percentile of the ink
-//    pixels' WCAG contrast against the background; peak = the strongest ink pixel (a not-painted line has no ink at all; a hairline weight keeps a few full-strength pixels).
-//  - grading (R18-MIMAR-02): where the CSS pass resolved the colours (contrastProbe known) and no translucent layer
-//    covers the line, pixels fail it only when it is effectively not painted: fewer than VISIBILITY.minInk ink pixels or
-//    peak under VISIBILITY.paintFloor (1.5:1). Light and thin weights that pass AA by colour are therefore left to the
-//    CSS pass. Where the CSS pass could not resolve the colours (a background image, a filter or blend, a translucent
-//    cover), the pixels grade readability: ratio under VISIBILITY.floor (3:1), or VISIBILITY.smallFloor (1.5:1) for
-//    a line with fewer than VISIBILITY.smallInk ink pixels (a single thin glyph). AA (4.5:1, 3:1 for large text) stays
-//    with the CSS pass, axe and the manual WCAG review. A line box under VISIBILITY.minTextHeight px high is unreadable.
-//  - a target is obscured or unreadable when any of its lines is; it is unmeasured (INCOMPLETE, never PASS) when a
-//    line is outside the document, has too few pixels, is not reachable by scrolling or was not measured before the
-//    bound.
-//  - text of a disabled control (`:disabled`, or inside aria-disabled="true") has no contrast requirement (WCAG 1.4.3)
-//    and assistive-only text (a clipping box of at most 1 x 1 px, the sr-only rules and the off-screen focusable skip
-//    link of width-screen.mjs) are counted, not graded.
+// - targets: every rendered text node (display:contents wrappers included), every native control showing text (its
+// value, placeholder or selected option, measured in its content box) and every named element without painted
+// text of its own (an accessible name only, such as an icon button: hit test only, it has no text pixels).
+// - lines: a text node is measured line by line. Its words' text ranges are grouped into line boxes, so a line hidden
+// while another line of the same element is visible is caught .
+// - clipping: a line clipped to nothing by a clipping ancestor (overflow other than visible) that cannot be scrolled
+// (an inactive carousel slide, an accordion collapsed with max-height:0) is not displayed: counted in textHidden,
+// like display:none, and graded through the declared states. More hidden text with JavaScript off than on is a
+// js-off mismatch. A line outside the scrollport of a scrollable ancestor (an app shell's main, a tab strip) is
+// reached by scrolling that ancestor . Absolute and fixed descendants escape the
+// clippers they escape in CSS.
+// - coverage: the scan visits targets, not bands. After a first look at the top of the page every line that is not yet
+// measured is scrolled into view (its scrollable ancestors first, then the document, the line at a quarter of the
+// viewport) and measured once the page has settled; a line that measured covered or unpainted gets one retry
+// centred. The page bottom is then collected again, so content added while scrolling is found; this repeats for at
+// most VISIBILITY.maxPasses passes. A line still unmeasured at VISIBILITY.maxSteps, or content still added after the
+// last pass, is INCOMPLETE ; there is no band cap.
+// - settle: after each scroll the finite running animations are allowed to finish and then the painted state of
+// every element (opacity, transform, filter, clip-path, colours, position) must be unchanged about 100 ms apart, so
+// a normal CSS or script-driven entrance or scroll reveal is measured at rest (bounded by
+// VISIBILITY.animationWaitMs; elements under infinite animations are left out; other continuous motion ends the
+// wait at the bound and is counted in unsettledSteps).
+// - (a) hit test: at three points across each line (elementsFromPoint in the document and in every shadow root on the
+// way), the first element in the stack must be the target, its own subtree or an ancestor. An OPAQUE cover (a
+// replaced element, or a background colour whose alpha times the opacity is at least VISIBILITY.opaqueCover) at
+// more than half the points obscures the line. A translucent cover (a lighter background colour, a background
+// image or gradient, a backdrop filter or other text) is compositing the CSS pass cannot see: that line is graded
+// by its pixels .
+// - (b) pixels: a viewport screenshot is taken after the page settles. Over the middle 60% of the line box (so the
+// descenders of a neighbouring line do not count) the background is the modal colour (5 bits per channel); ink
+// pixels differ from it by more than VISIBILITY.inkDelta in a channel. ratio = the 90th percentile of the ink
+// pixels' WCAG contrast against the background; peak = the strongest ink pixel (a not-painted line has no ink at all; a hairline weight keeps a few full-strength pixels).
+// - grading where the CSS pass resolved the colours (contrastProbe known) and no translucent layer
+// covers the line, pixels fail it only when it is effectively not painted: fewer than VISIBILITY.minInk ink pixels or
+// peak under VISIBILITY.paintFloor (1.5:1). Light and thin weights that pass AA by colour are therefore left to the
+// CSS pass. Where the CSS pass could not resolve the colours (a background image, a filter or blend, a translucent
+// cover), the pixels grade readability: ratio under VISIBILITY.floor (3:1), or VISIBILITY.smallFloor (1.5:1) for
+// a line with fewer than VISIBILITY.smallInk ink pixels (a single thin glyph). AA (4.5:1, 3:1 for large text) stays
+// with the CSS pass, axe and the manual WCAG review. A line box under VISIBILITY.minTextHeight px high is unreadable.
+// - a target is obscured or unreadable when any of its lines is; it is unmeasured (INCOMPLETE, never PASS) when a
+// line is outside the document, has too few pixels, is not reachable by scrolling or was not measured before the
+// bound.
+// - text of a disabled control (`:disabled`, or inside aria-disabled="true") has no contrast requirement (WCAG 1.4.3)
+// and assistive-only text (a clipping box of at most 1 x 1 px, the sr-only rules and the off-screen focusable skip
+// link of width-screen.mjs) are counted, not graded.
 // compareIntegrity fails text obscured or unreadable in the scripted page and treats JavaScript-off text that is
 // worse (obscured, unreadable, unmeasured or hidden where the scripted page painted it) as an integrity mismatch.
 import { inflateSync } from 'node:zlib';
@@ -142,12 +141,12 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
       if (/^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|OPTION|OPTGROUP|HEAD|TITLE|DATALIST)$/.test(el.tagName)) continue;
       const s = getComputedStyle(el);
       // not rendered (display:none, a closed details or another content-visibility:hidden subtree): not a target; a
-      // display:contents wrapper has no box of its own and is judged by its nearest ancestor with one (R18-GPT-03)
+      // display:contents wrapper has no box of its own and is judged by its nearest ancestor with one
       let boxed = el; while (boxed && getComputedStyle(boxed).display === 'contents') boxed = up(boxed);
       if (s.display !== 'none' && (!boxed || boxed.checkVisibility())) {
         if (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) { if (controlShows(el) && s.visibility === 'visible' && el.getClientRects().length) out.push({ kind: 'control', el, id: idOf(el, { kind: 'control', el }) }); }
         else {
-          // R22-GPT-03 (Fadel's tiebreak): the fallback content of video, audio, object and canvas is not rendered, so it
+          // the fallback content of video, audio, object and canvas is not rendered, so it
           // is not text on screen (neither its own text nor its descendants are targets)
           let own = fallback(el);
           if (s.visibility === 'visible' && !own) for (const n of el.childNodes) if (n.nodeType === 3 && n.nodeValue.trim()) { own = true; out.push({ kind: 'text', node: n, el, id: idOf(n, { kind: 'text', node: n, el }) }); }
@@ -161,10 +160,10 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
     return out;
   };
   if (mode === 'restore') { for (const [el, [l, t]] of R.scrolled) { el.scrollLeft = l; el.scrollTop = t; } R.scrolled.clear(); R.byId.clear(); scrollTo(0, 0); return { ok: true }; }
-  // R18 path of an element in the composed tree (the same in every rendering of the same markup)
+  // path of an element in the composed tree (the same in every rendering of the same markup)
   const pathOf = el => { const parts = []; for (let a = el; a && a !== document.documentElement; ) { const p = up(a), list = [...(a.parentElement ? a.parentElement.children : (a.getRootNode().children || []))]; parts.unshift(`${a.tagName.toLowerCase()}:${list.indexOf(a)}${a.parentElement ? '' : '#shadow'}`); a = p; } return parts.join('/'); };
   if (mode === 'paths') return focus.map(sel => { try { const el = document.querySelector(sel); if (!el) return null; const s = getComputedStyle(el), size = parseFloat(s.fontSize), large = size >= 24 || (size >= 18.66 && Number(s.fontWeight) >= 700); return { path: pathOf(el), large }; } catch { return null; } });
-  // R19-GPT-04: the inner scrollports (elements that scroll), so the end of each can be collected again
+  // the inner scrollports (elements that scroll), so the end of each can be collected again
   if (mode === 'scrollers') { const out = []; const walk = root => { for (const el of root.querySelectorAll('*')) { const s = getComputedStyle(el); if (el !== document.body && scrollerOf(el, s) && el.checkVisibility()) { R.sids ||= new WeakMap(); let id = R.sids.get(el); if (!id) { id = 's' + R.next++; R.sids.set(el, id); } R.byId.set(id, { kind: 'scroller', el }); out.push(id); } if (el.shadowRoot) walk(el.shadowRoot); } }; walk(document); return out; }
   if (mode === 'focus') {
     const t = R.byId.get(focus.id); if (!t || !(t.node || t.el).isConnected) return { ok: false };
@@ -190,7 +189,7 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   const paintsAt = (e, x, yy) => {
     const s = getComputedStyle(e), op = opacityOf(e);
     if (s.visibility !== 'visible' || op < 0.02) return null;
-    // R19-GPT-03 (P3): an SVG is mostly transparent shapes (a decorative wave): its pixels decide, not its box
+    // an SVG is mostly transparent shapes (a decorative wave): its pixels decide, not its box
     if (e instanceof SVGElement) return 'translucent';
     if (/^(IMG|VIDEO|CANVAS|IFRAME|OBJECT|EMBED|INPUT|TEXTAREA|SELECT|PICTURE)$/.test(e.tagName)) return op >= opaqueCover ? 'opaque' : 'translucent';
     const bg = parse(s.backgroundColor);
@@ -204,7 +203,7 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
     for (const root of roots) for (const e of root.elementsFromPoint(x, yy)) { if (e === target || inside(target, e) || inside(e, target)) break; if (popovers.some(pp => inside(pp, e) && !inside(pp, target))) return 'toplayer'; const p = paintsAt(e, x, yy); if (p === 'opaque') return 'opaque'; if (p) found = 'translucent'; }
     return found;
   };
-  // R19-GPT-02: covers the hit test cannot see. (1) An absolutely or fixed positioned ::before/::after with a
+  // covers the hit test cannot see. (1) An absolutely or fixed positioned ::before/::after with a
   // background on the text's element or an ancestor (a loading veil, a scrim); (2) a positioned pointer-events:none
   // layer that paints. Behind-the-text layers (negative z-index) are skipped. A line under such a layer is compositing
   // the CSS pass cannot resolve, so its pixels grade it at 3:1. A gradient pseudo-element at the cut edge of a clipping
@@ -219,16 +218,16 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
     for (const which of ['::before', '::after']) {
       const s = getComputedStyle(a, which);
       if (['none', 'normal'].includes(s.content) || !['absolute', 'fixed'].includes(s.position) || !paints(s) || behind(s) || s.display === 'none' || s.visibility !== 'visible') continue;
-      const R0 = s.position === 'fixed' ? { left: 0, top: 0, right: vw, bottom: vh } : a.getBoundingClientRect();
+      const box0 = s.position === 'fixed' ? { left: 0, top: 0, right: vw, bottom: vh } : a.getBoundingClientRect();
       const t = px(s.top), b = px(s.bottom), l = px(s.left), r = px(s.right), w = px(s.width), h = px(s.height);
-      const top = t !== null ? R0.top + t : b !== null && h !== null ? R0.bottom - b - h : R0.top, bottom = b !== null ? R0.bottom - b : t !== null && h !== null ? top + h : R0.bottom;
-      const left = l !== null ? R0.left + l : r !== null && w !== null ? R0.right - r - w : R0.left, right = r !== null ? R0.right - r : l !== null && w !== null ? left + w : R0.right;
+      const top = t !== null ? box0.top + t : b !== null && h !== null ? box0.bottom - b - h : box0.top, bottom = b !== null ? box0.bottom - b : t !== null && h !== null ? top + h : box0.bottom;
+      const left = l !== null ? box0.left + l : r !== null && w !== null ? box0.right - r - w : box0.left, right = r !== null ? box0.right - r : l !== null && w !== null ? left + w : box0.right;
       const ac = getComputedStyle(a), clipsOwn = !(ac.overflowX === 'visible' && ac.overflowY === 'visible');
-      // R20-GPT-02: the truncation-fade label needs text that actually overflows the owner and a fade that sits at the
+      // the truncation-fade label needs text that actually overflows the owner and a fade that sits at the
       // edge where it is cut (block end, or the inline end) and leaves the opposite edge uncovered; any other gradient
       // pseudo-element is a cover graded by its pixels
       const cutY = a.scrollHeight > a.clientHeight + 1, cutX = a.scrollWidth > a.clientWidth + 1, rtl = ac.direction === 'rtl';
-      const atEdge = (cutY && bottom >= R0.bottom - 2 && top > R0.top + 2) || (cutX && (rtl ? left <= R0.left + 2 && right < R0.right - 2 : right >= R0.right - 2 && left > R0.left + 2));
+      const atEdge = (cutY && bottom >= box0.bottom - 2 && top > box0.top + 2) || (cutX && (rtl ? left <= box0.left + 2 && right < box0.right - 2 : right >= box0.right - 2 && left > box0.left + 2));
       out.push({ rect: { left, top, right, bottom }, fade: clipsOwn && /gradient/.test(s.backgroundImage) && atEdge });
     }
     pseudoCache.set(a, out); return out;
@@ -237,10 +236,10 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
   { const walk = root => { for (const e of root.querySelectorAll('*')) { const s = getComputedStyle(e); if (s.pointerEvents === 'none' && ['absolute', 'fixed'].includes(s.position) && !behind(s) && s.visibility === 'visible' && (paints(s) || /^(IMG|VIDEO|CANVAS|PICTURE)$/.test(e.tagName))) layers.push({ el: e, rect: e.getBoundingClientRect() }); if (e.shadowRoot) walk(e.shadowRoot); } }; walk(document); }
   const within = (r, x, yy) => x >= r.left && x <= r.right && yy >= r.top && yy <= r.bottom;
   const hiddenLayerAt = (el, x, yy) => { let fade = false, cover = false; for (let a = el; a && a !== document.documentElement; a = up(a)) for (const p of pseudoOf(a)) if (within(p.rect, x, yy)) { if (p.fade) fade = true; else cover = true; } for (const L of layers) if (!inside(L.el, el) && !inside(el, L.el) && within(L.rect, x, yy)) cover = true; return fade ? 'fade' : cover ? 'cover' : null; };
-  // R19-MIMAR-02 (declared states only): with a modal dialog open (or an element with aria-modal="true" shown) the
+  // (declared states only): with a modal dialog open (or an element with aria-modal="true" shown) the
   // rest of the page is inert and is not graded; page text covered by an open popover (the top layer) is not graded;
   // the dialog's and the popover's own text are. A non-modal <dialog open> is not inert: text it covers stays graded.
-  // R32-M-08: discover :modal across open shadow roots (match width-screen); aria-modal alone is a last-resort light-DOM fallback
+  // discover :modal across open shadow roots (match width-screen); aria-modal alone is a last-resort light-DOM fallback
   let modal = null;
   if (topLayer) {
     const modals = [];
@@ -262,7 +261,7 @@ export function visibilityBand({ mode = 'measure', minTextHeight = 4, opaqueCove
         let inside = false; for (let a = hit; a; a = up(a)) if (a === d) { inside = true; break; }
         if (inside) selfHit.push(d);
       }
-      // R33-M-08: sole :modal remains active without a self-hit; multiple still need hit-test
+      // sole :modal remains active without a self-hit; multiple still need hit-test
       modal = selfHit.length ? selfHit[selfHit.length - 1] : (modals.length === 1 ? modals[0] : null);
     }
     if (!modal) modal = [...document.querySelectorAll('[aria-modal="true"]')].find(e => e.checkVisibility()) || null;
@@ -392,7 +391,7 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
       // the page bottom, collected again: content added on scroll (lazy sections, infinite lists) is found here
       const known = new Set(T.keys()), height = last.docH;
       last = await look(Math.max(0, last.docH - last.vh));
-      // R19-GPT-04: and the end of every inner scrollport (an app panel whose IntersectionObserver adds content)
+      // and the end of every inner scrollport (an app panel whose IntersectionObserver adds content)
       const ends = await pg.evaluate(visibilityBand, { mode: 'scrollers' });
       let added = last.targets.some(t => !known.has(t.id));
       for (const id of ends) { if (steps >= o.maxSteps) { stopped = true; break; } if ((await pg.evaluate(visibilityBand, { mode: 'focus', focus: { id } })).ok) { const b = await look(null); added ||= b.targets.some(t => !known.has(t.id)); last = b; } }
@@ -407,7 +406,7 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
     if (r.present !== seenAt) continue; // no longer in the document (a removed preloader)
     const base = { id, kind: r.kind, text: r.text };
     if (r.status === 'inactive' || r.status === 'assistive') { assistive++; continue; }
-    if (r.status === 'inert') { hidden++; continue; } // R19-MIMAR-02: behind an open modal on a declared state
+    if (r.status === 'inert') { hidden++; continue; } // behind an open modal on a declared state
     const ls = r.lines.filter(Boolean), m = ls.filter(l => l.best).map(l => l.best);
     const ob = m.find(l => l.obscured), un = m.find(l => !l.obscured && l.bad && l.pixel?.ratio !== null), tiny = ls.some(l => !l.best && l.status === 'tiny');
     const open = ls.filter(l => !l.best && !['hidden', 'tiny'].includes(l.status)), nopx = m.find(l => l.pixel && l.pixel.ratio === null);
@@ -419,13 +418,13 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
     else measured++;
   }
   if (growing) { unmeasured++; items.push({ problem: 'unmeasured', reason: `content still added after ${o.maxPasses} passes over the page` }); }
-  // R19-MIMAR-01: per element (composed path): the lowest measured pixel readability ratio over its lines and whether
+  // per element (composed path): the lowest measured pixel readability ratio over its lines and whether
   // every line was measured uncovered, for resolving an automated colour-contrast incomplete result
   const byElement = {};
   for (const [, r] of T) {
     if (r.present !== seenAt || !r.path || r.status !== 'shown') continue;
     const ls = r.lines.filter(Boolean), m = ls.map(l => l.best), e = byElement[r.path] || (byElement[r.path] = { min: Infinity, complete: true, large: !!r.large, texts: [] });
-    if (r.text) e.texts.push(r.text); // R20-GPT-04: text fingerprints for the requiresScript check
+    if (r.text) e.texts.push(r.text); // text fingerprints for the requiresScript check
     e.complete &&= ls.length > 0 && m.every(b => b && !b.obscured && b.pixel && b.pixel.ratio !== null);
     for (const b of m) if (b?.pixel?.ratio != null) e.min = Math.min(e.min, b.pixel.ratio);
   }
@@ -433,7 +432,7 @@ export async function visibilityScan(pg, opts = VISIBILITY) {
   return { textMeasured: measured, textObscured: obscured, textUnreadable: unreadable, textUnmeasured: unmeasured, textHidden: hidden, textAssistive: assistive, byElement, steps, passes: passes + 1, unsettledSteps: unsettled, ms: Date.now() - started, items: items.slice(0, o.maxItems), itemsTotal: items.length, method: `target-directed scan, line by line: hit test at 3 points per line (opaque covers obscure); pixels decide visibility: not painted (strongest ink pixel under ${o.paintFloor}:1) where the CSS pass resolved the colours, readability (90th-percentile ink under ${o.floor}:1) where it could not` };
 }
 
-// R19-MIMAR-01: an automated colour-contrast "incomplete" result (axe could not resolve the colours: text over a photo,
+// an automated colour-contrast "incomplete" result (axe could not resolve the colours: text over a photo,
 // a gradient or a scrim) is resolved only when (1) the backstop measured that exact element (the same composed path)
 // with every line uncovered and at or above the AA ratio for its size (4.5:1, or 3:1 for large text) in BOTH the scripted
 // and the JavaScript-off rendering, and (2) a PASS `wcag-review` manual record for the same screen, language and state
@@ -446,15 +445,15 @@ export async function contrastPaths(page, incomplete) {
   const found = await page.evaluate(visibilityBand, { mode: 'paths', focus: sels.map(s => s ?? ':not(*)') });
   return nodes.map((n, i) => ({ target: n.target, ...(sels[i] && found[i] ? found[i] : { path: null }) }));
 }
-// R19b (Mi'mar's tiebreak): a declared NON-default state reachable only by script (declared `requiresScript: true`, its
+// b: a declared NON-default state reachable only by script (declared `requiresScript: true`, its
 // trigger recorded, and no JavaScript-off rendering of it) resolves on the scripted rendering alone; the same element,
 // AA and review conditions apply. The default state always needs both renderings. `scriptOnly` is true only when the
 // caller has checked the claim (requiresScriptCheck) and the state is not `default`.
-// R22 (Fadel's three-zone tiebreak for text over images), on the faintest real glyph cluster in either rendering:
+// Three-zone rule for text over images, on the faintest real glyph cluster in either rendering:
 // (a) clearly at or above AA (floor x (1 + margin); a halo is the text's background): PASS, no review needed beyond
-//     the backstop conditions; (b) clearly below 3:1 (under 3 x (1 - margin)): FAIL, no review can override it;
+// the backstop conditions; (b) clearly below 3:1 (under 3 x (1 - margin)): FAIL, no review can override it;
 // (c) between, or unmeasurable (null): INCOMPLETE, resolved only by a PASS wcag-review that cites the screenshot AND
-//     names the worst region checked (`worstRegion`).
+// names the worst region checked (`worstRegion`).
 export const CONTRAST_ZONES = { fail: 3, margin: 0.05 };
 export function zoneOf(ratio, floor, z = CONTRAST_ZONES) {
   if (ratio === null || ratio === undefined || !Number.isFinite(ratio)) return 'incomplete';
@@ -464,16 +463,16 @@ export function zoneOf(ratio, floor, z = CONTRAST_ZONES) {
 }
 export function resolveContrastIncomplete({ incomplete = [], paths = [], integrity = null, review = null, shots = [], scriptOnly = false } = {}) {
   const on = integrity?.probeWorld?.visibility?.byElement, off = scriptOnly ? on : integrity?.jsOff?.visibility?.byElement;
-  // R20-GPT-03: AA is graded on the faintest glyphs (glyphContrast), per rendering; the backstop still has to have
+  // AA is graded on the faintest glyphs (glyphContrast), per rendering; the backstop still has to have
   // measured every line of the element uncovered
   const gOn = integrity?.glyph?.scripted || {}, gOff = scriptOnly ? gOn : integrity?.glyph?.jsOff || {};
   const base = s => String(s || '').split('/').pop();
   const cited = !!review && review.id === 'wcag-review' && review.decision === 'PASS' && shots.filter(Boolean).some(s => review.artifact === s || (base(s) && String(review.note || '').includes(base(s))));
-  const region = !!review && String(review.worstRegion || '').trim().length > 0; // R22: names the worst region checked
+  const region = !!review && String(review.worstRegion || '').trim().length > 0; // names the worst region checked
   const nodes = paths.map(p => {
     const a = p.path && on?.[p.path], b = p.path && off?.[p.path], floor = p.large ? AA.large : AA.normal;
     const ga = p.path ? gOn[p.path]?.ratio ?? null : null, gb = p.path ? gOff[p.path]?.ratio ?? null : null;
-    // R23-GPT-01 (Fadel's zone c as written): an unmeasured faintest glyph (either rendering) is INCOMPLETE and goes
+    // (the owner's zone c as written): an unmeasured faintest glyph (either rendering) is INCOMPLETE and goes
     // through the zone (c) review checks; a value measured below 3:1 (less the margin) in either rendering fails anyway
     const measured = [ga, gb].filter(v => v !== null && v !== undefined), worst = measured.length ? Math.min(...measured) : null;
     const zoneAll = measured.length < 2 ? (worst !== null && zoneOf(worst, floor) === 'fail' ? 'fail' : 'incomplete') : zoneOf(worst, floor);
@@ -487,16 +486,16 @@ export function resolveContrastIncomplete({ incomplete = [], paths = [], integri
   const unresolved = [...others, ...(contrastOpen ? ['color-contrast'] : [])];
   return { unresolved, contrastNodes: nodes, pass: unresolved.length === 0 };
 }
-// R20-GPT-03, R21-GPT-02, R22 (Fadel's three-zone tiebreak): the AA measure for an axe colour-contrast incomplete
+// Three-zone rule: the AA measure for an axe colour-contrast incomplete
 // element is its FAINTEST glyph. The element is scrolled into view and its text box captured four times: as painted;
 // with the text transparent but its text-shadow kept (the background under every glyph pixel, a halo included, as WCAG
-// counts a halo or outline as the text's background; R22-MIMAR-01); and with the text forced to solid black and to solid
-// white with no shadow and opacity 1 on the element and every ancestor (R22-GPT-01). Glyph coverage is the difference
+// counts a halo or outline as the text's background; ; and with the text forced to solid black and to solid
+// white with no shadow and opacity 1 on the element and every ancestor . Glyph coverage is the difference
 // between the black and white shots, so it is geometric: it depends neither on the text's own contrast nor on opacity.
 // In every glyph-core pixel (coverage at least coreAlpha; the anti-aliased edge is excluded) the composited text colour
 // is recovered from the painted shot, the coverage and the background under it, and graded against that background.
 // Core pixels form 8-connected clusters (a glyph or touching glyphs); each cluster counts its median pixel and the
-// element's ratio is the MINIMUM over clusters. R22-GPT-02: a cluster is dropped only when it is punctuation-sized
+// element's ratio is the MINIMUM over clusters. a cluster is dropped only when it is punctuation-sized
 // relative to the font (its box at most punctEm of the font size in both directions, as a full stop, comma or the dot of
 // an i) AND it sits on a solid background; thin letters (the stems of i and l are tall) and every cluster over a varied
 // background are always kept. An element whose coverage cannot be measured is INCOMPLETE (ratio null).
@@ -567,9 +566,9 @@ export async function glyphContrast(pg, paths, opts = GLYPH) {
   }
   return out;
 }
-// R19b: is a `requiresScript` claim true? The state renders with JavaScript off when every text the scripted rendering
+// b: is a `requiresScript` claim true? The state renders with JavaScript off when every text the scripted rendering
 // shows is shown by the JavaScript-off rendering as well; a claim on such a state is false and fails as an integrity
-// mismatch. Without both scans the claim cannot be checked (not valid). R20-GPT-04, R21-GPT-06: texts are compared as
+// mismatch. Without both scans the claim cannot be checked (not valid). texts are compared as
 // counted word tokens of every shown text run, not by composed path or run boundaries, so a script that only moves or wraps
 // the same content (shifting element indices) cannot make a static state look script-only.
 export function requiresScriptCheck({ declaration = null, integrity = null } = {}) {
@@ -577,7 +576,7 @@ export function requiresScriptCheck({ declaration = null, integrity = null } = {
   if (!claimed) return { claimed: false, valid: false, rendersWithoutScript: null };
   const on = integrity?.probeWorld?.visibility?.byElement, off = integrity?.jsOff?.visibility?.byElement;
   if (!on || !off) return { claimed, valid: false, rendersWithoutScript: null, reason: 'visibility scans missing' };
-  // R21-GPT-06: the shown texts are compared as one counted stream of normalised word tokens, so a script that splits a
+  // the shown texts are compared as one counted stream of normalised word tokens, so a script that splits a
   // text run into inline elements (Static <span>state</span> text) still shows the same tokens
   const prints = by => Object.entries(by).flatMap(([k, e]) => (Array.isArray(e.texts) && e.texts.length ? e.texts : [`path:${k}`]).flatMap(t => String(t).normalize('NFC').toLowerCase().split(/[\s\p{P}]+/u)).filter(Boolean));
   const offCount = new Map(); for (const t of prints(off)) offCount.set(t, (offCount.get(t) || 0) + 1);

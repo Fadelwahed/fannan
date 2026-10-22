@@ -1,5 +1,5 @@
 #!/bin/sh
-# verify-manifest.sh <manifest> <root> <expected-manifest-sha256>   (round 5: absolute paths, fixed PATH)
+# verify-manifest.sh <manifest> <root> <expected-manifest-sha256>   (absolute paths, fixed PATH)
 # The manifest lives OUTSIDE the folders it checks, read-only; its own sha256 is pinned in the spec
 # and passed in, so a tamper-and-rewrite of the manifest is caught. Fails closed (exit 1) on:
 # a manifest hash mismatch, any symlink, any missing or changed file, or any extra file in a covered folder.

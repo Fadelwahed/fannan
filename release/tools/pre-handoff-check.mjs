@@ -17,12 +17,12 @@ import { verifiedBrowser, browserLaunchEnv } from './executable-trust.mjs';
 import { focusSettle, focusStyleProbe, focusBaseline } from './focus-screen.mjs';
 import { spacingProbe, approvedSpacing, approvedAccent } from './spacing-scale.mjs';
 import { designProbe, rawGlass, normColour, accentCheck } from './design-probe.mjs';
-import { screenWidths, resolveReflowCandidates, validWidths, resolveReveals } from './width-screen.mjs'; // R8, ported from codex/fannan-r3-review 2733317
+import { screenWidths, resolveReflowCandidates, validWidths, resolveReveals } from './width-screen.mjs';
 import { axeOptions } from './axe-tags.mjs';
 import { isolatedPage } from './probe-world.mjs';
 import { nativeCheck, compareIntegrity, contrastProbe, contentProbe, rafCounterInit, rafLoopFrom, motionSnapshot, motionChanges } from './integrity.mjs';
-import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck, glyphContrast } from './visibility.mjs'; // R17: the rendered-visibility backstop
-import { copyDeckProbe } from './copy-deck.mjs'; // R18: the copy-deck check, testable on its own
+import { visibilityScan, contrastPaths, resolveContrastIncomplete, requiresScriptCheck, glyphContrast } from './visibility.mjs'; // the rendered-visibility backstop
+import { copyDeckProbe } from './copy-deck.mjs'; // the copy-deck check, testable on its own
 import { scopeOf, resolveScoped } from './exceptions.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const [, , designMd, page, outDir, project, handoffPath, phaseArg] = process.argv;
@@ -52,11 +52,11 @@ try { handoff = JSON.parse(readFileSync(handoffPath, 'utf8')); ev.checks.contrac
 catch (e) { ev.checks.contract = { errors: [`handoff JSON cannot be read: ${e.message}`] }; }
 ev.checks.contract.pass = ev.checks.contract.errors.length === 0;
 if (!ev.checks.contract.pass) fail = true;
-// CODEX-R3-02: the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.
+// the approved spacing scale comes from the hash-checked handoff token JSON, never from the page.
 const approvedScale = approvedSpacing(handoff);
 ev.checks.spacingTokens = { source: approvedScale.source ?? null, values: approvedScale.values, error: approvedScale.error, pass: !approvedScale.error };
 if (phase === 'handoff' && !ev.checks.spacingTokens.pass) fail = true;
-// R11 panel D1 (decision A): the accent must be the approved palette token; FAIL at handoff, DEFERRED in wireframes.
+// the accent must be the approved palette token; FAIL at handoff, DEFERRED in wireframes.
 const approvedAccentToken = approvedAccent(handoff);
 const accentFor = async (pg, d) => accentCheck({ design: d, approved: approvedAccentToken, pageColour: await pg.evaluate(normColour, d.accent), approvedColour: approvedAccentToken.value ? await pg.evaluate(normColour, approvedAccentToken.value) : null, phase });
 // 1 lint
@@ -69,66 +69,66 @@ try {
 let axeSrc;
 try { axeSrc = readFileSync(join(depsRoot, 'node_modules/axe-core/axe.min.js'), 'utf8'); }
 catch (e) { console.error('pre-handoff-check: axe-core missing from FANNAN_DEPS: ' + e.message); process.exit(2); }
-const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // ARGON-R2-06: private HOME, removed on exit
+const browserHome = mkdtempSync(join(tmpdir(), 'fannan-browser-home-')); // private HOME, removed on exit
 process.on('exit', () => rmSync(browserHome, { recursive: true, force: true }));
 let browserIdentity;
 try { browserIdentity = verifiedBrowser(); }
 catch (e) { console.error('pre-handoff-check: browser untrusted: ' + e.message); process.exit(2); }
 const b = await chromium.launch({ executablePath: browserIdentity.path, chromiumSandbox: true, env: browserLaunchEnv(browserHome) });
 const runtimeVersion = b.version();
-if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); } // R4-4
+if (runtimeVersion !== browserIdentity.version) { console.error(`pre-handoff-check: browser version ${runtimeVersion} does not match reviewed pin ${browserIdentity.version}`); await b.close(); process.exit(2); }
 ev.browser = { ...browserIdentity, version: runtimeVersion };
 const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' });
 await ctx.routeWebSocket(/.*/, ws => ws.close());
 const blocked = [];
 const OUTPUT_BASE = '/workspace/design-output';
 const projectRoot = join(OUTPUT_BASE, project);
-const glassFiles = new Set(); // R11 S2: served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
-// R11: served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)
-const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // R12 M04: script forms in HTML/JS/SVG
-const served = new Set(); // R13 N07: URLs whose bytes the checker served and scanned
+const glassFiles = new Set(); // served CSS/HTML that declares a backdrop filter (Chrome drops the -webkit- alias)
+// served CSS, HTML, SVG and JavaScript text (constructed sheets and script-set styles; Chrome drops the -webkit- alias when parsing)
+const scanGlass = (path, contentType, body) => { if (/text\/(css|html|javascript)|application\/(javascript|ecmascript)|image\/svg\+xml/.test(contentType) && rawGlass(body.toString('utf8'), /text\/css/.test(contentType) ? 'css' : 'script')) glassFiles.add(path); }; // script forms in HTML/JS/SVG
+const served = new Set(); // URLs whose bytes the checker served and scanned
 const routeLocal = async r => { const u = r.request().url(); try { const asset = localAsset(u, projectRoot); scanGlass(asset.path, asset.contentType, asset.body); served.add(u); await r.fulfill({ body: asset.body, contentType: asset.contentType }); } catch (e) { blocked.push({ url: u, reason: e.message }); await r.abort(); } };
 await ctx.route('**/*', routeLocal);
-const p = await isolatedPage(await ctx.newPage()); // R11 C3: probes and axe run in an isolated world
+const p = await isolatedPage(await ctx.newPage()); // probes and axe run in an isolated world
 const ready = page => page.evaluate(async () => { await document.fonts.ready; const brokenImages = []; await Promise.all([...document.images].map(async img => { try { await img.decode(); } catch { brokenImages.push(img.currentSrc || img.src); } })); return { brokenImages, failedFonts: [...document.fonts].filter(f => f.status === 'error').map(f => f.family) }; });
 await p.goto(pathToFileURL(resolve(page)).href); const firstAssets = await ready(p); await p.addScriptTag({ content: axeSrc });
 ev.checks.assets = { ...firstAssets, pass: firstAssets.brokenImages.length === 0 && firstAssets.failedFonts.length === 0 };
 if (!ev.checks.assets.pass) fail = true;
 const copyProbe = (page, st) => page.evaluate(copyDeckProbe, { slots: (handoff?.copySlots || []).filter(c => c.screen === st.screen && c.placements?.some(p => p.lang === st.lang && p.state === st.state)), lang: st.lang, dir: st.dir });
-const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
+const design = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) };
 Object.assign(design, copySignals(design.visibleText, design.headlines));
 delete design.visibleText; delete design.headlines;
 ev.checks.design = { ...design, basis: 'DOM background-area proxy; overlapping backgrounds may double count; screenshots and state-bound manual review required', pass: design.centered <= q.centeredSectionsPerPage && (phase === 'wireframe' || (design.typeSizes.length <= q.typeSizes && design.accentRatio !== null && design.accentRatio <= q.accentAreaRatioFullPage && design.accentViewportRatio !== null && design.accentViewportRatio <= q.accentAreaRatioViewport)) && !design.heroGradient && design.glass <= q.stockGlass && design.iconRows <= q.centeredThreeIconRows && !design.purpleBlue && !design.filler && !design.ruleOfThree && (phase === 'wireframe' || !design.placeholders) && (phase === 'wireframe' || design.spacingOffScale.length <= q.spacingOffScale) && design.h1 === 1 };
 if (!ev.checks.design.pass) fail = true;
 ev.checks.accent = await accentFor(p, design);
 if (!ev.checks.accent.pass) fail = true;
-// R12 M03: probes and axe run in the main frame only, so any frame (readable or not) blocks the final handoff.
+// probes and axe run in the main frame only, so any frame (readable or not) blocks the final handoff.
 const framesCheck = d => ({ frames: d.glassScopes.frames + d.glassScopes.unscannedFrames.length, unscanned: d.glassScopes.unscannedFrames, status: phase === 'wireframe' ? 'DEFERRED' : d.glassScopes.frames + d.glassScopes.unscannedFrames.length ? 'FAIL' : 'PASS', note: 'axe and the probes do not run inside frames', pass: phase === 'wireframe' || d.glassScopes.frames + d.glassScopes.unscannedFrames.length === 0 });
 ev.checks.frames = framesCheck(design);
 if (!ev.checks.frames.pass) fail = true;
-// R13 N07: data:/blob: stylesheets are refused, and a stylesheet whose rules could not be read and whose bytes the
+// data:/blob: stylesheets are refused, and a stylesheet whose rules could not be read and whose bytes the
 // checker did not serve and scan is unscanned; both fail (glass is gated in both phases).
 const sheetsCheck = d => { const list = d.stylesheets || [], refused = list.filter(x => /^(data|blob):/i.test(x.href || '')), unscanned = list.filter(x => !x.readable && !refused.includes(x) && !(x.href && served.has(x.href))); return { sheets: list.length, refused: refused.map(x => (x.href || '').slice(0, 80)), unscanned: unscanned.map(x => x.href || x.owner), pass: refused.length === 0 && unscanned.length === 0 }; };
 ev.checks.stylesheets = sheetsCheck(design);
 if (!ev.checks.stylesheets.pass) fail = true;
-// R12 M07/M09/M20: the positional page is scoped by its declared state (screen, state, lang).
+// the positional page is scoped by its declared state (screen, state, lang).
 const declaredStates = (handoff?.screens || []).flatMap(s => (s.states || []).filter(st => st.applicable !== false).map(st => ({ screen: s.id, ...st })));
-// R19-MIMAR-01: the PASS wcag-review manual record for a scope (screen, language, state)
+// the PASS wcag-review manual record for a scope (screen, language, state)
 const reviewFor = scope => scope ? (handoff?.manualChecks || []).find(m => m.id === 'wcag-review' && m.screen === scope.screen && m.lang === scope.lang && m.state === scope.state && m.decision === 'PASS') ?? null : null;
 const pageScope = scopeOf(declaredStates.find(st => st.page && resolve(st.page) === resolve(page)));
-// R29 (Mi'mar's decision): a state that rescues hidden content declares `opener` and `reveals`; every rendering of the
+// a state that rescues hidden content declares `opener` and `reveals`; every rendering of the
 // screen and language probes those selectors at each width so the gate can verify the declaration
 const declarationOf = sc => { const st = sc && declaredStates.find(x => x.screen === sc.screen && x.lang === sc.lang && x.state === sc.state); return st && st.opener && st.reveals ? { opener: st.opener, reveals: st.reveals, ...(st.carousel ? { carousel: st.carousel } : {}) } : null; };
 const probesFor = sc => sc ? declaredStates.filter(x => x.screen === sc.screen && x.lang === sc.lang && x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) })) : [];
-const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1: WCAG 2.0-2.2 A and AA
+const axe = await p.evaluate(async options => axe.run(document, options), axeOptions()); // WCAG 2.0-2.2 A and AA
 ev.checks.axe = { version: axe.testEngine.version, targetSizeEnabled: true, violations: axe.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })), incomplete: axe.incomplete.map(v => v.id), pass: axe.violations.length === 0 && axe.incomplete.length === 0 };
-const pagePaths = await contrastPaths(await isolatedPage(p), axe.incomplete); // R19-MIMAR-01, resolved after integrity
+const pagePaths = await contrastPaths(await isolatedPage(p), axe.incomplete); // , resolved after integrity
 const pageIncomplete = axe.incomplete;
 if (axe.violations.length) fail = true;
 // custom: tab through, check focus visible, not obscured by fixed/sticky elements, target size
 await p.evaluate(() => { window.__fid = new WeakMap(); window.__fnext = 0; });
 const stops = []; const seen = new Set();
-await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05: one unfocused baseline
+await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // one unfocused baseline
 for (let i = 0; i < 200; i++) {
   await p.keyboard.press('Tab');
   await p.evaluate(focusSettle);
@@ -153,18 +153,18 @@ const small = stops.filter(s => (s.w < 24 || s.h < 24) && !s.inlineLink), noFocu
 ev.checks.custom22 = { tabStops: stops.length, targetUnder24: small, focusNotVisible: noFocus, focusObscured: obsc, keyboardTrapSuspect, pass: !small.length && !noFocus.length && !obsc.length && !keyboardTrapSuspect, note: 'focus appearance change is a screening heuristic (settled after transitions; colour-only changes under the configured focusStateContrast (3:1 floor) between states, indicators below it against their backdrop and unrendered outline/border/decoration/pseudo changes do not count); manual visibility/contrast and WCAG evidence remain mandatory; inline-link exception needs manual review' };
 if (!ev.checks.custom22.pass) fail = true;
 evidenceWrite('page-1440.png', await p.screenshot({ fullPage: true }));
-// R8: every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
+// every declared desktop width plus 320 px reflow (after the 1440 frame; the viewport returns to 1440)
 ev.checks.widths = await screenWidths(p, handoff?.settings?.desktopWidths, null, 900, probesFor(pageScope));
-if (!ev.checks.widths.passExceptReveal) fail = true; // R20: reveal clips are resolved across the declared states below
-// R11 panel D1 (decisions C, T4), R12 M06-M08/M17: integrity cross-checks (integrity.mjs). The full hard-fail vector is
+if (!ev.checks.widths.passExceptReveal) fail = true; // reveal clips are resolved across the declared states below
+// integrity cross-checks (integrity.mjs). The full hard-fail vector is
 // measured in the probe world, in the page world and with JavaScript off, plus native-function and content checks.
 const integrityFor = async (pagePath, scope, glyphPaths = [], baseline = null) => {
   const contexts = [];
   try {
     const contextFor = async javaScriptEnabled => { const c = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', javaScriptEnabled }); contexts.push(c); await c.routeWebSocket(/.*/, ws => ws.close()); await c.route('**/*', routeLocal); return c; };
     const widthsFor = validWidths(handoff?.settings?.desktopWidths) ? handoff.settings.desktopWidths : [1440];
-    // R13 N11/N12: the canonical gate result, per width where the gate is per width.
-    // R17: the rendered-visibility backstop runs once per rendering in the probe world (screenshots are shared by both
+    // the canonical gate result, per width where the gate is per width.
+    // the rendered-visibility backstop runs once per rendering in the probe world (screenshots are shared by both
     // worlds) and its counts enter both vectors; its items are kept as evidence.
     const measure = async (pg, vis) => { try {
       const d = await pg.evaluate(designProbe), sp = await pg.evaluate(spacingProbe, approvedScale.values), ct = await pg.evaluate(contrastProbe);
@@ -182,16 +182,16 @@ const integrityFor = async (pagePath, scope, glyphPaths = [], baseline = null) =
     const vis = await scan(icProbe), probe = await measure(icProbe, vis), pageWorld = await measure(icMain, vis);
     let tamperSigns = null; try { tamperSigns = await icMain.evaluate(nativeCheck); } catch {}
     const jc = await contextFor(false), jsOffPage = await isolatedPage(await jc.newPage());
-    // R20-GPT-05: a valid requiresScript state's JavaScript-off baseline is the default state's JavaScript-off rendering
+    // a valid requiresScript state's JavaScript-off baseline is the default state's JavaScript-off rendering
     await jsOffPage.goto(baseline ? pathToFileURL(resolve(baseline.page)).href : href); await jsOffPage.waitForLoadState('load'); // no ready(): its promises need page scripts
     const jsOff = await measure(jsOffPage, await scan(jsOffPage));
-    // R20-GPT-03: the faintest-glyph contrast of each axe colour-contrast incomplete element, per rendering
+    // the faintest-glyph contrast of each axe colour-contrast incomplete element, per rendering
     const glyph = glyphPaths.length ? { scripted: await glyphContrast(icProbe, glyphPaths), jsOff: await glyphContrast(jsOffPage, glyphPaths) } : null;
     return { ...compareIntegrity({ probe, page: pageWorld, jsOff, tamperSigns, handoff, scope, baseline }), glyph };
   } catch (e) { return { scope, status: 'INCOMPLETE', pass: false, error: `integrity cross-check could not run: ${e.message}` }; }
   finally { for (const c of contexts) await c.close().catch(() => {}); }
 };
-// R20-GPT-05: a valid requiresScript state has no JavaScript-off rendering of its own; its JavaScript-off baseline is the
+// a valid requiresScript state has no JavaScript-off rendering of its own; its JavaScript-off baseline is the
 // default state's JavaScript-off rendering (same screen and language), and content only the scripted state shows passes
 // only as approved copy slots placed in this state. Without a default rendering the state stays as measured.
 const scriptStateIntegrity = async (st, paths, own) => {
@@ -201,7 +201,7 @@ const scriptStateIntegrity = async (st, paths, own) => {
   const r = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path), { page: def.page, state: 'default', allowedSlots });
   return { ...r, ownJsOff: own.jsOff };
 };
-// R12 M13, R13 N18: one hardened reduced-motion routine for the positional page and every declared state: running Web
+// one hardened reduced-motion routine for the positional page and every declared state: running Web
 // Animations, moved elements, and the private rAF counter (rafCounterInit, read in the main world on purpose).
 const motionFor = async pagePath => {
   const c = await b.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce', serviceWorkers: 'block' });
@@ -211,7 +211,7 @@ const motionFor = async pagePath => {
     await c.route('**/*', routeLocal);
     const main = await c.newPage(), pg = await isolatedPage(main);
     await pg.goto(pathToFileURL(resolve(pagePath)).href); await pg.waitForTimeout(300);
-    const snap = () => pg.evaluate(motionSnapshot); // R14-GPT-05: composed tree, stable composed-path keys (integrity.mjs)
+    const snap = () => pg.evaluate(motionSnapshot); // composed tree, stable composed-path keys (integrity.mjs)
     const s1 = await snap(); const raf1 = await main.evaluate(() => window.__raf);
     await pg.waitForTimeout(700);
     const s2 = await snap(); const raf2 = await main.evaluate(() => window.__raf);
@@ -223,7 +223,7 @@ const motionFor = async pagePath => {
   finally { await c.close().catch(() => {}); }
 };
 ev.checks.states = [];
-// R16-GPT-03: the wireframe phase also renders every declared screen in every declared language (its default
+// the wireframe phase also renders every declared screen in every declared language (its default
 // state), with phase-appropriate checks; a missing rendering or page fails instead of being skipped.
 const wireframe = phase === 'wireframe';
 if (handoff?.screens) {
@@ -240,11 +240,11 @@ if (handoff?.screens) {
       const frameBytes = await p.screenshot({ fullPage: true });
       const renderedSha256 = digest(frameBytes);
       await p.addScriptTag({ content: axeSrc });
-      const a = await p.evaluate(async options => axe.run(document, options), axeOptions()); // R11 C1
-      const paths = await contrastPaths(await isolatedPage(p), a.incomplete); // R19-MIMAR-01
-      const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) }; // OPUS-R2-10
+      const a = await p.evaluate(async options => axe.run(document, options), axeOptions());
+      const paths = await contrastPaths(await isolatedPage(p), a.incomplete);
+      const d = { ...await p.evaluate(designProbe), ...await p.evaluate(spacingProbe, approvedScale.values) };
       Object.assign(d, copySignals(d.visibleText, d.headlines));
-      const accent = await accentFor(p, d); // R11 panel A, every state
+      const accent = await accentFor(p, d); // , every state
       delete d.visibleText; delete d.headlines;
       const doc = await p.evaluate(() => ({ lang: document.documentElement.lang, dir: getComputedStyle(document.documentElement).direction, height: document.documentElement.scrollHeight }));
       const viewportRatios = [];
@@ -252,7 +252,7 @@ if (handoff?.screens) {
       await p.evaluate(() => scrollTo(0, 0));
       const focus = [];
       await p.evaluate(() => { window.__stateFocus = new WeakSet(); });
-      await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true }); // ARGON-R2-05
+      await p.evaluate(focusBaseline); await p.evaluate(focusStyleProbe, { capture: true });
       for (let i = 0; i < 200; i++) {
         await p.keyboard.press('Tab');
         await p.evaluate(focusSettle);
@@ -262,17 +262,17 @@ if (handoff?.screens) {
         f.invisible = !focusVisible;
         focus.push(f);
       }
-      const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }, 900, probesFor(scopeOf(st))); // R8, R29 probes
-      const frames = framesCheck(d); // R12 M03
-      let integrity = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path)); // R12 M07: every declared state; R20-GPT-03 glyph targets
+      const widths = await screenWidths(p, handoff?.settings?.desktopWidths, { lang: st.lang, dir: st.dir }, 900, probesFor(scopeOf(st))); // probes
+      const frames = framesCheck(d);
+      let integrity = await integrityFor(st.page, scopeOf(st), paths.map(x => x.path)); // every declared state; glyph targets
       const filename = `${st.screen}-${st.lang}-${st.state}-1440.png`;
-      const scriptClaim = requiresScriptCheck({ declaration: st, integrity }); // R19b
+      const scriptClaim = requiresScriptCheck({ declaration: st, integrity }); // b
       if (scriptClaim.valid) integrity = await scriptStateIntegrity(st, paths, integrity);
       if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { integrity.mismatches = [...(integrity.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; integrity.status = 'integrity mismatch'; integrity.pass = false; }
-      const contrastResolution = resolveContrastIncomplete({ incomplete: a.incomplete, paths, integrity, review: reviewFor(scopeOf(st)), shots: [st.frame?.path, filename], scriptOnly: scriptClaim.valid }); // R19-MIMAR-01
-      const stylesheets = sheetsCheck(d); // R13 N07
-      const reducedMotion = await motionFor(st.page); // R13 N18: the same hardened routine as the page
-      const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // ARGON-R5-01: Math.max(null) is 0
+      const contrastResolution = resolveContrastIncomplete({ incomplete: a.incomplete, paths, integrity, review: reviewFor(scopeOf(st)), shots: [st.frame?.path, filename], scriptOnly: scriptClaim.valid });
+      const stylesheets = sheetsCheck(d);
+      const reducedMotion = await motionFor(st.page); // the same hardened routine as the page
+      const maxViewportAccent = viewportRatios.length && !viewportRatios.includes(null) ? Math.max(...viewportRatios) : null; // Math.max(null) is 0
       const stateResult = { screen: st.screen, lang: st.lang, state: st.state, renderedSha256, approvedSha256: st.frame?.sha256, browserVersion: b.version(), axeViolations: a.violations.map(v => v.id), axeIncomplete: a.incomplete.map(v => v.id), axeIncompleteUnresolved: contrastResolution.unresolved, requiresScript: scriptClaim, axeContrastNodes: contrastResolution.contrastNodes, assets, copy, centered: d.centered, typeSizes: d.typeSizes.length, accentRatio: d.accentRatio, maxViewportAccent, gradients: d.gradients, heroGradient: d.heroGradient, glass: d.glass, purpleBlue: d.purpleBlue, iconRows: d.iconRows, spacingOffScale: d.spacingOffScale, spacingExceptions: d.spacingExceptions, accent, frames, integrity, filler: d.filler, ruleOfThree: d.ruleOfThree, placeholders: d.placeholders, focusFailures: focus.filter(f => f.small || f.invisible || f.obscured), widths, reducedMotion, stylesheets, language: doc.lang, direction: doc.dir };
       stateResult.pass = (wireframe || renderedSha256 === st.frame?.sha256) && copy.pass && assets.brokenImages.length === 0 && assets.failedFonts.length === 0 && a.violations.length === 0 && contrastResolution.pass && d.centered <= q.centeredSectionsPerPage && (wireframe || (d.typeSizes.length <= q.typeSizes && d.accentRatio !== null && d.accentRatio <= q.accentAreaRatioFullPage && maxViewportAccent !== null && maxViewportAccent <= q.accentAreaRatioViewport)) && !d.heroGradient && d.glass <= q.stockGlass && !d.purpleBlue && d.iconRows <= q.centeredThreeIconRows && !d.filler && !d.ruleOfThree && (wireframe || !d.placeholders) && (wireframe || d.spacingOffScale.length <= q.spacingOffScale) && d.h1 === 1 && accent.pass && frames.pass && stylesheets.pass && integrity.pass && stateResult.focusFailures.length === 0 && widths.passExceptReveal && reducedMotion.pass && doc.lang === st.lang && doc.dir === st.dir;
       if (!/^[a-zA-Z0-9_-]+\.png$/.test(filename)) throw Error('unsafe screen/state filename');
@@ -282,26 +282,26 @@ if (handoff?.screens) {
     } catch (e) { ev.checks.states.push({ screen: st.screen, state: st.state, pass: false, error: e.message }); fail = true; }
   }
 }
-// R11 panel D1 (decisions B, T2): every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
-// R20 (Mi'mar's clipping tiebreak): content cut wholly at 1440 in a state counts as not displayed only when another
+// every 2D reflow candidate (page and states) needs a recorded decision; unresolved BLOCKS.
+// content cut wholly at 1440 in a state counts as not displayed only when another
 // declared state of the screen shows it; otherwise it fails that state (and the positional page).
 ev.checks.reveals = resolveReveals([{ scope: pageScope, widths: ev.checks.widths, declaration: declarationOf(pageScope) }, ...ev.checks.states.filter(st => st.widths).map(st => ({ scope: scopeOf(st), widths: st.widths, declaration: declarationOf(scopeOf(st)) }))], phase);
 for (const u of ev.checks.reveals.unresolved.filter(u => !u.deferred)) { fail = true; for (const st of ev.checks.states) if (st.screen === u.screen && st.lang === u.lang && st.state === u.state) st.pass = false; }
-ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // R12 M09: scoped
+ev.checks.reflowCandidates = resolveReflowCandidates([{ scope: pageScope, w: ev.checks.widths }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), w: st.widths }))].flatMap(({ scope, w }) => (w?.results || []).flatMap(r => (r.reflowCandidates || []).map(c => ({ ...scopeOf(scope), ...c })))), handoff, phase); // scoped
 if (!ev.checks.reflowCandidates.pass) fail = true;
-// R12 M20: every documented spacing exception needs a scoped handoff `spacingExceptions` entry naming the approver.
+// every documented spacing exception needs a scoped handoff `spacingExceptions` entry naming the approver.
 const spacingItems = [{ scope: pageScope, list: design.spacingExceptions }, ...ev.checks.states.map(st => ({ scope: scopeOf(st), list: st.spacingExceptions }))].flatMap(({ scope, list }) => (list || []).map(x => ({ ...scopeOf(scope), ...x })));
 const spacingResolved = resolveScoped({ items: spacingItems, entries: handoff?.spacingExceptions, roles: [handoff?.settings?.roles?.approver], phase, what: 'spacingExceptions' });
 ev.checks.spacingExceptions = { exceptions: spacingResolved.items, unresolved: spacingResolved.unresolved, status: spacingResolved.status, pass: spacingResolved.pass };
 if (!ev.checks.spacingExceptions.pass) fail = true;
-ev.checks.reducedMotion = await motionFor(page); // R12 M13, R13 N18
+ev.checks.reducedMotion = await motionFor(page);
 if (!ev.checks.reducedMotion.pass) fail = true;
-// R11 panel D1 (decisions C, T4), R12 M06-M08: integrity cross-checks on the positional page (and, above, every state).
+// integrity cross-checks on the positional page (and, above, every state).
 ev.checks.integrity = await integrityFor(page, pageScope, pagePaths.map(x => x.path));
 if (!ev.checks.integrity.pass) fail = true;
-{ // R19-MIMAR-01: the positional page's automated incomplete results, resolved against the backstop and the review
+{ // the positional page's automated incomplete results, resolved against the backstop and the review
   const st = declaredStates.find(x => x.page && resolve(x.page) === resolve(page));
-  const scriptClaim = requiresScriptCheck({ declaration: st, integrity: ev.checks.integrity }); // R19b
+  const scriptClaim = requiresScriptCheck({ declaration: st, integrity: ev.checks.integrity }); // b
   if (scriptClaim.claimed && scriptClaim.rendersWithoutScript) { const i = ev.checks.integrity; i.mismatches = [...(i.mismatches || []), { check: 'requiresScript', source: 'js-off', reason: 'requiresScript is declared but the state renders with JavaScript off' }]; i.status = 'integrity mismatch'; i.pass = false; fail = true; }
   ev.checks.axe.requiresScript = scriptClaim;
   const r = resolveContrastIncomplete({ incomplete: pageIncomplete, paths: pagePaths, integrity: ev.checks.integrity, review: reviewFor(pageScope), shots: [st?.frame?.path, 'page-1440.png'], scriptOnly: scriptClaim.valid });

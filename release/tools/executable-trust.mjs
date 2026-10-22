@@ -35,9 +35,9 @@ export function verifyExecutable(pin, protectedStorage = false) {
   return { path: pin.path, sha256: actual, version: pin.version };
 }
 
-// R4-4: hash the whole browser directory (libraries, .pak, ICU data, helpers), not only the executable.
+// hash the whole browser directory (libraries, .pak, ICU data, helpers), not only the executable.
 // Same entry format as verify-deps inventoryDigest; unprotected (test) trees may hold symlinks that stay inside.
-// ARGON-R2-01: in protected mode the root is checked as given (absolute, normalised, not a symlink, not
+// in protected mode the root is checked as given (absolute, normalised, not a symlink, not
 // /opt/fannan/bin itself, root-owned all the way up) BEFORE it is resolved, and no symlink is allowed in the tree.
 export function supportTreeDigest(root, protectedStorage = false) {
   if (protectedStorage) {
@@ -75,7 +75,7 @@ export function verifyBrowserPin(pin, protectedStorage = true) {
   return { ...identity, supportTreeSha256 };
 }
 
-// OPUS-R2-06: the support tree is the executable's own directory, so the browser must sit in its own directory
+// the support tree is the executable's own directory, so the browser must sit in its own directory
 // under /opt/fannan/bin, never directly in it, and the path must be absolute and normalised (no '..').
 export function assertBrowserPinLocation(path) {
   if (typeof path !== 'string' || !path.startsWith('/opt/fannan/bin/') || posix.normalize(path) !== path) throw Error('browser pin missing protected path or version');
@@ -92,7 +92,7 @@ export function verifiedBrowser() {
   return verifyBrowserPin(pin, true);
 }
 
-// ARGON-R2-06: the browser child gets only these variables (like the Impeccable launcher), never the checker's
+// the browser child gets only these variables (like the Impeccable launcher), never the checker's
 // process.env, so tokens or keys in the caller's environment cannot reach page or browser code. HOME is a fresh
 // private directory made by the caller.
 export function browserLaunchEnv(home) {

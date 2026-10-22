@@ -1,4 +1,4 @@
-// R12 (panel round 12, M09/M20/M21): one discipline for every reviewed exception. An item found on a page carries its
+// one discipline for every reviewed exception. An item found on a page carries its
 // scope (screen, state, lang). It is resolved only by a handoff entry with the same scope and element id, a non-empty
 // reason and a reviewer who holds an allowed role. Identical repeats collapse; every other occurrence is kept, and an
 // id that names different elements within one scope is never resolved. Unresolved items block the final handoff

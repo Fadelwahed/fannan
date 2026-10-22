@@ -10,4 +10,4 @@ At Steps 4–5 draw 1440px **grayscale structure only**; wait for the recorded S
 ## Gotchas
 
 - A vendor template or default palette never overrides the project's brief, approved wireframes or accessibility floor.
-- External sharing, generation with cost, or a design-system mutation needs Fadel's yes in Fannan's chat.
+- External sharing, generation with cost, or a design-system mutation needs the owner's yes in Fannan's chat.

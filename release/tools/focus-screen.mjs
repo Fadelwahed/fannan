@@ -1,7 +1,7 @@
 // Browser-side screening only; a style change still needs manual visibility/contrast review.
 // Playwright serialises these functions into the page, so every helper must live inside them.
 
-// R4-3: wait for finite CSS transitions/animations on the focused element (and its subtree, including
+// wait for finite CSS transitions/animations on the focused element (and its subtree, including
 // pseudo-elements) and on its ancestors, so a focus style is read in its settled state. Infinite
 // animations are ignored; the wait is capped.
 export async function focusSettle({ maxMs = 1000 } = {}) {
@@ -14,7 +14,7 @@ export async function focusSettle({ maxMs = 1000 } = {}) {
   await Promise.race([Promise.allSettled(finite.map(animation => animation.finished)), new Promise(resolve => setTimeout(resolve, maxMs))]);
 }
 
-// ARGON-R2-05: the baseline for a tab loop is captured once, with nothing focused, so :focus-within styles on a
+// the baseline for a tab loop is captured once, with nothing focused, so :focus-within styles on a
 // shared ancestor never leak into the "before" state of a later sibling. Call before focusStyleProbe({ capture: true }).
 export function focusBaseline() {
   if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur?.();
@@ -33,16 +33,16 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     window.__focusBefore = new WeakMap([...document.querySelectorAll('*')].map(el => [el, read(el)]));
     return;
   }
-  // R4-3: colours are compared by contrast between the unfocused and focused state. OPUS-R2-02: translucent
+  // colours are compared by contrast between the unfocused and focused state. translucent
   // colours are composited over the backdrop (the nearest opaque ancestor background, captured unfocused, with
   // translucent layers in between), falling back to white. A colour-only change below minContrast is not counted. Unparseable colours count as changed,
-  // so this is never weaker than the R3 "any change" rule.
+  // so this is never weaker than the "any change" rule.
   const rgba = value => {
     if (String(value ?? '').trim() === 'transparent') return { c: [0, 0, 0], a: 0 };
     const m = /^rgba?\(([^)]*)\)$/.exec(String(value ?? '').trim());
     if (!m) return null;
     const parts = m[1].split(/[\s,/]+/).filter(Boolean);
-    const n = parts.map((part, i) => part.endsWith('%') ? parseFloat(part) * (i < 3 ? 2.55 : 0.01) : parseFloat(part)); // ARGON-R2-04: channel % -> 0..255, alpha % -> 0..1
+    const n = parts.map((part, i) => part.endsWith('%') ? parseFloat(part) * (i < 3 ? 2.55 : 0.01) : parseFloat(part)); // channel % -> 0..255, alpha % -> 0..1
     if (n.length < 3 || n.some(Number.isNaN)) return null;
     return { c: n.slice(0, 3), a: n.length > 3 ? n[3] : 1 };
   };
@@ -67,7 +67,7 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     if (!x || !y) return true;
     return contrast(x, y) >= minContrast;
   };
-  // CODEX-R2-01: an outline/border/decoration/shadow only counts when it is painted: alpha > 0 and at least
+  // an outline/border/decoration/shadow only counts when it is painted: alpha > 0 and at least
   // minContrast against the element's unfocused background composited over its backdrop. Unparseable colours count.
   const painted = (value, ground) => {
     const colour = rgba(value);
@@ -87,7 +87,7 @@ export function focusStyleProbe({ capture = false, minContrast = 3 } = {}) {
     if (geometry.some(key => a[key] !== b[key])) return painted(a[colour], ground) || painted(b[colour], ground);
     return strongColour(b[colour], a[colour], ground);
   };
-  // R6: an outline (offset >= 0) and an outer box-shadow ring are drawn outside the element, so they are measured
+  // an outline (offset >= 0) and an outer box-shadow ring are drawn outside the element, so they are measured
   // against the backdrop; an inset ring or a negative-offset outline against the element's own background.
   const shadowItems = value => String(value ?? '').split(/,(?![^(]*\))/).map(item => item.trim()).filter(item => item && item !== 'none');
   const shadowColour = item => (item.match(/rgba?\([^)]*\)/) || [])[0];
