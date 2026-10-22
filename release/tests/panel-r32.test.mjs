@@ -31,22 +31,22 @@ const withBrowser = async fn => {
 const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir === 'rtl' ? 'ar' : 'en'}" dir="${dir}"><head></head><body style="background:#fff;margin:0;font:16px/24px sans-serif;color:#1a1a1a"><main style="margin:20px"><h1>${dir === 'rtl' ? 'عنوان' : 'Title'}</h1>${body}</main>${script ? `<script>${script}</script>` : ''}</body></html>`;
 const ws = await import('../tools/width-screen.mjs');
 const vis = await import('../tools/visibility.mjs');
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 const scopesOf = async (open, list, dir = 'ltr', desktop = [1440]) => {
-  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals }));
+  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) }));
   const scopes = [];
   for (const x of list) {
     scopes.push({
       scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' },
       widths: await ws.screenWidths((await open(x.html)).main, desktop, null, 900, probes),
-      declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals } : null,
+      declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) } : null,
     });
   }
   const r = ws.resolveReveals(scopes);
   return { pass: r.pass && scopes.every(s => s.widths.pass), scopes, r };
 };
 const gateOf = (open, desktop = [1440]) => async (states, dir = 'ltr') => {
-  const list = Object.entries(states).map(([state, v]) => ({ state, html: typeof v === 'string' ? v : v.html, opener: v.opener, reveals: v.reveals }));
+  const list = Object.entries(states).map(([state, v]) => ({ state, html: typeof v === 'string' ? v : v.html, opener: v.opener, reveals: v.reveals, carousel: typeof v === 'string' ? undefined : v.carousel }));
   return scopesOf(open, list, dir, desktop);
 };
 const P = (body, css = '', dir = 'ltr') => W(`${css ? `<style>${css}</style>` : ''}${body}`, '', dir);
@@ -89,11 +89,13 @@ test('R32-M-03: Next labels and overflowing wrappers cannot certify disclosures'
   const css = `@media(max-width:600px){.wide{display:none}}@media(min-width:601px){.mobile{display:none}}`;
   const menu = (opened) => P(`<a class="wide" href="/about">About</a><div class="wrap mobile" style="width:100%;overflow-x:hidden"><div style="width:110%"></div><button id="m">More</button><nav id="p" style="${opened ? '' : 'display:none'}"><a href="/about">About</a></nav></div>`, css);
   assert.equal((await gate({ default: menu(false), 'menu-open': D(menu(true), '#m', '#p') })).pass, false);
-  // genuine translated-track carousel still PASS
-  const car = (tx) => P(`<div style="width:200px;overflow:hidden;direction:ltr"><div style="display:flex;width:400px;transform:translateX(${tx}px)"><div class="slide" style="flex:0 0 200px"><p>One unique</p></div><div class="slide" style="flex:0 0 200px"><p>Two unique</p></div></div></div><button class="next" aria-label="Next slide">›</button>`);
+  // genuine translated-track carousel still PASS with explicit mapping
+  const CM = { root: '#g', slides: ['#s1', '#s2'] };
+  const car = (tx) => P(`<div id="g" style="width:200px;overflow:hidden;direction:ltr"><div style="display:flex;width:400px;transform:translateX(${tx}px)"><div class="slide" id="s1" style="flex:0 0 200px"><p>One unique</p></div><div class="slide" id="s2" style="flex:0 0 200px"><p>Two unique</p></div></div></div><button class="prev">Previous</button><button class="next" aria-label="Next slide">›</button>`);
   assert.equal((await scopesOf(open, [
     { state: 'default', html: car(0) },
-    { state: 'slide-2', html: car(-200), opener: '.next', reveals: '.slide:nth-child(2)' },
+    { state: 'slide-1', html: car(0), opener: '.prev', reveals: '#s1', carousel: CM },
+    { state: 'slide-2', html: car(-200), opener: '.next', reveals: '#s2', carousel: CM },
   ])).pass, true);
 }));
 
@@ -104,15 +106,16 @@ test('R32-M-04: localized responsive carousels pass without overflowing tracks',
       ? '@media(max-width:600px){#b{display:none}}'
       : '@media(max-width:600px){#a{display:none}}';
     const status = which === 'a' ? '<p>Status A</p>' : which === 'b' ? '<p>Status B</p>' : '';
-    return P(`<div aria-roledescription="carousel"><div id="a" role="group"><p>Slide Alpha content</p></div><div id="b" role="group"><p>Slide Beta content</p></div>
+    return P(`<div id="g" aria-roledescription="carousel"><div id="a" role="group"><p>Slide Alpha content</p></div><div id="b" role="group"><p>Slide Beta content</p></div>
       <button id="prev" aria-controls="a" aria-label="${labels[0]}">‹</button>
       <button id="next" aria-controls="b" aria-label="${labels[1]}">›</button>${status}</div>`, show, dir);
   };
+  const CM = { root: '#g', slides: ['#a', '#b'] };
   for (const [labels, dir] of [[['السابق', 'التالي'], 'rtl'], [['Précédent', 'Suivant'], 'ltr'], [['Previous', 'Next'], 'ltr']]) {
     const g = await scopesOf(open, [
       { state: 'default', html: mk(labels, dir, 'a') },
-      { state: 'slide-a', html: mk(labels, dir, 'a'), opener: '#prev', reveals: '#a' },
-      { state: 'slide-b', html: mk(labels, dir, 'b'), opener: '#next', reveals: '#b' },
+      { state: 'slide-a', html: mk(labels, dir, 'a'), opener: '#prev', reveals: '#a', carousel: CM },
+      { state: 'slide-b', html: mk(labels, dir, 'b'), opener: '#next', reveals: '#b', carousel: CM },
     ], dir);
     assert.equal(g.pass, true, `${labels} ${dir}`);
   }
@@ -125,7 +128,7 @@ test('R32-M-05: mixed-axis FAQ overflow does not enable undeclared fallback', { 
   const disc = (opened) => P(`<button id="m" aria-expanded="${opened}">More</button><div id="answer" style="width:200px;height:${opened ? 'auto' : '0'};overflow:hidden"><p style="margin:0">${T}</p></div>`);
   assert.equal((await gate({ default: disc(false), expanded: D(disc(true), '#m', '#answer') })).pass, true);
   const slide = i => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(-${i * 200}px)"><div style="flex:0 0 200px"><p>One</p></div><div style="flex:0 0 200px"><p>Two</p></div></div></div>`);
-  assert.equal((await gate({ default: slide(0), 'slide-2': slide(1) })).pass, true);
+  assert.equal((await gate({ default: slide(0), 'slide-2': slide(1) })).pass, false);
 }));
 
 test('R32-M-06: desktop reveal cannot bypass a disabled 320 opener', { skip }, async () => withBrowser(async ({ open }) => {

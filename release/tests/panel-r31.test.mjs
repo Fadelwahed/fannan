@@ -29,15 +29,15 @@ const withBrowser = async fn => {
 
 const W = (body, script = '', dir = 'ltr') => `<!doctype html><html lang="${dir === 'rtl' ? 'ar' : 'en'}" dir="${dir}"><head></head><body style="background:#fff;margin:0;font:16px/1.5 sans-serif;color:#1a1a1a"><main style="padding:20px"><h1>${dir === 'rtl' ? 'عنوان' : 'Title'}</h1>${body}</main>${script ? `<script>${script}</script>` : ''}</body></html>`;
 const ws = await import('../tools/width-screen.mjs');
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 const scopesOf = async (open, list, dir = 'ltr', desktop = [1440]) => {
-  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals }));
+  const probes = list.filter(x => x.opener && x.reveals).map(x => ({ state: x.state, opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) }));
   const scopes = [];
   for (const x of list) {
     scopes.push({
       scope: { screen: 'home', state: x.state, lang: dir === 'rtl' ? 'ar' : 'en' },
       widths: await ws.screenWidths((await open(x.html)).main, desktop, null, 900, probes),
-      declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals } : null,
+      declaration: x.opener && x.reveals ? { opener: x.opener, reveals: x.reveals, ...(x.carousel ? { carousel: x.carousel } : {}) } : null,
     });
   }
   const r = ws.resolveReveals(scopes);
@@ -45,7 +45,7 @@ const scopesOf = async (open, list, dir = 'ltr', desktop = [1440]) => {
 };
 const gateOf = (open, desktop = [1440]) => async (states, dir = 'ltr') => {
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-  const list = decl.map(([state, v]) => ({ state, html: v.html, opener: v.opener, reveals: v.reveals }));
+  const list = decl.map(([state, v]) => ({ state, html: v.html, opener: v.opener, reveals: v.reveals, carousel: v.carousel }));
   return scopesOf(open, list, dir, desktop);
 };
 const P = (body, css = '', dir = 'ltr') => W(`${css ? `<style>${css}</style>` : ''}${body}`, '', dir);
@@ -71,13 +71,15 @@ test('R31-M-02: declared read-more permits an already visible introduction', { s
 }));
 
 test('R31-M-03: descriptive and Arabic carousel steps verify actual slide transitions', { skip }, async () => withBrowser(async ({ open }) => {
+  const CM = { root: '#g', slides: ['#s1', '#s2'] };
   const car = (tx, label, dir = 'ltr') => P(
-    `<div class="viewport" style="width:200px;overflow:hidden;direction:ltr"><div class="track" style="display:flex;width:400px;transform:translateX(${tx}px);direction:ltr"><div class="slide" style="flex:0 0 200px"><p>Slide one unique</p></div><div class="slide" style="flex:0 0 200px"><p>Slide two unique</p></div></div></div><button class="next" aria-label="${label}">›</button>`,
+    `<div id="g" class="viewport" style="width:200px;overflow:hidden;direction:ltr"><div class="track" style="display:flex;width:400px;transform:translateX(${tx}px);direction:ltr"><div class="slide" id="s1" style="flex:0 0 200px"><p>Slide one unique</p></div><div class="slide" id="s2" style="flex:0 0 200px"><p>Slide two unique</p></div></div></div><button class="prev" aria-label="Previous">‹</button><button class="next" aria-label="${label}">›</button>`,
     '', dir);
   const run = async (label, dir) => {
     const g = await scopesOf(open, [
       { state: 'default', html: car(0, label, dir) },
-      { state: 'slide-2', html: car(-200, label, dir), opener: '.next', reveals: '.slide:nth-child(2)' },
+      { state: 'slide-1', html: car(0, label, dir), opener: '.prev', reveals: '#s1', carousel: CM },
+      { state: 'slide-2', html: car(-200, label, dir), opener: '.next', reveals: '#s2', carousel: CM },
     ], dir);
     return g.pass;
   };
@@ -85,7 +87,7 @@ test('R31-M-03: descriptive and Arabic carousel steps verify actual slide transi
   assert.equal(await run('التالي', 'rtl'), true);
   const stuck = await scopesOf(open, [
     { state: 'default', html: car(0, 'Next slide') },
-    { state: 'slide-2', html: car(0, 'Next slide'), opener: '.next', reveals: '.slide:nth-child(2)' },
+    { state: 'slide-2', html: car(0, 'Next slide'), opener: '.next', reveals: '#s2', carousel: CM },
   ]);
   assert.equal(stuck.pass, false);
 }));
@@ -114,9 +116,9 @@ test('R31-M-05: a policy link does not exempt an undeclared collapsed FAQ', { sk
   assert.equal((await gate({ default: faq('0'), expanded: faq('auto') })).pass, false);
   const disc = opened => P(`<button id="m" aria-expanded="${opened}">More</button><div id="answer" style="width:240px;height:${opened ? 'auto' : '0'};overflow:hidden"><p>Shipping answer.</p><a href="/policy">Delivery policy</a></div>`);
   assert.equal((await gate({ default: disc(false), expanded: D(disc(true), '#m', '#answer') })).pass, true);
-  // horizontal carousel undeclared fallback retained
+  // R34: undeclared horizontal carousel fallback deleted
   const slide = i => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(-${i * 200}px)"><div style="flex:0 0 200px"><p>One</p></div><div style="flex:0 0 200px"><p>Two</p></div></div></div>`);
-  assert.equal((await gate({ default: slide(0), 'slide-2': slide(1) })).pass, true);
+  assert.equal((await gate({ default: slide(0), 'slide-2': slide(1) })).pass, false);
 }));
 
 test('R31-M-07: a disabled fieldset permits its enabled first-legend opener', { skip }, async () => withBrowser(async ({ open }) => {
@@ -215,10 +217,12 @@ test('R31-M-12: false haspopup does not certify a generic reveal opener', { skip
     `<a class="wide" href="/about">About</a><button id="m" class="mobile" aria-haspopup="true" aria-controls="p" aria-expanded="false">Menu</button><nav id="p" class="mobile" style="${opened ? '' : 'display:none'}"><a href="/about">About</a></nav>`, css);
   assert.equal((await gate({ default: stuck(false), 'menu-open': D(stuck(true), '#m', '#p') })).pass, false);
   // M-03 companion: real Next transition with aria-haspopup="false" still PASS
-  const car = (tx) => P(`<div style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(${tx}px)"><div class="slide" style="flex:0 0 200px"><p>A unique</p></div><div class="slide" style="flex:0 0 200px"><p>B unique</p></div></div></div><button class="next" aria-haspopup="false" aria-label="Next slide">›</button>`);
+  const CM = { root: '#g', slides: ['#s1', '#s2'] };
+  const car = (tx) => P(`<div id="g" style="width:200px;overflow:hidden"><div style="display:flex;width:400px;transform:translateX(${tx}px)"><div class="slide" id="s1" style="flex:0 0 200px"><p>A unique</p></div><div class="slide" id="s2" style="flex:0 0 200px"><p>B unique</p></div></div></div><button class="prev">Previous</button><button class="next" aria-haspopup="false" aria-label="Next slide">›</button>`);
   assert.equal((await scopesOf(open, [
     { state: 'default', html: car(0) },
-    { state: 'slide-2', html: car(-200), opener: '.next', reveals: '.slide:nth-child(2)' },
+    { state: 'slide-1', html: car(0), opener: '.prev', reveals: '#s1', carousel: CM },
+    { state: 'slide-2', html: car(-200), opener: '.next', reveals: '#s2', carousel: CM },
   ])).pass, true);
 }));
 

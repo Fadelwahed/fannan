@@ -1,4 +1,4 @@
-# Mi'mar R33 changes (head 35eb7a5)
+# Mi'mar R33 changes (head 47effac)
 
 **Branch:** `fannan/r33-carousel-fixes` (stacked on `fannan/r32-reveal-fixes` / 70cfd77)
 **Registry:** `ba2e93afed492ad96cf951a2a3a790cef5335dacffabc1b59e671484cd717ea4`
@@ -25,7 +25,7 @@ Implement Sol's accepted R33 fix specs M-01..M-08 from `/workspace/panel-r33/out
 - Full local fixture: exit 0 (`test-results/r33/local-fixture.log`)
 - Honest sets R18–R28: **223/582** pass, **0** rows changed vs R32/main, **0** errors
 - Anchored verify: PASS with registry above
-- Head: `35eb7a525b03aeec6856fe1c2c99a54203033456`
+- Head: `47effacb0bfd6eef19154b04a90bded6da6e6dd2`
 - Registry: `ba2e93afed492ad96cf951a2a3a790cef5335dacffabc1b59e671484cd717ea4`
 
 ## Review order

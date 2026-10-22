@@ -69,8 +69,8 @@ const ws = await import('../tools/width-screen.mjs');
 const gateOf = open => async (states, dir = 'ltr') => {
   // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
-  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -89,7 +89,7 @@ const P = x => W(LS + x);
 const ws26 = await import('../tools/width-screen.mjs');
 
 // R29: a declared state that rescues hidden content names its opener and the region it reveals
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 
 test('R26-GPT-01: real Chrome: footer copies never cover nav items: a declared menu-open that does not open fails (max-height:0 or display:none, with or without footer copies); a menu-open that opens passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
@@ -129,11 +129,13 @@ test('R26-GPT-03: real Chrome: tabs to headed sections counts each action across
 
 test('R26-GPT-04: real Chrome: carousel slides are identified by element: a fluid carousel whose slides all say Shop now passes with every slide declared; a missing slide state fails (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
-  const car = (i, cta = k => 'Shop now') => W(`<div style="overflow:hidden;width:100%;max-width:600px"><div style="display:flex;width:300%;transform:translateX(-${i * 100 / 3}%)">${[0, 1, 2].map(k => `<div style="flex:0 0 33.3333%"><p>Slide ${k + 1}</p><button>${cta(k)}</button></div>`).join('')}</div></div>`);
+  const CM = { root: '#g', slides: ['#s1', '#s2', '#s3'] };
+  const car = (i, cta = k => 'Shop now') => W(`<div id="g" style="overflow:hidden;width:100%;max-width:600px"><div style="display:flex;width:300%;transform:translateX(-${i * 100 / 3}%)">${[0, 1, 2].map(k => `<div id="s${k + 1}" style="flex:0 0 33.3333%"><p>Slide ${k + 1}</p><button>${cta(k)}</button></div>`).join('')}</div></div><button id="prev">Previous</button><button id="next">Next</button>`);
+  const all = (cta) => ({ default: car(0, cta), 'slide-1': D(car(0, cta), '#prev', '#s1', CM), 'slide-2': D(car(1, cta), '#next', '#s2', CM), 'slide-3': D(car(2, cta), '#next', '#s3', CM) });
   assert.deepEqual({
-    repeatedAllDeclared: await gate({ default: car(0), 'slide-2': car(1), 'slide-3': car(2) }),
-    distinctAllDeclared: await gate({ default: car(0, k => `Shop ${k}`), 'slide-2': car(1, k => `Shop ${k}`), 'slide-3': car(2, k => `Shop ${k}`) }),
-    repeatedMissingSlide: (await gate({ default: car(0), 'slide-2': car(1) })).pass,
+    repeatedAllDeclared: await gate(all(k => 'Shop now')),
+    distinctAllDeclared: await gate(all(k => `Shop ${k}`)),
+    repeatedMissingSlide: (await gate({ default: car(0), 'slide-2': D(car(1), '#next', '#s2', CM) })).pass,
   }, { repeatedAllDeclared: { pass: true, rules: [] }, distinctAllDeclared: { pass: true, rules: [] }, repeatedMissingSlide: false });
 }));
 

@@ -68,8 +68,8 @@ const ws = await import('../tools/width-screen.mjs');
 const gateOf = open => async (states, dir = 'ltr') => {
   // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
-  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -87,7 +87,7 @@ const P = x => W(LS + x);
 
 
 // R29: a declared state that rescues hidden content names its opener and the region it reveals
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 
 test('R27-GPT-01: real Chrome: identity is a stable key: a menu-open page that inserts a Close button before the links passes (max-height:0 and display:none); a menu-open that stays collapsed fails even with footer copies (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
@@ -122,9 +122,10 @@ test('R27-GPT-03: real Chrome: identity keeps across role changes within the act
 
 test('R27-GPT-04: real Chrome: what the source state shows is set aside before name matching: image-only slides with an undeclared slide fail even with a footer Shop now; with every slide declared they pass (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
   const gate = gateOf(open);
-  const car = i => W(`<div style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[0, 1, 2].map(k => `<div style="flex:0 0 300px"><img src="${img}" alt="" style="display:block;width:300px;height:120px"><a href="/shop">Shop now</a></div>`).join('')}</div></div><footer><a href="/shop">Shop now</a></footer>`);
+  const CM = { root: '#g', slides: ['#s1', '#s2', '#s3'] };
+  const car = i => W(`<div id="g" style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${[0, 1, 2].map(k => `<div id="s${k + 1}" style="flex:0 0 300px"><img src="${img}" alt="" style="display:block;width:300px;height:120px"><a href="/shop">Shop now</a></div>`).join('')}</div></div><button id="prev">Previous</button><button id="next">Next</button><footer><a href="/shop">Shop now</a></footer>`);
   assert.deepEqual({
-    missingSlideFooter: (await gate({ default: car(0), 'slide-2': car(1) })).pass,
-    allDeclaredFooter: await gate({ default: car(0), 'slide-2': car(1), 'slide-3': car(2) }),
+    missingSlideFooter: (await gate({ default: car(0), 'slide-2': D(car(1), '#next', '#s2', CM) })).pass,
+    allDeclaredFooter: await gate({ default: car(0), 'slide-1': D(car(0), '#prev', '#s1', CM), 'slide-2': D(car(1), '#next', '#s2', CM), 'slide-3': D(car(2), '#next', '#s3', CM) }),
   }, { missingSlideFooter: false, allDeclaredFooter: { pass: true, rules: [] } });
 }));

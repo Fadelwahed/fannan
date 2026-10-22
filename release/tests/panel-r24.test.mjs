@@ -70,8 +70,8 @@ const ws = await import('../tools/width-screen.mjs');
 const gateOf = open => async (states, dir = 'ltr') => {
   // R29: a state is its html, or { html, opener, reveals } when it declares the reveal it rescues (checked by the gate)
   const decl = Object.entries(states).map(([state, v]) => [state, typeof v === 'string' ? { html: v } : v]);
-  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals }));
-  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals } : null });
+  const probes = decl.filter(([, v]) => v.opener && v.reveals).map(([state, v]) => ({ state, opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) }));
+  const scopes = []; for (const [state, v] of decl) scopes.push({ scope: { screen: 'home', state, lang: dir === 'rtl' ? 'ar' : 'en' }, widths: await ws.screenWidths((await open(v.html)).main, [1440], null, 900, probes), declaration: v.opener && v.reveals ? { opener: v.opener, reveals: v.reveals, ...(v.carousel ? { carousel: v.carousel } : {}) } : null });
   const r = ws.resolveReveals(scopes);
   const rules = [...new Set(scopes.flatMap(s => s.widths.results.flatMap(x => [...x.clipped.filter(c => !c.revealedBy).map(c => c.rule), ...(x.offscreenLeft.length ? ['offscreenLeft'] : []), ...((x.lost || []).filter(l => !l.reachableIn).length ? ['not shown at this width'] : [])])))].sort();
   if (process.env.DUMP) console.log(JSON.stringify(Object.keys(states)), JSON.stringify(scopes.map(s => s.widths.results.map(x => [x.width, x.clipped, x.lost, x.offscreenLeft]))).slice(0, 3000));
@@ -86,7 +86,7 @@ const P = x => W(LS + x);
 
 
 // R29: a declared state that rescues hidden content names its opener and the region it reveals
-const D = (html, opener, reveals) => ({ html, opener, reveals });
+const D = (html, opener, reveals, carousel) => ({ html, opener, reveals, ...(carousel ? { carousel } : {}) });
 const ACC = html => D(html, 'button[aria-expanded]', 'button[aria-expanded] + div');
 
 test('R24-GPT-01: real Chrome: controls are checked before the media branch: a borderless button and a nested label cut by the button box are partly clipped; a fitting borderless button passes (test-only)', { skip }, async () => withBrowser(async ({ open }) => {
@@ -103,11 +103,12 @@ test('R24-GPT-02: real Chrome: reveal matches are one to one: a collapsed panel 
   const gate = gateOf(open);
   const panel = (exp, n) => W(`<button aria-expanded="${exp}">Downloads</button><div style="${exp ? '' : 'max-height:0;overflow:hidden'}"><p>Files for this release.</p>${exp ? '<button>Download</button> '.repeat(n) : '<button>Download</button> <button>Download</button>'}</div>`);
   const slides = ['Shop shoes', 'Shop bags', 'Shop hats'];
-  const carousel = i => W(`<div style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${slides.map((s, k) => `<div style="flex:0 0 300px"><p>Slide ${k + 1}</p><button>${s}</button></div>`).join('')}</div></div>`);
+  const CM = { root: '#g', slides: ['#s1', '#s2', '#s3'] };
+  const carousel = i => W(`<div id="g" style="overflow:hidden;width:300px"><div style="display:flex;width:900px;transform:translateX(-${i * 300}px)">${slides.map((s, k) => `<div id="s${k + 1}" style="flex:0 0 300px"><p>Slide ${k + 1}</p><button>${s}</button></div>`).join('')}</div></div><button id="prev">Previous</button><button id="next">Next</button>`);
   const r = {
     expandedShowsOne: await gate({ default: panel(false), expanded: ACC(panel(true, 1)) }),
     expandedShowsTwo: await gate({ default: panel(false), expanded: ACC(panel(true, 2)) }),
-    carousel: await gate({ default: carousel(0), 'slide-2': carousel(1), 'slide-3': carousel(2) }),
+    carousel: await gate({ default: carousel(0), 'slide-1': D(carousel(0), '#prev', '#s1', CM), 'slide-2': D(carousel(1), '#next', '#s2', CM), 'slide-3': D(carousel(2), '#next', '#s3', CM) }),
   };
   assert.deepEqual({ expandedShowsOne: r.expandedShowsOne.pass, expandedShowsTwo: r.expandedShowsTwo, carousel: r.carousel.pass }, { expandedShowsOne: false, expandedShowsTwo: { pass: true, rules: [] }, carousel: true });
 }));
