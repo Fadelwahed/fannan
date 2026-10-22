@@ -19,6 +19,7 @@ This branch, `main`, holds only the files that install and run Fannan. Reviews, 
 - [Configure a project](#configure-a-project)
 - [Verify the release](#verify-the-release)
 - [Run the tests](#run-the-tests)
+- [Sync release/ from workbench to main](#sync-release-from-workbench-to-main)
 - [Update and pinning policy](#update-and-pinning-policy)
 - [Working with other bots](#working-with-other-bots)
 - [Approvals](#approvals)
@@ -251,6 +252,82 @@ python3 -B scripts/package-r3.py verify --start 9ee1ca6aaa4a257cb84fb7381056005f
 
 Run one test file at a time. The full pre-handoff gate stops at the missing pinned Impeccable binary; that is expected until the binary is staged.
 
+## Sync release/ from workbench to main
+
+`release/` syncs one way, from `workbench` to `main`. Never merge either branch into the other.
+
+`trust/MANIFEST.sha256` on `main` starts with the paths this branch covers:
+
+```
+# covers: CHANGELOG.md FANNAN-PLAN.md INSTALL-ACCEPTANCE.md OPEN-QUESTIONS.md PROVENANCE.md UNTESTED.md memory migrations references runtime skills tools
+```
+
+Those paths are `main`'s `release/`. `workbench` also has `release/tests/`, `release/VERIFICATION.md`, `release/PACKAGING.md` and `release/REVIEW-RESPONSE.md`. Leave those four on `workbench`.
+
+After the covers line, `trust/MANIFEST.sha256` has one sorted line per file: `<sha256>  <path relative to release/>`, two spaces, the text form GNU `sha256sum` prints. `trust/PINNED.sha256` is one line: `<sha256 of MANIFEST.sha256>  MANIFEST.sha256`.
+
+1. Land the work on `workbench` first, including round records and tests.
+
+2. From a fresh clone, branch off `main`. Replace `<round>` with the round you are syncing.
+
+```bash
+git clone https://github.com/Fadelwahed/fannan fannan && cd fannan
+git switch -c sync/<round> origin/main
+```
+
+3. Copy only the covered paths from `workbench`. Check out each covered path. Do not check out `release` as a whole.
+
+```bash
+git fetch origin workbench
+git checkout origin/workbench -- \
+  release/CHANGELOG.md \
+  release/FANNAN-PLAN.md \
+  release/INSTALL-ACCEPTANCE.md \
+  release/OPEN-QUESTIONS.md \
+  release/PROVENANCE.md \
+  release/UNTESTED.md \
+  release/memory \
+  release/migrations \
+  release/references \
+  release/runtime \
+  release/skills \
+  release/tools
+```
+
+Never copy `release/tests`, `release/VERIFICATION.md`, `release/PACKAGING.md` or `release/REVIEW-RESPONSE.md`.
+
+4. Regenerate the manifest and the pin from inside `release/`, make the manifest read-only, and run the checker. A fresh clone leaves `trust/MANIFEST.sha256` writable; `chmod` runs after the new bytes are written. The checker prints `MANIFEST OK (<n> files)` when the bytes, the covers list and the pin agree.
+
+```bash
+cd release
+{
+  echo '# covers: CHANGELOG.md FANNAN-PLAN.md INSTALL-ACCEPTANCE.md OPEN-QUESTIONS.md PROVENANCE.md UNTESTED.md memory migrations references runtime skills tools'
+  find CHANGELOG.md FANNAN-PLAN.md INSTALL-ACCEPTANCE.md OPEN-QUESTIONS.md PROVENANCE.md UNTESTED.md memory migrations references runtime skills tools -type f | LC_ALL=C sort | xargs sha256sum
+} > ../trust/MANIFEST.sha256
+( cd ../trust && sha256sum MANIFEST.sha256 > PINNED.sha256 )
+chmod 0444 ../trust/MANIFEST.sha256
+cd ..
+release/tools/verify-manifest.sh "$PWD/trust/MANIFEST.sha256" "$PWD/release" "$(cut -d' ' -f1 trust/PINNED.sha256)"
+```
+
+Checked on 22 October 2026 on a clean clone of main at 4ac681a: the snippet rewrote `trust/MANIFEST.sha256` and `trust/PINNED.sha256` byte for byte (empty `git diff -- trust/`), `verify-manifest.sh` printed MANIFEST OK (62 files), and the step 5 diff against workbench at cecf229 printed nothing. A second run in the same tree needs `chmod u+w trust/MANIFEST.sha256` before the redirect.
+
+5. From the clone root, check `release/` against a `workbench` checkout. Exclude the four workbench-only paths. No output means the covered trees match.
+
+```bash
+git clone -b workbench https://github.com/Fadelwahed/fannan ../fannan-wb
+diff -r \
+  --exclude=tests \
+  --exclude=VERIFICATION.md \
+  --exclude=PACKAGING.md \
+  --exclude=REVIEW-RESPONSE.md \
+  release ../fannan-wb/release
+```
+
+6. Open one focused pull request to `main`. The new pin needs Amin's review before any install. Only Fadel merges.
+
+7. Nothing flows from `main` to `workbench`. If a change was made on `main` by mistake, redo it on `workbench` first, then repeat this sync.
+
 ## Update and pinning policy
 
 - Every skill and tool is pinned to a commit or a SHA-256.
@@ -296,7 +373,7 @@ Fannan acts only on approvals the owner gives in Fannan's own chat.
 - **Impeccable pin mismatch.** The launcher pins SHA-256 `3d31ec1a664ac35c815ea1d7c10abad1155ce364d0f461157eb837a34368efb6` (engine v0.1.14). No staged binary matches it, so the full gate stops there by design.
 - **Engineer's read-only token not proven.** No proof that the code-read token is read-only has been recorded.
 - **Carousel libraries untested.** The declared-carousel contract has not been tested against Swiper, Splide, Embla, Slick or Flickity markup.
-- **No CI.** There is no `.github/workflows/`; every test is run by hand.
+- **No CI yet.** There is no `.github/workflows/` on this branch; every test is run by hand. CI workflows are proposed in separate pull requests.
 - **No branch protection on `main`.** The only-the-owner-merges rule is a team rule, not a GitHub setting.
 - **Repository visibility.** The repository is public. Earlier versions of this README called it private. The owner has not yet confirmed which is intended.
 - `release/UNTESTED.md` lists every item each review round could not establish.
