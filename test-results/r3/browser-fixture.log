@@ -1,3 +1,0 @@
-$ node release/tests/local-fixture.mjs
-exit=2
-LOCAL FIXTURE BLOCKED: existing pinned runtime dependencies absent; no network install attempted

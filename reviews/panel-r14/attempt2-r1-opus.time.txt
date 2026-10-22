@@ -1,3 +1,0 @@
-START 06:06:43 AM Gaza
-END 06:09:43 AM Gaza rc=1 secs=180
-cost_usd=0 models=[] denials=0

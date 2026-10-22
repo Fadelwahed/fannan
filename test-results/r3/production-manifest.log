@@ -1,5 +1,0 @@
-$ /Users/fadelwaheed/fannan-loop/fannan/release/tools/verify-manifest.sh /Users/fadelwaheed/fannan-loop/fannan/trust/MANIFEST.sha256 /Users/fadelwaheed/fannan-loop/fannan/release 24b41f44105e2bac678f64a03b5648e87e23806c5e8415a8e0e210e1c73a36b2
-exit=1
-realpath: illegal option -- e
-usage: realpath [-q] [path ...]
-MANIFEST: missing

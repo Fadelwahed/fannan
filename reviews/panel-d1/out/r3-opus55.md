@@ -1,8 +1,0 @@
-VOTE A: YES — Fail-closed accent with named variables, DEFERRED wireframes, and token-bound identity closes the silent-pass gaps without overclaiming what the area proxy can show.
-VOTE B: YES — Treating candidates as candidates, with element and reason recorded, stops blanket exemptions while still allowing real 2D content, and checking overflow on both sides catches RTL and negative-offset escapes.
-VOTE C: YES — An isolated world with private references is the only setup where page scripts can't tamper with probes; recording expected hydration differences avoids false failures.
-VOTE D: YES — These are concrete, testable fixes: full pinned tag coverage, wider glass selectors with fixtures, an allowlist instead of a denylist, and a desktop baseline that requires 1440.
-T1: DONT-REQUIRE — Accent presence and identity are already enforced; requiring it on an interactive element turns a brand choice into a hard rule and invites token-stuffing on focus rings.
-T2: BLOCK — An unresolved justification at final handoff means it hasn't been reviewed; passing it flagged turns the exemption into an auto-exemption by default.
-T3: REJECT — A count cap or a "mostly prose" heuristic is arbitrary and easy to game; per-candidate review plus the prose/viewport overflow failures already covers the risk.
-T4: FAIL-ONLY-IF-UNEXPLAINED — This matches the C consensus: required content that degrades with JS off fails unless it's a recorded, expected progressive-enhancement difference. An automatic fail would penalize legitimate hydration states.

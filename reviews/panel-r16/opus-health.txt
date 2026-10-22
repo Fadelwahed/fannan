@@ -1,3 +1,0 @@
-OPUS-HEALTH START 07:24:46 AM Gaza
-rc=1 END 07:24:47 AM Gaza
-True 'Failed to authenticate. API Error: 403 Insufficient account balance' cost 0

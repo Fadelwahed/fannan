@@ -1,9 +1,0 @@
-opacity70          [{"ratio":null,"clusters":0,"dropped":0,"reason":"no glyph coverage measured (INCOMPLETE)"}]
-opacity70ancestor  []
-thinLetters14      [{"ratio":14.64,"min":14.64,"clusters":15,"dropped":51}]
-thinLetters12      [{"ratio":14.64,"min":14.64,"clusters":5,"dropped":85}]
-videoFallback      [[1440,false,["partly clipped:text"],[]],[320,false,["partly clipped:text"],[]]]
-iconLinkHidden     [[1440,true,[],[]],[320,true,[],[]]]
-buttonVsHeading    [[1440,true,[],[]],[320,true,[],[]]]
-labelledbyCheckbox [[1440,true,[],[]],[320,true,[],[]]]
-clampOmits         {"pass":true,"unresolved":0,"default":[[1440,true,["truncated whole=1 partial=1"]],[320,false,["truncated whole=1 partial=1"]]]}

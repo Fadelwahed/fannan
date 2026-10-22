@@ -1,2 +1,0 @@
-START 06:58:11 AM Gaza
-END 06:58:21 AM Gaza rc=1 secs=10
