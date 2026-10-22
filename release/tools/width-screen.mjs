@@ -495,7 +495,7 @@ export function inspectLayout({ reflow = false, tag = false, probes = [] } = {})
                 }
                 carousel = {
                   valid: true, error: null, root: cm.root, slides: [...cm.slides],
-                  slideDisplayed, regionSlide, regionInSlide,
+                  slideDisplayed, slideResolved: slideEls.map(Boolean), regionSlide, regionInSlide,
                   scrollLeft: rootEl.scrollLeft || 0, scrollTop: rootEl.scrollTop || 0,
                   observedSlides: slideDisplayed.filter(Boolean).length,
                 };
@@ -841,6 +841,42 @@ export async function screenWidths(page, widths, expected = null, height = 900, 
 // accordion's expanded state, a carousel slide state); that state is graded normally. In the wireframe phase (only the
 // default state is rendered) an unresolved reveal is DEFERRED. Mutates each widths result: per-width pass, overall pass
 // and `reveals` (with `revealedBy`). scopes: [{ scope: { screen, state, lang }, widths }].
+// R35 GROK-03 (Sol ruling C): a supplied carousel inventory is an independent acceptance condition, not only evidence
+// for cover. Evidence is scoped to screen + language + root + ordered slides, taken at 1440 from the declared states that
+// supply that exact mapping. Every member must resolve somewhere in the inventory and be observed in some declared state,
+// and at least two distinct members must be observed. Unused invalid comparisons (declarationProblems) stay harmless.
+export function carouselInventoryIntegrity(groupScopes) {
+  const inv = new Map();
+  for (const g of groupScopes) {
+    const cm = g.declaration?.carousel;
+    if (!cm || !g.scope) continue;
+    const key = JSON.stringify([cm.root, cm.slides]);
+    if (!inv.has(key)) inv.set(key, { screen: g.scope.screen, lang: g.scope.lang, root: cm.root, slides: Array.isArray(cm.slides) ? [...cm.slides] : [], resolved: new Set(), observed: new Set(), errors: new Set(), valid: 0 });
+    const e = inv.get(key);
+    const d = (ledgerOf(g, 1440).declared || []).find(x => x.state === g.scope.state);
+    const c = d?.carousel;
+    if (!c) { e.errors.add('declared state has no 1440 mapping probe'); continue; }
+    if (!c.valid) { e.errors.add(c.error || 'invalid mapping'); continue; }
+    e.valid++;
+    (c.slideResolved || []).forEach((v, i) => { if (v) e.resolved.add(i); });
+    (c.slideDisplayed || []).forEach((v, i) => { if (v) { e.observed.add(i); e.resolved.add(i); } });
+  }
+  const problems = [];
+  for (const e of inv.values()) {
+    const why = [];
+    if (!e.valid) why.push(...[...e.errors].map(x => 'mapping invalid in every declared capture: ' + x));
+    else {
+      e.slides.forEach((sel, i) => {
+        if (!e.resolved.has(i)) why.push('registered member missing from the entire inventory: ' + sel);
+        else if (!e.observed.has(i)) why.push('registered member never observed: ' + sel);
+      });
+      if (e.observed.size < 2) why.push('fewer than two distinct registered members observed');
+    }
+    if (why.length) problems.push({ screen: e.screen, lang: e.lang, root: e.root, slides: e.slides, rule: 'carousel inventory', why });
+  }
+  return { pass: problems.length === 0, problems };
+}
+
 export function resolveReveals(scopes, phase = 'handoff') {
   const unresolved = [];
   // R30-M-07: one allocation ledger per losing rendering and width across clips and ordinary losses
@@ -961,7 +997,12 @@ export function resolveReveals(scopes, phase = 'handoff') {
     for (const r of w.results) r.pass = r.pass && (r.lost || []).every(l => l.reachableIn || l.deferred);
     w.pass = w.results.every(r => r.pass);
   }
-  return { unresolved, pass: unresolved.every(u => u.deferred) };
+  // R35 GROK-03: inventory integrity per screen/language group, independent of losses and clips
+  const declarationIntegrity = { pass: true, problems: [] };
+  for (const [, groupScopes] of groups) { const r = carouselInventoryIntegrity(groupScopes); declarationIntegrity.problems.push(...r.problems); }
+  declarationIntegrity.pass = declarationIntegrity.problems.length === 0;
+  for (const p of declarationIntegrity.problems) unresolved.push({ screen: p.screen, lang: p.lang, width: 1440, rule: p.rule, paths: [], text: p.why, deferred: false });
+  return { unresolved, pass: unresolved.every(u => u.deferred), declarationIntegrity };
 }
 
 // R11 panel D1 (decisions B, T2), R12 M09: a candidate is resolved only by a handoff `reflowExceptions` entry naming

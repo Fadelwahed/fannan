@@ -372,3 +372,216 @@ test('R35-M-03 sibling: three registered slides with two never observable cannot
     S('slide-b', page('slide-b'), { opener: '#next', reveals: '#b', carousel: M3 })];
   assert.equal((await G(list)).pass, false);
 }));
+
+// R35-S-01..05: Sol GROK-03 ruling C (inventory integrity), test bodies verbatim from r3-sol-grok03.md
+
+test('R35-S-01: false ghost inventory fails without any loss obligation',
+  { skip }, async () => withBrowser(async ({ open }) => {
+    openPage = open;
+
+    // A genuine disclosure signal must not repair false carousel metadata.
+    for (const signal of [false, true]) {
+      const page = opened => P(`
+        <div id="g">
+          <div id="info" ${opened ? '' : 'hidden'}>
+            <p>Delivery details for the order.</p>
+          </div>
+          <div id="ghost" hidden></div>
+        </div>
+        <button id="more"
+          ${signal
+            ? `aria-controls="info" aria-expanded="${opened}"`
+            : ''}>More</button>
+      `);
+
+      const result = await G([
+        S('default', page(false)),
+        S('open', page(true), {
+          opener: '#more',
+          reveals: '#info',
+          carousel: { root: '#g', slides: ['#info', '#ghost'] }
+        })
+      ]);
+
+      // This must fail because of inventory integrity, not invented losses.
+      assert.ok(result.scopes.every(s =>
+        s.widths.results.every(r => r.lost.length === 0)));
+      assert.equal(result.pass, false);
+      assert.equal(result.r.pass, false);
+      assert.ok(result.r.declarationIntegrity?.problems.some(p =>
+        p.root === '#g' &&
+        p.rule === 'carousel inventory' &&
+        p.why.some(w => w.includes('#ghost'))));
+    }
+  })
+);
+
+test('R35-S-02: a member missing from the entire inventory fails',
+  { skip }, async () => withBrowser(async ({ open }) => {
+    openPage = open;
+
+    const page = opened => P(`
+      <div id="g">
+        <div id="info" ${opened ? '' : 'hidden'}>
+          <p>Delivery details for the order.</p>
+        </div>
+        <div id="ghost" hidden></div>
+      </div>
+      <button id="more">More</button>
+    `);
+
+    const result = await G([
+      S('default', page(false)),
+      S('open', page(true), {
+        opener: '#more',
+        reveals: '#info',
+        carousel: { root: '#g', slides: ['#info', '#missing'] }
+      })
+    ]);
+
+    assert.ok(result.scopes.every(s =>
+      s.widths.results.every(r => r.lost.length === 0)));
+    assert.equal(result.pass, false);
+    assert.equal(result.r.pass, false);
+    assert.ok(result.r.declarationIntegrity?.problems.some(p =>
+      p.root === '#g' &&
+      p.rule === 'carousel inventory' &&
+      p.why.some(w => w.includes('#missing'))));
+  })
+);
+
+test('R35-S-03: an ordinary default-hidden disclosure remains valid',
+  { skip }, async () => withBrowser(async ({ open }) => {
+    openPage = open;
+
+    const page = opened => P(`
+      <button id="more" aria-controls="info"
+        aria-expanded="${opened}">Delivery details</button>
+      <div id="info" ${opened ? '' : 'hidden'}>
+        <p>Delivery details for the order.</p>
+      </div>
+    `);
+
+    const result = await G([
+      S('default', page(false)),
+      S('open', page(true), {
+        opener: '#more',
+        reveals: '#info'
+      })
+    ]);
+
+    assert.equal(result.pass, true);
+    const source = result.scopes.find(s => s.scope.state === 'default');
+    const target = result.scopes.find(s => s.scope.state === 'open');
+    const print = 'text:Delivery details for the order.';
+
+    assert.ok(!source.widths.ledgerByWidth[1440].items.some(i =>
+      i.print === print));
+    assert.ok(target.widths.ledgerByWidth[1440].items.some(i =>
+      i.print === print));
+    assert.ok(source.widths.results.find(r => r.width === 320)
+      .declarations.some(d => d.state === 'open' && d.valid));
+  })
+);
+
+test('R35-S-04: complete carousel inventory passes including unrolled 320',
+  { skip }, async () => withBrowser(async ({ open }) => {
+    openPage = open;
+
+    for (const unroll of [false, true]) {
+      const page = state => P(`
+        <p role="status">${state}</p>
+        <div id="g"><div class="track">
+          <div id="a"><p>Alpha unique copy.</p></div>
+          <div id="b"><p>Beta unique copy.</p></div>
+        </div></div>
+        <button id="prev">Previous</button>
+        <button id="next">Next</button>
+      `, `
+        #g{width:240px;height:80px;overflow:hidden}
+        .track{
+          display:flex;width:480px;
+          transform:translateX(${state === 'slide-b' ? -240 : 0}px)
+        }
+        #a,#b{flex:0 0 240px;height:80px}
+        ${unroll ? `
+          @media(max-width:600px){
+            #g{height:auto;overflow:visible}
+            .track{display:block;width:240px;transform:none}
+          }
+        ` : ''}
+      `);
+
+      const result = await G(states(page));
+      assert.equal(result.pass, true);
+
+      const source = result.scopes.find(s => s.scope.state === 'default');
+      const target = result.scopes.find(s => s.scope.state === 'slide-b');
+      const probe = (scope, width) =>
+        scope.widths.ledgerByWidth[width].declared.find(d =>
+          d.state === 'slide-b');
+
+      // Prove valid carousel evidence, not just an overall PASS.
+      assert.deepEqual(ws.declarationProblems(
+        probe(source, 1440), probe(target, 1440),
+        { inventoryObservedSlideIndices: 2 }
+      ), []);
+
+      if (unroll) {
+        // This unused comparison is legitimately invalid; it must not
+        // become a gate failure.
+        const why = ws.declarationProblems(
+          probe(source, 320), probe(target, 320),
+          { inventoryObservedSlideIndices: 2 }
+        );
+        assert.ok(why.some(w => w.includes('already displayed')));
+        assert.equal(result.pass, true);
+      }
+    }
+  })
+);
+
+test('R35-S-05: a native modal can open without retaining its trigger',
+  { skip }, async () => withBrowser(async ({ open }) => {
+    openPage = open;
+
+    const closed = P(`
+      <button id="more" aria-controls="info"
+        aria-haspopup="dialog">Delivery details</button>
+      <dialog id="info" aria-label="Delivery details">
+        <p>Delivery details for the order.</p>
+      </dialog>
+    `);
+
+    const opened = P(`
+      <dialog id="info" aria-label="Delivery details">
+        <p>Delivery details for the order.</p>
+        <button id="close">Close</button>
+      </dialog>
+      <script>document.getElementById('info').showModal();</script>
+    `, `
+      dialog{box-sizing:border-box;width:240px;max-width:100%}
+    `);
+
+    const result = await G([
+      S('default', closed),
+      S('dialog-open', opened, {
+        opener: '#more',
+        reveals: '#info'
+      })
+    ]);
+
+    assert.equal(result.pass, true);
+    const source = result.scopes.find(s => s.scope.state === 'default');
+    const target = result.scopes.find(s => s.scope.state === 'dialog-open');
+    const probe = scope =>
+      scope.widths.ledgerByWidth[320].declared.find(d =>
+        d.state === 'dialog-open');
+
+    assert.equal(probe(target).openerCount, 0);
+    assert.equal(probe(target).regionIndependentlyOpen, true);
+    assert.deepEqual(ws.declarationProblems(
+      probe(source), probe(target)
+    ), []);
+  })
+);
