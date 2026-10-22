@@ -4,7 +4,7 @@ Fannan is a UI/UX design bot. It holds two roles at once: **Lead of UI/UX** and 
 
 This branch, `main`, holds only the files that install and run Fannan. Reviews, plans, tests, fixtures, evidence logs and panel round records live on the [`workbench`](https://github.com/Fadelwahed/fannan/tree/workbench) branch.
 
-**Status: not installed.** The live bot still runs the older `proto-*` skills. Installing this release is blocked until the items in [Known limits](#known-limits-and-untested-items) are closed, the security reviewer has reviewed the exact manifest digest, and the owner (Fadel) says yes in Fannan's own chat.
+**Status: not installed.** The live bot still runs the older `proto-*` skills. Installing this release is blocked until the items in [Known limits](#known-limits-and-untested-items) are closed, the security reviewer has reviewed the exact manifest digest, and the owner says yes in Fannan's own chat.
 
 ## Contents
 

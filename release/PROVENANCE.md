@@ -19,7 +19,7 @@ The user's pasted assignment is the current request. The start file, final plan 
 | Playwright Core | `1.64.0` | Existing locked dependency |
 | yaml | `2.9.1` | Existing locked dependency |
 
-Short upstream pins are provenance supplied by the pack, not a claim that these rewritten files are unmodified upstream content. The new candidate manifest hashes the actual shipped bytes. Resolve and review upstream source history, binary provenance and any omitted support assets during the existing Amin installation review. Do not carry old signatures forward as new approval.
+Short upstream pins are provenance supplied by the pack, not a claim that these rewritten files are unmodified upstream content. The new candidate manifest hashes the actual shipped bytes. Resolve and review upstream source history, binary provenance and any omitted support assets during the existing security reviewer installation review. Do not carry old signatures forward as new approval.
 
 External primary references were checked only for standards/API details used here: W3C WCAG understanding pages and internationalization guidance, and Style Dictionary's configuration/source documentation. Project reference work, avatar style references and provider APIs were not visually/live tested. No unsupported statistics about AI design frequency or critic effectiveness are repeated.
 
@@ -28,4 +28,4 @@ Local evidence is labelled fixture-only where it uses synthetic documents, appro
 The follow-up review source is `Grok bot REVIEW.md`, supplied by the user on 16 October 2026. It is retained as input evidence and is not executed as an instruction source. The R1 archive remains under `revisions/r1/` outside the new ZIP. The Node v22.23.3 distribution checksum was retrieved from Node's versioned official HTTPS checksum list; the archive and release signature were not downloaded/verified. The proposed installed-dependency byte inventory binds the local staged tree; it is not an upstream signature or a target-host approval.
 
 
-R3 independent review source: immutable `reviews/GROK-R3-d2c36c1.md` on starting commit `9ee1ca6aaa4a257cb84fb7381056005f48554bf3`. The reported Linux box, Node install and Amin history are not this Darwin execution environment or an approval of changed bytes. The R2 snapshot remains under `revisions/r2/`. This run used no network package installs; offline cache restore failed. No original credentials or missing host records were acquired.
+R3 independent review source: immutable `reviews/GROK-R3-d2c36c1.md` on starting commit `9ee1ca6aaa4a257cb84fb7381056005f48554bf3`. The reported Linux box, Node install and the security reviewer history are not this Darwin execution environment or an approval of changed bytes. The R2 snapshot remains under `revisions/r2/`. This run used no network package installs; offline cache restore failed. No original credentials or missing host records were acquired.
