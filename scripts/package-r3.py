@@ -306,6 +306,7 @@ def changed(start):
 
 
 RECORD = re.compile(r'reviews/MIMAR-R(\d+)-changes-[0-9a-f]+\.md')
+TRANSIENT_RECORD = re.compile(r'reviews/MIMAR-R\d+-changes-[^/]+\.md')
 
 
 def listed(registry):
@@ -318,6 +319,12 @@ def coverage(start, registered=None):
     including the frozen CODEX response and earlier Mi'mar records. At verify, the only other path allowed outside the
     registry is at most one reviews/MIMAR-R<n>-changes-<sha>.md written after the freeze, for the latest round."""
     names = changed(start)
+    # R35-M-08 root cause: a transient record name (e.g. MIMAR-R34-changes-PENDING.md) present at build was hashed into
+    # the registry, then renamed before commit, so a clean checkout could never verify. Only final <sha> names register.
+    if registered is None:
+        transient = [name for name in names if TRANSIENT_RECORD.fullmatch(name) and not RECORD.fullmatch(name)]
+        if transient:
+            raise ValueError('transient review record among the changed paths (rename it to its final head sha first): ' + transient[0])
     excluded = {REGISTRY: 'self hash cannot be embedded in its own manifest'} if REGISTRY in names else {}
     if registered is not None:
         late = [name for name in names if name != REGISTRY and name not in registered and RECORD.fullmatch(name)]

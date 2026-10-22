@@ -653,6 +653,13 @@ class JunkAndSecretTests(unittest.TestCase):
         message = RegistryInputTests('run_build').run_build(['docs/.DS_Store'], damage)
         self.assertIn('docs/.DS_Store', message)
 
+    def test_build_refuses_a_transient_review_record(self):
+        """R35-M-08: a PENDING record hashed at build and renamed before commit made the clean checkout unverifiable."""
+        def damage(root):
+            (root / 'reviews/MIMAR-R34-changes-PENDING.md').write_text('pending')
+        message = RegistryInputTests('run_build').run_build(['reviews/MIMAR-R34-changes-PENDING.md'], damage)
+        self.assertIn('transient review record', message)
+
     def test_live_changed_paths_are_clean(self):
         if not (ROOT / '.git').exists():
             self.skipTest('needs a git checkout')
